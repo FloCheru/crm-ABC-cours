@@ -1,0 +1,40 @@
+/* ==========================================================================
+   COMPOSANT BUTTON GROUP
+   ========================================================================== */
+
+.button-group {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+/* ==========================================================================
+     RESPONSIVE
+     ========================================================================== */
+
+/* Sur mobile, toujours en colonne */
+@media (max-width: 640px) {
+  .button-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .button-group .btn {
+    width: 100%;
+  }
+}
+
+/* Sur tablette et desktop, disposition horizontale */
+@media (min-width: 641px) {
+  .button-group--single .btn {
+    min-width: 120px;
+  }
+
+  .button-group--double .btn {
+    min-width: 120px;
+  }
+
+  .button-group--triple .btn {
+    min-width: 100px;
+  }
+}

@@ -81,7 +81,7 @@ select {
   /* Couleurs */
   --primary: #2354a2;
   --primary-hover: #1e40af;
-  --text-on-primary: #bfdbfe;
+
   --secondary: #60a5fa;
   --secondary-hover: #3b82f6;
   --success: #059669;
@@ -96,6 +96,7 @@ select {
   --text-secondary: #374151;
   --text-tertiary: #6b7280;
   --text-light: #9ca3af;
+  --text-on-primary: #bfdbfe;
 
   /* Couleurs de surface */
   --surface-primary: #ffffff;
