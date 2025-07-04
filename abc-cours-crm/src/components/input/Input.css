@@ -1,0 +1,167 @@
+/* ==========================================================================
+   COMPOSANT INPUT
+   ========================================================================== */
+
+.input-field {
+  position: relative;
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+
+  /* État par défaut */
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb; /* Border Default */
+  border-radius: var(--radius-md);
+  color: #374151; /* Text Secondary */
+
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.input::placeholder {
+  color: #6b7280; /* Text Tertiary */
+}
+
+/* ==========================================================================
+     ÉTATS
+     ========================================================================== */
+
+/* État focus */
+.input:focus {
+  background-color: #ffffff;
+  border-color: #2354a2; /* Couleur primaire */
+  box-shadow: 0 0 0 3px #dbeafe; /* Bleu très clair */
+  color: #374151; /* Text Secondary */
+}
+
+/* État error */
+.input--error {
+  background-color: #ffffff;
+  border-color: #dc2626; /* Error */
+  box-shadow: 0 0 0 3px #fee2e2; /* Rouge très clair */
+  color: #374151; /* Text Secondary */
+}
+
+.input--error:focus {
+  border-color: #dc2626; /* Error */
+  box-shadow: 0 0 0 3px #fee2e2; /* Rouge très clair */
+}
+
+/* État disabled */
+.input:disabled {
+  background-color: #f3f4f6; /* Button outline hover */
+  border-color: #e5e7eb; /* Border Default */
+  color: #9ca3af; /* Text Light */
+  cursor: not-allowed;
+}
+
+.input:disabled::placeholder {
+  color: #9ca3af; /* Text Light */
+}
+
+/* ==========================================================================
+     LABEL
+     ========================================================================== */
+
+.input-label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+.input-label--required::after {
+  content: " *";
+  color: var(--error);
+}
+
+/* ==========================================================================
+     MESSAGE D'ERREUR
+     ========================================================================== */
+
+.input-error {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-small);
+  color: var(--error);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ==========================================================================
+     TEXTE D'AIDE
+     ========================================================================== */
+
+.input-help {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-small);
+  color: var(--text-tertiary);
+}
+
+/* ==========================================================================
+     ICÔNE DANS L'INPUT
+     ========================================================================== */
+
+.input-field--with-icon {
+  position: relative;
+}
+
+.input-field--with-icon .input {
+  padding-left: var(--spacing-4xl);
+}
+
+.input-icon {
+  position: absolute;
+  left: var(--spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.input:focus + .input-icon {
+  color: var(--primary);
+}
+
+.input--error + .input-icon {
+  color: var(--error);
+}
+
+/* ==========================================================================
+     TAILLES
+     ========================================================================== */
+
+.input--sm {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-small);
+}
+
+.input--lg {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--spacing-lg);
+}
+
+/* ==========================================================================
+     VARIANTE AVEC BOUTON
+     ========================================================================== */
+
+.input-field--with-button {
+  display: flex;
+  gap: 0;
+}
+/* ==========================================================================
+     RESPONSIVE
+     ========================================================================== */
+
+@media (max-width: 640px) {
+  .input {
+    font-size: 16px; /* Évite le zoom sur iOS */
+  }
+}
