@@ -1,0 +1,110 @@
+/* ==========================================================================
+   COMPOSANT CONTAINER
+   ========================================================================== */
+
+.container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  /* border: 1px solid red; */
+}
+
+/* ==========================================================================
+     VARIANTES DE LAYOUT
+     ========================================================================== */
+
+/* Layout en grille pour métriques/cards */
+.container--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* Layout deux colonnes */
+.container--two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+/* Layout trois colonnes */
+.container--three-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-lg);
+}
+
+/* Layout flex horizontal */
+.container--flex {
+  display: flex;
+  gap: var(--spacing-lg);
+  align-items: flex-start;
+}
+
+/* Layout flex vertical */
+.container--flex-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* ==========================================================================
+     VARIANTES DE TAILLE
+     ========================================================================== */
+
+.container--sm {
+  max-width: 800px;
+}
+
+.container--lg {
+  max-width: 1400px;
+}
+
+.container--full {
+  max-width: none;
+}
+
+/* ==========================================================================
+     VARIANTES DE PADDING
+     ========================================================================== */
+
+.container--no-padding {
+  padding: 0;
+}
+
+.container--sm-padding {
+  padding: 0 var(--spacing-md);
+}
+
+.container--lg-padding {
+  padding: 0 var(--spacing-xl);
+}
+
+/* ==========================================================================
+     RESPONSIVE
+     ========================================================================== */
+
+@media (max-width: 768px) {
+  .container--two-columns,
+  .container--three-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .container--grid {
+    grid-template-columns: 1fr;
+  }
+
+  .container--flex {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 var(--spacing-md);
+  }
+
+  .container--lg-padding {
+    padding: 0 var(--spacing-md);
+  }
+}
