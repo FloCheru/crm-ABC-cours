@@ -1,7 +1,7 @@
 import React from "react";
 import "./Button.css";
 
-type ButtonVariant = "primary" | "secondary" | "error" | "outline";
+export type ButtonVariant = "primary" | "secondary" | "error" | "outline";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "./Button";
+import type { ButtonVariant } from "./Button";
 import "./ButtonGroup.css";
 
 type ButtonGroupVariant = "single" | "double" | "triple";
@@ -11,9 +12,9 @@ interface ButtonConfig {
   text: string;
 
   /**
-   * Variante du bouton (primary, secondary, error)
+   * Variante du bouton (primary, secondary, error, outline)
    */
-  variant?: "primary" | "secondary" | "error";
+  variant?: ButtonVariant;
 
   /**
    * Fonction appelée au clic

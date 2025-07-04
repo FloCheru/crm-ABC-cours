@@ -33,8 +33,4 @@
   .button-group--double .btn {
     min-width: 120px;
   }
-
-  .button-group--triple .btn {
-    min-width: 100px;
-  }
 }
