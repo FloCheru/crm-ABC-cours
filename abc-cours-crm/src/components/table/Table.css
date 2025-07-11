@@ -1,0 +1,233 @@
+/* ==========================================================================
+   COMPOSANT TABLE
+   ========================================================================== */
+
+.table-wrapper {
+  background-color: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+/* Titre intégré (optionnel - préférer Container + h1 externe) */
+.table__title {
+  padding: var(--spacing-lg);
+  margin: 0;
+  border-bottom: 1px solid var(--border-default);
+  background-color: var(--surface-primary);
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-body);
+}
+
+/* ==========================================================================
+     HEADER
+     ========================================================================== */
+
+.table__header {
+  background-color: var(--surface-secondary);
+}
+
+.table__header-cell {
+  padding: var(--spacing-lg) var(--spacing-md);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+/* ==========================================================================
+     BODY
+     ========================================================================== */
+
+.table__row {
+  transition: background-color var(--transition-fast);
+}
+
+.table__row:hover {
+  background-color: var(--surface-tertiary);
+}
+
+.table__row:not(:last-child) {
+  border-bottom: 1px solid var(--border-default);
+}
+
+.table__cell {
+  padding: var(--spacing-md) var(--spacing-sm);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+/* ==========================================================================
+     STATUS BADGES
+     ========================================================================== */
+
+.table__status {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  text-transform: capitalize;
+}
+
+.table__status--active {
+  background-color: #d1fae5; /* Vert très clair */
+  color: var(--success);
+}
+
+.table__status--inactive {
+  background-color: #fee2e2; /* Rouge très clair */
+  color: var(--error);
+}
+
+.table__status--pending {
+  background-color: #fef3c7; /* Jaune très clair */
+  color: var(--warning);
+}
+
+/* ==========================================================================
+     ACTIONS
+     ========================================================================== */
+
+.table__actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+/* ==========================================================================
+     PAGINATION
+     ========================================================================== */
+
+.table__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  background-color: var(--surface-secondary);
+  border-top: 1px solid var(--border-default);
+}
+
+.pagination__info {
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  margin-right: var(--spacing-md);
+}
+
+.pagination__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-primary);
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pagination__button:hover:not(:disabled) {
+  background-color: var(--surface-tertiary);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.pagination__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination__button--active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.pagination__button--active:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+/* ==========================================================================
+     RESPONSIVE
+     ========================================================================== */
+
+@media (max-width: 768px) {
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  .table {
+    min-width: 700px;
+  }
+
+  .table__header-cell,
+  .table__cell {
+    padding: var(--spacing-xs) var(--spacing-xs);
+    font-size: var(--font-size-small);
+  }
+
+  .table__pagination {
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+
+  .pagination__info {
+    width: 100%;
+    text-align: center;
+    margin: 0 0 var(--spacing-sm) 0;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .table__header-cell,
+  .table__cell {
+    padding: var(--spacing-sm) var(--spacing-xs);
+  }
+}
+
+@media (min-width: 1025px) {
+  .table__header-cell,
+  .table__cell {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+}
+
+/* ==========================================================================
+     ÉTATS VIDES
+     ========================================================================== */
+
+.table__empty {
+  padding: var(--spacing-4xl);
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.table__empty-title {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.table__empty-description {
+  font-size: var(--font-size-body);
+  color: var(--text-tertiary);
+}
