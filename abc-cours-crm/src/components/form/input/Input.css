@@ -1,0 +1,167 @@
+/* ==========================================================================
+   COMPOSANT INPUT
+   ========================================================================== */
+
+.input-field {
+  position: relative;
+  width: 100%;
+}
+
+.input,
+.input select,
+.input textarea {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+
+  /* État par défaut */
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb; /* Border Default */
+  border-radius: var(--radius-md);
+  color: #374151; /* Text Secondary */
+
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+/* Styles spécifiques pour select, textarea */
+select.input {
+  cursor: pointer;
+  appearance: none;
+  background-image: none;
+}
+
+textarea.input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.input::placeholder,
+select.input option:disabled {
+  color: #6b7280; /* Text Tertiary */
+}
+
+/* ==========================================================================
+     ÉTATS
+     ========================================================================== */
+
+/* État focus */
+.input:focus,
+select.input:focus,
+textarea.input:focus {
+  background-color: #ffffff;
+  border-color: #2354a2; /* Couleur primaire */
+  box-shadow: 0 0 0 3px #dbeafe; /* Bleu très clair */
+  color: #374151; /* Text Secondary */
+}
+
+/* État error */
+.input--error,
+select.input--error,
+textarea.input--error {
+  background-color: #ffffff;
+  border-color: #dc2626; /* Error */
+  box-shadow: 0 0 0 3px #fee2e2; /* Rouge très clair */
+  color: #374151; /* Text Secondary */
+}
+
+.input--error:focus,
+select.input--error:focus,
+textarea.input--error:focus {
+  border-color: #dc2626; /* Error */
+  box-shadow: 0 0 0 3px #fee2e2; /* Rouge très clair */
+}
+
+/* État disabled */
+.input:disabled,
+select.input:disabled,
+textarea.input:disabled {
+  background-color: #f3f4f6; /* Button outline hover */
+  border-color: #e5e7eb; /* Border Default */
+  color: #9ca3af; /* Text Light */
+  cursor: not-allowed;
+}
+
+.input:disabled::placeholder,
+select.input:disabled,
+textarea.input:disabled::placeholder {
+  color: #9ca3af; /* Text Light */
+}
+
+/* ==========================================================================
+     LABEL
+     ========================================================================== */
+
+.input-label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+.input-label__required {
+  color: var(--error);
+  margin-left: 4px;
+}
+
+/* ==========================================================================
+     MESSAGE D'ERREUR
+     ========================================================================== */
+
+.input-error {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-small);
+  color: var(--error);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ==========================================================================
+     TEXTE D'AIDE
+     ========================================================================== */
+
+.input-help {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-small);
+  color: var(--text-tertiary);
+}
+
+/* ==========================================================================
+     VARIANTE AVEC BOUTON
+     ========================================================================== */
+
+.input-field--with-button {
+  display: flex;
+  gap: 0;
+}
+
+.input-field--with-button .input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+  flex: 1;
+}
+
+.input-field--with-button .input:focus {
+  z-index: 1;
+  position: relative;
+}
+
+.input-field--with-button .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: none;
+}
+
+/* ==========================================================================
+     RESPONSIVE
+     ========================================================================== */
+
+@media (max-width: 640px) {
+  .input {
+    font-size: 16px; /* Évite le zoom sur iOS */
+  }
+}
