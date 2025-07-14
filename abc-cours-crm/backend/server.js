@@ -3,7 +3,21 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
-require("dotenv").config();
+const path = require("path");
+const dotenv = require("dotenv");
+
+// Configuration d'environnement propre
+const envFile =
+  process.env.NODE_ENV === "production"
+    ? ".env.production"
+    : ".env.development";
+
+dotenv.config({ path: path.join(__dirname, envFile) });
+
+// Debug (à supprimer en production)
+console.log("🔍 Environnement chargé:", envFile);
+console.log("🔍 NODE_ENV:", process.env.NODE_ENV);
+console.log("🔍 MONGODB_URI défini:", !!process.env.MONGODB_URI);
 
 // Import des routes
 const authRoutes = require("./routes/auth");
@@ -53,6 +67,16 @@ app.get("/", (req, res) => {
     message: "API ABC Cours CRM",
     version: "1.0.0",
     status: "running",
+    environment: process.env.NODE_ENV || "development",
+  });
+});
+
+// Route de santé pour Railway
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
@@ -84,8 +108,9 @@ const startServer = async () => {
     await connectDB();
     app.listen(PORT, () => {
       console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-      console.log(`📊 Mode: ${process.env.NODE_ENV}`);
+      console.log(`📊 Mode: ${process.env.NODE_ENV || "development"}`);
       console.log(`🌐 URL: http://localhost:${PORT}`);
+      console.log(`🎯 Environnement: ${envFile}`);
     });
   } catch (error) {
     console.error("❌ Erreur lors du démarrage du serveur:", error);
