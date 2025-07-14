@@ -25,12 +25,13 @@ class FamilyService {
       );
     }
 
-    return response.json();
+    const data = await response.json();
+    return data.families || [];
   }
 
   async getStudentsByFamily(familyId: string): Promise<Student[]> {
     const response = await fetch(
-      `${API_BASE_URL}/families/${familyId}/students`,
+      `${API_BASE_URL}/students?family=${familyId}`,
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -44,7 +45,8 @@ class FamilyService {
       );
     }
 
-    return response.json();
+    const data = await response.json();
+    return data.students || [];
   }
 
   async getAllStudents(): Promise<Student[]> {
@@ -60,7 +62,8 @@ class FamilyService {
       );
     }
 
-    return response.json();
+    const data = await response.json();
+    return data.students || [];
   }
 }
 

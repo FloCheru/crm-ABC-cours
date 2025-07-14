@@ -204,7 +204,7 @@ export function CouponSeriesCreate() {
                     error={errors.familyId}
                     options={[
                       { value: "", label: "Sélectionner une famille" },
-                      ...families.map((family) => ({
+                      ...(families || []).map((family) => ({
                         value: family._id,
                         label: family.name,
                       })),
@@ -221,7 +221,7 @@ export function CouponSeriesCreate() {
                     disabled={!formData.familyId}
                     options={[
                       { value: "", label: "Sélectionner un élève" },
-                      ...students.map((student) => ({
+                      ...(students || []).map((student) => ({
                         value: student._id,
                         label: `${student.firstName} ${student.lastName} (${student.level})`,
                       })),
@@ -278,7 +278,7 @@ export function CouponSeriesCreate() {
                     error={errors.subject}
                     options={[
                       { value: "", label: "Sélectionner une matière" },
-                      ...subjects.map((subject) => ({
+                      ...(subjects || []).map((subject) => ({
                         value: subject._id,
                         label: subject.name,
                       })),
