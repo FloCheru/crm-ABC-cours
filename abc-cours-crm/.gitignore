@@ -22,3 +22,49 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Variables d'environnement (SÉCURITÉ CRITIQUE)
+.env
+.env.local
+.env.development
+.env.production
+
+# Mais garder les templates
+!.env.example
+
+# Uploads et fichiers utilisateurs
+uploads/
+*/uploads/
+temp/
+*/temp/
+
+# Base de données locale
+*.db
+*.sqlite
+*.sqlite3
+
+# Fichiers de cache
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+
+# Fichiers de build
+build/
+dist/
+out/
+
+# Fichiers système
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Coverage et tests
+coverage/
+*.lcov
+.nyc_output
+
+# Logs spécifiques
+*.tgz
+*.tar.gz
