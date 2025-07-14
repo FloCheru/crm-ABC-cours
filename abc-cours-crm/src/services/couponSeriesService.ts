@@ -1,7 +1,8 @@
 import type { CouponSeries, CreateCouponSeriesData } from "../types/coupon";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+// const API_BASE_URL =
+//   import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const API_BASE_URL = "https://crm-abc-cours-production.up.railway.app/api";
 
 class CouponSeriesService {
   private getAuthHeaders(): HeadersInit {
