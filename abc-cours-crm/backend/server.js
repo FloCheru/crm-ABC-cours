@@ -39,8 +39,12 @@ app.use(helmet());
 // Configuration CORS
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    credentials: true,
+    origin: [
+      "http://localhost:5173", // local
+      "https://crm-abc-cours.vercel.app", // production
+      process.env.FRONTEND_URL, // Backup Railway
+    ].filter(Boolean),
+    credentials: true, //Auth/cookies
   })
 );
 
