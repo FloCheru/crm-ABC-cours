@@ -1,5 +1,6 @@
 export interface CouponSeries {
   _id: string;
+  name: string;
   family: {
     _id: string;
     name: string;

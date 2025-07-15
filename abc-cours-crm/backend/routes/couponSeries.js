@@ -147,10 +147,16 @@ router.get(
       console.log("🔍 Exécution de la requête MongoDB...");
       const [series, total] = await Promise.all([
         CouponSeries.find(filter)
-          .populate("family", "familyName contact.email")
+          .populate("family", "name contact.email")
           .populate("student", "firstName lastName")
           .populate("subject", "name category")
-          .populate("professor", "user.firstName user.lastName user.email")
+          .populate({
+            path: "professor",
+            populate: {
+              path: "user",
+              select: "firstName lastName",
+            },
+          })
           .populate("createdBy", "firstName lastName")
           .sort(sort)
           .skip(skip)
@@ -197,10 +203,16 @@ router.get("/:id", async (req, res) => {
     }
 
     const series = await CouponSeries.findById(id)
-      .populate("family", "familyName contact address")
+      .populate("family", "name contact address")
       .populate("student", "firstName lastName schoolLevel subjects")
       .populate("subject", "name category description")
-      .populate("professor", "user subjects")
+      .populate({
+        path: "professor",
+        populate: {
+          path: "user",
+          select: "firstName lastName email",
+        },
+      })
       .populate("createdBy", "firstName lastName")
       .lean();
 
@@ -392,6 +404,7 @@ router.post(
         expirationDate,
         notes,
         createdBy: req.user._id,
+        // Le nom sera généré automatiquement par le middleware
       });
 
       await series.save();
@@ -413,7 +426,7 @@ router.post(
 
       // Retourner la série créée avec tous les détails
       const createdSeries = await CouponSeries.findById(series._id)
-        .populate("family", "familyName contact.email")
+        .populate("family", "name contact.email")
         .populate("student", "firstName lastName")
         .populate("subject", "name category")
         .populate("professor", "user.firstName user.lastName")
@@ -489,7 +502,7 @@ router.patch(
       res.json({
         message: `Series status changed to ${status}`,
         series: await CouponSeries.findById(id)
-          .populate("family", "familyName")
+          .populate("family", "name")
           .populate("student", "firstName lastName"),
       });
     } catch (error) {
@@ -536,7 +549,7 @@ router.get("/stats/overview", authorize(["admin"]), async (req, res) => {
           $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         }, // 30 jours
       })
-        .populate("family", "familyName contact.email")
+        .populate("family", "name contact.email")
         .populate("student", "firstName lastName")
         .select("family student subject expirationDate remainingCoupons")
         .lean(),

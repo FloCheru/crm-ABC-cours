@@ -114,7 +114,6 @@ export const Admin: React.FC = () => {
   }));
 
   // Calculer les statistiques
-  const totalSeries = couponsData.length;
   const activeSeries = couponsData.filter((s) => s.status === "active").length;
   const totalCoupons = couponsData.reduce(
     (sum, series) => sum + series.totalCoupons,
@@ -124,64 +123,68 @@ export const Admin: React.FC = () => {
     (sum, series) => sum + series.usedCoupons,
     0
   );
+  const totalAmount = couponsData.reduce(
+    (sum, series) => sum + series.totalAmount,
+    0
+  );
 
   const couponsColumns = [
     {
       key: "name",
       label: "Nom de la série",
-      width: "18%",
       render: (_: unknown, row: TableRowData) => (
         <div>
-          <div className="font-medium">
-            {row.family?.name} - {row.student?.firstName}{" "}
-            {row.student?.lastName}
-          </div>
-          <div className="text-sm text-gray-500">
-            {row.totalCoupons} coupons • {row.hourlyRate}€/h
-          </div>
+          <div className="font-medium">{row.name}</div>
         </div>
       ),
     },
     {
       key: "subject",
       label: "Matière",
-      width: "12%",
       render: (_: unknown, row: TableRowData) => (
         <div>
           <div className="font-medium">{row.subject?.name}</div>
-          <div className="text-sm text-gray-500">{row.subject?.category}</div>
+        </div>
+      ),
+    },
+    {
+      key: "professor",
+      label: "Professeur",
+      render: (_: unknown, row: TableRowData) => (
+        <div>
+          <div className="font-medium">
+            {row.professor?.user?.firstName} {row.professor?.user?.lastName}
+          </div>
+          <div className="text-sm text-gray-500">
+            {row.professor?.user?.email}
+          </div>
         </div>
       ),
     },
     {
       key: "totalCoupons",
       label: "Total coupons",
-      width: "10%",
       render: (_: unknown, row: TableRowData) => row.totalCoupons,
     },
     {
       key: "utilises",
       label: "Utilisés",
-      width: "10%",
       render: (_: unknown, row: TableRowData) => row.usedCoupons,
     },
     {
       key: "restants",
       label: "Restants",
-      width: "10%",
       render: (_: unknown, row: TableRowData) => row.remainingCoupons,
     },
     {
       key: "montantTotal",
       label: "Montant total",
-      width: "12%",
       render: (_: unknown, row: TableRowData) =>
         `${row.totalAmount.toFixed(2)} €`,
     },
     {
       key: "statut",
       label: "Statut",
-      width: "10%",
       render: (_: unknown, row: TableRowData) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -205,7 +208,6 @@ export const Admin: React.FC = () => {
     {
       key: "actions",
       label: "Actions",
-      width: "18%",
       render: (_: unknown, row: TableRowData) => (
         <div className="table__actions">
           <Button
@@ -247,22 +249,30 @@ export const Admin: React.FC = () => {
 
         <Container layout="grid" padding="none">
           <SummaryCard
-            title="Séries de coupons"
+            title="SYNTHESE GLOBALE"
             metrics={[
-              { value: totalSeries, label: "Total", variant: "primary" },
-              { value: activeSeries, label: "Actives", variant: "success" },
+              {
+                value: `${totalAmount.toFixed(2)} €`,
+                label: "Montant total",
+                variant: "primary",
+              },
+              {
+                value: activeSeries,
+                label: "Total Coupons",
+                variant: "success",
+              },
             ]}
           />
           <SummaryCard
-            title="Coupons"
+            title="UTILISATION"
             metrics={[
-              { value: totalCoupons, label: "Total", variant: "primary" },
-              { value: usedCoupons, label: "Utilisés", variant: "success" },
+              { value: usedCoupons, label: "Utilisés", variant: "primary" },
+              { value: totalCoupons, label: "Restants", variant: "success" },
             ]}
           />
         </Container>
 
-        <Container layout="grid">
+        <Container layout="flex">
           <ButtonGroup
             variant="triple"
             buttons={[

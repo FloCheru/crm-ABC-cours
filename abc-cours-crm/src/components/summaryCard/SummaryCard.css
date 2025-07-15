@@ -20,7 +20,7 @@
      ========================================================================== */
 
 .summary-card__header {
-  margin-bottom: var(--spacing-lg);
+  text-align: center;
 }
 
 .summary-card__title {
@@ -36,31 +36,18 @@
      MÉTRIQUES
      ========================================================================== */
 
-.summary-card__metrics {
-  display: flex;
-  gap: var(--spacing-xl);
-  flex-wrap: wrap;
-}
-
-.summary-card__metric {
-  flex: 1;
-  min-width: 120px;
-}
-
 .summary-card__value {
+  text-align: center;
   font-size: var(--font-size-h1);
   font-weight: var(--font-weight-bold);
   color: var(--primary);
-  margin: 0;
-  margin-bottom: var(--spacing-xs);
-  line-height: 1.1;
 }
 
 .summary-card__label {
+  text-align: center;
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
-  margin: 0;
 }
 
 /* ==========================================================================

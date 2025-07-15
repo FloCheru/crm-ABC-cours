@@ -1,4 +1,5 @@
 import React from "react";
+import { Container } from "../container/Container";
 import "./SummaryCard.css";
 
 type MetricVariant =
@@ -88,14 +89,14 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
         <h2 className="summary-card__title">{title}</h2>
       </header>
 
-      <div className="summary-card__metrics">
+      <Container>
         {metrics.map((metric, index) => (
-          <div key={index} className="summary-card__metric">
+          <Container key={index} layout="flex-col" align="center">
             <p className={getValueClasses(metric.variant)}>{metric.value}</p>
             <p className="summary-card__label">{metric.label}</p>
-          </div>
+          </Container>
         ))}
-      </div>
+      </Container>
     </div>
   );
 };

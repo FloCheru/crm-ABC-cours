@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 
 const couponSeriesSchema = new mongoose.Schema(
   {
+    name: {
+      type: String,
+      trim: true,
+    },
     family: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Family",
@@ -114,7 +118,23 @@ couponSeriesSchema.index({ subject: 1 });
 couponSeriesSchema.index({ expirationDate: 1 });
 
 // Middleware pour calculer automatiquement le montant total
-couponSeriesSchema.pre("save", function (next) {
+couponSeriesSchema.pre("save", async function (next) {
+  // Générer le nom de la série
+  if (this.family) {
+    try {
+      const Family = require("./Family");
+      const familyDoc = await Family.findById(this.family);
+      if (familyDoc) {
+        const now = new Date();
+        const month = (now.getMonth() + 1).toString().padStart(2, "0");
+        const year = now.getFullYear();
+        this.name = `${familyDoc.name}_${month}_${year}`;
+      }
+    } catch (error) {
+      console.error("Erreur lors de la génération du nom de série:", error);
+    }
+  }
+
   if (this.isModified("totalCoupons") || this.isModified("hourlyRate")) {
     this.totalAmount = this.totalCoupons * this.hourlyRate;
   }

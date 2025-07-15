@@ -27,7 +27,7 @@ html {
 
 /* Définit les paramètres par défaut du body */
 body {
-  min-height: 100vh; /* Garantit hauteur minimale écran (évite footers flottants) */
+  height: 100vh; /* Hauteur fixe de la fenêtre */
   text-rendering: optimizeSpeed; /* Privilégie performance vs qualité pour les SPAs */
   line-height: 1.5; /* Standard WCAG 2.1 pour l'accessibilité et lisibilité */
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -35,6 +35,12 @@ body {
   font-size: 14px;
   color: var(--text-primary);
   background-color: var(--surface-primary);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* Les éléments a sans classe reçoivent les styles par défaut */
@@ -180,9 +186,8 @@ h3 {
 p {
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
-  line-height: 1.5;
+  /* line-height: 1.5; */
   color: var(--text-primary);
-  margin-bottom: var(--spacing-md);
 }
 
 .text-small {
