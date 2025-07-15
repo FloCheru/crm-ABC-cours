@@ -1,7 +1,7 @@
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
-const User = require("./models/User");
-const connectDB = require("./config/database");
+const User = require("../../models/User");
+const connectDB = require("../../config/database");
 
 async function fixPassword() {
   await connectDB();

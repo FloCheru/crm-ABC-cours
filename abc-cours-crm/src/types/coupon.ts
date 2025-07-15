@@ -1,6 +1,5 @@
 export interface CouponSeries {
   _id: string;
-  name: string;
   family: {
     _id: string;
     name: string;
@@ -12,7 +11,19 @@ export interface CouponSeries {
     lastName: string;
     level: string;
   };
-  subject: string;
+  subject: {
+    _id: string;
+    name: string;
+    category: string;
+  };
+  professor?: {
+    _id: string;
+    user: {
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+  };
   hourlyRate: number;
   totalCoupons: number;
   usedCoupons: number;
@@ -29,6 +40,7 @@ export interface CouponSeries {
 export interface CreateCouponSeriesData {
   familyId: string;
   studentId: string;
+  professorId?: string; // Optionnel pour l'auto-assignation
   subject: string;
   hourlyRate: number;
   totalCoupons: number;

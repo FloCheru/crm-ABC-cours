@@ -15,20 +15,66 @@ class CouponSeriesService {
   async createCouponSeries(
     data: CreateCouponSeriesData
   ): Promise<CouponSeries> {
+    const headers = this.getAuthHeaders();
+
+    // Mapper les données du format frontend vers le format API
+    const apiData = {
+      family: data.familyId,
+      student: data.studentId,
+      professor: data.professorId || null, // null pour auto-assignation
+      subject: data.subject,
+      totalCoupons: data.totalCoupons,
+      hourlyRate: data.hourlyRate,
+      expirationMonths: 12, // Valeur par défaut
+      notes: data.notes || "",
+      autoAssignTeacher: data.autoAssignTeacher,
+      sendNotification: data.sendNotification,
+    };
+
+    console.log("🔍 Création série - Headers:", headers);
+    console.log("🔍 Création série - Données originales:", data);
+    console.log("🔍 Création série - Données mappées:", apiData);
+
     const response = await fetch(`${API_BASE_URL}/coupon-series`, {
       method: "POST",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(data),
+      headers,
+      body: JSON.stringify(apiData),
     });
+
+    console.log("🔍 Création série - Status:", response.status);
+    console.log(
+      "🔍 Création série - Headers réponse:",
+      Object.fromEntries(response.headers.entries())
+    );
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la création de la série de coupons"
+      console.error("🔍 Création série - Erreur API:", error);
+      console.error(
+        "🔍 Création série - Détails de validation:",
+        error.details
       );
+
+      // Construire un message d'erreur plus détaillé
+      let errorMessage =
+        error.message || "Erreur lors de la création de la série de coupons";
+
+      if (error.details && Array.isArray(error.details)) {
+        const validationErrors = error.details
+          .map(
+            (detail: { path: string; msg: string }) =>
+              `${detail.path}: ${detail.msg}`
+          )
+          .join(", ");
+        errorMessage = `Erreurs de validation: ${validationErrors}`;
+      }
+
+      throw new Error(errorMessage);
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log("🔍 Création série - Succès:", result);
+    return result;
   }
 
   async getCouponSeries(): Promise<CouponSeries[]> {

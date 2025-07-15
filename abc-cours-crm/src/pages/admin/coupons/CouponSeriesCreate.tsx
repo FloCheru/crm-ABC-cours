@@ -40,6 +40,7 @@ export function CouponSeriesCreate() {
   };
 
   const handleCreateSeries = async () => {
+    console.log("🔍 Validation du formulaire:", validateForm());
     if (!validateForm()) {
       return;
     }

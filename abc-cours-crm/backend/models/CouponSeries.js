@@ -14,9 +14,9 @@ const couponSeriesSchema = new mongoose.Schema(
       required: true,
     },
     subject: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subject",
       required: true,
-      trim: true,
     },
     professor: {
       type: mongoose.Schema.Types.ObjectId,

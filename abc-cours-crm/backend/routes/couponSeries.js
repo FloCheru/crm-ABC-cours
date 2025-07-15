@@ -5,6 +5,7 @@ const Coupon = require("../models/Coupon");
 const Family = require("../models/Family");
 const Student = require("../models/Student");
 const Professor = require("../models/Professor");
+const Subject = require("../models/Subject");
 const { authenticateToken, authorize } = require("../middleware/auth");
 const {
   isValidObjectId,
@@ -21,11 +22,26 @@ router.use(authenticateToken);
 const createSeriesValidation = [
   body("family").isMongoId().withMessage("Valid family ID required"),
   body("student").isMongoId().withMessage("Valid student ID required"),
-  body("professor").isMongoId().withMessage("Valid professor ID required"),
-  body("subject")
-    .trim()
-    .isLength({ min: 2 })
-    .withMessage("Subject must be at least 2 characters"),
+  body("professor")
+    .optional()
+    .custom((value, { req }) => {
+      // Si autoAssignTeacher est true, professor peut être null
+      if (req.body.autoAssignTeacher === true) {
+        return true;
+      }
+      // Sinon, professor doit être un ID MongoDB valide
+      if (!value) {
+        throw new Error(
+          "Professor ID required when auto-assignment is disabled"
+        );
+      }
+      const mongoose = require("mongoose");
+      return mongoose.Types.ObjectId.isValid(value);
+    })
+    .withMessage(
+      "Valid professor ID required when auto-assignment is disabled"
+    ),
+  body("subject").isMongoId().withMessage("Valid subject ID required"),
   body("totalCoupons")
     .isInt({ min: 1, max: 100 })
     .withMessage("Total coupons must be between 1 and 100"),
@@ -37,6 +53,8 @@ const createSeriesValidation = [
     .isInt({ min: 1, max: 24 })
     .withMessage("Expiration must be between 1 and 24 months"),
   body("notes").optional().trim(),
+  body("autoAssignTeacher").optional().isBoolean(),
+  body("sendNotification").optional().isBoolean(),
 ];
 
 // GET /api/coupon-series - Liste des séries de coupons
@@ -131,10 +149,8 @@ router.get(
         CouponSeries.find(filter)
           .populate("family", "familyName contact.email")
           .populate("student", "firstName lastName")
-          .populate(
-            "professor",
-            "personalInfo.firstName personalInfo.lastName personalInfo.email"
-          )
+          .populate("subject", "name category")
+          .populate("professor", "user.firstName user.lastName user.email")
           .populate("createdBy", "firstName lastName")
           .sort(sort)
           .skip(skip)
@@ -183,7 +199,8 @@ router.get("/:id", async (req, res) => {
     const series = await CouponSeries.findById(id)
       .populate("family", "familyName contact address")
       .populate("student", "firstName lastName schoolLevel subjects")
-      .populate("professor", "personalInfo professional.subjects")
+      .populate("subject", "name category description")
+      .populate("professor", "user subjects")
       .populate("createdBy", "firstName lastName")
       .lean();
 
@@ -239,8 +256,12 @@ router.post(
   createSeriesValidation,
   async (req, res) => {
     try {
+      console.log("🔍 POST /api/coupon-series - Début de la requête");
+      console.log("🔍 Données reçues:", req.body);
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log("❌ Erreurs de validation:", errors.array());
         return res.status(400).json({
           error: "Validation failed",
           details: errors.array(),
@@ -256,21 +277,41 @@ router.post(
         hourlyRate,
         expirationMonths = 12,
         notes,
+        autoAssignTeacher = false,
+        sendNotification = false,
       } = req.body;
 
+      console.log("🔍 Paramètres extraits:", {
+        family,
+        student,
+        professor,
+        subject,
+        totalCoupons,
+        hourlyRate,
+        autoAssignTeacher,
+      });
+
       // Vérifications des entités liées
-      const [familyExists, studentExists, professorExists] = await Promise.all([
+      console.log("🔍 Vérification des entités liées...");
+      const [familyExists, studentExists, subjectExists] = await Promise.all([
         Family.findById(family),
         Student.findById(student),
-        Professor.findById(professor),
+        Subject.findById(subject),
       ]);
+
+      console.log("🔍 Entités trouvées:", {
+        familyExists: !!familyExists,
+        studentExists: !!studentExists,
+        subjectExists: !!subjectExists,
+        subjectName: subjectExists?.name,
+      });
 
       if (!familyExists)
         return res.status(400).json({ error: "Family not found" });
       if (!studentExists)
         return res.status(400).json({ error: "Student not found" });
-      if (!professorExists)
-        return res.status(400).json({ error: "Professor not found" });
+      if (!subjectExists)
+        return res.status(400).json({ error: "Subject not found" });
 
       // Vérifier que l'élève appartient à la famille
       if (studentExists.family.toString() !== family) {
@@ -279,36 +320,85 @@ router.post(
           .json({ error: "Student does not belong to this family" });
       }
 
-      // Vérifier que le professeur enseigne cette matière
-      const teachesSubject = professorExists.professional.subjects.some(
-        (s) => s.name.toLowerCase() === subject.toLowerCase()
-      );
-      if (!teachesSubject) {
-        return res
-          .status(400)
-          .json({ error: "Professor does not teach this subject" });
+      // Gérer l'assignation du professeur
+      console.log("🔍 Gestion de l'assignation du professeur...");
+      let professorId = professor;
+
+      if (!professorId && autoAssignTeacher) {
+        console.log(
+          "🔍 Recherche d'un professeur disponible pour:",
+          subjectExists.name
+        );
+        // Auto-assigner un professeur disponible pour cette matière
+        const availableProfessor = await Professor.findOne({
+          "subjects.name": {
+            $regex: new RegExp(subjectExists.name, "i"),
+          },
+          status: "active",
+        });
+
+        console.log(
+          "🔍 Professeur trouvé:",
+          availableProfessor ? "Oui" : "Non"
+        );
+
+        if (availableProfessor) {
+          professorId = availableProfessor._id;
+          console.log(
+            `🔍 Professeur auto-assigné: ${availableProfessor.user.firstName} ${availableProfessor.user.lastName}`
+          );
+        } else {
+          return res.status(400).json({
+            error: "Aucun professeur disponible pour cette matière",
+          });
+        }
+      } else if (professorId) {
+        // Vérifier que le professeur spécifié existe et enseigne cette matière
+        const professorExists = await Professor.findById(professorId);
+        if (!professorExists) {
+          return res.status(400).json({ error: "Professor not found" });
+        }
+
+        const teachesSubject = professorExists.subjects.some(
+          (s) => s.name.toLowerCase() === subjectExists.name.toLowerCase()
+        );
+        if (!teachesSubject) {
+          return res
+            .status(400)
+            .json({ error: "Professor does not teach this subject" });
+        }
+      } else {
+        return res.status(400).json({
+          error: "Professor ID required or auto-assignment must be enabled",
+        });
       }
+
+      console.log("🔍 ProfessorId final:", professorId);
 
       // Calculer la date d'expiration
       const expirationDate = new Date();
       expirationDate.setMonth(expirationDate.getMonth() + expirationMonths);
 
+      console.log("🔍 Création de la série de coupons...");
       // Créer la série de coupons
       const series = new CouponSeries({
         family,
         student,
         subject,
-        professor,
+        professor: professorId,
         totalCoupons,
         hourlyRate,
+        totalAmount: totalCoupons * hourlyRate, // Calculer manuellement le montant total
         expirationDate,
         notes,
         createdBy: req.user._id,
       });
 
       await series.save();
+      console.log("🔍 Série créée avec succès, ID:", series._id);
 
       // Créer les coupons individuels
+      console.log("🔍 Création des coupons individuels...");
       const coupons = [];
       for (let i = 1; i <= totalCoupons; i++) {
         coupons.push({
@@ -319,21 +409,25 @@ router.post(
       }
 
       await Coupon.insertMany(coupons);
+      console.log("🔍 Coupons créés avec succès");
 
       // Retourner la série créée avec tous les détails
       const createdSeries = await CouponSeries.findById(series._id)
         .populate("family", "familyName contact.email")
         .populate("student", "firstName lastName")
-        .populate("professor", "personalInfo.firstName personalInfo.lastName")
+        .populate("subject", "name category")
+        .populate("professor", "user.firstName user.lastName")
         .populate("createdBy", "firstName lastName");
 
+      console.log("🔍 Réponse envoyée avec succès");
       res.status(201).json({
         message: "Coupon series created successfully",
         series: createdSeries,
         couponsCreated: totalCoupons,
       });
     } catch (error) {
-      console.error("Create coupon series error:", error);
+      console.error("❌ Erreur dans POST /api/coupon-series:", error);
+      console.error("❌ Stack trace:", error.stack);
       res.status(500).json({ error: "Internal server error" });
     }
   }

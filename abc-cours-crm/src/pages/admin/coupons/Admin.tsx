@@ -93,12 +93,18 @@ export const Admin: React.FC = () => {
   // Filtrer les données selon le terme de recherche
   const filteredData = couponsData.filter(
     (series) =>
-      series.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      series.family.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      series.student.firstName
+      (series.family?.name || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      series.student.lastName.toLowerCase().includes(searchTerm.toLowerCase())
+      (series.student?.firstName || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (series.student?.lastName || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (series.subject?.name || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
   );
 
   // Transformer les données pour le tableau (ajouter l'id requis)
@@ -123,45 +129,59 @@ export const Admin: React.FC = () => {
     {
       key: "name",
       label: "Nom de la série",
-      width: "20%",
+      width: "18%",
       render: (_: unknown, row: TableRowData) => (
         <div>
-          <div className="font-medium">{row.name}</div>
-          <div className="text-sm text-gray-500">
-            {row.family.name} - {row.student.firstName} {row.student.lastName}
+          <div className="font-medium">
+            {row.family?.name} - {row.student?.firstName}{" "}
+            {row.student?.lastName}
           </div>
+          <div className="text-sm text-gray-500">
+            {row.totalCoupons} coupons • {row.hourlyRate}€/h
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "subject",
+      label: "Matière",
+      width: "12%",
+      render: (_: unknown, row: TableRowData) => (
+        <div>
+          <div className="font-medium">{row.subject?.name}</div>
+          <div className="text-sm text-gray-500">{row.subject?.category}</div>
         </div>
       ),
     },
     {
       key: "totalCoupons",
       label: "Total coupons",
-      width: "12%",
+      width: "10%",
       render: (_: unknown, row: TableRowData) => row.totalCoupons,
     },
     {
       key: "utilises",
       label: "Utilisés",
-      width: "12%",
+      width: "10%",
       render: (_: unknown, row: TableRowData) => row.usedCoupons,
     },
     {
       key: "restants",
       label: "Restants",
-      width: "12%",
+      width: "10%",
       render: (_: unknown, row: TableRowData) => row.remainingCoupons,
     },
     {
       key: "montantTotal",
       label: "Montant total",
-      width: "15%",
+      width: "12%",
       render: (_: unknown, row: TableRowData) =>
         `${row.totalAmount.toFixed(2)} €`,
     },
     {
       key: "statut",
       label: "Statut",
-      width: "12%",
+      width: "10%",
       render: (_: unknown, row: TableRowData) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -185,7 +205,7 @@ export const Admin: React.FC = () => {
     {
       key: "actions",
       label: "Actions",
-      width: "17%",
+      width: "18%",
       render: (_: unknown, row: TableRowData) => (
         <div className="table__actions">
           <Button
