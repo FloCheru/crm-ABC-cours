@@ -568,4 +568,59 @@ router.get("/stats/overview", authorize(["admin"]), async (req, res) => {
   }
 });
 
+// DELETE /api/coupon-series/:id - Supprimer une série de coupons
+router.delete("/:id", authorize(["admin"]), async (req, res) => {
+  try {
+    console.log("🔍 DELETE /api/coupon-series/:id - Début de la requête");
+    console.log("🔍 ID de la série à supprimer:", req.params.id);
+
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ error: "Invalid series ID" });
+    }
+
+    // Vérifier que la série existe
+    const series = await CouponSeries.findById(id);
+    if (!series) {
+      return res.status(404).json({ error: "Coupon series not found" });
+    }
+
+    console.log("🔍 Série trouvée:", {
+      id: series._id,
+      family: series.family,
+      student: series.student,
+      totalCoupons: series.totalCoupons,
+      usedCoupons: series.usedCoupons,
+    });
+
+    // Vérifier si des coupons ont été utilisés
+    if (series.usedCoupons > 0) {
+      return res.status(400).json({
+        error:
+          "Cannot delete series with used coupons. Please refund used coupons first.",
+      });
+    }
+
+    // Supprimer tous les coupons de cette série
+    console.log("🔍 Suppression des coupons de la série...");
+    const deleteCouponsResult = await Coupon.deleteMany({ series: id });
+    console.log("🔍 Coupons supprimés:", deleteCouponsResult.deletedCount);
+
+    // Supprimer la série
+    console.log("🔍 Suppression de la série...");
+    await CouponSeries.findByIdAndDelete(id);
+    console.log("🔍 Série supprimée avec succès");
+
+    res.json({
+      message: "Coupon series deleted successfully",
+      deletedCoupons: deleteCouponsResult.deletedCount,
+    });
+  } catch (error) {
+    console.error("❌ Erreur dans DELETE /api/coupon-series/:id:", error);
+    console.error("❌ Stack trace:", error.stack);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 module.exports = router;
