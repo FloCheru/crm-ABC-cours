@@ -190,6 +190,49 @@ const createSuccessResponse = (
   };
 };
 
+/**
+ * Fonction pour construire les paramètres de pagination
+ * @param {number} page - La page actuelle
+ * @param {number} limit - La limite par page
+ * @returns {Object} - Paramètres de pagination
+ */
+const buildPaginationQuery = (page, limit) => {
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+  const skip = (pageNum - 1) * limitNum;
+
+  return {
+    skip,
+    limit: limitNum,
+  };
+};
+
+/**
+ * Fonction pour construire une réponse paginée
+ * @param {Array} data - Les données
+ * @param {number} total - Le total d'éléments
+ * @param {number} page - La page actuelle
+ * @param {number} limit - La limite par page
+ * @returns {Object} - Réponse paginée
+ */
+const buildPaginatedResponse = (data, total, page, limit) => {
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+  const totalPages = Math.ceil(total / limitNum);
+
+  return {
+    data,
+    pagination: {
+      current: pageNum,
+      total: totalPages,
+      hasNext: pageNum * limitNum < total,
+      hasPrev: pageNum > 1,
+      totalItems: total,
+      itemsPerPage: limitNum,
+    },
+  };
+};
+
 module.exports = {
   isValidObjectId,
   createValidationError,
@@ -200,4 +243,6 @@ module.exports = {
   validatePaginationParams,
   createErrorResponse,
   createSuccessResponse,
+  buildPaginationQuery,
+  buildPaginatedResponse,
 };

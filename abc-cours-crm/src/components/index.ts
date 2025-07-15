@@ -8,3 +8,4 @@ export { Breadcrumb } from "./breadcrum/Breadcrumb";
 export { SummaryCard } from "./summaryCard/SummaryCard";
 export { Table } from "./table/Table";
 export { FormCard } from "./form/formcard/FormCard";
+export { ProtectedRoute } from "./ProtectedRoute";

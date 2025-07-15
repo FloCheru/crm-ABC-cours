@@ -1,8 +1,7 @@
 import type { CouponSeries, CreateCouponSeriesData } from "../types/coupon";
 
-// const API_BASE_URL =
-//   import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const API_BASE_URL = "https://crm-abc-cours-production.up.railway.app/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 class CouponSeriesService {
   private getAuthHeaders(): HeadersInit {
@@ -33,19 +32,34 @@ class CouponSeriesService {
   }
 
   async getCouponSeries(): Promise<CouponSeries[]> {
+    const headers = this.getAuthHeaders();
+    console.log("🔍 Headers envoyés:", headers);
+    console.log("🔍 Token stocké:", localStorage.getItem("token"));
+
     const response = await fetch(`${API_BASE_URL}/coupon-series`, {
       method: "GET",
-      headers: this.getAuthHeaders(),
+      headers,
     });
+
+    console.log("🔍 Status de la réponse:", response.status);
+    console.log(
+      "🔍 Headers de la réponse:",
+      Object.fromEntries(response.headers.entries())
+    );
 
     if (!response.ok) {
       const error = await response.json();
+      console.error("🔍 Erreur de l'API:", error);
       throw new Error(
         error.message || "Erreur lors de la récupération des séries de coupons"
       );
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log("🔍 Données reçues:", data);
+
+    // Extraire les données du format de réponse paginée
+    return data.data || [];
   }
 
   async getCouponSeriesById(id: string): Promise<CouponSeries> {

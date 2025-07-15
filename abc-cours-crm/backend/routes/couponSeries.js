@@ -5,7 +5,7 @@ const Coupon = require("../models/Coupon");
 const Family = require("../models/Family");
 const Student = require("../models/Student");
 const Professor = require("../models/Professor");
-const { authenticateToken, requireRole } = require("../middleware/auth");
+const { authenticateToken, authorize } = require("../middleware/auth");
 const {
   isValidObjectId,
   buildPaginationQuery,
@@ -67,8 +67,13 @@ router.get(
   ],
   async (req, res) => {
     try {
+      console.log("🔍 GET /api/coupon-series - Début de la requête");
+      console.log("🔍 Utilisateur:", req.user);
+      console.log("🔍 Query params:", req.query);
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log("❌ Erreurs de validation:", errors.array());
         return res.status(400).json({
           error: "Validation failed",
           details: errors.array(),
@@ -88,6 +93,19 @@ router.get(
         sortOrder = "desc",
       } = req.query;
 
+      console.log("🔍 Paramètres traités:", {
+        page,
+        limit,
+        family,
+        student,
+        professor,
+        subject,
+        status,
+        paymentStatus,
+        sortBy,
+        sortOrder,
+      });
+
       // Construction du filtre
       let filter = {};
 
@@ -98,11 +116,17 @@ router.get(
       if (status) filter.status = status;
       if (paymentStatus) filter.paymentStatus = paymentStatus;
 
+      console.log("🔍 Filtre construit:", filter);
+
       // Pagination et tri
       const { skip, limit: pageLimit } = buildPaginationQuery(page, limit);
       const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
 
+      console.log("🔍 Pagination:", { skip, pageLimit });
+      console.log("🔍 Tri:", sort);
+
       // Exécution des requêtes
+      console.log("🔍 Exécution de la requête MongoDB...");
       const [series, total] = await Promise.all([
         CouponSeries.find(filter)
           .populate("family", "familyName contact.email")
@@ -119,6 +143,8 @@ router.get(
         CouponSeries.countDocuments(filter),
       ]);
 
+      console.log("🔍 Résultats:", { seriesCount: series.length, total });
+
       // Enrichir avec les coupons restants et le statut
       const enrichedSeries = series.map((s) => ({
         ...s,
@@ -134,9 +160,12 @@ router.get(
         page,
         pageLimit
       );
+
+      console.log("🔍 Réponse envoyée avec succès");
       res.json(response);
     } catch (error) {
-      console.error("Get coupon series error:", error);
+      console.error("❌ Erreur dans GET /api/coupon-series:", error);
+      console.error("❌ Stack trace:", error.stack);
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -206,7 +235,7 @@ router.get("/:id", async (req, res) => {
 // POST /api/coupon-series - Créer une nouvelle série de coupons
 router.post(
   "/",
-  requireRole(["admin"]),
+  authorize(["admin"]),
   createSeriesValidation,
   async (req, res) => {
     try {
@@ -313,7 +342,7 @@ router.post(
 // PATCH /api/coupon-series/:id/status - Changer le statut d'une série
 router.patch(
   "/:id/status",
-  requireRole(["admin"]),
+  authorize(["admin"]),
   [
     body("status")
       .isIn(["active", "expired", "suspended", "completed"])
@@ -377,7 +406,7 @@ router.patch(
 );
 
 // GET /api/coupon-series/stats - Statistiques globales des coupons
-router.get("/stats/overview", requireRole(["admin"]), async (req, res) => {
+router.get("/stats/overview", authorize(["admin"]), async (req, res) => {
   try {
     const [
       totalSeries,

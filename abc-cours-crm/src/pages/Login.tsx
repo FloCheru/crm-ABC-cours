@@ -1,16 +1,20 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Input, Button } from "../components";
 import { authService } from "../services/authService";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [credentials, setCredentials] = useState({
     email: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Récupérer la page d'origine depuis l'état de navigation
+  const from = location.state?.from?.pathname || "/admin/coupons";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +23,8 @@ export const Login: React.FC = () => {
 
     try {
       await authService.login(credentials);
-      navigate("/admin/coupons");
+      // Rediriger vers la page d'origine ou la page par défaut
+      navigate(from, { replace: true });
     } catch (error) {
       setError(error instanceof Error ? error.message : "Erreur de connexion");
     } finally {
