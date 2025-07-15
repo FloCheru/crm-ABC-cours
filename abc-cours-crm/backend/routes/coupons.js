@@ -2,7 +2,7 @@ const express = require("express");
 const { body, query, validationResult } = require("express-validator");
 const Coupon = require("../models/Coupon");
 const CouponSeries = require("../models/CouponSeries");
-const { authenticateToken, requireRole } = require("../middleware/auth");
+const { authenticateToken, authorize } = require("../middleware/auth");
 const {
   isValidObjectId,
   buildPaginationQuery,
@@ -191,12 +191,9 @@ router.post("/:id/use", useCouponValidation, async (req, res) => {
     const isAdmin = req.user.role === "admin";
 
     if (!isAssignedProfessor && !isAdmin) {
-      return res
-        .status(403)
-        .json({
-          error:
-            "Only the assigned professor or admin can validate this coupon",
-        });
+      return res.status(403).json({
+        error: "Only the assigned professor or admin can validate this coupon",
+      });
     }
 
     // Marquer le coupon comme utilisé
@@ -239,7 +236,7 @@ router.post("/:id/use", useCouponValidation, async (req, res) => {
 // POST /api/coupons/:id/cancel-usage - Annuler l'utilisation d'un coupon
 router.post(
   "/:id/cancel-usage",
-  requireRole(["admin"]),
+  authorize(["admin"]),
   [
     body("reason")
       .trim()
@@ -358,11 +355,9 @@ router.patch(
       const isAdmin = req.user.role === "admin";
 
       if (ratingType === "professor" && !isAssignedProfessor && !isAdmin) {
-        return res
-          .status(403)
-          .json({
-            error: "Only the assigned professor can give professor rating",
-          });
+        return res.status(403).json({
+          error: "Only the assigned professor can give professor rating",
+        });
       }
 
       // Pour les évaluations d'étudiants, on peut imaginer un système où la famille peut évaluer
