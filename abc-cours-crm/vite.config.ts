@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  base: "/abc-cours-crm/", // Pour GitHub Pages
+  base: "/crm-ABC-cours/", // Pour GitHub Pages
   build: {
     outDir: "dist",
     assetsDir: "assets",
