@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import type { CouponSeriesFormData } from "../types/coupon";
 import type { Family, Student } from "../types/family";
-import type { Subject } from "../services/subjectService";
+import type { Subject } from "../types/subject";
 import { familyService } from "../services/familyService";
 import { subjectService } from "../services/subjectService";
 
