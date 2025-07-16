@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  base: "/",
+  base: "/abc-cours-crm/", // Pour GitHub Pages
   build: {
     outDir: "dist",
     assetsDir: "assets",
@@ -22,10 +22,12 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        // target: process.env.VITE_API_URL || "http://localhost:3000",
         target: process.env.VITE_API_URL || "http://localhost:3000",
         changeOrigin: true,
       },
     },
+  },
+  define: {
+    "process.env": {},
   },
 });
