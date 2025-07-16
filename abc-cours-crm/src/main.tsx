@@ -5,9 +5,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Admin, Login, CouponSeriesCreate } from "./pages";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
+// Basename dynamique selon l'environnement
+const basename = import.meta.env.PROD ? "/crm-ABC-cours" : "";
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
