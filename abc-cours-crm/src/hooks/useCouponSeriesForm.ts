@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import type { CouponSeriesFormData } from "../types/coupon";
 import type { Family, Student } from "../types/family";
-import type { Subject } from "../services/subjectService";
+import type { Subject } from "../types/subject";
 import { familyService } from "../services/familyService";
 import { subjectService } from "../services/subjectService";
 
@@ -52,10 +52,13 @@ export const useCouponSeriesForm = (): UseCouponSeriesFormReturn => {
     const loadInitialData = async () => {
       try {
         setIsLoading(true);
+        console.log("🔍 Chargement des données initiales...");
         const [familiesData, subjectsData] = await Promise.all([
           familyService.getFamilies(),
           subjectService.getActiveSubjects(),
         ]);
+        console.log("🔍 Familles chargées:", familiesData.length);
+        console.log("🔍 Matières chargées:", subjectsData.length);
         setFamilies(familiesData);
         setSubjects(subjectsData);
       } catch (error) {
