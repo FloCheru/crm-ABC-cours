@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: "/crm-ABC-cours/", // Pour GitHub Pages
+  base: mode === "production" ? "/crm-ABC-cours/" : "/",
   build: {
     outDir: "dist",
     assetsDir: "assets",
@@ -30,4 +30,4 @@ export default defineConfig({
   define: {
     "process.env": {},
   },
-});
+}));

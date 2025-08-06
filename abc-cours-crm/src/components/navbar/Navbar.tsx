@@ -20,14 +20,14 @@ interface NavbarProps {
 
 // Items de navigation fixes
 const NAV_ITEMS = [
-  { label: "Admin", path: "/admin" },
-  { label: "Professeurs", path: "/professeurs" },
-  { label: "Prospects", path: "/prospects" },
-  { label: "Clients", path: "/clients" },
-  { label: "Tableau de bord", path: "/dashboard" },
-  { label: "Candidats", path: "/candidats" },
-  { label: "ATP", path: "/atp" },
-  { label: "Messagerie", path: "/messagerie" },
+  { label: "Admin", path: "/admin/coupons" },
+  { label: "Professeurs", path: "/under-development" },
+  { label: "Prospects", path: "/under-development" },
+  { label: "Clients", path: "/under-development" },
+  { label: "Tableau de bord", path: "/under-development" },
+  { label: "Candidats", path: "/under-development" },
+  { label: "ATP", path: "/under-development" },
+  { label: "Messagerie", path: "/under-development" },
 ];
 
 /**

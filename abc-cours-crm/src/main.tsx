@@ -2,11 +2,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Admin, Login, CouponSeriesCreate } from "./pages";
+import { Admin, Login, CouponSeriesCreate, UnderDevelopment } from "./pages";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Basename dynamique selon l'environnement
-const basename = import.meta.env.PROD ? "/crm-ABC-cours" : "";
+const basename = import.meta.env.PROD ? "/crm-ABC-cours/" : "";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -27,6 +27,14 @@ createRoot(document.getElementById("root")!).render(
           element={
             <ProtectedRoute>
               <CouponSeriesCreate />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/under-development"
+          element={
+            <ProtectedRoute>
+              <UnderDevelopment />
             </ProtectedRoute>
           }
         />
