@@ -18,6 +18,48 @@ const router = express.Router();
 // Toutes les routes nécessitent une authentification
 router.use(authenticateToken);
 
+// GET /api/coupon-series/student/:studentId/subject/:subjectId
+// Récupérer les séries de coupons pour un élève et une matière spécifiques
+router.get("/student/:studentId/subject/:subjectId", async (req, res) => {
+  try {
+    const { studentId, subjectId } = req.params;
+
+    // Vérifier que l'élève et la matière existent
+    const [student, subject] = await Promise.all([
+      Student.findById(studentId),
+      Subject.findById(subjectId),
+    ]);
+
+    if (!student) {
+      return res.status(404).json({ message: "Élève non trouvé" });
+    }
+
+    if (!subject) {
+      return res.status(404).json({ message: "Matière non trouvée" });
+    }
+
+    // Récupérer les séries de coupons actives pour cet élève et cette matière
+    const couponSeries = await CouponSeries.find({
+      student: studentId,
+      subject: subjectId,
+      status: { $in: ["active", "completed"] },
+    })
+      .populate("family", "name")
+      .populate("student", "firstName lastName")
+      .populate("subject", "name")
+      .populate("professor", "user")
+      .sort({ purchaseDate: -1 });
+
+    res.json(couponSeries);
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des séries de coupons:",
+      error
+    );
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 // Validation pour créer une série de coupons
 const createSeriesValidation = [
   body("family").isMongoId().withMessage("Valid family ID required"),

@@ -45,6 +45,35 @@ const upload = multer({
 // Appliquer l'authentification à toutes les routes
 router.use(authenticate);
 
+// @route   GET /api/professors/subject/:subjectId
+// @desc    Obtenir tous les professeurs qui enseignent une matière spécifique
+// @access  Private
+router.get("/subject/:subjectId", async (req, res) => {
+  try {
+    const Subject = require("../models/Subject");
+    const subject = await Subject.findById(req.params.subjectId);
+
+    if (!subject) {
+      return res.status(404).json({ message: "Matière non trouvée" });
+    }
+
+    const professors = await Professor.find({
+      "subjects.name": subject.name,
+      status: "active",
+    })
+      .populate("user", "firstName lastName")
+      .sort({ "user.firstName": 1, "user.lastName": 1 });
+
+    res.json(professors);
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des professeurs par matière:",
+      error
+    );
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 // @route   GET /api/professors
 // @desc    Obtenir tous les professeurs
 // @access  Private

@@ -2,7 +2,13 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Admin, Login, CouponSeriesCreate, UnderDevelopment } from "./pages";
+import {
+  Admin,
+  Login,
+  CouponSeriesCreate,
+  UnderDevelopment,
+  PaymentNotes,
+} from "./pages";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Basename dynamique selon l'environnement
@@ -35,6 +41,14 @@ createRoot(document.getElementById("root")!).render(
           element={
             <ProtectedRoute>
               <UnderDevelopment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/payment-notes"
+          element={
+            <ProtectedRoute>
+              <PaymentNotes />
             </ProtectedRoute>
           }
         />

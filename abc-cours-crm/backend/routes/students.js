@@ -77,6 +77,25 @@ router.get("/", async (req, res) => {
   }
 });
 
+// @route   GET /api/students/families/:familyId
+// @desc    Obtenir tous les élèves d'une famille
+// @access  Private
+router.get("/families/:familyId", async (req, res) => {
+  try {
+    const students = await Student.find({ family: req.params.familyId })
+      .populate("family", "name")
+      .sort({ firstName: 1, lastName: 1 });
+
+    res.json(students);
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des élèves de la famille:",
+      error
+    );
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 // @route   GET /api/students/:id
 // @desc    Obtenir un élève par ID
 // @access  Private

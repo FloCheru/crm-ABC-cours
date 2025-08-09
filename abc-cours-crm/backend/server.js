@@ -28,6 +28,7 @@ const assignmentRoutes = require("./routes/assignments");
 const subjectRoutes = require("./routes/subjects");
 const couponRoutes = require("./routes/coupons");
 const couponSeriesRoutes = require("./routes/couponSeries");
+const paymentNoteRoutes = require("./routes/paymentNotes");
 
 // Import de la configuration de la base de données
 const connectDB = require("./config/database");
@@ -96,6 +97,7 @@ app.use("/api/assignments", assignmentRoutes);
 app.use("/api/subjects", subjectRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/coupon-series", couponSeriesRoutes);
+app.use("/api/payment-notes", paymentNoteRoutes);
 
 // Middleware de gestion d'erreurs
 app.use((err, req, res, next) => {
