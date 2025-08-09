@@ -260,6 +260,15 @@ const PaymentNotes: React.FC = () => {
     }
   };
 
+  const handleDownloadPDF = async (id: string) => {
+    try {
+      await paymentNoteService.downloadPDF(id);
+    } catch (err) {
+      setError("Erreur lors du téléchargement du PDF");
+      console.error(err);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("fr-FR");
   };
@@ -327,6 +336,13 @@ const PaymentNotes: React.FC = () => {
     status: getStatusBadge(note.status),
     actions: (
       <div className="action-buttons">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => handleDownloadPDF(note._id)}
+        >
+          Télécharger PDF
+        </Button>
         {note.status === "pending" && (
           <>
             <Button

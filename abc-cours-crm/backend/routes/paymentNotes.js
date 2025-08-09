@@ -7,6 +7,7 @@ const Subject = require("../models/Subject");
 const Professor = require("../models/Professor");
 const CouponSeries = require("../models/CouponSeries");
 const { authenticateToken } = require("../middleware/auth");
+const pdfService = require("../services/pdfService");
 
 // GET /api/payment-notes - Récupérer toutes les notes de règlement
 router.get("/", authenticateToken, async (req, res) => {
@@ -338,6 +339,56 @@ router.patch("/:id/cancel", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Erreur lors de l'annulation:", error);
     res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// GET /api/payment-notes/:id/pdf - Générer le PDF d'une note de règlement
+router.get("/:id/pdf", authenticateToken, async (req, res) => {
+  try {
+    const paymentNote = await PaymentNote.findById(req.params.id)
+      .populate("family")
+      .populate("student", "firstName lastName")
+      .populate("subject", "name")
+      .populate("professor", "user")
+      .populate("couponSeries")
+      .populate("createdBy", "firstName lastName");
+
+    if (!paymentNote) {
+      return res.status(404).json({ message: "Note de règlement non trouvée" });
+    }
+
+    // Récupérer la série de coupons complète
+    const couponSeries = await CouponSeries.findById(
+      paymentNote.couponSeries._id
+    )
+      .populate("family", "name address")
+      .populate("student", "firstName lastName")
+      .populate("subject", "name")
+      .populate("professor", "user");
+
+    if (!couponSeries) {
+      return res.status(404).json({ message: "Série de coupons non trouvée" });
+    }
+
+    // Générer le PDF
+    const pdfResult = await pdfService.generatePaymentNotePDF(
+      paymentNote,
+      couponSeries
+    );
+
+    // Configurer les headers pour le téléchargement
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${pdfResult.filename}"`
+    );
+    res.setHeader("Content-Length", pdfResult.buffer.length);
+
+    // Envoyer le PDF
+    res.send(pdfResult.buffer);
+  } catch (error) {
+    console.error("Erreur lors de la génération du PDF:", error);
+    res.status(500).json({ message: "Erreur lors de la génération du PDF" });
   }
 });
 

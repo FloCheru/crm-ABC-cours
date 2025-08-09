@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Note de Règlement {{noteNumber}}</title>
+    <style>
+      /* Les styles CSS seront injectés dynamiquement */
+    </style>
+  </head>
+  <body>
+    <div class="document">
+      <!-- En-tête avec logo et coordonnées -->
+      <header class="header">
+        <div class="logo-section">
+          <div class="logo">
+            <span class="logo-solution">SOLUTION</span>
+            <div class="logo-subtitle">SOUTIEN SCOLAIRE & COURS À DOMICILE</div>
+            <span class="logo-cours">COURS</span>
+          </div>
+        </div>
+        <div class="company-info">
+          <h1>SARL SOLUTION COURS</h1>
+          <p>7 avenue de La Gaude, CAGNES SUR MER</p>
+          <p>Téléphone: 09 72 68 01 00 - 06 52 78 66 49</p>
+          <p>N° SIRET: 512 253 071 00025 | CODE APE: 85598</p>
+          <p>Agrément: N 040509 F 006 S 073</p>
+        </div>
+      </header>
+
+      <!-- Titre et numéro de la note -->
+      <div class="document-title">
+        <h2>Note de règlement n° {{noteNumber}}</h2>
+        <p class="issue-date">Le {{issueDate}}</p>
+      </div>
+
+      <!-- Informations client -->
+      <div class="client-section">
+        <div class="client-info">
+          <h3>{{clientName}}</h3>
+          <p>{{clientAddress}}</p>
+          <p><strong>Compte client:</strong> {{clientAccount}}</p>
+          <p><strong>Montant unitaire ttc:</strong> {{unitPrice}} €</p>
+          <p><strong>Prestations pour:</strong> {{studentName}}</p>
+        </div>
+      </div>
+
+      <!-- Détails des services -->
+      <div class="services-section">
+        <table class="services-table">
+          <tr>
+            <td class="service-description">
+              COURS {{subject}} {{studentLevel}}
+            </td>
+          </tr>
+          <tr>
+            <td class="pricing-details">
+              <p>Prix de l'heure de cours: {{unitPrice}} €</p>
+              <p>Nombre d'heures de cours: {{totalHours}} h</p>
+              <p class="total-line">Total: {{totalAmount}} €</p>
+            </td>
+          </tr>
+        </table>
+        <div class="total-section">
+          <p class="total-due">TOTAL DÛ: {{totalAmount}} €</p>
+          <p class="total-amount">MONTANT TOTAL: {{totalAmount}} €</p>
+        </div>
+      </div>
+
+      <!-- Échéancier du client -->
+      <div class="installment-section">
+        <h3>ÉCHÉANCIER DU CLIENT</h3>
+        <table class="installment-table">
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>MONTANT</th>
+              <th>MODE RÈGLEMENT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{installments}}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Répartition des montants -->
+      <div class="amount-breakdown">
+        <div class="breakdown-item">
+          <strong>MONTANT À RÈGLER PAR LE CLIENT:</strong> {{clientAmount}} €
+        </div>
+        <div class="breakdown-item">
+          <strong>MONTANT À RÈGLER PAR L'URSSAF:</strong> {{urssafAmount}} €
+        </div>
+      </div>
+
+      <!-- Informations de paiement -->
+      <div class="payment-info">
+        <p><strong>Méthode de paiement:</strong> {{paymentMethod}}</p>
+        {{#if paymentReference}}
+        <p><strong>Référence:</strong> {{paymentReference}}</p>
+        {{/if}} {{#if notes}}
+        <p><strong>Notes:</strong> {{notes}}</p>
+        {{/if}}
+      </div>
+
+      <!-- Attestations de coupons -->
+      <div class="coupons-section">
+        <h3>ATTESTATIONS D'HEURES DE COURS</h3>
+        <div class="coupons-grid">{{coupons}}</div>
+      </div>
+
+      <!-- Pied de page -->
+      <footer class="footer">
+        <p>SARL SOLUTION COURS - 7 avenue de La Gaude, CAGNES SUR MER</p>
+        <p>Tél: 09 72 68 01 00 - Email: contact@solution-cours.fr</p>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 const request = require("supertest");
-const app = require("../server-test");
+const app = require("../server");
 const User = require("../models/User");
 const Family = require("../models/Family");
 const Student = require("../models/Student");

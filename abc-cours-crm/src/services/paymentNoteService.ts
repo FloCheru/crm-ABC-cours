@@ -224,6 +224,45 @@ class PaymentNoteService {
       throw error;
     }
   }
+
+  async downloadPDF(id: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/payment-notes/${id}/pdf`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erreur HTTP: ${response.status}`);
+      }
+
+      // Récupérer le nom du fichier depuis les headers
+      const contentDisposition = response.headers.get("content-disposition");
+      let filename = "note_reglement.pdf";
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Créer un blob et télécharger le fichier
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Erreur lors du téléchargement du PDF:", error);
+      throw error;
+    }
+  }
 }
 
 export const paymentNoteService = new PaymentNoteService();
