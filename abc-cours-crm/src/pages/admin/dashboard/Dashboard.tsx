@@ -10,72 +10,65 @@ import {
   Button,
   Table,
 } from "../../../components";
-import { settlementService } from "../../../services/settlementService";
-import type {
-  SettlementNote,
-  SettlementNoteStats,
-} from "../../../types/settlement";
+import { familyService } from "../../../services/familyService";
+import type { Family, FamilyStats } from "../../../services/familyService";
 
 // Type pour les données du tableau avec l'id requis
-type TableRowData = SettlementNote & { id: string };
+type TableRowData = Family & { id: string };
 
 export const Dashboard: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [settlementData, setSettlementData] = useState<SettlementNote[]>([]);
-  const [stats, setStats] = useState<SettlementNoteStats | null>(null);
+  const [familyData, setFamilyData] = useState<Family[]>([]);
+  const [stats, setStats] = useState<FamilyStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Charger les données des notes de règlement
+  // Charger les données des familles
   useEffect(() => {
-    const loadSettlementData = async () => {
+    const loadFamilyData = async () => {
       try {
         setIsLoading(true);
         setError("");
         const [data, statsData] = await Promise.all([
-          settlementService.getSettlementNotes(),
-          settlementService.getSettlementStats(),
+          familyService.getFamilies(),
+          familyService.getFamilyStats(),
         ]);
-        setSettlementData(Array.isArray(data) ? data : []);
+        setFamilyData(Array.isArray(data) ? data : []);
         setStats(statsData);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Erreur lors du chargement"
         );
-        console.error("Erreur lors du chargement des notes de règlement:", err);
-        setSettlementData([]);
+        console.error("Erreur lors du chargement des familles:", err);
+        setFamilyData([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadSettlementData();
+    loadFamilyData();
   }, []);
 
-  const handleCreateSettlement = () => {
-    navigate("/admin/dashboard/create");
+  const handleCreateFamily = () => {
+    navigate("/admin/families/create");
   };
 
-  const handleEditSettlement = (settlementId: string) => {
-    navigate(`/admin/dashboard/edit/${settlementId}`);
+  const handleEditFamily = (familyId: string) => {
+    navigate(`/admin/families/edit/${familyId}`);
   };
 
-  const handleDeleteSettlement = async (settlementId: string) => {
-    if (
-      window.confirm(
-        "Êtes-vous sûr de vouloir supprimer cette note de règlement ?"
-      )
-    ) {
+  const handleDeleteFamily = async (familyId: string) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette famille ?")) {
       try {
-        await settlementService.deleteSettlementNote(settlementId);
+        await familyService.deleteFamily(familyId);
         // Recharger les données après suppression
         const [updatedData, updatedStats] = await Promise.all([
-          settlementService.getSettlementNotes(),
-          settlementService.getSettlementStats(),
+          familyService.getFamilies(),
+          familyService.getFamilyStats(),
         ]);
-        setSettlementData(updatedData);
+        setFamilyData(updatedData);
         setStats(updatedStats);
       } catch (err) {
         setError(
@@ -85,21 +78,24 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleMarkAsPaid = async (settlementId: string) => {
+  const handleUpdateStatus = async (
+    familyId: string,
+    newStatus: "prospect" | "client"
+  ) => {
     try {
-      await settlementService.markAsPaid(settlementId);
+      await familyService.updateStatus(familyId, newStatus);
       // Recharger les données après mise à jour
       const [updatedData, updatedStats] = await Promise.all([
-        settlementService.getSettlementNotes(),
-        settlementService.getSettlementStats(),
+        familyService.getFamilies(),
+        familyService.getFamilyStats(),
       ]);
-      setSettlementData(updatedData);
+      setFamilyData(updatedData);
       setStats(updatedStats);
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Erreur lors du marquage comme payé"
+          : "Erreur lors de la mise à jour du statut"
       );
     }
   };
@@ -121,114 +117,79 @@ export const Dashboard: React.FC = () => {
   };
 
   // Filtrer les données selon le terme de recherche
-  const filteredData = settlementData.filter(
-    (settlement) =>
-      settlement.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      settlement.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      settlement.subject.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredData = familyData.filter(
+    (family) =>
+      family.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      family.contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      family.address.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Transformer les données pour le tableau (ajouter l'id requis)
-  const tableData: TableRowData[] = filteredData.map((settlement) => ({
-    ...settlement,
-    id: settlement._id,
+  const tableData: TableRowData[] = filteredData.map((family) => ({
+    ...family,
+    id: family._id,
   }));
 
-  const settlementColumns = [
+  const familyColumns = [
     {
-      key: "clientName",
-      label: "Client",
+      key: "name",
+      label: "Famille",
       render: (_: unknown, row: TableRowData) => (
         <div>
-          <div className="font-medium">{row.clientName}</div>
-          <div className="text-sm text-gray-500">{row.department}</div>
+          <div className="font-medium">{row.name}</div>
+          <div className="text-sm text-gray-500">{row.address.city}</div>
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      label: "Contact",
+      render: (_: unknown, row: TableRowData) => (
+        <div>
+          <div className="font-medium">{row.contact.email}</div>
+          <div className="text-sm text-gray-500">
+            {row.contact.primaryPhone}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "parents",
+      label: "Parents",
+      render: (_: unknown, row: TableRowData) => (
+        <div>
+          {row.parents.map((parent, index) => (
+            <div key={index} className="text-sm">
+              {parent.firstName} {parent.lastName}
+              {parent.isPrimaryContact && (
+                <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  Principal
+                </span>
+              )}
+            </div>
+          ))}
         </div>
       ),
     },
     {
       key: "paymentMethod",
-      label: "Mode de règlement",
+      label: "Mode de paiement",
       render: (_: unknown, row: TableRowData) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
-            row.paymentMethod === "card"
+            row.financialInfo.paymentMethod === "card"
               ? "bg-blue-100 text-blue-800"
-              : row.paymentMethod === "check"
+              : row.financialInfo.paymentMethod === "check"
               ? "bg-green-100 text-green-800"
-              : row.paymentMethod === "transfer"
-              ? "bg-purple-100 text-purple-800"
-              : "bg-gray-100 text-gray-800"
+              : "bg-purple-100 text-purple-800"
           }`}
         >
-          {row.paymentMethod === "card"
+          {row.financialInfo.paymentMethod === "card"
             ? "Carte"
-            : row.paymentMethod === "check"
+            : row.financialInfo.paymentMethod === "check"
             ? "Chèque"
-            : row.paymentMethod === "transfer"
-            ? "Virement"
-            : "Espèces"}
+            : "Virement"}
         </span>
-      ),
-    },
-    {
-      key: "subject",
-      label: "Matière",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium">{row.subject.name}</div>
-      ),
-    },
-    {
-      key: "hourlyRate",
-      label: "Tarif horaire",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium">{row.hourlyRate.toFixed(2)} €</div>
-      ),
-    },
-    {
-      key: "quantity",
-      label: "Quantité",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium">{row.quantity}</div>
-      ),
-    },
-    {
-      key: "professorSalary",
-      label: "Salaire prof",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium">{row.professorSalary.toFixed(2)} €</div>
-      ),
-    },
-    {
-      key: "salaryToPay",
-      label: "Salaire à verser",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium">{row.salaryToPay.toFixed(2)} €</div>
-      ),
-    },
-    {
-      key: "charges",
-      label: "Charges",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium">{row.charges.toFixed(2)} €</div>
-      ),
-    },
-    {
-      key: "chargesToPay",
-      label: "Charges à verser",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium">{row.chargesToPay.toFixed(2)} €</div>
-      ),
-    },
-    {
-      key: "marginAmount",
-      label: "Marge",
-      render: (_: unknown, row: TableRowData) => (
-        <div>
-          <div className="font-medium">{row.marginAmount.toFixed(2)} €</div>
-          <div className="text-sm text-gray-500">
-            {row.marginPercentage.toFixed(1)}%
-          </div>
-        </div>
       ),
     },
     {
@@ -237,19 +198,22 @@ export const Dashboard: React.FC = () => {
       render: (_: unknown, row: TableRowData) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
-            row.status === "paid"
+            row.status === "client"
               ? "bg-green-100 text-green-800"
-              : row.status === "overdue"
-              ? "bg-red-100 text-red-800"
               : "bg-yellow-100 text-yellow-800"
           }`}
         >
-          {row.status === "paid"
-            ? "Payé"
-            : row.status === "overdue"
-            ? "En retard"
-            : "En attente"}
+          {row.status === "client" ? "Client" : "Prospect"}
         </span>
+      ),
+    },
+    {
+      key: "createdAt",
+      label: "Date d'ajout",
+      render: (_: unknown, row: TableRowData) => (
+        <div className="text-sm text-gray-500">
+          {new Date(row.createdAt).toLocaleDateString("fr-FR")}
+        </div>
       ),
     },
     {
@@ -257,26 +221,34 @@ export const Dashboard: React.FC = () => {
       label: "Actions",
       render: (_: unknown, row: TableRowData) => (
         <div className="table__actions">
-          {row.status !== "paid" && (
+          {row.status === "prospect" ? (
             <Button
               size="sm"
               variant="primary"
-              onClick={() => handleMarkAsPaid(row._id)}
+              onClick={() => handleUpdateStatus(row._id, "client")}
             >
-              Marquer payé
+              Convertir en client
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => handleUpdateStatus(row._id, "prospect")}
+            >
+              Reconvertir en prospect
             </Button>
           )}
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => handleEditSettlement(row._id)}
+            onClick={() => handleEditFamily(row._id)}
           >
             Modifier
           </Button>
           <Button
             size="sm"
             variant="error"
-            onClick={() => handleDeleteSettlement(row._id)}
+            onClick={() => handleDeleteFamily(row._id)}
           >
             Supprimer
           </Button>
@@ -295,7 +267,7 @@ export const Dashboard: React.FC = () => {
         ]}
       />
       <Container layout="flex-col">
-        <h1>Tableau de bord - Notes de règlement</h1>
+        <h1>Tableau de bord - Prospects et Clients</h1>
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -309,27 +281,26 @@ export const Dashboard: React.FC = () => {
               title="SYNTHESE GLOBALE"
               metrics={[
                 {
-                  value: `${stats.totalAmount.toFixed(2)} €`,
-                  label: "Montant total",
+                  value: stats.total,
+                  label: "Total familles",
                   variant: "primary",
                 },
                 {
-                  value: stats.total,
-                  label: "Total NDR",
-                  variant: "success",
+                  value: stats.prospects,
+                  label: "Prospects",
+                  variant: "warning",
                 },
               ]}
             />
             <SummaryCard
               title="STATUTS"
               metrics={[
-                { value: stats.paid, label: "Payées", variant: "success" },
+                { value: stats.clients, label: "Clients", variant: "success" },
                 {
-                  value: stats.pending,
-                  label: "En attente",
+                  value: stats.prospects,
+                  label: "Prospects",
                   variant: "warning",
                 },
-                { value: stats.overdue, label: "En retard", variant: "error" },
               ]}
             />
           </Container>
@@ -340,9 +311,9 @@ export const Dashboard: React.FC = () => {
             variant="triple"
             buttons={[
               {
-                text: "Créer une NDR",
+                text: "Créer une famille",
                 variant: "primary",
-                onClick: handleCreateSettlement,
+                onClick: handleCreateFamily,
               },
               { text: "Exporter", variant: "secondary" },
               { text: "Importer", variant: "secondary" },
@@ -363,7 +334,7 @@ export const Dashboard: React.FC = () => {
 
         <Container layout="flex">
           <Input
-            placeholder="Rechercher par client, département, matière..."
+            placeholder="Rechercher par nom, email, ville..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             button={
@@ -375,24 +346,22 @@ export const Dashboard: React.FC = () => {
         </Container>
 
         <Container layout="flex-col">
-          <h3>Liste des notes de règlement</h3>
+          <h3>Liste des familles</h3>
 
           {isLoading ? (
             <div className="text-center py-8">
-              <div className="text-gray-500">
-                Chargement des notes de règlement...
-              </div>
+              <div className="text-gray-500">Chargement des familles...</div>
             </div>
           ) : filteredData.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-gray-500">
                 {searchTerm
-                  ? "Aucune note trouvée pour cette recherche"
-                  : "Aucune note de règlement disponible"}
+                  ? "Aucune famille trouvée pour cette recherche"
+                  : "Aucune famille disponible"}
               </div>
             </div>
           ) : (
-            <Table columns={settlementColumns} data={tableData} />
+            <Table columns={familyColumns} data={tableData} />
           )}
         </Container>
       </Container>

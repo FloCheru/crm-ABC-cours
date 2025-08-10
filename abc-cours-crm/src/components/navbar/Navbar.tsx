@@ -20,11 +20,11 @@ interface NavbarProps {
 
 // Items de navigation fixes
 const NAV_ITEMS = [
-  { label: "Admin", path: "/admin" },
+  { label: "Admin", path: "/admin/coupons" },
   { label: "Professeurs", path: "/professeurs" },
   { label: "Prospects", path: "/prospects" },
   { label: "Clients", path: "/clients" },
-  { label: "Tableau de bord", path: "/dashboard" },
+  { label: "Tableau de bord", path: "/admin/dashboard" },
   { label: "Candidats", path: "/candidats" },
   { label: "ATP", path: "/atp" },
   { label: "Messagerie", path: "/messagerie" },
@@ -50,6 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
 }) => {
   const handleClick = (path: string, event: React.MouseEvent) => {
+    console.log(path);
     if (onNavigate) {
       event.preventDefault();
       onNavigate(path);

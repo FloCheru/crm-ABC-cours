@@ -164,6 +164,70 @@ router.put(
   }
 );
 
+// @route   PATCH /api/families/:id/status
+// @desc    Mettre à jour le statut d'une famille
+// @access  Private (Admin)
+router.patch(
+  "/:id/status",
+  [
+    authorize(["admin"]),
+    body("status")
+      .isIn(["prospect", "client"])
+      .withMessage("Statut doit être 'prospect' ou 'client'"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Données invalides",
+          errors: errors.array(),
+        });
+      }
+
+      const family = await Family.findByIdAndUpdate(
+        req.params.id,
+        { status: req.body.status },
+        { new: true, runValidators: true }
+      );
+
+      if (!family) {
+        return res.status(404).json({ message: "Famille non trouvée" });
+      }
+
+      res.json({
+        message: "Statut mis à jour avec succès",
+        family,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du statut:", error);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
+
+// @route   GET /api/families/stats
+// @desc    Obtenir les statistiques des familles
+// @access  Private
+router.get("/stats", async (req, res) => {
+  try {
+    const [total, prospects, clients] = await Promise.all([
+      Family.countDocuments(),
+      Family.countDocuments({ status: "prospect" }),
+      Family.countDocuments({ status: "client" }),
+    ]);
+
+    res.json({
+      total,
+      prospects,
+      clients,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des statistiques:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 // @route   DELETE /api/families/:id
 // @desc    Supprimer une famille
 // @access  Private (Admin)

@@ -77,8 +77,8 @@ const familySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["active", "inactive", "pending"],
-      default: "active",
+      enum: ["prospect", "client"],
+      default: "prospect",
     },
     notes: {
       type: String,

@@ -1,70 +1,87 @@
-import type { Family, Student } from "../types/family";
+import { apiClient } from "../utils/apiClient";
 
-// const API_BASE_URL =
-//   import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const API_BASE_URL = "https://crm-abc-cours-production.up.railway.app/api";
+export interface Family {
+  _id: string;
+  name: string;
+  address: {
+    street: string;
+    city: string;
+    postalCode: string;
+  };
+  contact: {
+    primaryPhone: string;
+    secondaryPhone?: string;
+    email: string;
+  };
+  parents: Array<{
+    firstName: string;
+    lastName: string;
+    phone?: string;
+    email?: string;
+    profession?: string;
+    isPrimaryContact: boolean;
+  }>;
+  financialInfo: {
+    paymentMethod: "check" | "transfer" | "card";
+    billingAddress?: {
+      street: string;
+      city: string;
+      postalCode: string;
+    };
+    notes?: string;
+  };
+  status: "prospect" | "client";
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FamilyStats {
+  total: number;
+  prospects: number;
+  clients: number;
+}
 
 class FamilyService {
-  private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem("token");
-    return {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    };
-  }
-
   async getFamilies(): Promise<Family[]> {
-    const response = await fetch(`${API_BASE_URL}/families`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la récupération des familles"
-      );
-    }
-
-    const data = await response.json();
-    return data.families || [];
+    const response = await apiClient.get("/api/families");
+    return response.data;
   }
 
-  async getStudentsByFamily(familyId: string): Promise<Student[]> {
-    const response = await fetch(
-      `${API_BASE_URL}/students?family=${familyId}`,
-      {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la récupération des élèves"
-      );
-    }
-
-    const data = await response.json();
-    return data.students || [];
+  async getFamily(id: string): Promise<Family> {
+    const response = await apiClient.get(`/api/families/${id}`);
+    return response.data;
   }
 
-  async getAllStudents(): Promise<Student[]> {
-    const response = await fetch(`${API_BASE_URL}/students`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
+  async createFamily(
+    familyData: Omit<Family, "_id" | "createdAt" | "updatedAt">
+  ): Promise<Family> {
+    const response = await apiClient.post("/api/families", familyData);
+    return response.data;
+  }
+
+  async updateFamily(id: string, familyData: Partial<Family>): Promise<Family> {
+    const response = await apiClient.put(`/api/families/${id}`, familyData);
+    return response.data;
+  }
+
+  async deleteFamily(id: string): Promise<void> {
+    await apiClient.delete(`/api/families/${id}`);
+  }
+
+  async updateStatus(
+    id: string,
+    status: "prospect" | "client"
+  ): Promise<Family> {
+    const response = await apiClient.patch(`/api/families/${id}/status`, {
+      status,
     });
+    return response.data;
+  }
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la récupération des élèves"
-      );
-    }
-
-    const data = await response.json();
-    return data.students || [];
+  async getFamilyStats(): Promise<FamilyStats> {
+    const response = await apiClient.get("/api/families/stats");
+    return response.data;
   }
 }
 
