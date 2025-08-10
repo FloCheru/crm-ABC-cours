@@ -6,6 +6,7 @@ export { Select } from "./form/select/Select";
 export { Navbar } from "./navbar/Navbar";
 export { Breadcrumb } from "./breadcrum/Breadcrumb";
 export { SummaryCard } from "./summaryCard/SummaryCard";
+export { StatusBadge } from "./statusBadge/StatusBadge";
 export { Table } from "./table/Table";
 export { FormCard } from "./form/formcard/FormCard";
 export { ProtectedRoute } from "./ProtectedRoute";
