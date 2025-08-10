@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: "/",
+  base: mode === "production" ? "/crm-ABC-cours/" : "/",
   build: {
     outDir: "dist",
     assetsDir: "assets",
@@ -22,10 +22,12 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        // target: process.env.VITE_API_URL || "http://localhost:3000",
         target: process.env.VITE_API_URL || "http://localhost:3000",
         changeOrigin: true,
       },
     },
   },
-});
+  define: {
+    "process.env": {},
+  },
+}));

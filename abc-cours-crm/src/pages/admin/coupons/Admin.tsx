@@ -9,6 +9,7 @@ import {
   Input,
   Button,
   Table,
+  StatusBadge,
 } from "../../../components";
 import { couponSeriesService } from "../../../services/couponSeriesService";
 import type { CouponSeries } from "../../../types/coupon";
@@ -114,7 +115,6 @@ export const Admin: React.FC = () => {
   }));
 
   // Calculer les statistiques
-  const activeSeries = couponsData.filter((s) => s.status === "active").length;
   const totalCoupons = couponsData.reduce(
     (sum, series) => sum + series.totalCoupons,
     0
@@ -186,14 +186,16 @@ export const Admin: React.FC = () => {
       key: "statut",
       label: "Statut",
       render: (_: unknown, row: TableRowData) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
+        <StatusBadge
+          variant={
             row.status === "active"
-              ? "bg-green-100 text-green-800"
+              ? "active"
               : row.status === "expired"
-              ? "bg-red-100 text-red-800"
-              : "bg-gray-100 text-gray-800"
-          }`}
+              ? "terminee"
+              : row.status === "inactive"
+              ? "bloquee"
+              : "disponible"
+          }
         >
           {row.status === "active"
             ? "Actif"
@@ -202,7 +204,7 @@ export const Admin: React.FC = () => {
             : row.status === "inactive"
             ? "Inactif"
             : row.status}
-        </span>
+        </StatusBadge>
       ),
     },
     {
@@ -257,7 +259,7 @@ export const Admin: React.FC = () => {
                 variant: "primary",
               },
               {
-                value: activeSeries,
+                value: totalCoupons,
                 label: "Total Coupons",
                 variant: "success",
               },

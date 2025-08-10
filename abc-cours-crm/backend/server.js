@@ -45,6 +45,7 @@ app.use(
     origin: [
       "http://localhost:5173", // local
       "https://crm-abc-cours.vercel.app", // production
+      "https://flocheru.github.io", // GitHub Pages
       process.env.FRONTEND_URL, // Backup Railway
     ].filter(Boolean),
     credentials: true, //Auth/cookies
