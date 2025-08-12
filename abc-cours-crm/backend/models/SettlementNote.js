@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const settlementNoteSchema = new mongoose.Schema(
   {
+    familyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Family",
+      required: [true, "ID de la famille requis"],
+    },
     clientName: {
       type: String,
       required: [true, "Nom du client requis"],
@@ -39,7 +44,6 @@ const settlementNoteSchema = new mongoose.Schema(
     },
     salaryToPay: {
       type: Number,
-      required: [true, "Salaire à verser requis"],
       min: [0, "Le salaire à verser doit être positif"],
     },
     charges: {
@@ -49,16 +53,14 @@ const settlementNoteSchema = new mongoose.Schema(
     },
     chargesToPay: {
       type: Number,
-      required: [true, "Charges à verser requises"],
       min: [0, "Les charges à verser doivent être positives"],
     },
     marginAmount: {
       type: Number,
-      required: [true, "Montant de la marge requis"],
+      min: [0, "Le montant de la marge doit être positif"],
     },
     marginPercentage: {
       type: Number,
-      required: [true, "Pourcentage de marge requis"],
       min: [0, "Le pourcentage de marge doit être positif"],
       max: [100, "Le pourcentage de marge ne peut pas dépasser 100%"],
     },
@@ -90,6 +92,7 @@ const settlementNoteSchema = new mongoose.Schema(
 );
 
 // Index pour améliorer les performances
+settlementNoteSchema.index({ familyId: 1 });
 settlementNoteSchema.index({ clientName: 1 });
 settlementNoteSchema.index({ department: 1 });
 settlementNoteSchema.index({ status: 1 });

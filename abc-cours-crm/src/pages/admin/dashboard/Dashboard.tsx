@@ -11,6 +11,7 @@ import {
   Table,
 } from "../../../components";
 import { familyService } from "../../../services/familyService";
+import { settlementService } from "../../../services/settlementService";
 import type { Family, FamilyStats } from "../../../services/familyService";
 
 // Type pour les données du tableau avec l'id requis
@@ -21,6 +22,9 @@ export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [familyData, setFamilyData] = useState<Family[]>([]);
   const [stats, setStats] = useState<FamilyStats | null>(null);
+  const [settlementCounts, setSettlementCounts] = useState<
+    Record<string, number>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,8 +39,28 @@ export const Dashboard: React.FC = () => {
           familyService.getFamilies(),
           familyService.getFamilyStats(),
         ]);
-        setFamilyData(Array.isArray(data) ? data : []);
+        const families = Array.isArray(data) ? data : [];
+        setFamilyData(families);
         setStats(statsData);
+
+        // Charger le nombre de notes de règlement pour chaque famille
+        const counts: Record<string, number> = {};
+        for (const family of families) {
+          try {
+            const count =
+              await settlementService.getSettlementNotesCountByFamily(
+                family._id
+              );
+            counts[family._id] = count;
+          } catch (err) {
+            console.error(
+              `Erreur lors du comptage pour la famille ${family._id}:`,
+              err
+            );
+            counts[family._id] = 0;
+          }
+        }
+        setSettlementCounts(counts);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Erreur lors du chargement"
@@ -133,7 +157,7 @@ export const Dashboard: React.FC = () => {
   const familyColumns = [
     {
       key: "name",
-      label: "Famille",
+      label: "Prospect",
       render: (_: unknown, row: TableRowData) => (
         <div>
           <div className="font-medium">{row.name}</div>
@@ -217,6 +241,17 @@ export const Dashboard: React.FC = () => {
       ),
     },
     {
+      key: "settlementNotes",
+      label: "Notes de règlement",
+      render: (_: unknown, row: TableRowData) => (
+        <div className="text-center">
+          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+            {settlementCounts[row._id] || 0}
+          </span>
+        </div>
+      ),
+    },
+    {
       key: "actions",
       label: "Actions",
       render: (_: unknown, row: TableRowData) => (
@@ -230,13 +265,29 @@ export const Dashboard: React.FC = () => {
               Convertir en client
             </Button>
           ) : (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => handleUpdateStatus(row._id, "prospect")}
-            >
-              Reconvertir en prospect
-            </Button>
+            <>
+              {settlementCounts[row._id] === 0 ? (
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={() =>
+                    navigate(`/admin/dashboard/create?familyId=${row._id}`)
+                  }
+                >
+                  Créer une note de règlement
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() =>
+                    navigate(`/admin/settlements?familyId=${row._id}`)
+                  }
+                >
+                  Voir les notes de règlement ({settlementCounts[row._id]})
+                </Button>
+              )}
+            </>
           )}
           <Button
             size="sm"
@@ -315,8 +366,12 @@ export const Dashboard: React.FC = () => {
                 variant: "primary",
                 onClick: handleCreateFamily,
               },
+              {
+                text: "Créer une NDR",
+                variant: "secondary",
+                onClick: () => navigate("/admin/dashboard/create"),
+              },
               { text: "Exporter", variant: "secondary" },
-              { text: "Importer", variant: "secondary" },
             ]}
           />
           <ButtonGroup
@@ -346,11 +401,11 @@ export const Dashboard: React.FC = () => {
         </Container>
 
         <Container layout="flex-col">
-          <h3>Liste des familles</h3>
+          <h3>Liste des prospects</h3>
 
           {isLoading ? (
             <div className="text-center py-8">
-              <div className="text-gray-500">Chargement des familles...</div>
+              <div className="text-gray-500">Chargement des prospects...</div>
             </div>
           ) : filteredData.length === 0 ? (
             <div className="text-center py-8">

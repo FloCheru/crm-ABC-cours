@@ -1,157 +1,125 @@
-import type {
-  SettlementNote,
-  CreateSettlementNoteData,
-  SettlementNoteStats,
-} from "../types/settlement";
+import { apiClient } from "../utils";
+import type { CreateSettlementNoteData } from "../types/settlement";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+interface SettlementNote {
+  _id: string;
+  clientName: string;
+  department: string;
+  paymentMethod: string;
+  subject: {
+    _id: string;
+    name: string;
+    category: string;
+  };
+  hourlyRate: number;
+  quantity: number;
+  professorSalary: number;
+  charges: number;
+  status: string;
+  dueDate: string;
+  notes?: string;
+  createdBy: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  salaryToPay: number;
+  chargesToPay: number;
+  marginAmount: number;
+  marginPercentage: number;
+}
+
+interface SettlementNotesResponse {
+  notes: SettlementNote[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+interface SettlementNoteResponse {
+  message: string;
+  settlementNote: SettlementNote;
+}
 
 class SettlementService {
-  private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem("token");
-    return {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    };
-  }
-
-  async getSettlementNotes(): Promise<SettlementNote[]> {
-    const headers = this.getAuthHeaders();
-    console.log("🔍 Récupération des notes de règlement...");
-
-    const response = await fetch(`${API_BASE_URL}/settlement-notes`, {
-      method: "GET",
-      headers,
-    });
-
-    console.log("🔍 Status de la réponse:", response.status);
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error("🔍 Erreur de l'API:", error);
-      throw new Error(
-        error.message || "Erreur lors de la récupération des notes de règlement"
-      );
-    }
-
-    const data = await response.json();
-    console.log("🔍 Données reçues:", data);
-
-    // Extraire les données du format de réponse paginée
-    return data.data || [];
-  }
-
-  async getSettlementNoteById(id: string): Promise<SettlementNote> {
-    const response = await fetch(`${API_BASE_URL}/settlement-notes/${id}`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message ||
-          "Erreur lors de la récupération de la note de règlement"
-      );
-    }
-
-    return response.json();
-  }
-
   async createSettlementNote(
     data: CreateSettlementNoteData
   ): Promise<SettlementNote> {
-    const headers = this.getAuthHeaders();
-    console.log("🔍 Création note de règlement - Données:", data);
-
-    const response = await fetch(`${API_BASE_URL}/settlement-notes`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(data),
-    });
-
-    console.log("🔍 Création note de règlement - Status:", response.status);
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error("🔍 Création note de règlement - Erreur API:", error);
-      throw new Error(
-        error.message || "Erreur lors de la création de la note de règlement"
+    try {
+      const response = await apiClient.post("/api/settlement-notes", data);
+      return (response as SettlementNoteResponse).settlementNote;
+    } catch (error) {
+      console.error(
+        "Erreur lors de la création de la note de règlement:",
+        error
       );
-    }
-
-    const result = await response.json();
-    console.log("🔍 Création note de règlement - Succès:", result);
-    return result;
-  }
-
-  async updateSettlementNote(
-    id: string,
-    data: Partial<CreateSettlementNoteData>
-  ): Promise<SettlementNote> {
-    const response = await fetch(`${API_BASE_URL}/settlement-notes/${id}`, {
-      method: "PUT",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la mise à jour de la note de règlement"
-      );
-    }
-
-    return response.json();
-  }
-
-  async deleteSettlementNote(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/settlement-notes/${id}`, {
-      method: "DELETE",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la suppression de la note de règlement"
-      );
+      throw error;
     }
   }
 
-  async markAsPaid(id: string): Promise<SettlementNote> {
-    const response = await fetch(
-      `${API_BASE_URL}/settlement-notes/${id}/mark-paid`,
-      {
-        method: "PATCH",
-        headers: this.getAuthHeaders(),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Erreur lors du marquage comme payé");
+  async getSettlementNotesByFamily(
+    familyId: string
+  ): Promise<SettlementNote[]> {
+    try {
+      const response = await apiClient.get(
+        `/api/settlement-notes?familyId=${familyId}`
+      );
+      return (response as SettlementNotesResponse).notes || [];
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des notes de règlement:",
+        error
+      );
+      return [];
     }
-
-    return response.json();
   }
 
-  async getSettlementStats(): Promise<SettlementNoteStats> {
-    const response = await fetch(`${API_BASE_URL}/settlement-notes/stats`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la récupération des statistiques"
-      );
+  async getSettlementNotesCountByFamily(familyId: string): Promise<number> {
+    try {
+      const notes = await this.getSettlementNotesByFamily(familyId);
+      return notes.length;
+    } catch (error) {
+      console.error("Erreur lors du comptage des notes de règlement:", error);
+      return 0;
     }
+  }
 
-    return response.json();
+  async getAllSettlementNotes(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<SettlementNotesResponse> {
+    try {
+      const response = await apiClient.get(
+        `/api/settlement-notes?page=${page}&limit=${limit}`
+      );
+      return response as SettlementNotesResponse;
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des notes de règlement:",
+        error
+      );
+      throw error;
+    }
+  }
+
+  async getSettlementNoteById(id: string): Promise<SettlementNote> {
+    try {
+      const response = await apiClient.get(`/api/settlement-notes/${id}`);
+      return response as SettlementNote;
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération de la note de règlement:",
+        error
+      );
+      throw error;
+    }
   }
 }
 
 export const settlementService = new SettlementService();
+export type { SettlementNote, SettlementNotesResponse };

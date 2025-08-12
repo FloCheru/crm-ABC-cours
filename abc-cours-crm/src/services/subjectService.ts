@@ -1,66 +1,51 @@
+import { apiClient } from "../utils";
 import type { Subject } from "../types/subject";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+interface SubjectsResponse {
+  subjects: Subject[];
+}
 
 class SubjectService {
-  private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem("token");
-    return {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    };
-  }
-
   async getSubjects(): Promise<Subject[]> {
-    const headers = this.getAuthHeaders();
+    try {
+      const response = await apiClient.get("/api/subjects");
+      console.log("🔍 Réponse brute de l'API /subjects:", response);
+      console.log("🔍 Type de la réponse:", typeof response);
+      console.log("🔍 Est-ce un tableau?", Array.isArray(response));
 
-    const response = await fetch(`${API_BASE_URL}/subjects`, {
-      method: "GET",
-      headers,
-    });
+      // Si c'est directement un tableau
+      if (Array.isArray(response)) {
+        return response as Subject[];
+      }
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la récupération des matières"
-      );
+      // Si c'est encapsulé dans un objet
+      if (response && typeof response === "object" && "subjects" in response) {
+        return (response as { subjects: Subject[] }).subjects || [];
+      }
+
+      // Fallback
+      console.warn("🔍 Format de réponse inattendu, retour d'un tableau vide");
+      return [];
+    } catch (error) {
+      console.error("🔍 Erreur dans getSubjects:", error);
+      return [];
     }
-
-    const data = await response.json();
-
-    // L'API retourne directement le tableau, pas encapsulé dans { data: [...] }
-    return Array.isArray(data) ? data : data.data || [];
   }
 
   async getActiveSubjects(): Promise<Subject[]> {
-    const headers = this.getAuthHeaders();
     console.log("🔍 Récupération des matières actives...");
 
-    // Pour l'instant, récupérer toutes les matières au lieu de seulement les actives
-    const response = await fetch(`${API_BASE_URL}/subjects`, {
-      method: "GET",
-      headers,
-    });
-
-    console.log("🔍 Status de la réponse:", response.status);
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error("🔍 Erreur de l'API:", error);
-      throw new Error(
-        error.message || "Erreur lors de la récupération des matières actives"
-      );
+    try {
+      const response = (await apiClient.get(
+        "/api/subjects"
+      )) as SubjectsResponse;
+      const subjects = response.subjects || [];
+      console.log("🔍 Matières trouvées:", subjects.length);
+      return subjects;
+    } catch (error) {
+      console.error("🔍 Erreur lors de la récupération des matières:", error);
+      throw error;
     }
-
-    const data = await response.json();
-    console.log("🔍 Données reçues:", data);
-
-    // L'API retourne directement le tableau, pas encapsulé dans { data: [...] }
-    const subjects = Array.isArray(data) ? data : data.data || [];
-    console.log("🔍 Matières trouvées:", subjects.length);
-
-    return subjects;
   }
 }
 

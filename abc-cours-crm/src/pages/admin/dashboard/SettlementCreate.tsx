@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Navbar,
   Breadcrumb,
@@ -9,15 +9,20 @@ import {
 } from "../../../components";
 import { settlementService } from "../../../services/settlementService";
 import { subjectService } from "../../../services/subjectService";
+import { familyService } from "../../../services/familyService";
 import type { CreateSettlementNoteData } from "../../../types/settlement";
 import type { Subject } from "../../../types/subject";
 
 export const SettlementCreate: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const familyId = searchParams.get("familyId");
+
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [formData, setFormData] = useState<CreateSettlementNoteData>({
+    familyId: familyId || "",
     clientName: "",
     department: "",
     paymentMethod: "card",
@@ -28,21 +33,69 @@ export const SettlementCreate: React.FC = () => {
     charges: 0,
     dueDate: new Date(),
     notes: "",
+    // Champs calculés automatiquement
+    marginPercentage: 0,
+    marginAmount: 0,
+    chargesToPay: 0,
+    salaryToPay: 0,
   });
 
-  // Charger les matières
+  // Charger les matières et les informations de la famille si familyId est fourni
   useEffect(() => {
-    const loadSubjects = async () => {
+    const loadData = async () => {
       try {
-        const data = await subjectService.getSubjects();
-        setSubjects(Array.isArray(data) ? data : []);
+        // Charger les matières
+        const subjectsData = await subjectService.getSubjects();
+        setSubjects(Array.isArray(subjectsData) ? subjectsData : []);
+
+        // Si un familyId est fourni, charger les informations de la famille
+        if (familyId) {
+          try {
+            const family = await familyService.getFamily(familyId);
+            setFormData((prev) => ({
+              ...prev,
+              familyId: familyId,
+              clientName: family.name,
+              department: family.address.city || "",
+            }));
+          } catch (err) {
+            console.error("Erreur lors du chargement de la famille:", err);
+          }
+        }
       } catch (err) {
         console.error("Erreur lors du chargement des matières:", err);
+        // En cas d'erreur, afficher un message et permettre la saisie manuelle
+        setError(
+          "Impossible de charger les matières. Vous pouvez saisir manuellement les informations."
+        );
       }
     };
 
-    loadSubjects();
-  }, []);
+    loadData();
+  }, [familyId]);
+
+  // Calculer automatiquement les valeurs dérivées
+  useEffect(() => {
+    const salaryToPay = formData.professorSalary * formData.quantity;
+    const chargesToPay = formData.charges * formData.quantity;
+    const totalAmount = formData.hourlyRate * formData.quantity;
+    const marginAmount = totalAmount - salaryToPay - chargesToPay;
+    const marginPercentage =
+      totalAmount > 0 ? (marginAmount / totalAmount) * 100 : 0;
+
+    setFormData((prev) => ({
+      ...prev,
+      salaryToPay,
+      chargesToPay,
+      marginAmount,
+      marginPercentage,
+    }));
+  }, [
+    formData.professorSalary,
+    formData.charges,
+    formData.hourlyRate,
+    formData.quantity,
+  ]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -172,21 +225,34 @@ export const SettlementCreate: React.FC = () => {
                 >
                   Matière *
                 </label>
-                <select
-                  id="subjectId"
-                  name="subjectId"
-                  value={formData.subjectId}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Sélectionner une matière</option>
-                  {subjects.map((subject) => (
-                    <option key={subject._id} value={subject._id}>
-                      {subject.name}
-                    </option>
-                  ))}
-                </select>
+                {subjects.length > 0 ? (
+                  <select
+                    id="subjectId"
+                    name="subjectId"
+                    value={formData.subjectId}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Sélectionner une matière</option>
+                    {subjects.map((subject) => (
+                      <option key={subject._id} value={subject._id}>
+                        {subject.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input
+                    id="subjectId"
+                    name="subjectId"
+                    type="text"
+                    value={formData.subjectId}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Saisir le nom de la matière"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                )}
               </div>
 
               <div>

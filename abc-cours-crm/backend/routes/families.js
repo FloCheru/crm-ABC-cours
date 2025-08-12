@@ -54,6 +54,28 @@ router.get("/", async (req, res) => {
   }
 });
 
+// @route   GET /api/families/stats
+// @desc    Obtenir les statistiques des familles
+// @access  Private
+router.get("/stats", async (req, res) => {
+  try {
+    const [total, prospects, clients] = await Promise.all([
+      Family.countDocuments(),
+      Family.countDocuments({ status: "prospect" }),
+      Family.countDocuments({ status: "client" }),
+    ]);
+
+    res.json({
+      total,
+      prospects,
+      clients,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des statistiques:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 // @route   GET /api/families/:id
 // @desc    Obtenir une famille par ID
 // @access  Private
@@ -205,28 +227,6 @@ router.patch(
     }
   }
 );
-
-// @route   GET /api/families/stats
-// @desc    Obtenir les statistiques des familles
-// @access  Private
-router.get("/stats", async (req, res) => {
-  try {
-    const [total, prospects, clients] = await Promise.all([
-      Family.countDocuments(),
-      Family.countDocuments({ status: "prospect" }),
-      Family.countDocuments({ status: "client" }),
-    ]);
-
-    res.json({
-      total,
-      prospects,
-      clients,
-    });
-  } catch (error) {
-    console.error("Erreur lors de la récupération des statistiques:", error);
-    res.status(500).json({ message: "Erreur serveur" });
-  }
-});
 
 // @route   DELETE /api/families/:id
 // @desc    Supprimer une famille

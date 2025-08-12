@@ -24,6 +24,7 @@ export interface SettlementNote {
 }
 
 export interface CreateSettlementNoteData {
+  familyId: string;
   clientName: string;
   department: string;
   paymentMethod: "card" | "check" | "transfer" | "cash";
@@ -34,6 +35,11 @@ export interface CreateSettlementNoteData {
   charges: number;
   dueDate: Date;
   notes?: string;
+  // Champs calculés automatiquement
+  marginPercentage: number;
+  marginAmount: number;
+  chargesToPay: number;
+  salaryToPay: number;
 }
 
 export interface SettlementNoteStats {

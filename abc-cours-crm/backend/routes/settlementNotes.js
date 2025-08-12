@@ -16,6 +16,7 @@ router.use(authenticateToken);
 
 // Validation pour créer une note de règlement
 const createSettlementValidation = [
+  body("familyId").isMongoId().withMessage("ID de famille requis"),
   body("clientName").trim().notEmpty().withMessage("Nom du client requis"),
   body("department").trim().notEmpty().withMessage("Département requis"),
   body("paymentMethod")
@@ -185,6 +186,7 @@ router.post(
       }
 
       const {
+        familyId,
         clientName,
         department,
         paymentMethod,
@@ -198,6 +200,7 @@ router.post(
       } = req.body;
 
       console.log("🔍 Paramètres extraits:", {
+        familyId,
         clientName,
         department,
         paymentMethod,
@@ -217,6 +220,7 @@ router.post(
 
       // Créer la note de règlement
       const settlementNote = new SettlementNote({
+        familyId,
         clientName,
         department,
         paymentMethod,
@@ -239,7 +243,10 @@ router.post(
         .lean();
 
       console.log("🔍 Note de règlement créée avec succès:", populatedNote);
-      res.status(201).json(populatedNote);
+      res.status(201).json({
+        message: "Note de règlement créée avec succès",
+        settlementNote: populatedNote,
+      });
     } catch (error) {
       console.error("❌ Erreur dans POST /api/settlement-notes:", error);
       console.error("❌ Stack trace:", error.stack);
@@ -270,6 +277,7 @@ router.put(
       }
 
       const {
+        familyId,
         clientName,
         department,
         paymentMethod,
@@ -300,6 +308,7 @@ router.put(
       const updatedNote = await SettlementNote.findByIdAndUpdate(
         id,
         {
+          familyId,
           clientName,
           department,
           paymentMethod,
@@ -374,6 +383,54 @@ router.patch("/:id/mark-paid", authorize(["admin"]), async (req, res) => {
   }
 });
 
+// GET /api/settlement-notes - Récupérer toutes les notes de règlement
+router.get("/", authorize(["admin"]), async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      clientName,
+      department,
+      familyId,
+    } = req.query;
+
+    // Construire le filtre
+    const filter = {};
+    if (status) filter.status = status;
+    if (clientName) filter.clientName = { $regex: clientName, $options: "i" };
+    if (department) filter.department = { $regex: department, $options: "i" };
+    if (familyId) filter.familyId = familyId;
+
+    // Pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [notes, total] = await Promise.all([
+      SettlementNote.find(filter)
+        .populate("subject", "name category")
+        .populate("createdBy", "firstName lastName")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      SettlementNote.countDocuments(filter),
+    ]);
+
+    res.json({
+      notes,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Get settlement notes error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // GET /api/settlement-notes/stats - Statistiques des notes de règlement
 router.get("/stats", async (req, res) => {
   try {
@@ -442,6 +499,31 @@ router.get("/stats", async (req, res) => {
     res.json(stats);
   } catch (error) {
     console.error("Get settlement stats error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/settlement-notes/:id - Récupérer une note de règlement spécifique
+router.get("/:id", authorize(["admin"]), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ error: "Invalid settlement note ID" });
+    }
+
+    const note = await SettlementNote.findById(id)
+      .populate("subject", "name category")
+      .populate("createdBy", "firstName lastName")
+      .lean();
+
+    if (!note) {
+      return res.status(404).json({ error: "Settlement note not found" });
+    }
+
+    res.json(note);
+  } catch (error) {
+    console.error("Get settlement note error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
