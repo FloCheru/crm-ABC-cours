@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
+import { authService } from "../../services/authService";
+import type { AuthResponse } from "../../services/authService";
 
 interface NavbarProps {
   /**
@@ -49,11 +52,50 @@ export const Navbar: React.FC<NavbarProps> = ({
   className = "",
   onNavigate,
 }) => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<AuthResponse["user"] | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Vérifier l'état d'authentification au chargement et lors des changements
+  useEffect(() => {
+    const checkAuth = () => {
+      const currentUser = authService.getUser();
+      const authenticated = authService.isAuthenticated();
+      setUser(currentUser);
+      setIsAuthenticated(authenticated);
+    };
+
+    checkAuth();
+
+    // Écouter les changements dans localStorage
+    const handleStorageChange = () => {
+      checkAuth();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   const handleClick = (path: string, event: React.MouseEvent) => {
     console.log(path);
     if (onNavigate) {
       event.preventDefault();
       onNavigate(path);
+    }
+  };
+
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      setIsAuthenticated(false);
+      setUser(null);
+      navigate("/login");
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
     }
   };
 
@@ -84,6 +126,32 @@ export const Navbar: React.FC<NavbarProps> = ({
             </li>
           );
         })}
+
+        {/* Bouton d'authentification */}
+        <li className="navbar__item navbar__item--auth">
+          {isAuthenticated && user ? (
+            <div className="navbar__user">
+              <span className="navbar__user-greeting">
+                Bonjour, {user.firstName}
+              </span>
+              <button
+                className="navbar__logout-btn"
+                onClick={handleLogout}
+                type="button"
+              >
+                Déconnexion
+              </button>
+            </div>
+          ) : (
+            <button
+              className="navbar__login-btn"
+              onClick={handleLogin}
+              type="button"
+            >
+              Connexion
+            </button>
+          )}
+        </li>
       </ul>
     </nav>
   );

@@ -73,6 +73,49 @@
 }
 
 /* ==========================================================================
+     AUTHENTIFICATION
+     ========================================================================== */
+
+.navbar__item--auth {
+  margin-left: auto;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.navbar__login-btn,
+.navbar__logout-btn {
+  background: none;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: var(--text-on-primary);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.navbar__login-btn:hover,
+.navbar__logout-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: white;
+}
+
+.navbar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
+}
+
+.navbar__user-greeting {
+  color: var(--text-on-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ==========================================================================
      RESPONSIVE
      ========================================================================== */
 
@@ -101,6 +144,18 @@
 
   .navbar__item:last-child .navbar__link {
     border-bottom: none;
+  }
+
+  .navbar__item--auth {
+    margin-left: 0;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .navbar__user {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
   }
 }
 
