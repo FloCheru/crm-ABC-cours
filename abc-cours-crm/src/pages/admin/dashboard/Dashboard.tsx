@@ -143,9 +143,16 @@ export const Dashboard: React.FC = () => {
   // Filtrer les données selon le terme de recherche
   const filteredData = familyData.filter(
     (family) =>
-      family.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      family.contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      family.address.city.toLowerCase().includes(searchTerm.toLowerCase())
+      family.primaryContact?.firstName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      family.primaryContact?.lastName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      family.primaryContact?.email
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      family.address?.city?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Transformer les données pour le tableau (ajouter l'id requis)
@@ -160,7 +167,9 @@ export const Dashboard: React.FC = () => {
       label: "Prospect",
       render: (_: unknown, row: TableRowData) => (
         <div>
-          <div className="font-medium">{row.name}</div>
+          <div className="font-medium">
+            {row.primaryContact?.firstName} {row.primaryContact?.lastName}
+          </div>
         </div>
       ),
     },
@@ -169,23 +178,21 @@ export const Dashboard: React.FC = () => {
       label: "Contact",
       render: (_: unknown, row: TableRowData) => (
         <div>
-          <div className="font-medium">{row.contact.email}</div>
+          <div className="font-medium">{row.primaryContact?.email}</div>
           <div className="text-sm text-gray-500">
-            {row.contact.primaryPhone}
+            {row.primaryContact?.primaryPhone}
           </div>
         </div>
       ),
     },
     {
-      key: "parents",
-      label: "Parents",
+      key: "address",
+      label: "Adresse",
       render: (_: unknown, row: TableRowData) => (
         <div>
-          {row.parents && row.parents.length > 0 && (
-            <div className="text-sm">
-              {row.parents[0].firstName} {row.parents[0].lastName}
-            </div>
-          )}
+          <div className="text-sm">
+            {row.address?.street}, {row.address?.postalCode} {row.address?.city}
+          </div>
         </div>
       ),
     },
@@ -195,17 +202,25 @@ export const Dashboard: React.FC = () => {
       render: (_: unknown, row: TableRowData) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
-            row.financialInfo.paymentMethod === "card"
+            row.financialInfo?.paymentMethod === "card"
               ? "bg-blue-100 text-blue-800"
-              : row.financialInfo.paymentMethod === "check"
+              : row.financialInfo?.paymentMethod === "check"
               ? "bg-green-100 text-green-800"
-              : "bg-purple-100 text-purple-800"
+              : row.financialInfo?.paymentMethod === "transfer"
+              ? "bg-purple-100 text-purple-800"
+              : row.financialInfo?.paymentMethod === "cash"
+              ? "bg-orange-100 text-orange-800"
+              : "bg-gray-100 text-gray-800"
           }`}
         >
-          {row.financialInfo.paymentMethod === "card"
+          {row.financialInfo?.paymentMethod === "card"
             ? "Carte"
-            : row.financialInfo.paymentMethod === "check"
+            : row.financialInfo?.paymentMethod === "check"
             ? "Chèque"
+            : row.financialInfo?.paymentMethod === "transfer"
+            ? "Virement"
+            : row.financialInfo?.paymentMethod === "cash"
+            ? "Espèces"
             : "N/A"}
         </span>
       ),
@@ -230,7 +245,9 @@ export const Dashboard: React.FC = () => {
       label: "Date d'ajout",
       render: (_: unknown, row: TableRowData) => (
         <div className="text-sm text-gray-500">
-          {new Date(row.createdAt).toLocaleDateString("fr-FR")}
+          {row.createdAt
+            ? new Date(row.createdAt).toLocaleDateString("fr-FR")
+            : "N/A"}
         </div>
       ),
     },
