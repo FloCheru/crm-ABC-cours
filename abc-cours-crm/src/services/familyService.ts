@@ -2,27 +2,27 @@ import { apiClient } from "../utils";
 
 export interface Family {
   _id: string;
-  name: string;
+  primaryContact: {
+    firstName: string;
+    lastName: string;
+    primaryPhone: string;
+    secondaryPhone?: string;
+    email: string;
+  };
   address: {
     street: string;
     city: string;
     postalCode: string;
   };
-  contact: {
-    primaryPhone: string;
-    secondaryPhone?: string;
-    email: string;
-  };
-  parents: Array<{
-    firstName: string;
-    lastName: string;
+  secondaryContact?: {
+    firstName?: string;
+    lastName?: string;
     phone?: string;
     email?: string;
-    profession?: string;
-    isPrimaryContact: boolean;
-  }>;
+    relationship?: string;
+  };
   financialInfo: {
-    paymentMethod: "check" | "transfer" | "card";
+    paymentMethod: "check" | "transfer" | "card" | "cash";
     billingAddress?: {
       street: string;
       city: string;
@@ -32,6 +32,13 @@ export interface Family {
   };
   status: "prospect" | "client";
   notes?: string;
+  students?: Array<{
+    _id: string;
+    firstName: string;
+    lastName: string;
+    level: string;
+  }>;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
 }

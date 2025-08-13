@@ -32,7 +32,13 @@ export const Admin: React.FC = () => {
         setIsLoading(true);
         setError("");
         const data = await couponSeriesService.getCouponSeries();
-        // S'assurer que data est un tableau
+        console.log("🔍 Données reçues du service:", data);
+        console.log("🔍 Type de données:", typeof data);
+        console.log("🔍 Est un tableau:", Array.isArray(data));
+        if (Array.isArray(data) && data.length > 0) {
+          console.log("🔍 Premier élément:", data[0]);
+          console.log("🔍 familyId du premier élément:", data[0].familyId);
+        }
         setCouponsData(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(
@@ -50,6 +56,10 @@ export const Admin: React.FC = () => {
 
   const handleCreateSeries = () => {
     navigate("/admin/coupons/create");
+  };
+
+  const handleViewCoupons = (seriesId: string) => {
+    navigate(`/admin/coupons/${seriesId}/coupons`);
   };
 
   const handleEditSeries = (seriesId: string) => {
@@ -94,16 +104,13 @@ export const Admin: React.FC = () => {
   // Filtrer les données selon le terme de recherche
   const filteredData = couponsData.filter(
     (series) =>
-      (series.family?.name || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (series.student?.firstName || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (series.student?.lastName || "")
+      (series.familyId?.name || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
       (series.subject?.name || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (series.createdBy?.firstName + " " + series.createdBy?.lastName || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase())
   );
@@ -124,7 +131,7 @@ export const Admin: React.FC = () => {
     0
   );
   const totalAmount = couponsData.reduce(
-    (sum, series) => sum + series.totalAmount,
+    (sum, series) => sum + series.hourlyRate * series.totalCoupons,
     0
   );
 
@@ -132,9 +139,39 @@ export const Admin: React.FC = () => {
     {
       key: "name",
       label: "Nom de la série",
+      render: (_: unknown, row: TableRowData) => {
+        // Construire le nom : Nomdefamille_mois_année
+        const familyName = row.familyId?.name || "Famille inconnue";
+        const createdAt = new Date(row.createdAt);
+        const month = (createdAt.getMonth() + 1).toString().padStart(2, "0");
+        const year = createdAt.getFullYear();
+        const seriesName = `${familyName}_${month}_${year}`;
+
+        return (
+          <div>
+            <div className="font-medium">{seriesName}</div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "family",
+      label: "Famille",
       render: (_: unknown, row: TableRowData) => (
         <div>
-          <div className="font-medium">{row.name}</div>
+          <div className="font-medium">{row.familyId?.name}</div>
+        </div>
+      ),
+    },
+    {
+      key: "student",
+      label: "Élève",
+      render: (_: unknown, row: TableRowData) => (
+        <div>
+          <div className="font-medium">
+            {row.studentId?.firstName} {row.studentId?.lastName}
+          </div>
+          <div className="text-sm text-gray-500">{row.studentId?.level}</div>
         </div>
       ),
     },
@@ -144,20 +181,7 @@ export const Admin: React.FC = () => {
       render: (_: unknown, row: TableRowData) => (
         <div>
           <div className="font-medium">{row.subject?.name}</div>
-        </div>
-      ),
-    },
-    {
-      key: "professor",
-      label: "Professeur",
-      render: (_: unknown, row: TableRowData) => (
-        <div>
-          <div className="font-medium">
-            {row.professor?.user?.firstName} {row.professor?.user?.lastName}
-          </div>
-          <div className="text-sm text-gray-500">
-            {row.professor?.user?.email}
-          </div>
+          <div className="text-sm text-gray-500">{row.subject?.category}</div>
         </div>
       ),
     },
@@ -174,14 +198,16 @@ export const Admin: React.FC = () => {
     {
       key: "restants",
       label: "Restants",
-      render: (_: unknown, row: TableRowData) => row.remainingCoupons,
+      render: (_: unknown, row: TableRowData) =>
+        row.totalCoupons - row.usedCoupons,
     },
     {
       key: "montantTotal",
       label: "Montant total",
       render: (_: unknown, row: TableRowData) =>
-        `${row.totalAmount.toFixed(2)} €`,
+        `${(row.hourlyRate * row.totalCoupons).toFixed(2)} €`,
     },
+
     {
       key: "statut",
       label: "Statut",
@@ -190,19 +216,19 @@ export const Admin: React.FC = () => {
           variant={
             row.status === "active"
               ? "active"
-              : row.status === "expired"
+              : row.status === "completed"
               ? "terminee"
-              : row.status === "inactive"
+              : row.status === "expired"
               ? "bloquee"
               : "disponible"
           }
         >
           {row.status === "active"
             ? "Actif"
+            : row.status === "completed"
+            ? "Terminé"
             : row.status === "expired"
             ? "Expiré"
-            : row.status === "inactive"
-            ? "Inactif"
             : row.status}
         </StatusBadge>
       ),
@@ -215,6 +241,13 @@ export const Admin: React.FC = () => {
           <Button
             size="sm"
             variant="secondary"
+            onClick={() => handleViewCoupons(row._id)}
+          >
+            Voir les coupons
+          </Button>
+          <Button
+            size="sm"
+            variant="primary"
             onClick={() => handleEditSeries(row._id)}
           >
             Modifier
@@ -241,7 +274,7 @@ export const Admin: React.FC = () => {
         ]}
       />
       <Container layout="flex-col">
-        <h1>Gestion des coupons</h1>
+        <h1>Gestion des séries de coupons</h1>
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -298,7 +331,7 @@ export const Admin: React.FC = () => {
 
         <Container layout="flex">
           <Input
-            placeholder="Rechercher par nom de série, famille, date..."
+            placeholder="Rechercher par famille, matière, créateur..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             button={

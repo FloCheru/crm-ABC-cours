@@ -3,7 +3,7 @@ const { body, query, validationResult } = require("express-validator");
 const CouponSeries = require("../models/CouponSeries");
 const Coupon = require("../models/Coupon");
 const Family = require("../models/Family");
-const Student = require("../models/Student");
+// const Student = require("../models/Student"); // Pas utilisé dans CouponSeries
 const Professor = require("../models/Professor");
 const Subject = require("../models/Subject");
 const { authenticateToken, authorize } = require("../middleware/auth");
@@ -64,7 +64,6 @@ router.get(
     query("page").optional().isInt({ min: 1 }),
     query("limit").optional().isInt({ min: 1, max: 100 }),
     query("family").optional().isMongoId(),
-    query("student").optional().isMongoId(),
     query("professor").optional().isMongoId(),
     query("subject").optional().trim(),
     query("status")
@@ -102,7 +101,6 @@ router.get(
         page = 1,
         limit = 10,
         family,
-        student,
         professor,
         subject,
         status,
@@ -115,7 +113,6 @@ router.get(
         page,
         limit,
         family,
-        student,
         professor,
         subject,
         status,
@@ -127,8 +124,7 @@ router.get(
       // Construction du filtre
       let filter = {};
 
-      if (family && isValidObjectId(family)) filter.family = family;
-      if (student && isValidObjectId(student)) filter.student = student;
+      if (family && isValidObjectId(family)) filter.familyId = family;
       if (professor && isValidObjectId(professor)) filter.professor = professor;
       if (subject) filter.subject = new RegExp(subject, "i");
       if (status) filter.status = status;
@@ -147,16 +143,9 @@ router.get(
       console.log("🔍 Exécution de la requête MongoDB...");
       const [series, total] = await Promise.all([
         CouponSeries.find(filter)
-          .populate("family", "name contact.email")
-          .populate("student", "firstName lastName")
+          .populate("familyId", "name contact.email")
+          .populate("studentId", "firstName lastName level")
           .populate("subject", "name category")
-          .populate({
-            path: "professor",
-            populate: {
-              path: "user",
-              select: "firstName lastName",
-            },
-          })
           .populate("createdBy", "firstName lastName")
           .sort(sort)
           .skip(skip)
@@ -166,13 +155,14 @@ router.get(
       ]);
 
       console.log("🔍 Résultats:", { seriesCount: series.length, total });
+      console.log("🔍 Premier élément brut:", series[0]);
+      console.log("🔍 Premier élément familyId:", series[0]?.familyId);
 
       // Enrichir avec les coupons restants et le statut
       const enrichedSeries = series.map((s) => ({
         ...s,
         remainingCoupons: s.totalCoupons - s.usedCoupons,
         usagePercentage: ((s.usedCoupons / s.totalCoupons) * 100).toFixed(1),
-        isExpired: new Date() > s.expirationDate,
         isCompleted: s.usedCoupons >= s.totalCoupons,
       }));
 
@@ -203,16 +193,9 @@ router.get("/:id", async (req, res) => {
     }
 
     const series = await CouponSeries.findById(id)
-      .populate("family", "name contact address")
-      .populate("student", "firstName lastName schoolLevel subjects")
+      .populate("familyId", "name contact address")
+      .populate("studentId", "firstName lastName level")
       .populate("subject", "name category description")
-      .populate({
-        path: "professor",
-        populate: {
-          path: "user",
-          select: "firstName lastName email",
-        },
-      })
       .populate("createdBy", "firstName lastName")
       .lean();
 
@@ -221,7 +204,7 @@ router.get("/:id", async (req, res) => {
     }
 
     // Récupérer tous les coupons de cette série
-    const coupons = await Coupon.find({ series: id })
+    const coupons = await Coupon.find({ couponSeriesId: id })
       .populate("usedBy", "firstName lastName")
       .sort({ couponNumber: 1 })
       .lean();
@@ -394,17 +377,13 @@ router.post(
       console.log("🔍 Création de la série de coupons...");
       // Créer la série de coupons
       const series = new CouponSeries({
-        family,
-        student,
+        familyId: family,
+        studentId: student,
         subject,
-        professor: professorId,
         totalCoupons,
         hourlyRate,
-        totalAmount: totalCoupons * hourlyRate, // Calculer manuellement le montant total
-        expirationDate,
-        notes,
+        professorSalary: hourlyRate * 0.7, // 70% du tarif horaire pour le professeur
         createdBy: req.user._id,
-        // Le nom sera généré automatiquement par le middleware
       });
 
       await series.save();
@@ -415,7 +394,8 @@ router.post(
       const coupons = [];
       for (let i = 1; i <= totalCoupons; i++) {
         coupons.push({
-          series: series._id,
+          couponSeriesId: series._id,
+          familyId: family,
           couponNumber: i,
           status: "available",
         });
@@ -426,10 +406,9 @@ router.post(
 
       // Retourner la série créée avec tous les détails
       const createdSeries = await CouponSeries.findById(series._id)
-        .populate("family", "name contact.email")
-        .populate("student", "firstName lastName")
+        .populate("familyId", "name contact.email")
+        .populate("studentId", "firstName lastName level")
         .populate("subject", "name category")
-        .populate("professor", "user.firstName user.lastName")
         .populate("createdBy", "firstName lastName");
 
       console.log("🔍 Réponse envoyée avec succès");
@@ -494,7 +473,7 @@ router.patch(
       // Si la série est suspendue, marquer tous les coupons disponibles comme suspendus
       if (status === "suspended") {
         await Coupon.updateMany(
-          { series: id, status: "available" },
+          { couponSeriesId: id, status: "available" },
           { status: "expired" }
         );
       }
@@ -502,8 +481,9 @@ router.patch(
       res.json({
         message: `Series status changed to ${status}`,
         series: await CouponSeries.findById(id)
-          .populate("family", "name")
-          .populate("student", "firstName lastName"),
+          .populate("familyId", "name")
+          .populate("studentId", "firstName lastName level")
+          .populate("createdBy", "firstName lastName"),
       });
     } catch (error) {
       console.error("Update series status error:", error);
@@ -549,9 +529,11 @@ router.get("/stats/overview", authorize(["admin"]), async (req, res) => {
           $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         }, // 30 jours
       })
-        .populate("family", "name contact.email")
-        .populate("student", "firstName lastName")
-        .select("family student subject expirationDate remainingCoupons")
+        .populate("familyId", "name contact.email")
+        .populate("studentId", "firstName lastName")
+        .select(
+          "familyId studentId subject expirationDate totalCoupons usedCoupons"
+        )
         .lean(),
     ]);
 
@@ -601,8 +583,7 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
 
     console.log("🔍 Série trouvée:", {
       id: series._id,
-      family: series.family,
-      student: series.student,
+      familyId: series.familyId,
       totalCoupons: series.totalCoupons,
       usedCoupons: series.usedCoupons,
     });
@@ -617,7 +598,7 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
 
     // Supprimer tous les coupons de cette série
     console.log("🔍 Suppression des coupons de la série...");
-    const deleteCouponsResult = await Coupon.deleteMany({ series: id });
+    const deleteCouponsResult = await Coupon.deleteMany({ couponSeriesId: id });
     console.log("🔍 Coupons supprimés:", deleteCouponsResult.deletedCount);
 
     // Supprimer la série

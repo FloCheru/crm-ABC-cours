@@ -8,6 +8,7 @@ const {
   buildPaginationQuery,
   buildPaginatedResponse,
 } = require("../utils/dbHelpers");
+const CouponGenerationService = require("../services/couponGenerationService");
 
 const router = express.Router();
 
@@ -236,16 +237,42 @@ router.post(
 
       await settlementNote.save();
 
+      // Générer automatiquement la série de coupons
+      console.log("🎫 Génération automatique des coupons...");
+      const couponGenerationResult =
+        await CouponGenerationService.generateCouponSeries(
+          settlementNote,
+          req.user.id
+        );
+
+      // Mettre à jour la note de règlement avec l'ID de la série de coupons
+      settlementNote.couponSeriesId = couponGenerationResult.couponSeries._id;
+      settlementNote.totalCoupons = couponGenerationResult.totalCoupons;
+      await settlementNote.save();
+
       // Récupérer la note avec les données populées
       const populatedNote = await SettlementNote.findById(settlementNote._id)
         .populate("subject", "name category")
         .populate("createdBy", "firstName lastName")
+        .populate("couponSeriesId", "totalCoupons usedCoupons status")
         .lean();
 
       console.log("🔍 Note de règlement créée avec succès:", populatedNote);
+      console.log(
+        "🎫 Série de coupons générée:",
+        couponGenerationResult.totalCoupons,
+        "coupons"
+      );
+
       res.status(201).json({
-        message: "Note de règlement créée avec succès",
+        message:
+          "Note de règlement créée avec succès avec génération automatique des coupons",
         settlementNote: populatedNote,
+        couponSeries: {
+          id: couponGenerationResult.couponSeries._id,
+          totalCoupons: couponGenerationResult.totalCoupons,
+          status: "active",
+        },
       });
     } catch (error) {
       console.error("❌ Erreur dans POST /api/settlement-notes:", error);
@@ -515,6 +542,7 @@ router.get("/:id", authorize(["admin"]), async (req, res) => {
     const note = await SettlementNote.findById(id)
       .populate("subject", "name category")
       .populate("createdBy", "firstName lastName")
+      .populate("couponSeriesId", "totalCoupons usedCoupons status")
       .lean();
 
     if (!note) {
@@ -525,6 +553,66 @@ router.get("/:id", authorize(["admin"]), async (req, res) => {
   } catch (error) {
     console.error("Get settlement note error:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/settlement-notes/:id/coupons - Récupérer les détails des coupons d'une NDR
+router.get("/:id/coupons", authorize(["admin"]), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ error: "Invalid settlement note ID" });
+    }
+
+    // Récupérer la série de coupons avec tous les détails
+    const couponSeries =
+      await CouponGenerationService.getCouponSeriesBySettlementNote(id);
+
+    res.json({
+      settlementNoteId: id,
+      couponSeries,
+      stats: await CouponGenerationService.getCouponSeriesStats(
+        couponSeries._id
+      ),
+    });
+  } catch (error) {
+    console.error(
+      "❌ Erreur dans GET /api/settlement-notes/:id/coupons:",
+      error
+    );
+    if (error.message.includes("Aucune série de coupons trouvée")) {
+      return res.status(404).json({ error: error.message });
+    }
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/coupons/search/:code - Rechercher un coupon par son code
+router.get("/coupons/search/:code", async (req, res) => {
+  try {
+    const { code } = req.params;
+
+    if (!code || code.trim() === "") {
+      return res.status(400).json({ error: "Code de coupon requis" });
+    }
+
+    const coupon = await CouponGenerationService.findCouponByCode(
+      code.trim().toUpperCase()
+    );
+
+    res.json({
+      coupon,
+      message: "Coupon trouvé avec succès",
+    });
+  } catch (error) {
+    console.error("❌ Erreur dans la recherche de coupon:", error);
+
+    if (error.message.includes("Coupon non trouvé")) {
+      return res.status(404).json({ error: "Coupon non trouvé" });
+    }
+
+    res.status(500).json({ error: "Erreur interne du serveur" });
   }
 });
 

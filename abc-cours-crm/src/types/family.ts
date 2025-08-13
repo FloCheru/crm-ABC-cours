@@ -9,7 +9,14 @@ export interface Family {
     postalCode: string;
     country: string;
   };
-  students: string[]; // IDs des élèves
+  students:
+    | string[]
+    | Array<{
+        _id: string;
+        firstName: string;
+        lastName: string;
+        level: string;
+      }>; // IDs des élèves ou objets populés
   createdAt: Date;
   updatedAt: Date;
 }

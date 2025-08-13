@@ -79,28 +79,28 @@ export const Dashboard: React.FC = () => {
     navigate("/admin/families/create");
   };
 
-  const handleEditFamily = (familyId: string) => {
-    navigate(`/admin/families/edit/${familyId}`);
-  };
+  // const handleEditFamily = (familyId: string) => {
+  //   navigate(`/admin/families/edit/${familyId}`);
+  // };
 
-  const handleDeleteFamily = async (familyId: string) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette famille ?")) {
-      try {
-        await familyService.deleteFamily(familyId);
-        // Recharger les données après suppression
-        const [updatedData, updatedStats] = await Promise.all([
-          familyService.getFamilies(),
-          familyService.getFamilyStats(),
-        ]);
-        setFamilyData(updatedData);
-        setStats(updatedStats);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Erreur lors de la suppression"
-        );
-      }
-    }
-  };
+  // const handleDeleteFamily = async (familyId: string) => {
+  //   if (window.confirm("Êtes-vous sûr de vouloir supprimer cette famille ?")) {
+  //     try {
+  //       await familyService.deleteFamily(familyId);
+  //       // Recharger les données après suppression
+  //       const [updatedData, updatedStats] = await Promise.all([
+  //         familyService.getFamilies(),
+  //         familyService.getFamilyStats(),
+  //       ]);
+  //       setFamilyData(updatedData);
+  //       setStats(updatedStats);
+  //     } catch (err) {
+  //       setError(
+  //         err instanceof Error ? err.message : "Erreur lors de la suppression"
+  //       );
+  //     }
+  //   }
+  // };
 
   const handleUpdateStatus = async (
     familyId: string,
@@ -161,7 +161,6 @@ export const Dashboard: React.FC = () => {
       render: (_: unknown, row: TableRowData) => (
         <div>
           <div className="font-medium">{row.name}</div>
-          <div className="text-sm text-gray-500">{row.address.city}</div>
         </div>
       ),
     },
@@ -182,16 +181,11 @@ export const Dashboard: React.FC = () => {
       label: "Parents",
       render: (_: unknown, row: TableRowData) => (
         <div>
-          {row.parents.map((parent, index) => (
-            <div key={index} className="text-sm">
-              {parent.firstName} {parent.lastName}
-              {parent.isPrimaryContact && (
-                <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  Principal
-                </span>
-              )}
+          {row.parents && row.parents.length > 0 && (
+            <div className="text-sm">
+              {row.parents[0].firstName} {row.parents[0].lastName}
             </div>
-          ))}
+          )}
         </div>
       ),
     },
@@ -212,7 +206,7 @@ export const Dashboard: React.FC = () => {
             ? "Carte"
             : row.financialInfo.paymentMethod === "check"
             ? "Chèque"
-            : "Virement"}
+            : "N/A"}
         </span>
       ),
     },
@@ -262,7 +256,7 @@ export const Dashboard: React.FC = () => {
               variant="primary"
               onClick={() => handleUpdateStatus(row._id, "client")}
             >
-              Convertir en client
+              Créer une note de règlement
             </Button>
           ) : (
             <>
@@ -289,20 +283,6 @@ export const Dashboard: React.FC = () => {
               )}
             </>
           )}
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => handleEditFamily(row._id)}
-          >
-            Modifier
-          </Button>
-          <Button
-            size="sm"
-            variant="error"
-            onClick={() => handleDeleteFamily(row._id)}
-          >
-            Supprimer
-          </Button>
         </div>
       ),
     },
@@ -337,9 +317,9 @@ export const Dashboard: React.FC = () => {
                   variant: "primary",
                 },
                 {
-                  value: stats.prospects,
-                  label: "Prospects",
-                  variant: "warning",
+                  value: stats.clients,
+                  label: "  Clients",
+                  variant: "success",
                 },
               ]}
             />

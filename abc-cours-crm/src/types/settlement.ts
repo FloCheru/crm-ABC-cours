@@ -1,5 +1,6 @@
 export interface SettlementNote {
   _id: string;
+  familyId: string;
   clientName: string;
   department: string;
   paymentMethod: "card" | "check" | "transfer" | "cash";
@@ -21,10 +22,19 @@ export interface SettlementNote {
   dueDate: Date;
   paidAt?: Date;
   notes?: string;
+  // Champs pour la gestion des coupons
+  couponSeriesId?: {
+    _id: string;
+    totalCoupons: number;
+    usedCoupons: number;
+    status: "active" | "completed" | "expired";
+  };
+  totalCoupons?: number;
 }
 
 export interface CreateSettlementNoteData {
   familyId: string;
+  studentId: string;
   clientName: string;
   department: string;
   paymentMethod: "card" | "check" | "transfer" | "cash";

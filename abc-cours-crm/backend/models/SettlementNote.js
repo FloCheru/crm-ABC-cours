@@ -85,6 +85,16 @@ const settlementNoteSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "Utilisateur créateur requis"],
     },
+    // Champs pour la gestion des coupons
+    couponSeriesId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CouponSeries",
+    },
+    totalCoupons: {
+      type: Number,
+      min: [0, "Le nombre de coupons doit être positif"],
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -98,6 +108,7 @@ settlementNoteSchema.index({ department: 1 });
 settlementNoteSchema.index({ status: 1 });
 settlementNoteSchema.index({ dueDate: 1 });
 settlementNoteSchema.index({ createdAt: -1 });
+settlementNoteSchema.index({ couponSeriesId: 1 });
 
 // Middleware pour calculer automatiquement les montants
 settlementNoteSchema.pre("save", function (next) {

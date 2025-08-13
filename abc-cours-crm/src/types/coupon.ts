@@ -1,41 +1,94 @@
-export interface CouponSeries {
+export interface Coupon {
   _id: string;
-  name: string;
-  family: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  student: {
+  couponSeriesId: string;
+  familyId: string;
+  couponNumber: number;
+  code: string; // Code unique en base 32
+  status: "available" | "used" | "expired" | "cancelled";
+  usedDate?: Date;
+  sessionDate?: Date;
+  sessionDuration?: number; // en minutes
+  sessionLocation?: "home" | "professor" | "online";
+  usedBy?: {
     _id: string;
     firstName: string;
     lastName: string;
-    level: string;
   };
+  rating?: {
+    student?: {
+      score: number;
+      comment?: string;
+      ratedBy: string;
+      ratedAt: Date;
+    };
+    professor?: {
+      score: number;
+      comment?: string;
+      ratedBy: string;
+      ratedAt: Date;
+    };
+  };
+  notes?: string;
+  billingInfo?: {
+    invoiceNumber?: string;
+    invoiceDate?: Date;
+    amount?: number;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CouponSeries {
+  _id: string;
+  settlementNoteId: string;
+  familyId: {
+    _id: string;
+    name: string;
+  };
+  studentId: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    level?: string;
+  };
+  totalCoupons: number;
+  usedCoupons: number;
+  status: "active" | "completed" | "expired";
+  coupons: string[]; // IDs des coupons
   subject: {
     _id: string;
     name: string;
     category: string;
   };
-  professor?: {
-    _id: string;
-    user: {
-      firstName: string;
-      lastName: string;
-      email: string;
-    };
-  };
   hourlyRate: number;
+  professorSalary: number;
+  createdBy: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CouponSeriesStats {
   totalCoupons: number;
   usedCoupons: number;
   remainingCoupons: number;
-  totalAmount: number;
-  status: "active" | "inactive" | "expired";
-  notes?: string;
-  autoAssignTeacher: boolean;
-  sendNotification: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  status: "active" | "completed" | "expired";
+  usagePercentage: string;
+}
+
+export interface CouponGenerationResult {
+  couponSeries: CouponSeries;
+  coupons: string[];
+  totalCoupons: number;
+}
+
+export interface SettlementNoteWithCoupons {
+  settlementNoteId: string;
+  couponSeries: CouponSeries;
+  stats: CouponSeriesStats;
 }
 
 export interface CreateCouponSeriesData {
@@ -48,20 +101,6 @@ export interface CreateCouponSeriesData {
   notes?: string;
   autoAssignTeacher: boolean;
   sendNotification: boolean;
-}
-
-export interface Coupon {
-  _id: string;
-  seriesId: string;
-  code: string;
-  status: "unused" | "used" | "expired" | "blocked";
-  usedAt?: Date;
-  usedBy?: {
-    _id: string;
-    name: string;
-  };
-  createdAt: Date;
-  expiresAt?: Date;
 }
 
 export interface CouponSeriesFormData {

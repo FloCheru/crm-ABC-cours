@@ -44,6 +44,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // local
+      "http://localhost:5174", // local Vite (port par défaut)
       "https://crm-abc-cours.vercel.app", // production
       "https://flocheru.github.io", // GitHub Pages
       process.env.FRONTEND_URL, // Backup Railway

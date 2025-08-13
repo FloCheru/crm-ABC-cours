@@ -20,9 +20,10 @@ router.get("/", async (req, res) => {
     const filter = {};
     if (search) {
       filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { "contact.email": { $regex: search, $options: "i" } },
-        { "contact.primaryPhone": { $regex: search, $options: "i" } },
+        { "primaryContact.lastName": { $regex: search, $options: "i" } },
+        { "primaryContact.firstName": { $regex: search, $options: "i" } },
+        { "primaryContact.email": { $regex: search, $options: "i" } },
+        { "primaryContact.primaryPhone": { $regex: search, $options: "i" } },
       ];
     }
     if (status) {
@@ -87,7 +88,18 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Famille non trouvée" });
     }
 
-    res.json({ family });
+    // Récupérer les élèves de cette famille
+    const students = await Student.find({ family: family._id })
+      .select("firstName lastName level")
+      .lean();
+
+    // Ajouter les élèves à la réponse
+    const familyWithStudents = {
+      ...family.toObject(),
+      students,
+    };
+
+    res.json({ family: familyWithStudents });
   } catch (error) {
     console.error("Erreur lors de la récupération de la famille:", error);
     res.status(500).json({ message: "Erreur serveur" });
@@ -101,24 +113,33 @@ router.post(
   "/",
   [
     authorize(["admin"]),
-    body("name").trim().notEmpty().withMessage("Nom de famille requis"),
+    body("primaryContact.firstName")
+      .trim()
+      .notEmpty()
+      .withMessage("Prénom du contact principal requis"),
+    body("primaryContact.lastName")
+      .trim()
+      .notEmpty()
+      .withMessage("Nom du contact principal requis"),
+    body("primaryContact.primaryPhone")
+      .trim()
+      .notEmpty()
+      .withMessage("Téléphone principal requis"),
+    body("primaryContact.email")
+      .isEmail()
+      .normalizeEmail()
+      .withMessage("Email valide requis"),
     body("address.street").trim().notEmpty().withMessage("Adresse requise"),
     body("address.city").trim().notEmpty().withMessage("Ville requise"),
     body("address.postalCode")
       .trim()
       .notEmpty()
       .withMessage("Code postal requis"),
-    body("contact.primaryPhone")
-      .trim()
-      .notEmpty()
-      .withMessage("Téléphone principal requis"),
-    body("contact.email")
-      .isEmail()
-      .normalizeEmail()
-      .withMessage("Email valide requis"),
-    body("parents")
-      .isArray({ min: 1 })
-      .withMessage("Au moins un parent requis"),
+    body("financialInfo.paymentMethod")
+      .isIn(["card", "check", "transfer", "cash"])
+      .withMessage(
+        "Mode de paiement doit être 'card', 'check', 'transfer' ou 'cash'"
+      ),
   ],
   async (req, res) => {
     try {
@@ -134,9 +155,15 @@ router.post(
       const family = new Family(req.body);
       await family.save();
 
+      // Debug: vérifier ce qui est dans family après sauvegarde
+      console.log("🔍 DEBUG - family après save():", family);
+      console.log("🔍 DEBUG - family._id:", family._id);
+      console.log("🔍 DEBUG - family.primaryContact:", family.primaryContact);
+      console.log("🔍 DEBUG - family.toObject():", family.toObject());
+
       res.status(201).json({
         message: "Famille créée avec succès",
-        family,
+        family: family.toObject(),
       });
     } catch (error) {
       console.error("Erreur lors de la création de la famille:", error);
@@ -152,8 +179,10 @@ router.put(
   "/:id",
   [
     authorize(["admin"]),
-    body("name").optional().trim().notEmpty(),
-    body("contact.email").optional().isEmail().normalizeEmail(),
+    body("primaryContact.firstName").optional().trim().notEmpty(),
+    body("primaryContact.lastName").optional().trim().notEmpty(),
+    body("primaryContact.email").optional().isEmail().normalizeEmail(),
+    body("primaryContact.primaryPhone").optional().trim().notEmpty(),
   ],
   async (req, res) => {
     try {

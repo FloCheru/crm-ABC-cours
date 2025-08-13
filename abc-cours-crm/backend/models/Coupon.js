@@ -2,16 +2,27 @@ const mongoose = require("mongoose");
 
 const couponSchema = new mongoose.Schema(
   {
-    series: {
+    couponSeriesId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "CouponSeries",
-      required: true,
+      required: [true, "ID de la série de coupons requis"],
+    },
+    familyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Family",
+      required: [true, "ID de la famille requis"],
     },
 
     // Numéro du coupon dans la série
     couponNumber: {
       type: Number,
       required: true,
+    },
+    code: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
     },
 
     // Statut du coupon
@@ -70,8 +81,10 @@ const couponSchema = new mongoose.Schema(
   }
 );
 
-// Index composé unique pour éviter les doublons
-couponSchema.index({ series: 1, couponNumber: 1 }, { unique: true });
+// Index pour améliorer les performances
+couponSchema.index({ couponSeriesId: 1, couponNumber: 1 }, { unique: true });
+couponSchema.index({ code: 1 }, { unique: true }); // Index unique pour le code
+couponSchema.index({ familyId: 1 });
 couponSchema.index({ status: 1 });
 couponSchema.index({ usedDate: 1 });
 couponSchema.index({ sessionDate: 1 });
@@ -79,7 +92,7 @@ couponSchema.index({ sessionDate: 1 });
 // Virtual pour obtenir les infos de la série
 couponSchema.virtual("seriesInfo", {
   ref: "CouponSeries",
-  localField: "series",
+  localField: "couponSeriesId",
   foreignField: "_id",
   justOne: true,
 });
@@ -92,7 +105,7 @@ couponSchema.methods.markAsUsed = async function (sessionData, usedBy) {
 
   // Vérifier que la série est encore active
   const CouponSeries = require("./CouponSeries");
-  const series = await CouponSeries.findById(this.series);
+  const series = await CouponSeries.findById(this.couponSeriesId);
 
   if (!series || series.status !== "active") {
     throw new Error("Coupon series is not active");

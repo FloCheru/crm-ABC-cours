@@ -140,8 +140,13 @@ router.post(
       const student = new Student(req.body);
       await student.save();
 
-      // Note: La relation est gérée par le champ family dans le modèle Student
-      // Pas besoin d'ajouter l'élève à la famille car la relation est unidirectionnelle
+      // Ajouter l'élève à la famille
+      await Family.findByIdAndUpdate(req.body.family, {
+        $push: { students: student._id },
+      });
+
+      // Note: La relation est maintenant bidirectionnelle
+      // L'élève connaît sa famille ET la famille connaît ses élèves
 
       const populatedStudent = await Student.findById(student._id).populate(
         "family",
@@ -187,10 +192,23 @@ router.put(
       const student = await Student.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true,
-      }).populate("family", "name contact.email");
+      }).populate("family", "primaryContact address");
 
       if (!student) {
         return res.status(404).json({ message: "Élève non trouvé" });
+      }
+
+      // Si la famille a changé, mettre à jour les relations
+      if (req.body.family && req.body.family !== student.family._id) {
+        // Retirer l'élève de l'ancienne famille
+        await Family.findByIdAndUpdate(student.family._id, {
+          $pull: { students: student._id },
+        });
+
+        // Ajouter l'élève à la nouvelle famille
+        await Family.findByIdAndUpdate(req.body.family, {
+          $push: { students: student._id },
+        });
       }
 
       res.json({
@@ -218,8 +236,13 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
     // Vérifier s'il y a des assignations actives
     // TODO: Ajouter la vérification des assignations
 
-    // Note: Pas besoin de retirer l'élève de la famille car la relation est unidirectionnelle
-    // Le champ family dans Student fait le lien
+    // Retirer l'élève de la famille
+    await Family.findByIdAndUpdate(student.family, {
+      $pull: { students: student._id },
+    });
+
+    // Note: La relation est maintenant bidirectionnelle
+    // Il faut maintenir la cohérence des deux côtés
 
     await Student.findByIdAndDelete(req.params.id);
 
