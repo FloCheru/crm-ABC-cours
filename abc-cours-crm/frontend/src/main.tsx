@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import {
   Admin,
   Login,
+  UnderDevelopment,
   CouponSeriesCreate,
   Dashboard,
   SettlementCreate,
@@ -51,6 +52,14 @@ createRoot(document.getElementById("root")!).render(
             element={
               <ProtectedRoute>
                 <SettlementCreate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/under-development"
+            element={
+              <ProtectedRoute>
+                <UnderDevelopment />
               </ProtectedRoute>
             }
           />

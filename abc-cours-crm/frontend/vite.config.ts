@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   plugins: [react()],
-  base: mode === "production" ? "/crm-ABC-cours/" : "/",
+  base: "/", // Vercel utilise le domaine racine
   build: {
     outDir: "dist",
     assetsDir: "assets",

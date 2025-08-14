@@ -4,67 +4,52 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Dependencies
+node_modules/
+*/node_modules/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Variables d'environnement (SÉCURITÉ CRITIQUE)
+# Environment variables
 .env
 .env.local
 .env.development
 .env.production
-
-# Mais garder les templates
 !.env.example
 
-# Uploads et fichiers utilisateurs
-uploads/
-*/uploads/
-temp/
-*/temp/
+# Build outputs
+dist/
+build/
+*/dist/
+*/build/
 
-# Base de données locale
-*.db
-*.sqlite
-*.sqlite3
-
-# Fichiers de cache
+# Cache
 .cache/
 .parcel-cache/
 .next/
 .nuxt/
 
-# Fichiers de build
-build/
-dist/
-out/
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
 
-# Fichiers système
-Thumbs.db
+# OS
 .DS_Store
-.AppleDouble
-.LSOverride
+Thumbs.db
 
-# Coverage et tests
+# Configuration Claude Code
+.claude/
+.mcp.json
+CLAUDE.md
+
+# Uploads
+uploads/
+*/uploads/
+
+# Coverage
 coverage/
 *.lcov
-.nyc_output
 
-# Logs spécifiques
-*.tgz
-*.tar.gz
+# Temporary
+temp/
+*.tmp

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "../../button/Button";
 import { Input } from "../input/Input";
+import { logger } from "../../../utils/logger";
 import "./EntityForm.css";
 
 // Types de configuration pour différentes entités
@@ -325,14 +326,14 @@ export const EntityForm: React.FC<EntityFormProps> = ({
   useEffect(() => {
     const initData = { ...additionalProps, ...initialData };
     setFormData(initData);
-  }, []); // ✅ Une seule fois au montage
+  }, []); // Une seule fois au montage
 
   // Mettre à jour seulement si les props changent vraiment
   useEffect(() => {
     if (Object.keys(additionalProps).length > 0) {
       setFormData((prev) => ({ ...prev, ...additionalProps }));
     }
-  }, [additionalProps.familyId]); // ✅ Surveiller seulement familyId qui peut changer
+  }, [additionalProps.familyId]); // Surveiller seulement familyId qui peut changer
 
   // Obtenir la valeur d'un champ imbriqué (ex: "address.street")
   const getNestedValue = (
@@ -356,7 +357,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
     path: string,
     value: unknown
   ): Record<string, unknown> => {
-    console.log("🔧 setNestedValue - Début:", { obj, path, value });
+    logger.debug("setNestedValue - Début:", { obj, path, value });
 
     const keys = path.split(".");
     const result = { ...obj };
@@ -383,7 +384,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
     const finalKey = keys[keys.length - 1];
     current[finalKey] = value;
 
-    console.log("🔧 setNestedValue - Résultat:", {
+    logger.debug("setNestedValue - Résultat:", {
       keys,
       result,
       finalValue: getNestedValue(result, path),
@@ -395,26 +396,26 @@ export const EntityForm: React.FC<EntityFormProps> = ({
 
   // Gérer les changements de champs
   const handleFieldChange = (fieldKey: string, value: unknown) => {
-    console.log(`📝 CHANGEMENT - Champ "${fieldKey}" modifié:`, {
+    logger.debug(`CHANGEMENT - Champ "${fieldKey}" modifié:`, {
       ancienneValeur: getNestedValue(formData, fieldKey),
       nouvelleValeur: value,
       type: typeof value,
     });
 
     setFormData((prev) => {
-      console.log(
-        "🔍 CHANGEMENT - formData avant modification:",
+      logger.debug(
+        "CHANGEMENT - formData avant modification:",
         JSON.stringify(prev, null, 2)
       );
 
       const newData = setNestedValue(prev, fieldKey, value);
 
-      console.log(
-        "🔍 CHANGEMENT - formData après modification:",
+      logger.debug(
+        "CHANGEMENT - formData après modification:",
         JSON.stringify(newData, null, 2)
       );
-      console.log(
-        "🔍 CHANGEMENT - Vérification de la valeur définie:",
+      logger.debug(
+        "CHANGEMENT - Vérification de la valeur définie:",
         getNestedValue(newData, fieldKey)
       );
 
@@ -424,7 +425,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
         const parentKey = keys[0];
         const childKey = keys[1];
 
-        console.log("🔍 CHANGEMENT - Champ imbriqué détecté:", {
+        logger.debug("CHANGEMENT - Champ imbriqué détecté:", {
           fieldKey,
           parentKey,
           childKey,
@@ -443,7 +444,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
       setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[fieldKey];
-        console.log(`🧹 CHANGEMENT - Erreur supprimée pour "${fieldKey}"`);
+        logger.debug(`CHANGEMENT - Erreur supprimée pour "${fieldKey}"`);
         return newErrors;
       });
     }
@@ -475,18 +476,18 @@ export const EntityForm: React.FC<EntityFormProps> = ({
 
   // Valider tout le formulaire
   const validateForm = (): boolean => {
-    console.log("🔍 VALIDATION - Début de la validation du formulaire");
-    console.log(
-      "📝 VALIDATION - Données du formulaire:",
+    logger.debug("VALIDATION - Début de la validation du formulaire");
+    logger.debug(
+      "VALIDATION - Données du formulaire:",
       JSON.stringify(formData, null, 2)
     );
-    console.log("⚙️ VALIDATION - Configuration des champs:", config.fields);
+    logger.debug("VALIDATION - Configuration des champs:", config.fields);
 
     const newErrors: Record<string, string> = {};
 
     config.fields.forEach((field: FieldConfig) => {
       const value = getNestedValue(formData, field.key);
-      console.log(`🔎 VALIDATION - Champ "${field.key}":`, {
+      logger.debug(`VALIDATION - Champ "${field.key}":`, {
         label: field.label,
         type: field.type,
         required: field.required,
@@ -497,16 +498,16 @@ export const EntityForm: React.FC<EntityFormProps> = ({
 
       const error = validateField(field, value);
       if (error) {
-        console.log(`❌ VALIDATION - Erreur pour "${field.key}": ${error}`);
+        logger.warn(`VALIDATION - Erreur pour "${field.key}": ${error}`);
         newErrors[field.key] = error;
       } else {
-        console.log(`✅ VALIDATION - Champ "${field.key}" valide`);
+        logger.debug(`VALIDATION - Champ "${field.key}" valide`);
       }
     });
 
-    console.log("�� VALIDATION - Résumé des erreurs:", newErrors);
-    console.log(
-      "🎯 VALIDATION - Formulaire valide:",
+    logger.debug("VALIDATION - Résumé des erreurs:", newErrors);
+    logger.debug(
+      "VALIDATION - Formulaire valide:",
       Object.keys(newErrors).length === 0
     );
 
@@ -518,25 +519,25 @@ export const EntityForm: React.FC<EntityFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("🚀 SOUMISSION - Début de la soumission");
-    console.log(
-      "📋 SOUMISSION - Données avant validation:",
+    logger.debug("SOUMISSION - Début de la soumission");
+    logger.debug(
+      "SOUMISSION - Données avant validation:",
       JSON.stringify(formData, null, 2)
     );
 
     if (!validateForm()) {
-      console.log("❌ SOUMISSION - Validation échouée, arrêt de la soumission");
-      console.log("🔍 SOUMISSION - Erreurs actuelles:", errors);
+      logger.warn("SOUMISSION - Validation échouée, arrêt de la soumission");
+      logger.debug("SOUMISSION - Erreurs actuelles:", errors);
       return;
     }
 
-    console.log("✅ SOUMISSION - Validation réussie, envoi des données");
+    logger.debug("SOUMISSION - Validation réussie, envoi des données");
 
     try {
       await onSubmit(formData);
-      console.log("🎉 SOUMISSION - Succès de la soumission");
+      logger.info("SOUMISSION - Succès de la soumission");
     } catch (error) {
-      console.error("💥 SOUMISSION - Erreur lors de la soumission:", error);
+      logger.error("SOUMISSION - Erreur lors de la soumission:", error);
     }
   };
 
