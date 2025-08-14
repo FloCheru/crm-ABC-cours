@@ -103,7 +103,7 @@ beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
   await mongoose.connect(mongoUri);
-  console.log("✅ Test database connected");
+  console.log("Test database connected");
 });
 
 afterAll(async () => {

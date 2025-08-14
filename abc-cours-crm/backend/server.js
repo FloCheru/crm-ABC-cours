@@ -125,7 +125,7 @@ const startServer = async () => {
       console.log(`🎯 Environnement: ${envFile}`);
     });
   } catch (error) {
-    console.error("❌ Erreur lors du démarrage du serveur:", error);
+    console.error("Erreur lors du démarrage du serveur:", error);
     process.exit(1);
   }
 };

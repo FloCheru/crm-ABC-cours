@@ -13,9 +13,9 @@ const Assignment = require("../models/Assignment");
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log("✅ MongoDB connecté pour le seeding");
+    console.log("MongoDB connecté pour le seeding");
   } catch (error) {
-    console.error("❌ Erreur de connexion MongoDB:", error);
+    console.error("Erreur de connexion MongoDB:", error);
     process.exit(1);
   }
 };
@@ -353,7 +353,7 @@ const seedData = async () => {
       },
     });
 
-    console.log("✅ Base de données peuplée avec succès !");
+    console.log("Base de données peuplée avec succès !");
     console.log("\n📊 Résumé :");
     console.log(`- ${await User.countDocuments()} utilisateurs`);
     console.log(`- ${await Family.countDocuments()} familles`);
@@ -367,7 +367,7 @@ const seedData = async () => {
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Erreur lors du seeding:", error);
+    console.error("Erreur lors du seeding:", error);
     process.exit(1);
   }
 };

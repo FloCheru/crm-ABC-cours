@@ -6,7 +6,7 @@ const createSubjects = async () => {
   try {
     // Connexion à la base de données
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log("✅ Connecté à MongoDB");
+    console.log("Connecté à MongoDB");
 
     // Liste des matières à créer
     const subjects = [
@@ -107,11 +107,11 @@ const createSubjects = async () => {
       const existingSubject = await Subject.findOne({ name: subjectData.name });
 
       if (existingSubject) {
-        console.log(`⚠️ La matière "${subjectData.name}" existe déjà`);
+        console.log(`La matière "${subjectData.name}" existe déjà`);
       } else {
         const subject = new Subject(subjectData);
         await subject.save();
-        console.log(`✅ Matière créée : ${subjectData.name}`);
+        console.log(`Matière créée : ${subjectData.name}`);
       }
     }
 
@@ -119,7 +119,7 @@ const createSubjects = async () => {
     const totalSubjects = await Subject.countDocuments();
     console.log(`\n📊 Résumé : ${totalSubjects} matières au total`);
   } catch (error) {
-    console.error("❌ Erreur lors de la création des matières:", error);
+    console.error("Erreur lors de la création des matières:", error);
   } finally {
     await mongoose.disconnect();
     console.log("🔌 Déconnecté de MongoDB");

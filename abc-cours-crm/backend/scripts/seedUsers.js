@@ -34,7 +34,7 @@ const seedUsers = async () => {
   try {
     // Connexion à la base de données
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log("✅ Connecté à MongoDB");
+    console.log("Connecté à MongoDB");
 
     // Supprimer tous les utilisateurs existants
     await User.deleteMany({});
@@ -52,7 +52,7 @@ const seedUsers = async () => {
       createdUsers.push(user);
     }
 
-    console.log(`✅ ${createdUsers.length} utilisateurs créés`);
+    console.log(`${createdUsers.length} utilisateurs créés`);
 
     // Afficher les utilisateurs créés
     console.log("\n👥 Utilisateurs créés :");
@@ -70,7 +70,7 @@ const seedUsers = async () => {
     console.log("   - prof@abc-cours.com / prof123");
     console.log("   - famille@abc-cours.com / famille123");
   } catch (error) {
-    console.error("❌ Erreur lors du seeding:", error);
+    console.error("Erreur lors du seeding:", error);
   } finally {
     await mongoose.disconnect();
     console.log("🔌 Déconnecté de MongoDB");

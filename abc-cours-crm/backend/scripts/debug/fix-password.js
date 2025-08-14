@@ -29,7 +29,7 @@ async function fixPassword() {
   // Vérification immédiate
   const user = await User.findOne({ email });
   const testResult = await bcrypt.compare(newPassword, user.password);
-  console.log("✅ Test final:", testResult ? "SUCCESS" : "FAILED");
+  console.log("Test final:", testResult ? "SUCCESS" : "FAILED");
 
   if (testResult) {
     console.log("🎉 Mot de passe fixé ! Tu peux maintenant te connecter.");
