@@ -7,12 +7,12 @@ const createAdminUser = async () => {
   try {
     // Connexion à la base de données
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log("✅ Connecté à MongoDB");
+    console.log("Connecté à MongoDB");
 
     // Vérifier si l'admin existe déjà
     const existingAdmin = await User.findOne({ email: "admin@abc-cours.fr" });
     if (existingAdmin) {
-      console.log("⚠️ L'utilisateur admin existe déjà");
+      console.log("L'utilisateur admin existe déjà");
       return;
     }
 
@@ -31,11 +31,11 @@ const createAdminUser = async () => {
     });
 
     await adminUser.save();
-    console.log("✅ Utilisateur admin créé avec succès");
+    console.log("Utilisateur admin créé avec succès");
     console.log("📧 Email: admin@abc-cours.fr");
     console.log("🔑 Mot de passe: admin123");
   } catch (error) {
-    console.error("❌ Erreur lors de la création de l'admin:", error);
+    console.error("Erreur lors de la création de l'admin:", error);
   } finally {
     await mongoose.disconnect();
     console.log("🔌 Déconnecté de MongoDB");

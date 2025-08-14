@@ -90,7 +90,7 @@ async function generateUniqueCouponCode(seriesId, couponNumber) {
     }
 
     attempts++;
-    console.log(`⚠️ Code ${couponCode} existe déjà, tentative ${attempts + 1}`);
+    console.log(`Code ${couponCode} existe déjà, tentative ${attempts + 1}`);
   }
 
   // Si on arrive ici, utiliser un timestamp pour garantir l'unicité
@@ -170,7 +170,7 @@ class CouponGenerationService {
       await couponSeries.save();
 
       console.log(
-        `✅ Série de ${totalCoupons} coupons générée pour la NDR ${settlementNote._id}`
+        `Série de ${totalCoupons} coupons générée pour la NDR ${settlementNote._id}`
       );
 
       return {
@@ -179,7 +179,7 @@ class CouponGenerationService {
         totalCoupons,
       };
     } catch (error) {
-      console.error("❌ Erreur lors de la génération des coupons:", error);
+      console.error("Erreur lors de la génération des coupons:", error);
       throw new Error(
         `Erreur lors de la génération des coupons: ${error.message}`
       );
@@ -206,7 +206,7 @@ class CouponGenerationService {
 
       return couponSeries;
     } catch (error) {
-      console.error("❌ Erreur lors de la récupération de la série:", error);
+      console.error("Erreur lors de la récupération de la série:", error);
       throw error;
     }
   }
@@ -237,7 +237,7 @@ class CouponGenerationService {
 
       return coupon;
     } catch (error) {
-      console.error("❌ Erreur lors de l'utilisation du coupon:", error);
+      console.error("Erreur lors de l'utilisation du coupon:", error);
       throw error;
     }
   }
@@ -268,7 +268,7 @@ class CouponGenerationService {
       return stats;
     } catch (error) {
       console.error(
-        "❌ Erreur lors de la récupération des statistiques:",
+        "Erreur lors de la récupération des statistiques:",
         error
       );
       throw error;
@@ -296,7 +296,7 @@ class CouponGenerationService {
 
       return coupon;
     } catch (error) {
-      console.error("❌ Erreur lors de la recherche du coupon:", error);
+      console.error("Erreur lors de la recherche du coupon:", error);
       throw error;
     }
   }

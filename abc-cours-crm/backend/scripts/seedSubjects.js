@@ -117,7 +117,7 @@ const seedSubjects = async () => {
   try {
     // Connexion à la base de données
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log("✅ Connecté à MongoDB");
+    console.log("Connecté à MongoDB");
 
     // Supprimer toutes les matières existantes
     await Subject.deleteMany({});
@@ -125,7 +125,7 @@ const seedSubjects = async () => {
 
     // Insérer les nouvelles matières
     const insertedSubjects = await Subject.insertMany(subjects);
-    console.log(`✅ ${insertedSubjects.length} matières ajoutées`);
+    console.log(`${insertedSubjects.length} matières ajoutées`);
 
     // Afficher les matières ajoutées
     console.log("\n📚 Matières ajoutées :");
@@ -135,7 +135,7 @@ const seedSubjects = async () => {
 
     console.log("\n🎉 Seeding terminé avec succès !");
   } catch (error) {
-    console.error("❌ Erreur lors du seeding:", error);
+    console.error("Erreur lors du seeding:", error);
   } finally {
     await mongoose.disconnect();
     console.log("🔌 Déconnecté de MongoDB");

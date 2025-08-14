@@ -90,7 +90,7 @@ router.get(
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log("❌ Erreurs de validation:", errors.array());
+        console.log("Erreurs de validation:", errors.array());
         return res.status(400).json({
           error: "Validation failed",
           details: errors.array(),
@@ -176,8 +176,8 @@ router.get(
       console.log("🔍 Réponse envoyée avec succès");
       res.json(response);
     } catch (error) {
-      console.error("❌ Erreur dans GET /api/coupon-series:", error);
-      console.error("❌ Stack trace:", error.stack);
+      console.error("Erreur dans GET /api/coupon-series:", error);
+      console.error("Stack trace:", error.stack);
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -256,7 +256,7 @@ router.post(
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log("❌ Erreurs de validation:", errors.array());
+        console.log("Erreurs de validation:", errors.array());
         return res.status(400).json({
           error: "Validation failed",
           details: errors.array(),
@@ -418,8 +418,8 @@ router.post(
         couponsCreated: totalCoupons,
       });
     } catch (error) {
-      console.error("❌ Erreur dans POST /api/coupon-series:", error);
-      console.error("❌ Stack trace:", error.stack);
+      console.error("Erreur dans POST /api/coupon-series:", error);
+      console.error("Stack trace:", error.stack);
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -611,8 +611,8 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
       deletedCoupons: deleteCouponsResult.deletedCount,
     });
   } catch (error) {
-    console.error("❌ Erreur dans DELETE /api/coupon-series/:id:", error);
-    console.error("❌ Stack trace:", error.stack);
+    console.error("Erreur dans DELETE /api/coupon-series/:id:", error);
+    console.error("Stack trace:", error.stack);
     res.status(500).json({ error: "Internal server error" });
   }
 });

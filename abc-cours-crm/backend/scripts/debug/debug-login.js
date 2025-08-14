@@ -20,13 +20,13 @@ async function debugLogin() {
   console.log("👤 Utilisateur trouvé:", !!user);
 
   if (!user) {
-    console.log("❌ Utilisateur introuvable !");
+    console.log("Utilisateur introuvable !");
     process.exit(1);
   }
 
   console.log("📧 Email en base:", user.email);
   console.log("🔐 Hash en base:", user.password);
-  console.log("✅ Utilisateur actif:", user.isActive);
+  console.log("Utilisateur actif:", user.isActive);
 
   // 2. Tester le mot de passe
   console.log("\n🧪 TEST DU MOT DE PASSE:");

@@ -4,15 +4,15 @@ const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI);
 
-    console.log(`✅ MongoDB connecté: ${conn.connection.host}`);
+    console.log(`MongoDB connecté: ${conn.connection.host}`);
 
     // Gestion des événements de connexion
     mongoose.connection.on("error", (err) => {
-      console.error("❌ Erreur MongoDB:", err);
+      console.error("Erreur MongoDB:", err);
     });
 
     mongoose.connection.on("disconnected", () => {
-      console.log("⚠️ MongoDB déconnecté");
+      console.log("MongoDB déconnecté");
     });
 
     // Gestion propre de la fermeture
@@ -22,7 +22,7 @@ const connectDB = async () => {
       process.exit(0);
     });
   } catch (error) {
-    console.error("❌ Erreur de connexion MongoDB:", error);
+    console.error("Erreur de connexion MongoDB:", error);
     process.exit(1);
   }
 };

@@ -15,7 +15,7 @@ const setupTestDB = async () => {
   const mongoUri = mongoServer.getUri();
 
   await mongoose.connect(mongoUri);
-  console.log("✅ Test database connected");
+  console.log("Test database connected");
 };
 
 const teardownTestDB = async () => {

@@ -67,7 +67,7 @@ router.get(
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log("❌ Erreurs de validation:", errors.array());
+        console.log("Erreurs de validation:", errors.array());
         return res.status(400).json({
           error: "Validation failed",
           details: errors.array(),
@@ -145,8 +145,8 @@ router.get(
         pagination: response.pagination, // Pagination inchangée
       });
     } catch (error) {
-      console.error("❌ Erreur dans GET /api/settlement-notes:", error);
-      console.error("❌ Stack trace:", error.stack);
+      console.error("Erreur dans GET /api/settlement-notes:", error);
+      console.error("Stack trace:", error.stack);
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -189,7 +189,7 @@ router.post(
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log("❌ Erreurs de validation:", errors.array());
+        console.log("Erreurs de validation:", errors.array());
         return res.status(400).json({
           error: "Validation failed",
           details: errors.array(),
@@ -234,7 +234,7 @@ router.post(
       // Créer la note de règlement
       const settlementNote = new SettlementNote({
         familyId,
-        studentId, // ✅ Ajout du studentId dans le modèle
+        studentId, // Ajout du studentId dans le modèle
         clientName,
         department,
         paymentMethod,
@@ -261,7 +261,7 @@ router.post(
       if (family && family.status === "prospect") {
         await Family.findByIdAndUpdate(familyId, { status: "client" });
         console.log(
-          "✅ Statut de la famille changé automatiquement de 'prospect' à 'client'"
+          "Statut de la famille changé automatiquement de 'prospect' à 'client'"
         );
       }
 
@@ -303,8 +303,8 @@ router.post(
         },
       });
     } catch (error) {
-      console.error("❌ Erreur dans POST /api/settlement-notes:", error);
-      console.error("❌ Stack trace:", error.stack);
+      console.error("Erreur dans POST /api/settlement-notes:", error);
+      console.error("Stack trace:", error.stack);
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -612,7 +612,7 @@ router.get("/:id/coupons", authorize(["admin"]), async (req, res) => {
     });
   } catch (error) {
     console.error(
-      "❌ Erreur dans GET /api/settlement-notes/:id/coupons:",
+      "Erreur dans GET /api/settlement-notes/:id/coupons:",
       error
     );
     if (error.message.includes("Aucune série de coupons trouvée")) {
@@ -640,7 +640,7 @@ router.get("/coupons/search/:code", async (req, res) => {
       message: "Coupon trouvé avec succès",
     });
   } catch (error) {
-    console.error("❌ Erreur dans la recherche de coupon:", error);
+    console.error("Erreur dans la recherche de coupon:", error);
 
     if (error.message.includes("Coupon non trouvé")) {
       return res.status(404).json({ error: "Coupon non trouvé" });
