@@ -13,7 +13,10 @@ import { ModalWrapper } from "../../../components/ui/ModalWrapper/ModalWrapper";
 
 import { settlementService } from "../../../services/settlementService";
 import { familyService, type Family } from "../../../services/familyService";
+import { subjectService } from "../../../services/subjectService";
 import type { CreateSettlementNoteData } from "../../../types/settlement";
+import type { Subject } from "../../../types/subject";
+import { useRefresh } from "../../../contexts/RefreshContext";
 
 // Import des types partagés
 import type {
@@ -25,11 +28,13 @@ export const SettlementCreate: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const familyId = searchParams.get("familyId");
+  const { triggerRefresh } = useRefresh();
 
   const [families, setFamilies] = useState<Family[]>([]);
   const [students, setStudents] = useState<
     Array<{ _id: string; firstName: string; lastName: string; level?: string }>
   >([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
@@ -72,6 +77,41 @@ export const SettlementCreate: React.FC = () => {
         console.log("🔍 Familles reçues:", familiesData);
         setFamilies(familiesData);
 
+        // Charger toutes les matières
+        console.log("🔍 Chargement des matières...");
+        let subjectsData: Subject[] = [];
+        try {
+          // Test direct de l'API
+          console.log("🔍 Test direct de l'API /api/subjects...");
+          const testResponse = await fetch(
+            "http://localhost:3000/api/subjects",
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          console.log("🔍 Test API - Status:", testResponse.status);
+          console.log("🔍 Test API - OK:", testResponse.ok);
+
+          if (testResponse.ok) {
+            const testData = await testResponse.json();
+            console.log("🔍 Test API - Données brutes:", testData);
+          } else {
+            console.log("❌ Test API - Erreur:", testResponse.statusText);
+          }
+
+          subjectsData = await subjectService.getSubjects();
+          console.log("🔍 Matières reçues via service:", subjectsData);
+          console.log("🔍 Nombre de matières:", subjectsData.length);
+          console.log("🔍 Type des matières:", typeof subjectsData);
+          console.log("🔍 Est-ce un tableau?", Array.isArray(subjectsData));
+          setSubjects(subjectsData);
+        } catch (error) {
+          console.error("❌ Erreur lors du chargement des matières:", error);
+          setSubjects([]);
+        }
+
         // Si un familyId est fourni, charger les informations de la famille et ses élèves
         if (familyId) {
           try {
@@ -111,6 +151,18 @@ export const SettlementCreate: React.FC = () => {
             console.error("Erreur lors du chargement de la famille:", err);
           }
         }
+
+        // Sélectionner automatiquement la première matière si disponible
+        if (subjectsData.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            subjectId: subjectsData[0]._id,
+          }));
+          console.log(
+            "✅ Première matière sélectionnée:",
+            subjectsData[0].name
+          );
+        }
       } catch (err) {
         console.error("Erreur lors du chargement des données:", err);
         setError("Impossible de charger les données. Veuillez réessayer.");
@@ -128,6 +180,23 @@ export const SettlementCreate: React.FC = () => {
     const marginAmount = totalAmount - salaryToPay - chargesToPay;
     const marginPercentage =
       totalAmount > 0 ? (marginAmount / totalAmount) * 100 : 0;
+
+    // 🔍 LOGS DE DÉBOGAGE - Calcul des valeurs dérivées
+    console.log("🔍 === CALCUL VALEURS DÉRIVÉES ===");
+    console.log("🔍 Inputs:", {
+      professorSalary: formData.professorSalary,
+      charges: formData.charges,
+      hourlyRate: formData.hourlyRate,
+      quantity: formData.quantity,
+    });
+    console.log("🔍 Calculs:", {
+      salaryToPay,
+      chargesToPay,
+      totalAmount,
+      marginAmount,
+      marginPercentage,
+    });
+    console.log("🔍 === FIN CALCUL ===");
 
     setFormData((prev) => ({
       ...prev,
@@ -149,6 +218,12 @@ export const SettlementCreate: React.FC = () => {
     >
   ) => {
     const { name, value } = e.target;
+
+    // 🔍 LOG DE DÉBOGAGE - Changement de valeur
+    console.log(
+      `🔍 Changement de valeur: ${name} = ${value} (type: ${typeof value})`
+    );
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -202,6 +277,63 @@ export const SettlementCreate: React.FC = () => {
     setIsLoading(true);
     setError("");
 
+    // 🔍 LOGS DE DÉBOGAGE - Vérification des données avant envoi
+    console.log("🔍 === DÉBOGAGE FORMULAIRE ===");
+    console.log("🔍 formData complet:", formData);
+    console.log("🔍 Vérification des champs requis:");
+    console.log(
+      "  - familyId:",
+      formData.familyId,
+      "✅" + (formData.familyId ? "" : "❌ MANQUANT")
+    );
+    console.log(
+      "  - studentId:",
+      formData.studentId,
+      "✅" + (formData.studentId ? "" : "❌ MANQUANT")
+    );
+    console.log(
+      "  - clientName:",
+      formData.clientName,
+      "✅" + (formData.clientName ? "" : "❌ MANQUANT")
+    );
+    console.log(
+      "  - department:",
+      formData.department,
+      "✅" + (formData.department ? "" : "❌ MANQUANT")
+    );
+    console.log(
+      "  - subjectId:",
+      formData.subjectId,
+      "✅" + (formData.subjectId ? "" : "❌ MANQUANT")
+    );
+    console.log(
+      "  - hourlyRate:",
+      formData.hourlyRate,
+      "✅" + (formData.hourlyRate > 0 ? "" : "❌ DOIT ÊTRE > 0")
+    );
+    console.log(
+      "  - quantity:",
+      formData.quantity,
+      "✅" + (formData.quantity > 0 ? "" : "❌ DOIT ÊTRE > 0")
+    );
+    console.log(
+      "  - professorSalary:",
+      formData.professorSalary,
+      "✅" + (formData.professorSalary > 0 ? "" : "❌ DOIT ÊTRE > 0")
+    );
+    console.log(
+      "  - charges:",
+      formData.charges,
+      "✅" + (formData.charges > 0 ? "" : "❌ DOIT ÊTRE > 0")
+    );
+    console.log(
+      "  - dueDate:",
+      formData.dueDate,
+      "✅" + (formData.dueDate ? "" : "❌ MANQUANT")
+    );
+    console.log("  - paymentMethod:", formData.paymentMethod, "✅");
+    console.log("🔍 === FIN DÉBOGAGE ===");
+
     try {
       // Si c'est un nouvel élève (pas un ID MongoDB), le créer d'abord
       if (
@@ -218,10 +350,23 @@ export const SettlementCreate: React.FC = () => {
         console.log("✅ Nouvel élève créé avec l'ID:", newStudent._id);
       }
 
+      // 🔍 LOG AVANT ENVOI À L'API
+      console.log("🚀 Envoi des données à l'API:", formData);
+
       // Créer la note de règlement
       await settlementService.createSettlementNote(formData);
+
+      // ✅ NAVIGUER D'ABORD
+      console.log("🚀 Navigation vers le Dashboard");
       navigate("/admin/dashboard");
+
+      // ✅ PUIS déclencher le refresh après un délai
+      setTimeout(() => {
+        console.log("🔄 Déclenchement du rafraîchissement après navigation");
+        triggerRefresh();
+      }, 200);
     } catch (err) {
+      console.error("❌ ERREUR DÉTAILLÉE:", err);
       setError(
         err instanceof Error ? err.message : "Erreur lors de la création"
       );
@@ -1038,17 +1183,26 @@ export const SettlementCreate: React.FC = () => {
                 >
                   Matière *
                 </label>
-                {/* The subjects state was removed, so this input is now static */}
-                <Input
+                <select
                   id="subjectId"
                   name="subjectId"
-                  type="text"
                   value={formData.subjectId}
                   onChange={handleInputChange}
                   required
-                  placeholder="Saisir le nom de la matière"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                >
+                  <option value="">Sélectionner une matière</option>
+                  {subjects.map((subject) => (
+                    <option key={subject._id} value={subject._id}>
+                      {subject.name} ({subject.category})
+                    </option>
+                  ))}
+                </select>
+                {subjects.length === 0 && (
+                  <p className="text-sm text-red-600 mt-1">
+                    Aucune matière disponible. Veuillez en créer une d'abord.
+                  </p>
+                )}
               </div>
 
               <div>

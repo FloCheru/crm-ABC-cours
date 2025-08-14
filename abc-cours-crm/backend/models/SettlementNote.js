@@ -7,6 +7,11 @@ const settlementNoteSchema = new mongoose.Schema(
       ref: "Family",
       required: [true, "ID de la famille requis"],
     },
+    studentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+      required: [true, "ID de l'élève requis"],
+    },
     clientName: {
       type: String,
       required: [true, "Nom du client requis"],

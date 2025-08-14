@@ -115,19 +115,6 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         type: "text",
         group: "secondaryContact",
       },
-      {
-        key: "financialInfo.paymentMethod",
-        label: "Mode de paiement",
-        type: "select",
-        required: true,
-        options: [
-          { value: "card", label: "Carte" },
-          { value: "check", label: "Chèque" },
-          { value: "transfer", label: "Virement" },
-          { value: "cash", label: "Espèces" },
-        ],
-        group: "financial",
-      },
       { key: "notes", label: "Notes", type: "textarea", group: "notes" },
     ],
   },
@@ -657,7 +644,6 @@ export const EntityForm: React.FC<EntityFormProps> = ({
         <h3 className="entity-form__group-title">
           {groupName === "primaryContact" && "Contact principal"}
           {groupName === "secondaryContact" && "Contact secondaire"}
-          {groupName === "financial" && "Informations financières"}
           {groupName === "personal" && "Informations personnelles"}
           {groupName === "school" && "Scolarité"}
           {groupName === "contact" && "Contact"}

@@ -70,19 +70,13 @@ const familySchema = new mongoose.Schema(
         default: "Contact secondaire",
       },
     },
-    financialInfo: {
-      paymentMethod: {
-        type: String,
-        enum: ["card", "check", "transfer", "cash"],
-        default: "transfer",
+    // Notes de règlement liées à cette famille
+    settlementNotes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "SettlementNote",
       },
-      billingAddress: {
-        street: String,
-        city: String,
-        postalCode: String,
-      },
-      notes: String,
-    },
+    ],
     status: {
       type: String,
       enum: ["prospect", "client"],

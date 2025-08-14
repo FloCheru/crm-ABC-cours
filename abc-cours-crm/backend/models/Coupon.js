@@ -13,11 +13,7 @@ const couponSchema = new mongoose.Schema(
       required: [true, "ID de la famille requis"],
     },
 
-    // Numéro du coupon dans la série
-    couponNumber: {
-      type: Number,
-      required: true,
-    },
+    // Code unique du coupon (ex: "ABC123-001")
     code: {
       type: String,
       required: true,
@@ -82,8 +78,8 @@ const couponSchema = new mongoose.Schema(
 );
 
 // Index pour améliorer les performances
-couponSchema.index({ couponSeriesId: 1, couponNumber: 1 }, { unique: true });
-couponSchema.index({ code: 1 }, { unique: true }); // Index unique pour le code
+couponSchema.index({ couponSeriesId: 1, code: 1 }, { unique: true });
+couponSchema.index({ code: 1 }, { unique: true });
 couponSchema.index({ familyId: 1 });
 couponSchema.index({ status: 1 });
 couponSchema.index({ usedDate: 1 });
@@ -151,7 +147,7 @@ couponSchema.methods.cancelUsage = async function () {
 
   // Mettre à jour la série
   const CouponSeries = require("./CouponSeries");
-  const series = await CouponSeries.findById(this.series);
+  const series = await CouponSeries.findById(this.couponSeriesId);
   await series.refundCoupon();
 
   return this;

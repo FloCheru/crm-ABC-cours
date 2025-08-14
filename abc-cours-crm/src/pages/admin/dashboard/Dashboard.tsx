@@ -10,16 +10,21 @@ import {
   Button,
   Table,
 } from "../../../components";
+import { ModalWrapper } from "../../../components/ui/ModalWrapper/ModalWrapper";
+import { EntityForm } from "../../../components/forms/EntityForm";
 import { familyService } from "../../../services/familyService";
 import { settlementService } from "../../../services/settlementService";
 import type { Family, FamilyStats } from "../../../services/familyService";
+import { useRefresh } from "../../../contexts/RefreshContext";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Family & { id: string };
+type CreateFamilyData = Omit<Family, "_id" | "createdAt" | "updatedAt">;
 
 export const Dashboard: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { refreshTrigger } = useRefresh();
   const [familyData, setFamilyData] = useState<Family[]>([]);
   const [stats, setStats] = useState<FamilyStats | null>(null);
   const [settlementCounts, setSettlementCounts] = useState<
@@ -28,55 +33,72 @@ export const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isCreateFamilyModalOpen, setIsCreateFamilyModalOpen] = useState(false);
 
-  // Charger les données des familles
-  useEffect(() => {
-    const loadFamilyData = async () => {
-      try {
-        setIsLoading(true);
-        setError("");
-        const [data, statsData] = await Promise.all([
-          familyService.getFamilies(),
-          familyService.getFamilyStats(),
-        ]);
-        const families = Array.isArray(data) ? data : [];
-        setFamilyData(families);
-        setStats(statsData);
+  // Fonction pour charger les données des familles
+  const loadFamilyData = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+      const [data, statsData] = await Promise.all([
+        familyService.getFamilies(),
+        familyService.getFamilyStats(),
+      ]);
+      const families = Array.isArray(data) ? data : [];
+      setFamilyData(families);
+      setStats(statsData);
 
-        // Charger le nombre de notes de règlement pour chaque famille
-        const counts: Record<string, number> = {};
-        for (const family of families) {
-          try {
-            const count =
-              await settlementService.getSettlementNotesCountByFamily(
-                family._id
-              );
-            counts[family._id] = count;
-          } catch (err) {
-            console.error(
-              `Erreur lors du comptage pour la famille ${family._id}:`,
-              err
-            );
-            counts[family._id] = 0;
-          }
+      // Charger le nombre de notes de règlement pour chaque famille
+      const counts: Record<string, number> = {};
+      for (const family of families) {
+        try {
+          const count = await settlementService.getSettlementNotesCountByFamily(
+            family._id
+          );
+          counts[family._id] = count;
+        } catch (err) {
+          console.error(
+            `Erreur lors du comptage pour la famille ${family._id}:`,
+            err
+          );
+          counts[family._id] = 0;
         }
-        setSettlementCounts(counts);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Erreur lors du chargement"
-        );
-        console.error("Erreur lors du chargement des familles:", err);
-        setFamilyData([]);
-      } finally {
-        setIsLoading(false);
       }
-    };
+      setSettlementCounts(counts);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erreur lors du chargement"
+      );
+      console.error("Erreur lors du chargement des familles:", err);
+      setFamilyData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // Charger les données au montage du composant ET quand refreshTrigger change
+  useEffect(() => {
+    console.log(
+      "🎯 Dashboard: Chargement des données (trigger:",
+      refreshTrigger,
+      ")"
+    );
     loadFamilyData();
-  }, []);
+  }, [refreshTrigger]);
+
+  // Log supplémentaire pour déboguer
+  useEffect(() => {
+    console.log("🔄 Dashboard: refreshTrigger a changé:", refreshTrigger);
+  }, [refreshTrigger]);
+
+  // Fonction pour rafraîchir manuellement (optionnel)
+  const handleManualRefresh = () => {
+    console.log("🔄 Rafraîchissement manuel déclenché");
+    loadFamilyData();
+  };
 
   const handleCreateFamily = () => {
-    navigate("/admin/families/create");
+    setIsCreateFamilyModalOpen(true);
   };
 
   // const handleEditFamily = (familyId: string) => {
@@ -101,28 +123,6 @@ export const Dashboard: React.FC = () => {
   //     }
   //   }
   // };
-
-  const handleUpdateStatus = async (
-    familyId: string,
-    newStatus: "prospect" | "client"
-  ) => {
-    try {
-      await familyService.updateStatus(familyId, newStatus);
-      // Recharger les données après mise à jour
-      const [updatedData, updatedStats] = await Promise.all([
-        familyService.getFamilies(),
-        familyService.getFamilyStats(),
-      ]);
-      setFamilyData(updatedData);
-      setStats(updatedStats);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Erreur lors de la mise à jour du statut"
-      );
-    }
-  };
 
   const handleSearch = () => {
     // Implémenter la recherche si nécessaire
@@ -197,35 +197,6 @@ export const Dashboard: React.FC = () => {
       ),
     },
     {
-      key: "paymentMethod",
-      label: "Mode de paiement",
-      render: (_: unknown, row: TableRowData) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            row.financialInfo?.paymentMethod === "card"
-              ? "bg-blue-100 text-blue-800"
-              : row.financialInfo?.paymentMethod === "check"
-              ? "bg-green-100 text-green-800"
-              : row.financialInfo?.paymentMethod === "transfer"
-              ? "bg-purple-100 text-purple-800"
-              : row.financialInfo?.paymentMethod === "cash"
-              ? "bg-orange-100 text-orange-800"
-              : "bg-gray-100 text-gray-800"
-          }`}
-        >
-          {row.financialInfo?.paymentMethod === "card"
-            ? "Carte"
-            : row.financialInfo?.paymentMethod === "check"
-            ? "Chèque"
-            : row.financialInfo?.paymentMethod === "transfer"
-            ? "Virement"
-            : row.financialInfo?.paymentMethod === "cash"
-            ? "Espèces"
-            : "N/A"}
-        </span>
-      ),
-    },
-    {
       key: "status",
       label: "Statut",
       render: (_: unknown, row: TableRowData) => (
@@ -271,7 +242,9 @@ export const Dashboard: React.FC = () => {
             <Button
               size="sm"
               variant="primary"
-              onClick={() => handleUpdateStatus(row._id, "client")}
+              onClick={() =>
+                navigate(`/admin/dashboard/create?familyId=${row._id}`)
+              }
             >
               Créer une note de règlement
             </Button>
@@ -288,15 +261,26 @@ export const Dashboard: React.FC = () => {
                   Créer une note de règlement
                 </Button>
               ) : (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() =>
-                    navigate(`/admin/settlements?familyId=${row._id}`)
-                  }
-                >
-                  Voir les notes de règlement ({settlementCounts[row._id]})
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={() =>
+                      navigate(`/admin/dashboard/create?familyId=${row._id}`)
+                    }
+                  >
+                    Créer une note de règlement
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() =>
+                      navigate(`/admin/settlements?familyId=${row._id}`)
+                    }
+                  >
+                    Voir les notes de règlement ({settlementCounts[row._id]})
+                  </Button>
+                </div>
               )}
             </>
           )}
@@ -359,7 +343,7 @@ export const Dashboard: React.FC = () => {
             variant="triple"
             buttons={[
               {
-                text: "Créer une famille",
+                text: "Créer un prospect",
                 variant: "primary",
                 onClick: handleCreateFamily,
               },
@@ -382,6 +366,14 @@ export const Dashboard: React.FC = () => {
               },
             ]}
           />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleManualRefresh}
+            className="ml-2"
+          >
+            🔄 Rafraîchir
+          </Button>
         </Container>
 
         <Container layout="flex">
@@ -417,6 +409,30 @@ export const Dashboard: React.FC = () => {
           )}
         </Container>
       </Container>
+
+      <ModalWrapper
+        isOpen={isCreateFamilyModalOpen}
+        onClose={() => setIsCreateFamilyModalOpen(false)}
+        size="lg"
+      >
+        <EntityForm
+          entityType="family"
+          onSubmit={async (data) => {
+            try {
+              await familyService.createFamily(data as CreateFamilyData);
+              setIsCreateFamilyModalOpen(false);
+              handleManualRefresh();
+            } catch (err) {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : "Erreur lors de la création"
+              );
+            }
+          }}
+          onCancel={() => setIsCreateFamilyModalOpen(false)}
+        />
+      </ModalWrapper>
     </div>
   );
 };

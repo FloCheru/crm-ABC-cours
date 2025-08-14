@@ -135,11 +135,7 @@ router.post(
       .trim()
       .notEmpty()
       .withMessage("Code postal requis"),
-    body("financialInfo.paymentMethod")
-      .isIn(["card", "check", "transfer", "cash"])
-      .withMessage(
-        "Mode de paiement doit être 'card', 'check', 'transfer' ou 'cash'"
-      ),
+    // Validation supprimée pour financialInfo.paymentMethod (champ supprimé du modèle)
   ],
   async (req, res) => {
     try {
@@ -152,7 +148,10 @@ router.post(
         });
       }
 
-      const family = new Family(req.body);
+      const family = new Family({
+        ...req.body,
+        createdBy: req.user.id, // Ajouter automatiquement l'ID de l'utilisateur créateur
+      });
       await family.save();
 
       // Debug: vérifier ce qui est dans family après sauvegarde

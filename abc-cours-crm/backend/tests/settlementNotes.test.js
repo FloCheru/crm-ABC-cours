@@ -70,9 +70,7 @@ describe("Settlement Notes API Tests", () => {
           isPrimaryContact: true,
         },
       ],
-      financialInfo: {
-        paymentMethod: "card",
-      },
+      settlementNotes: [], // Notes de règlement liées à cette famille
       status: "client",
     });
     await testFamily.save();

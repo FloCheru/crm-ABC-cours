@@ -68,6 +68,37 @@ function decodeCouponCode(code) {
   return result;
 }
 
+/**
+ * Génère un code de coupon unique en vérifiant qu'il n'existe pas déjà
+ * @param {string} seriesId - ID de la série
+ * @param {number} couponNumber - Numéro du coupon dans la série
+ * @returns {Promise<string>} - Code unique du coupon
+ */
+async function generateUniqueCouponCode(seriesId, couponNumber) {
+  let attempts = 0;
+  const maxAttempts = 10; // Limite de sécurité
+
+  while (attempts < maxAttempts) {
+    const couponCode = generateCouponCode(seriesId, couponNumber + attempts);
+
+    // Vérifier que le code n'existe pas déjà
+    const Coupon = require("../models/Coupon");
+    const existingCoupon = await Coupon.findOne({ code: couponCode });
+
+    if (!existingCoupon) {
+      return couponCode; // Code unique trouvé
+    }
+
+    attempts++;
+    console.log(`⚠️ Code ${couponCode} existe déjà, tentative ${attempts + 1}`);
+  }
+
+  // Si on arrive ici, utiliser un timestamp pour garantir l'unicité
+  const timestamp = Date.now().toString(36).substring(0, 4);
+  const baseCode = generateCouponCode(seriesId, couponNumber);
+  return `${baseCode}-${timestamp}`;
+}
+
 class CouponGenerationService {
   /**
    * Génère automatiquement une série de coupons pour une note de règlement
@@ -105,13 +136,28 @@ class CouponGenerationService {
       // Générer les coupons individuels
       const coupons = [];
       for (let i = 1; i <= totalCoupons; i++) {
-        const couponCode = generateCouponCode(couponSeries._id.toString(), i);
+        const couponCode = await generateUniqueCouponCode(
+          couponSeries._id.toString(),
+          i
+        );
+
+        // Debug: vérifier que le code n'est pas null
+        console.log("🔍 DEBUG - Génération coupon:", {
+          seriesId: couponSeries._id.toString(),
+          couponNumber: i,
+          couponCode: couponCode,
+        });
+
+        if (!couponCode) {
+          throw new Error(
+            `Erreur: Impossible de générer le code pour le coupon ${i}`
+          );
+        }
 
         const coupon = new Coupon({
           couponSeriesId: couponSeries._id,
           familyId: settlementNote.familyId,
-          couponNumber: i,
-          code: couponCode, // Code unique en base 32
+          code: couponCode, // Code unique généré (ex: "ABC123-001")
           status: "available",
         });
 

@@ -18,6 +18,7 @@ router.use(authenticateToken);
 // Validation pour créer une note de règlement
 const createSettlementValidation = [
   body("familyId").isMongoId().withMessage("ID de famille requis"),
+  body("studentId").isMongoId().withMessage("ID de l'élève requis"),
   body("clientName").trim().notEmpty().withMessage("Nom du client requis"),
   body("department").trim().notEmpty().withMessage("Département requis"),
   body("paymentMethod")
@@ -46,6 +47,7 @@ router.get(
   [
     query("page").optional().isInt({ min: 1 }),
     query("limit").optional().isInt({ min: 1, max: 100 }),
+    query("familyId").optional().isMongoId(),
     query("clientName").optional().trim(),
     query("department").optional().trim(),
     query("status").optional().isIn(["pending", "paid", "overdue"]),
@@ -75,6 +77,7 @@ router.get(
       const {
         page = 1,
         limit = 10,
+        familyId,
         clientName,
         department,
         status,
@@ -86,6 +89,7 @@ router.get(
       console.log("🔍 Paramètres traités:", {
         page,
         limit,
+        familyId,
         clientName,
         department,
         status,
@@ -97,6 +101,9 @@ router.get(
       // Construction du filtre
       let filter = {};
 
+      if (familyId) {
+        filter.familyId = familyId;
+      }
       if (clientName) {
         filter.clientName = new RegExp(clientName, "i");
       }
@@ -133,7 +140,10 @@ router.get(
       const response = buildPaginatedResponse(notes, total, page, pageLimit);
 
       console.log("🔍 Réponse envoyée avec succès");
-      res.json(response);
+      res.json({
+        notes: response.data, // Champ 'notes' attendu par le frontend
+        pagination: response.pagination, // Pagination inchangée
+      });
     } catch (error) {
       console.error("❌ Erreur dans GET /api/settlement-notes:", error);
       console.error("❌ Stack trace:", error.stack);
@@ -188,6 +198,7 @@ router.post(
 
       const {
         familyId,
+        studentId,
         clientName,
         department,
         paymentMethod,
@@ -202,6 +213,7 @@ router.post(
 
       console.log("🔍 Paramètres extraits:", {
         familyId,
+        studentId,
         clientName,
         department,
         paymentMethod,
@@ -222,6 +234,7 @@ router.post(
       // Créer la note de règlement
       const settlementNote = new SettlementNote({
         familyId,
+        studentId, // ✅ Ajout du studentId dans le modèle
         clientName,
         department,
         paymentMethod,
@@ -236,6 +249,21 @@ router.post(
       });
 
       await settlementNote.save();
+
+      // Mettre à jour la famille avec l'ID de la note de règlement
+      const Family = require("../models/Family");
+      await Family.findByIdAndUpdate(familyId, {
+        $push: { settlementNotes: settlementNote._id },
+      });
+
+      // Changer automatiquement le statut de "prospect" à "client" si c'est la première note de règlement
+      const family = await Family.findById(familyId);
+      if (family && family.status === "prospect") {
+        await Family.findByIdAndUpdate(familyId, { status: "client" });
+        console.log(
+          "✅ Statut de la famille changé automatiquement de 'prospect' à 'client'"
+        );
+      }
 
       // Générer automatiquement la série de coupons
       console.log("🎫 Génération automatique des coupons...");
@@ -374,6 +402,12 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
     if (!note) {
       return res.status(404).json({ error: "Settlement note not found" });
     }
+
+    // Retirer l'ID de la note de règlement de la famille
+    const Family = require("../models/Family");
+    await Family.findByIdAndUpdate(note.familyId, {
+      $pull: { settlementNotes: id },
+    });
 
     res.json({ message: "Settlement note deleted successfully" });
   } catch (error) {

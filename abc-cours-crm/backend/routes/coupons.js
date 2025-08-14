@@ -39,9 +39,7 @@ router.get(
     query("usedBy").optional().isMongoId(),
     query("sessionDateFrom").optional().isISO8601(),
     query("sessionDateTo").optional().isISO8601(),
-    query("sortBy")
-      .optional()
-      .isIn(["couponNumber", "usedDate", "sessionDate"]),
+    query("sortBy").optional().isIn(["code", "usedDate", "sessionDate"]),
     query("sortOrder").optional().isIn(["asc", "desc"]),
   ],
   async (req, res) => {
@@ -62,14 +60,14 @@ router.get(
         usedBy,
         sessionDateFrom,
         sessionDateTo,
-        sortBy = "couponNumber",
+        sortBy = "code",
         sortOrder = "asc",
       } = req.query;
 
       // Construction du filtre
       let filter = {};
 
-      if (series && isValidObjectId(series)) filter.series = series;
+      if (series && isValidObjectId(series)) filter.couponSeriesId = series;
       if (status) filter.status = status;
       if (usedBy && isValidObjectId(usedBy)) filter.usedBy = usedBy;
 
@@ -89,12 +87,12 @@ router.get(
       const [coupons, total] = await Promise.all([
         Coupon.find(filter)
           .populate({
-            path: "series",
+            path: "couponSeriesId",
             populate: [
-              { path: "family", select: "familyName" },
-              { path: "student", select: "firstName lastName" },
+              { path: "familyId", select: "familyName" },
+              { path: "studentId", select: "firstName lastName" },
               {
-                path: "professor",
+                path: "professorId",
                 select: "personalInfo.firstName personalInfo.lastName",
               },
             ],
@@ -127,11 +125,11 @@ router.get("/:id", async (req, res) => {
 
     const coupon = await Coupon.findById(id)
       .populate({
-        path: "series",
+        path: "couponSeriesId",
         populate: [
-          { path: "family", select: "familyName contact address" },
-          { path: "student", select: "firstName lastName schoolLevel" },
-          { path: "professor", select: "personalInfo professional.subjects" },
+          { path: "familyId", select: "familyName contact address" },
+          { path: "studentId", select: "firstName lastName schoolLevel" },
+          { path: "professorId", select: "personalInfo professional.subjects" },
         ],
       })
       .populate("usedBy", "firstName lastName email")
@@ -176,18 +174,24 @@ router.post("/:id/use", useCouponValidation, async (req, res) => {
       return res.status(400).json({ error: "Coupon is not available for use" });
     }
 
-    if (coupon.series.status !== "active") {
+    // Récupérer la série de coupons pour les vérifications
+    const couponSeries = await CouponSeries.findById(coupon.couponSeriesId);
+    if (!couponSeries) {
+      return res.status(400).json({ error: "Coupon series not found" });
+    }
+
+    if (couponSeries.status !== "active") {
       return res.status(400).json({ error: "Coupon series is not active" });
     }
 
-    if (new Date() > coupon.series.expirationDate) {
+    if (new Date() > couponSeries.expirationDate) {
       return res.status(400).json({ error: "Coupon series has expired" });
     }
 
     // Vérification des permissions - seul le professeur assigné ou un admin peut valider
     const isAssignedProfessor =
       req.user.role === "professor" &&
-      coupon.series.professor.toString() === req.user._id.toString();
+      couponSeries.professorId.toString() === req.user._id.toString();
     const isAdmin = req.user.role === "admin";
 
     if (!isAssignedProfessor && !isAdmin) {
@@ -209,10 +213,10 @@ router.post("/:id/use", useCouponValidation, async (req, res) => {
     // Récupérer le coupon mis à jour avec toutes les relations
     const updatedCoupon = await Coupon.findById(id)
       .populate({
-        path: "series",
+        path: "couponSeriesId",
         populate: [
-          { path: "family", select: "familyName" },
-          { path: "student", select: "firstName lastName" },
+          { path: "familyId", select: "familyName" },
+          { path: "studentId", select: "firstName lastName" },
         ],
       })
       .populate("usedBy", "firstName lastName");
@@ -339,7 +343,7 @@ router.patch(
         return res.status(400).json({ error: "Invalid coupon ID" });
       }
 
-      const coupon = await Coupon.findById(id).populate("series");
+      const coupon = await Coupon.findById(id).populate("couponSeriesId");
       if (!coupon) {
         return res.status(404).json({ error: "Coupon not found" });
       }
@@ -351,7 +355,8 @@ router.patch(
       // Vérifications des permissions
       const isAssignedProfessor =
         req.user.role === "professor" &&
-        coupon.series.professor.toString() === req.user._id.toString();
+        coupon.couponSeriesId.professorId.toString() ===
+          req.user._id.toString();
       const isAdmin = req.user.role === "admin";
 
       if (ratingType === "professor" && !isAssignedProfessor && !isAdmin) {
@@ -380,7 +385,7 @@ router.patch(
       res.json({
         message: `${ratingType} rating added successfully`,
         coupon: await Coupon.findById(id)
-          .populate("series", "family student subject")
+          .populate("couponSeriesId", "familyId studentId subjectId")
           .populate("usedBy", "firstName lastName"),
       });
     } catch (error) {
@@ -411,16 +416,16 @@ router.get("/available/by-series/:seriesId", async (req, res) => {
 
     // Récupérer les coupons disponibles
     const availableCoupons = await Coupon.find({
-      series: seriesId,
+      couponSeriesId: seriesId,
       status: "available",
     })
-      .sort({ couponNumber: 1 })
+      .sort({ code: 1 })
       .lean();
 
     res.json({
       series: {
         _id: series._id,
-        subject: series.subject,
+        subject: series.subjectId,
         totalCoupons: series.totalCoupons,
         usedCoupons: series.usedCoupons,
         remainingCoupons: series.totalCoupons - series.usedCoupons,
@@ -472,10 +477,10 @@ router.get("/usage-history/:professorId", async (req, res) => {
     const [coupons, total] = await Promise.all([
       Coupon.find(filter)
         .populate({
-          path: "series",
+          path: "couponSeriesId",
           populate: [
-            { path: "family", select: "familyName" },
-            { path: "student", select: "firstName lastName" },
+            { path: "familyId", select: "familyName" },
+            { path: "studentId", select: "firstName lastName" },
           ],
         })
         .sort({ sessionDate: -1 })
@@ -495,7 +500,9 @@ router.get("/usage-history/:professorId", async (req, res) => {
           ? coupons.reduce((sum, c) => sum + (c.sessionDuration || 0), 0) /
             coupons.length
           : 0,
-      subjectsCount: [...new Set(coupons.map((c) => c.series.subject))].length,
+      subjectsCount: [
+        ...new Set(coupons.map((c) => c.couponSeriesId?.subjectId)),
+      ].length,
     };
 
     const response = buildPaginatedResponse(coupons, total, page, pageLimit);

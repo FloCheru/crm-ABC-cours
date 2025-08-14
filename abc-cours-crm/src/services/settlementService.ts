@@ -51,6 +51,14 @@ class SettlementService {
     data: CreateSettlementNoteData
   ): Promise<SettlementNote> {
     try {
+      // 🔍 LOGS DE DÉBOGAGE - Service
+      console.log("🔍 === DÉBOGAGE SERVICE ===");
+      console.log("🔍 URL appelée:", "/api/settlement-notes");
+      console.log("🔍 Données envoyées:", data);
+      console.log("🔍 Type des données:", typeof data);
+      console.log("🔍 Clés des données:", Object.keys(data));
+      console.log("🔍 === FIN DÉBOGAGE SERVICE ===");
+
       const response = await apiClient.post("/api/settlement-notes", data);
       return (response as SettlementNoteResponse).settlementNote;
     } catch (error) {
@@ -81,7 +89,9 @@ class SettlementService {
 
   async getSettlementNotesCountByFamily(familyId: string): Promise<number> {
     try {
+      console.log("🔍 Service: Comptage des notes pour famille:", familyId);
       const notes = await this.getSettlementNotesByFamily(familyId);
+      console.log("🔍 Service: Notes trouvées:", notes.length, notes);
       return notes.length;
     } catch (error) {
       console.error("Erreur lors du comptage des notes de règlement:", error);

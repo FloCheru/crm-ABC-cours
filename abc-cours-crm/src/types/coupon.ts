@@ -2,8 +2,7 @@ export interface Coupon {
   _id: string;
   couponSeriesId: string;
   familyId: string;
-  couponNumber: number;
-  code: string; // Code unique en base 32
+  couponNumber: string; // Code unique du coupon (anciennement code)
   status: "available" | "used" | "expired" | "cancelled";
   usedDate?: Date;
   sessionDate?: Date;
