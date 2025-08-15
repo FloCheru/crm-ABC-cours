@@ -17,7 +17,7 @@ import { subjectService } from "../../../services/subjectService";
 import type { CreateSettlementNoteData } from "../../../types/settlement";
 import type { Subject } from "../../../types/subject";
 import type { Family } from "../../../types/family";
-import { useRefresh } from "../../../contexts/RefreshContext";
+import { useRefresh } from "../../../hooks/useRefresh";
 import { logger } from "../../../utils/logger";
 
 // Import des types partagés

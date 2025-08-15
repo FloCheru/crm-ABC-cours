@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
-import { authService } from "../../services/authService";
-import type { AuthResponse } from "../../services/authService";
+import { useAuthStore } from "../../stores";
 
 interface NavbarProps {
   /**
@@ -53,28 +52,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
 }) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<AuthResponse["user"] | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // Vérifier l'état d'authentification au chargement et lors des changements
-  useEffect(() => {
-    const checkAuth = () => {
-      const currentUser = authService.getUser();
-      const authenticated = authService.isAuthenticated();
-      setUser(currentUser);
-      setIsAuthenticated(authenticated);
-    };
-
-    checkAuth();
-
-    // Écouter les changements dans localStorage
-    const handleStorageChange = () => {
-      checkAuth();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  const { user, isAuthenticated, logout } = useAuthStore((state) => ({
+    user: state.user,
+    isAuthenticated: state.isAuthenticated,
+    logout: state.logout,
+  }));
 
   const handleClick = (path: string, event: React.MouseEvent) => {
     console.log(path);
@@ -88,15 +70,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     navigate("/login");
   };
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      setIsAuthenticated(false);
-      setUser(null);
-      navigate("/login");
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-    }
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   const classes = ["navbar", className].filter(Boolean).join(" ");

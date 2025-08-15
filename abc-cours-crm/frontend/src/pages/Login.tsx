@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Input, Button } from "../components";
-import { authService } from "../services/authService";
+import { useAuthStore } from "../stores";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const login = useAuthStore((state) => state.login);
+  
   const [credentials, setCredentials] = useState({
     email: "",
     password: "",
@@ -22,7 +24,7 @@ export const Login: React.FC = () => {
     setError("");
 
     try {
-      await authService.login(credentials);
+      await login(credentials.email, credentials.password);
       // Rediriger vers la page d'origine ou la page par défaut
       navigate(from, { replace: true });
     } catch (error) {
