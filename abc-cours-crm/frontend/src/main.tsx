@@ -13,8 +13,8 @@ import {
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RefreshProvider } from "./contexts/RefreshContext";
 
-// Basename dynamique selon l'environnement
-const basename = import.meta.env.PROD ? "/crm-ABC-cours/" : "";
+// Basename vide pour Vercel (domaine dédié)
+const basename = "";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
