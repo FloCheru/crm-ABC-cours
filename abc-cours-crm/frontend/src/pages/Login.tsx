@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Input, Button } from "../components";
-import { useAuthStore } from "../stores";
+import { useAuth } from "../hooks/useAuth";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const login = useAuthStore((state) => state.login);
+  const { login } = useAuth();
   
   const [credentials, setCredentials] = useState({
     email: "",

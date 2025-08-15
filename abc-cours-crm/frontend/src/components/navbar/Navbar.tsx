@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
-import { useAuthStore } from "../../stores";
+import { useAuth } from "../../hooks/useAuth";
 
 interface NavbarProps {
   /**
@@ -52,9 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
 }) => {
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const logout = useAuthStore((state) => state.logout);
+  const { user, isAuthenticated, logout } = useAuth();
 
   const handleClick = (path: string, event: React.MouseEvent) => {
     console.log(path);
