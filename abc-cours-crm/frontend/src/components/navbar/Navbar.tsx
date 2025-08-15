@@ -52,11 +52,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
 }) => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuthStore((state) => ({
-    user: state.user,
-    isAuthenticated: state.isAuthenticated,
-    logout: state.logout,
-  }));
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logout = useAuthStore((state) => state.logout);
 
   const handleClick = (path: string, event: React.MouseEvent) => {
     console.log(path);
