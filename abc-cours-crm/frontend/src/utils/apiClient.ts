@@ -3,7 +3,7 @@ import { logger } from './logger';
 class ApiClient {
   private baseURL: string;
 
-  constructor(baseURL: string = "http://localhost:3000") {
+  constructor(baseURL: string = import.meta.env.VITE_API_URL || "http://localhost:3000") {
     this.baseURL = baseURL;
   }
 
