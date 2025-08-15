@@ -1,69 +1,68 @@
-# React + TypeScript + Vite
+# ABC Cours CRM
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+CRM pour ABC Cours - Application complète de gestion éducative
 
-Currently, two official plugins are available:
+## 🏗️ Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+abc-cours-crm/
+├── frontend/          # React 19 + TypeScript + Vite
+├── backend/           # Node.js + Express + MongoDB
+└── docs/              # Documentation
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Déploiement
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Frontend (Vercel)
+```bash
+cd frontend
+npm install
+npm run build
 ```
+
+### Backend (Railway)
+```bash
+cd backend
+npm install
+npm start
+```
+
+## 📋 Stack Technique
+
+### Frontend
+- **React 19** + TypeScript
+- **Vite** (bundler)
+- **Tailwind CSS** (styling)
+- **React Router** (navigation)
+- **Zustand** (state management)
+- **TanStack Query** (API state)
+
+### Backend
+- **Node.js** + Express
+- **MongoDB** + Mongoose
+- **JWT** (authentification)
+- **Jest** (tests)
+
+## 🔧 Développement
+
+### Installation
+```bash
+# Frontend
+cd frontend && npm install
+
+# Backend
+cd backend && npm install
+```
+
+### Lancement
+```bash
+# Frontend (http://localhost:5173)
+cd frontend && npm run dev
+
+# Backend (http://localhost:3000)
+cd backend && npm run dev
+```
+
+## 📚 Documentation
+
+Voir `CLAUDE.md` pour les détails techniques et les commandes de développement.

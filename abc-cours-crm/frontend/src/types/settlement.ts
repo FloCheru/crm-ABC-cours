@@ -1,0 +1,64 @@
+export interface SettlementNote {
+  _id: string;
+  familyId: string;
+  clientName: string;
+  department: string;
+  paymentMethod: "card" | "check" | "transfer" | "cash";
+  subject: {
+    _id: string;
+    name: string;
+  };
+  hourlyRate: number;
+  quantity: number;
+  professorSalary: number;
+  salaryToPay: number; // professorSalary * usedCoupons
+  charges: number;
+  chargesToPay: number; // charges * usedCoupons
+  marginAmount: number;
+  marginPercentage: number;
+  status: "pending" | "paid" | "overdue";
+  createdAt: Date;
+  updatedAt: Date;
+  dueDate: Date;
+  paidAt?: Date;
+  notes?: string;
+  // Champs pour la gestion des coupons
+  couponSeriesId?: {
+    _id: string;
+    totalCoupons: number;
+    usedCoupons: number;
+    status: "active" | "completed" | "expired";
+  };
+  totalCoupons?: number;
+}
+
+export interface CreateSettlementNoteData {
+  familyId: string;
+  studentId: string;
+  clientName: string;
+  department: string;
+  paymentMethod: "card" | "check" | "transfer" | "cash";
+  subjectId: string;
+  hourlyRate: number;
+  quantity: number;
+  professorSalary: number;
+  charges: number;
+  dueDate: Date;
+  notes?: string;
+  // Champs calculés automatiquement
+  marginPercentage: number;
+  marginAmount: number;
+  chargesToPay: number;
+  salaryToPay: number;
+}
+
+export interface SettlementNoteStats {
+  total: number;
+  pending: number;
+  paid: number;
+  overdue: number;
+  totalAmount: number;
+  totalPaid: number;
+  totalPending: number;
+  totalOverdue: number;
+}
