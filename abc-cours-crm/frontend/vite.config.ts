@@ -13,7 +13,7 @@ export default defineConfig(() => ({
         manualChunks: {
           vendor: ["react", "react-dom"],
           router: ["react-router-dom"],
-          forms: ["react-hook-form", "zod"],
+          forms: ["react-hook-form"],
           state: ["zustand", "@tanstack/react-query"],
         },
       },
