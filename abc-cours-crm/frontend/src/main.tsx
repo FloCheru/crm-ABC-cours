@@ -11,15 +11,22 @@ import {
   SettlementCreate,
 } from "./pages";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { RefreshProvider } from "./contexts/RefreshContext";
+import { useAuthStore } from "./stores";
+import { useEffect } from "react";
 
 // Basename vide pour Vercel (domaine dédié)
 const basename = "";
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <RefreshProvider>
-      <BrowserRouter basename={basename}>
+// Composant pour initialiser l'auth au démarrage
+function App() {
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+  
+  return (
+    <BrowserRouter basename={basename}>
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
@@ -64,7 +71,12 @@ createRoot(document.getElementById("root")!).render(
             }
           />
         </Routes>
-      </BrowserRouter>
-    </RefreshProvider>
+    </BrowserRouter>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
   </StrictMode>
 );
