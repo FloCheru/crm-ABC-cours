@@ -1,8 +1,33 @@
 export interface Coupon {
   _id: string;
-  couponSeriesId: string;
+  couponSeriesId: {
+    _id: string;
+    familyId: {
+      _id: string;
+      primaryContact: {
+        firstName: string;
+        lastName: string;
+        email: string;
+      };
+    };
+    studentId: {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      level?: string;
+    };
+    subject: {
+      _id: string;
+      name: string;
+      category: string;
+    };
+    hourlyRate: number;
+    totalCoupons: number;
+    usedCoupons: number;
+    status: "active" | "completed" | "expired";
+  };
   familyId: string;
-  couponNumber: string; // Code unique du coupon (anciennement code)
+  code: string; // Code unique du coupon (ex: "689DBB-001")
   status: "available" | "used" | "expired" | "cancelled";
   usedDate?: Date;
   sessionDate?: Date;
@@ -42,7 +67,11 @@ export interface CouponSeries {
   settlementNoteId: string;
   familyId: {
     _id: string;
-    name: string;
+    primaryContact: {
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
   };
   studentId: {
     _id: string;
