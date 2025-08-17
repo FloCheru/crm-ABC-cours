@@ -43,30 +43,42 @@ export const SettlementCreate: React.FC = () => {
   // États pour les popups de création
   const [showFamilyModal, setShowFamilyModal] = useState(false);
   const [showStudentModal, setShowStudentModal] = useState(false);
+  const [showSubjectSelectionModal, setShowSubjectSelectionModal] =
+    useState(false);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [isModalLoading, setIsModalLoading] = useState(false);
   const [showStudentSelect, setShowStudentSelect] = useState(false);
 
-  // Log pour déboguer l'état de la modal
-  logger.debug("🔍 DEBUG - Rendu - showStudentModal:", showStudentModal);
-
-  const [formData, setFormData] = useState<CreateSettlementNoteData>({
+  const [formData, setFormData] = useState<
+    CreateSettlementNoteData & { hasPaymentSchedule: boolean }
+  >({
     familyId: familyId || "",
-    studentId: "",
+    studentIds: [],
     clientName: "",
     department: "",
     paymentMethod: "card",
-    subjectId: "",
-    hourlyRate: 0,
-    quantity: 1,
-    professorSalary: 0,
+    subjects: [],
     charges: 0,
-    dueDate: new Date(),
+    // Échéancier
+    hasPaymentSchedule: false,
+    paymentSchedule: {
+      paymentMethod: "PRLV" as const,
+      numberOfInstallments: 1,
+      dayOfMonth: 1,
+    },
     notes: "",
     // Champs calculés automatiquement
     marginPercentage: 0,
     marginAmount: 0,
     chargesToPay: 0,
     salaryToPay: 0,
+  });
+
+  // États séparés pour les tarifs communs
+  const [commonRates, setCommonRates] = useState({
+    hourlyRate: "",
+    quantity: "",
+    professorSalary: "",
   });
 
   // Charger les données des matières et des familles
@@ -154,17 +166,8 @@ export const SettlementCreate: React.FC = () => {
           }
         }
 
-        // Sélectionner automatiquement la première matière si disponible
-        if (subjectsData.length > 0) {
-          setFormData((prev) => ({
-            ...prev,
-            subjectId: subjectsData[0]._id,
-          }));
-          logger.debug(
-            "Première matière sélectionnée:",
-            subjectsData[0].name
-          );
-        }
+        // Note: Plus besoin de sélectionner automatiquement une matière 
+        // car maintenant on utilise la sélection multiple
       } catch (err) {
         logger.error("Erreur lors du chargement des données:", err);
         setError("Impossible de charger les données. Veuillez réessayer.");
@@ -174,24 +177,33 @@ export const SettlementCreate: React.FC = () => {
     loadData();
   }, [familyId]);
 
-  // Calculer automatiquement les valeurs dérivées
+  // Calculer automatiquement les valeurs dérivées basées sur les tarifs communs et les matières
   useEffect(() => {
-    const salaryToPay = formData.professorSalary * formData.quantity;
-    const chargesToPay = formData.charges * formData.quantity;
-    const totalAmount = formData.hourlyRate * formData.quantity;
+    const numberOfSubjects = formData.subjects.length;
+    const hourlyRate = parseFloat(commonRates.hourlyRate) || 0;
+    const quantity = parseInt(commonRates.quantity) || 0;
+    const professorSalary = parseFloat(commonRates.professorSalary) || 0;
+
+    // Calculs globaux pour toutes les matières
+    const totalHourlyRate = hourlyRate * numberOfSubjects;
+    const totalQuantity = quantity * numberOfSubjects;
+    const salaryToPay = professorSalary * quantity * numberOfSubjects;
+    const chargesToPay = formData.charges * totalQuantity;
+    const totalAmount = hourlyRate * quantity * numberOfSubjects;
     const marginAmount = totalAmount - salaryToPay - chargesToPay;
     const marginPercentage =
       totalAmount > 0 ? (marginAmount / totalAmount) * 100 : 0;
 
     // 🔍 LOGS DE DÉBOGAGE - Calcul des valeurs dérivées
-    logger.debug("🔍 === CALCUL VALEURS DÉRIVÉES ===");
+    logger.debug("🔍 === CALCUL VALEURS DÉRIVÉES (TARIFS COMMUNS) ===");
     logger.debug("🔍 Inputs:", {
-      professorSalary: formData.professorSalary,
+      numberOfSubjects,
+      commonRates,
       charges: formData.charges,
-      hourlyRate: formData.hourlyRate,
-      quantity: formData.quantity,
     });
     logger.debug("🔍 Calculs:", {
+      totalHourlyRate,
+      totalQuantity,
       salaryToPay,
       chargesToPay,
       totalAmount,
@@ -207,12 +219,7 @@ export const SettlementCreate: React.FC = () => {
       marginAmount,
       marginPercentage,
     }));
-  }, [
-    formData.professorSalary,
-    formData.charges,
-    formData.hourlyRate,
-    formData.quantity,
-  ]);
+  }, [formData.subjects, formData.charges, commonRates]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -243,7 +250,7 @@ export const SettlementCreate: React.FC = () => {
         familyId: familyId,
         clientName: `${family.primaryContact.firstName} ${family.primaryContact.lastName}`,
         department: family.address.city || "",
-        studentId: "", // Réinitialiser l'élève sélectionné
+        studentIds: [], // Réinitialiser les élèves sélectionnés
       }));
 
       // Charger les élèves de la nouvelle famille
@@ -263,7 +270,7 @@ export const SettlementCreate: React.FC = () => {
         // Sélectionner automatiquement le premier élève
         setFormData((prev) => ({
           ...prev,
-          studentId: studentsArray[0]._id,
+          studentIds: [studentsArray[0]._id],
         }));
       } else {
         setStudents([]);
@@ -271,6 +278,70 @@ export const SettlementCreate: React.FC = () => {
       }
     } catch (err) {
       logger.error("Erreur lors du chargement de la famille:", err);
+    }
+  };
+
+  // Gérer la sélection multiple d'élèves
+  const handleStudentSelection = (studentId: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      studentIds: checked
+        ? [...prev.studentIds, studentId]
+        : prev.studentIds.filter((id) => id !== studentId),
+    }));
+  };
+
+  // Ouvrir la modal de sélection des matières
+  const openSubjectSelectionModal = () => {
+    // Initialiser avec les matières déjà sélectionnées
+    setSelectedSubjectIds(formData.subjects.map((s) => s.subjectId));
+    setShowSubjectSelectionModal(true);
+  };
+
+  // Gérer la sélection d'une matière dans la modal
+  const handleSubjectSelection = (subjectId: string, checked: boolean) => {
+    setSelectedSubjectIds((prev) =>
+      checked ? [...prev, subjectId] : prev.filter((id) => id !== subjectId)
+    );
+  };
+
+  // Confirmer la sélection des matières
+  const confirmSubjectSelection = () => {
+    // Appliquer les tarifs communs à toutes les matières sélectionnées
+    const newSubjects = selectedSubjectIds.map((subjectId) => ({
+      subjectId,
+      hourlyRate: commonRates.hourlyRate || "",
+      quantity: commonRates.quantity || "",
+      professorSalary: commonRates.professorSalary || "",
+    }));
+
+    setFormData((prev) => ({
+      ...prev,
+      subjects: newSubjects,
+    }));
+
+    setShowSubjectSelectionModal(false);
+  };
+
+  // Gérer les changements des tarifs communs
+  const handleCommonRateChange = (
+    field: keyof typeof commonRates,
+    value: string
+  ) => {
+    setCommonRates((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    // Mettre à jour toutes les matières existantes avec la nouvelle valeur
+    if (formData.subjects.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        subjects: prev.subjects.map((subject) => ({
+          ...subject,
+          [field]: value,
+        })),
+      }));
     }
   };
 
@@ -289,9 +360,9 @@ export const SettlementCreate: React.FC = () => {
       "✅" + (formData.familyId ? "" : "MANQUANT")
     );
     logger.debug(
-      "  - studentId:",
-      formData.studentId,
-      "✅" + (formData.studentId ? "" : "MANQUANT")
+      "  - studentIds:",
+      formData.studentIds,
+      "✅" + (formData.studentIds.length > 0 ? "" : "MANQUANT")
     );
     logger.debug(
       "  - clientName:",
@@ -304,59 +375,82 @@ export const SettlementCreate: React.FC = () => {
       "✅" + (formData.department ? "" : "MANQUANT")
     );
     logger.debug(
-      "  - subjectId:",
-      formData.subjectId,
-      "✅" + (formData.subjectId ? "" : "MANQUANT")
-    );
-    logger.debug(
-      "  - hourlyRate:",
-      formData.hourlyRate,
-      "✅" + (formData.hourlyRate > 0 ? "" : "DOIT ÊTRE > 0")
-    );
-    logger.debug(
-      "  - quantity:",
-      formData.quantity,
-      "✅" + (formData.quantity > 0 ? "" : "DOIT ÊTRE > 0")
-    );
-    logger.debug(
-      "  - professorSalary:",
-      formData.professorSalary,
-      "✅" + (formData.professorSalary > 0 ? "" : "DOIT ÊTRE > 0")
+      "  - subjects:",
+      formData.subjects,
+      "✅" + (formData.subjects.length > 0 ? "" : "MANQUANT")
     );
     logger.debug(
       "  - charges:",
       formData.charges,
       "✅" + (formData.charges > 0 ? "" : "DOIT ÊTRE > 0")
     );
-    logger.debug(
-      "  - dueDate:",
-      formData.dueDate,
-      "✅" + (formData.dueDate ? "" : "MANQUANT")
-    );
+    logger.debug("  - hasPaymentSchedule:", formData.hasPaymentSchedule, "✅");
     logger.debug("  - paymentMethod:", formData.paymentMethod, "✅");
     logger.debug("🔍 === FIN DÉBOGAGE ===");
 
     try {
-      // Si c'est un nouvel élève (pas un ID MongoDB), le créer d'abord
+      // Vérifier que les champs requis sont présents
+      if (formData.studentIds.length === 0) {
+        throw new Error("Au moins un élève doit être sélectionné");
+      }
+      if (formData.subjects.length === 0) {
+        throw new Error("Au moins une matière doit être ajoutée");
+      }
+
+      // Vérifier que les tarifs communs sont remplis
+      const hourlyRate = parseFloat(commonRates.hourlyRate);
+      const quantity = parseInt(commonRates.quantity);
+      const professorSalary = parseFloat(commonRates.professorSalary);
+
       if (
-        formData.studentId &&
-        !formData.studentId.match(/^[0-9a-fA-F]{24}$/)
+        !commonRates.hourlyRate ||
+        !commonRates.quantity ||
+        !commonRates.professorSalary ||
+        isNaN(hourlyRate) ||
+        isNaN(quantity) ||
+        isNaN(professorSalary) ||
+        hourlyRate <= 0 ||
+        quantity <= 0 ||
+        professorSalary <= 0
       ) {
-        logger.debug("🔍 Création d'un nouvel élève:", formData.studentId);
+        throw new Error(
+          "Veuillez remplir tous les champs de tarification avec des valeurs valides"
+        );
+      }
 
-        // Créer l'élève dans la famille
-        const newStudent = await createStudentInFamily(formData.studentId);
+      // Préparer les données à envoyer avec les tarifs communs appliqués
+      const dataToSend = {
+        ...formData,
+        subjects: formData.subjects.map((subject) => ({
+          subjectId: subject.subjectId,
+          hourlyRate: parseFloat(commonRates.hourlyRate),
+          quantity: parseInt(commonRates.quantity),
+          professorSalary: parseFloat(commonRates.professorSalary),
+        })),
+      };
 
-        // Mettre à jour le studentId avec l'ID créé
-        formData.studentId = newStudent._id;
-        logger.debug("Nouvel élève créé avec l'ID:", newStudent._id);
+      // Ajouter l'échéancier seulement s'il est activé et valide
+      if (formData.hasPaymentSchedule && formData.paymentSchedule) {
+        dataToSend.paymentSchedule = formData.paymentSchedule;
+      }
+      // Si pas d'échéancier, ne pas inclure le champ du tout
+      
+      // Supprimer les champs qui n'existent que côté frontend
+      delete dataToSend.hasPaymentSchedule;
+      // Supprimer le champ subjectId qui pourrait être resté de l'ancien système
+      if (dataToSend.subjectId) {
+        delete dataToSend.subjectId;
       }
 
       // 🔍 LOG AVANT ENVOI À L'API
-      logger.debug("🚀 Envoi des données à l'API:", formData);
+      logger.debug("🚀 Envoi des données à l'API:", {
+        ...dataToSend,
+        paymentScheduleStatus: formData.hasPaymentSchedule ? 'activé' : 'désactivé',
+        hasPaymentScheduleField: 'paymentSchedule' in dataToSend
+      });
 
       // Créer la note de règlement
-      await settlementService.createSettlementNote(formData);
+      await settlementService.createSettlementNote(dataToSend);
 
       // NAVIGUER D'ABORD
       logger.debug("🚀 Navigation vers le Dashboard");
@@ -612,10 +706,7 @@ export const SettlementCreate: React.FC = () => {
           }
           const user = JSON.parse(userStr);
           if (!user.id) {
-            logger.error(
-              "ID utilisateur manquant dans l'objet user:",
-              user
-            );
+            logger.error("ID utilisateur manquant dans l'objet user:", user);
             throw new Error("ID utilisateur manquant");
           }
           return user.id;
@@ -960,10 +1051,10 @@ export const SettlementCreate: React.FC = () => {
         setShowStudentSelect(true);
       }
 
-      // Sélectionner automatiquement le nouvel élève
+      // Ajouter automatiquement le nouvel élève aux sélectionnés
       setFormData((prev) => ({
         ...prev,
-        studentId: formattedStudent._id,
+        studentIds: [...prev.studentIds, formattedStudent._id],
       }));
 
       // Fermer la modal
@@ -1125,154 +1216,208 @@ export const SettlementCreate: React.FC = () => {
               <h3 className="text-lg font-semibold">Informations cours</h3>
 
               <div>
-                <label
-                  htmlFor="studentId"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Élève concerné *
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Élèves concernés *
                 </label>
-                <div className="flex space-x-2">
+                <div className="space-y-2">
                   {formData.familyId && showStudentSelect ? (
-                    // Select d'élève quand il y en a
-                    <select
-                      value={formData.studentId}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          studentId: e.target.value,
-                        }))
-                      }
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option key="default" value="">
-                        Sélectionner un élève
-                      </option>
-                      {students.map((student) => (
-                        <option key={student._id} value={student._id}>
-                          {student.firstName} {student.lastName}
-                        </option>
-                      ))}
-                    </select>
+                    // Checkboxes pour sélection multiple d'élèves
+                    <div className="border border-gray-300 rounded-md p-3 max-h-40 overflow-y-auto">
+                      {students.length > 0 ? (
+                        students.map((student) => (
+                          <div
+                            key={student._id}
+                            className="flex items-center mb-2"
+                          >
+                            <input
+                              type="checkbox"
+                              id={`student-${student._id}`}
+                              checked={formData.studentIds.includes(
+                                student._id
+                              )}
+                              onChange={(e) =>
+                                handleStudentSelection(
+                                  student._id,
+                                  e.target.checked
+                                )
+                              }
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <label
+                              htmlFor={`student-${student._id}`}
+                              className="ml-2 text-sm text-gray-700 cursor-pointer"
+                            >
+                              {student.firstName} {student.lastName}
+                            </label>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 text-sm">
+                          Aucun élève trouvé pour cette famille
+                        </p>
+                      )}
+                    </div>
                   ) : formData.familyId && !showStudentSelect ? (
                     // Message quand la famille n'a pas d'élève
-                    <div className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-500 italic">
+                    <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-500 italic">
                       Le client n'a pas d'élève
                     </div>
                   ) : (
                     // Affichage par défaut quand aucune famille n'est sélectionnée
-                    <div className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-400 italic">
+                    <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-400 italic">
                       Sélectionnez d'abord une famille
                     </div>
                   )}
-                  {/* Bouton "+ Nouvel élève" - affiché uniquement si une famille est sélectionnée */}
-                  {formData.familyId && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCreateNewStudent}
-                      className="whitespace-nowrap"
-                    >
-                      + Nouvel élève
-                    </Button>
-                  )}
+                  <div className="flex justify-between items-center">
+                    {formData.studentIds.length > 0 && (
+                      <div className="text-sm text-blue-600">
+                        {formData.studentIds.length} élève(s) sélectionné(s)
+                      </div>
+                    )}
+                    {formData.familyId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCreateNewStudent}
+                        className="whitespace-nowrap"
+                      >
+                        + Nouvel élève
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
+              {/* Sélection des matières */}
               <div>
-                <label
-                  htmlFor="subjectId"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Matière *
-                </label>
-                <select
-                  id="subjectId"
-                  name="subjectId"
-                  value={formData.subjectId}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Sélectionner une matière</option>
-                  {subjects.map((subject) => (
-                    <option key={subject._id} value={subject._id}>
-                      {subject.name} ({subject.category})
-                    </option>
-                  ))}
-                </select>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Matières sélectionnées *
+                  </label>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={openSubjectSelectionModal}
+                    disabled={subjects.length === 0}
+                  >
+                    Sélectionner les matières
+                  </Button>
+                </div>
+
                 {subjects.length === 0 && (
-                  <p className="text-sm text-red-600 mt-1">
+                  <p className="text-sm text-red-600 mb-3">
                     Aucune matière disponible. Veuillez en créer une d'abord.
                   </p>
                 )}
-              </div>
 
-              <div>
-                <label
-                  htmlFor="hourlyRate"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Tarif horaire (€) *
-                </label>
-                <Input
-                  id="hourlyRate"
-                  name="hourlyRate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.hourlyRate}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="0.00"
-                />
-              </div>
+                {formData.subjects.length === 0 && subjects.length > 0 && (
+                  <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                    <p className="text-gray-500 mb-2">
+                      Aucune matière sélectionnée
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      Utilisez le bouton "Sélectionner les matières" ci-dessus
+                    </p>
+                  </div>
+                )}
 
-              <div>
-                <label
-                  htmlFor="quantity"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Quantité (heures) *
-                </label>
-                <Input
-                  id="quantity"
-                  name="quantity"
-                  type="number"
-                  min="1"
-                  value={formData.quantity}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="1"
-                />
+                {formData.subjects.length > 0 && (
+                  <div className="space-y-4">
+                    {/* Liste des matières sélectionnées */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-blue-800 mb-2">
+                        {formData.subjects.length} matière(s) sélectionnée(s):
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.subjects.map((subject) => {
+                          const subjectInfo = subjects.find(
+                            (s) => s._id === subject.subjectId
+                          );
+                          return (
+                            <span
+                              key={subject.subjectId}
+                              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                            >
+                              {subjectInfo ? subjectInfo.name : "Matière"}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Tarifs communs */}
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <h4 className="text-md font-medium text-gray-800 mb-4">
+                        Tarification commune pour toutes les matières
+                      </h4>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Tarif horaire (€) *
+                          </label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={commonRates.hourlyRate}
+                            onChange={(e) =>
+                              handleCommonRateChange(
+                                "hourlyRate",
+                                e.target.value
+                              )
+                            }
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Quantité (heures) *
+                          </label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={commonRates.quantity}
+                            onChange={(e) =>
+                              handleCommonRateChange("quantity", e.target.value)
+                            }
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Salaire professeur (€/h) *
+                          </label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={commonRates.professorSalary}
+                            onChange={(e) =>
+                              handleCommonRateChange(
+                                "professorSalary",
+                                e.target.value
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Informations financières */}
+            {/* Informations financières globales */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">
-                Informations financières
+                Informations financières globales
               </h3>
-
-              <div>
-                <label
-                  htmlFor="professorSalary"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Salaire du professeur (€/h) *
-                </label>
-                <Input
-                  id="professorSalary"
-                  name="professorSalary"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.professorSalary}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="0.00"
-                />
-              </div>
 
               <div>
                 <label
@@ -1294,21 +1439,109 @@ export const SettlementCreate: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label
-                  htmlFor="dueDate"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Date d'échéance *
-                </label>
-                <Input
-                  id="dueDate"
-                  name="dueDate"
-                  type="date"
-                  value={formData.dueDate.toISOString().split("T")[0]}
-                  onChange={handleInputChange}
-                  required
-                />
+              {/* Échéancier */}
+              <div className="col-span-2">
+                <div className="border rounded-lg p-4">
+                  <label className="flex items-center mb-3">
+                    <input
+                      type="checkbox"
+                      checked={formData.hasPaymentSchedule}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          hasPaymentSchedule: e.target.checked,
+                        }))
+                      }
+                      className="mr-2"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Créer un échéancier de paiement
+                    </span>
+                  </label>
+
+                  {formData.hasPaymentSchedule && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Mode de règlement *
+                        </label>
+                        <select
+                          value={formData.paymentSchedule.paymentMethod}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              paymentSchedule: {
+                                ...prev.paymentSchedule,
+                                paymentMethod: e.target.value as
+                                  | "PRLV"
+                                  | "check",
+                              },
+                            }))
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="PRLV">Prélèvement</option>
+                          <option value="check">Chèque</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nombre d'échéances *
+                        </label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="12"
+                          value={formData.paymentSchedule.numberOfInstallments}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              paymentSchedule: {
+                                ...prev.paymentSchedule,
+                                numberOfInstallments:
+                                  parseInt(e.target.value) || 1,
+                              },
+                            }))
+                          }
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Jour de{" "}
+                          {formData.paymentSchedule.paymentMethod === "PRLV"
+                            ? "prélèvement"
+                            : "remise"}{" "}
+                          *
+                        </label>
+                        <select
+                          value={formData.paymentSchedule.dayOfMonth}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              paymentSchedule: {
+                                ...prev.paymentSchedule,
+                                dayOfMonth: parseInt(e.target.value),
+                              },
+                            }))
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        >
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                            (day) => (
+                              <option key={day} value={day}>
+                                {day} {day === 1 ? "er" : ""}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </Container>
@@ -1332,37 +1565,58 @@ export const SettlementCreate: React.FC = () => {
             />
           </div>
 
-          {/* Calculs automatiques */}
+          {/* Résumé financier global */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-semibold mb-3">Calculs automatiques</h4>
+            <h4 className="font-semibold mb-3">Résumé financier global</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Salaire à verser:</span>
+                <span className="text-gray-600">Nombre de matières:</span>
                 <span className="ml-2 font-medium">
-                  {(formData.professorSalary * formData.quantity).toFixed(2)} €
+                  {formData.subjects.length}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Total heures:</span>
+                <span className="ml-2 font-medium">
+                  {(parseInt(commonRates.quantity) || 0) *
+                    formData.subjects.length}{" "}
+                  h
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Salaire total à verser:</span>
+                <span className="ml-2 font-medium">
+                  {formData.salaryToPay.toFixed(2)} €
                 </span>
               </div>
               <div>
                 <span className="text-gray-600">Charges à verser:</span>
                 <span className="ml-2 font-medium">
-                  {(formData.charges * formData.quantity).toFixed(2)} €
+                  {formData.chargesToPay.toFixed(2)} €
                 </span>
               </div>
               <div>
-                <span className="text-gray-600">Montant total:</span>
-                <span className="ml-2 font-medium">
-                  {(formData.hourlyRate * formData.quantity).toFixed(2)} €
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">Marge:</span>
-                <span className="ml-2 font-medium">
+                <span className="text-gray-600">Chiffre d'affaires total:</span>
+                <span className="ml-2 font-medium text-blue-600">
                   {(
-                    formData.hourlyRate * formData.quantity -
-                    formData.professorSalary * formData.quantity -
-                    formData.charges * formData.quantity
+                    (parseFloat(commonRates.hourlyRate) || 0) *
+                    (parseInt(commonRates.quantity) || 0) *
+                    formData.subjects.length
                   ).toFixed(2)}{" "}
                   €
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Marge totale:</span>
+                <span
+                  className={`ml-2 font-medium ${
+                    formData.marginAmount >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {formData.marginAmount.toFixed(2)} € (
+                  {formData.marginPercentage.toFixed(1)}%)
                 </span>
               </div>
             </div>
@@ -1428,6 +1682,133 @@ export const SettlementCreate: React.FC = () => {
           isLoading={isModalLoading}
         />
       </ModalWrapper>
+
+      {/* Modal sélection des matières */}
+      {showSubjectSelectionModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full mx-4"
+            style={{
+              maxWidth: "600px",
+              height: "500px",
+              backgroundColor: "white",
+              borderRadius: "8px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {/* Header fixe */}
+            <div
+              className="px-6 py-4 border-b border-gray-200"
+              style={{
+                padding: "16px 24px",
+                borderBottom: "1px solid #e5e7eb",
+                flexShrink: 0,
+              }}
+            >
+              <h3 className="text-lg font-semibold">
+                Sélectionner les matières
+              </h3>
+            </div>
+
+            {/* Liste avec scroll forcé */}
+            <div
+              style={{
+                height: "340px",
+                overflowY: "auto",
+                overflowX: "hidden",
+                padding: "16px 24px",
+                flex: 1,
+              }}
+            >
+              <div className="space-y-2">
+                {subjects.length > 0 ? (
+                  subjects.map((subject) => (
+                    <div
+                      key={subject._id}
+                      className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        id={`subject-modal-${subject._id}`}
+                        checked={selectedSubjectIds.includes(subject._id)}
+                        onChange={(e) =>
+                          handleSubjectSelection(subject._id, e.target.checked)
+                        }
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label
+                        htmlFor={`subject-modal-${subject._id}`}
+                        className="ml-3 flex-1 cursor-pointer"
+                      >
+                        <div className="font-medium text-gray-900">
+                          {subject.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {subject.category}
+                        </div>
+                      </label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-4">
+                    Aucune matière disponible
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer fixe */}
+            <div
+              className="px-6 py-4 border-t border-gray-200 bg-gray-50"
+              style={{
+                padding: "16px 24px",
+                borderTop: "1px solid #e5e7eb",
+                backgroundColor: "#f9fafb",
+                flexShrink: 0,
+              }}
+            >
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  {selectedSubjectIds.length} matière(s) sélectionnée(s)
+                </div>
+                <div className="flex space-x-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowSubjectSelectionModal(false)}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={confirmSubjectSelection}
+                    disabled={selectedSubjectIds.length === 0}
+                  >
+                    Confirmer la sélection
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

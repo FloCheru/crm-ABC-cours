@@ -1,34 +1,58 @@
-import { apiClient } from "../utils";
+import { rateLimitedApiClient } from "../utils";
 import type { CreateSettlementNoteData } from "../types/settlement";
 
 interface SettlementNote {
   _id: string;
+  familyId: string;
+  studentIds: string[];
   clientName: string;
   department: string;
-  paymentMethod: string;
-  subject: {
-    _id: string;
-    name: string;
-    category: string;
-  };
-  hourlyRate: number;
-  quantity: number;
-  professorSalary: number;
+  paymentMethod: "card" | "check" | "transfer" | "cash" | "PRLV";
+  subjects: Array<{
+    subjectId: string | { _id: string; name: string; category: string };
+    hourlyRate: number;
+    quantity: number;
+    professorSalary: number;
+  }>;
+  // Champs calculés globaux
+  totalHourlyRate: number;
+  totalQuantity: number;
+  totalProfessorSalary: number;
+  salaryToPay: number;
   charges: number;
-  status: string;
-  dueDate: string;
+  chargesToPay: number;
+  marginAmount: number;
+  marginPercentage: number;
+  status: "pending" | "paid" | "overdue";
+  createdAt: string;
+  updatedAt: string;
+  paidAt?: string;
   notes?: string;
+  // Échéancier
+  paymentSchedule?: {
+    paymentMethod: "PRLV" | "check";
+    numberOfInstallments: number;
+    dayOfMonth: number;
+    installments: {
+      amount: number;
+      dueDate: string;
+      status: "pending" | "paid" | "failed";
+      paidAt?: string;
+    }[];
+  };
+  // Champs pour la gestion des coupons
+  couponSeriesId?: {
+    _id: string;
+    totalCoupons: number;
+    usedCoupons: number;
+    status: "active" | "completed" | "expired";
+  };
+  totalCoupons?: number;
   createdBy: {
     _id: string;
     firstName: string;
     lastName: string;
   };
-  createdAt: string;
-  updatedAt: string;
-  salaryToPay: number;
-  chargesToPay: number;
-  marginAmount: number;
-  marginPercentage: number;
 }
 
 interface SettlementNotesResponse {
@@ -59,7 +83,7 @@ class SettlementService {
       console.log("🔍 Clés des données:", Object.keys(data));
       console.log("🔍 === FIN DÉBOGAGE SERVICE ===");
 
-      const response = await apiClient.post("/api/settlement-notes", data);
+      const response = await rateLimitedApiClient.post("/api/settlement-notes", data);
       return (response as SettlementNoteResponse).settlementNote;
     } catch (error) {
       console.error(
@@ -74,7 +98,7 @@ class SettlementService {
     familyId: string
   ): Promise<SettlementNote[]> {
     try {
-      const response = await apiClient.get(
+      const response = await rateLimitedApiClient.get(
         `/api/settlement-notes?familyId=${familyId}`
       );
       return (response as SettlementNotesResponse).notes || [];
@@ -104,7 +128,7 @@ class SettlementService {
     limit: number = 10
   ): Promise<SettlementNotesResponse> {
     try {
-      const response = await apiClient.get(
+      const response = await rateLimitedApiClient.get(
         `/api/settlement-notes?page=${page}&limit=${limit}`
       );
       return response as SettlementNotesResponse;
@@ -119,11 +143,24 @@ class SettlementService {
 
   async getSettlementNoteById(id: string): Promise<SettlementNote> {
     try {
-      const response = await apiClient.get(`/api/settlement-notes/${id}`);
+      const response = await rateLimitedApiClient.get(`/api/settlement-notes/${id}`);
       return response as SettlementNote;
     } catch (error) {
       console.error(
         "Erreur lors de la récupération de la note de règlement:",
+        error
+      );
+      throw error;
+    }
+  }
+
+  async deleteSettlementNote(id: string): Promise<{ message: string }> {
+    try {
+      const response = await rateLimitedApiClient.delete(`/api/settlement-notes/${id}`);
+      return response as { message: string };
+    } catch (error) {
+      console.error(
+        "Erreur lors de la suppression de la note de règlement:",
         error
       );
       throw error;

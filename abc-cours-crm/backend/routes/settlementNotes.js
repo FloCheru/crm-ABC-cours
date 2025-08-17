@@ -18,26 +18,45 @@ router.use(authenticateToken);
 // Validation pour créer une note de règlement
 const createSettlementValidation = [
   body("familyId").isMongoId().withMessage("ID de famille requis"),
-  body("studentId").isMongoId().withMessage("ID de l'élève requis"),
+  body("studentIds")
+    .isArray({ min: 1 })
+    .withMessage("Au moins un élève requis"),
+  body("studentIds.*").isMongoId().withMessage("ID d'élève invalide"),
   body("clientName").trim().notEmpty().withMessage("Nom du client requis"),
   body("department").trim().notEmpty().withMessage("Département requis"),
   body("paymentMethod")
     .isIn(["card", "check", "transfer", "cash"])
     .withMessage("Mode de règlement invalide"),
-  body("subjectId").isMongoId().withMessage("ID de matière invalide"),
-  body("hourlyRate")
+  body("subjects")
+    .isArray({ min: 1 })
+    .withMessage("Au moins une matière requise"),
+  body("subjects.*.subjectId").isMongoId().withMessage("ID de matière invalide"),
+  body("subjects.*.hourlyRate")
     .isFloat({ min: 0 })
     .withMessage("Tarif horaire doit être positif"),
-  body("quantity")
+  body("subjects.*.quantity")
     .isInt({ min: 1 })
     .withMessage("Quantité doit être au moins 1"),
-  body("professorSalary")
+  body("subjects.*.professorSalary")
     .isFloat({ min: 0 })
     .withMessage("Salaire du professeur doit être positif"),
   body("charges")
     .isFloat({ min: 0 })
     .withMessage("Charges doivent être positives"),
-  body("dueDate").isISO8601().withMessage("Date d'échéance invalide"),
+  // Validation conditionnelle pour l'échéancier
+  body("paymentSchedule").optional().isObject(),
+  body("paymentSchedule.paymentMethod")
+    .optional()
+    .isIn(["PRLV", "check"])
+    .withMessage("Mode de règlement de l'échéancier invalide"),
+  body("paymentSchedule.numberOfInstallments")
+    .optional()
+    .isInt({ min: 1, max: 12 })
+    .withMessage("Nombre d'échéances doit être entre 1 et 12"),
+  body("paymentSchedule.dayOfMonth")
+    .optional()
+    .isInt({ min: 1, max: 31 })
+    .withMessage("Jour du mois doit être entre 1 et 31"),
   body("notes").optional().trim(),
 ];
 
@@ -56,7 +75,7 @@ router.get(
       .isIn(["card", "check", "transfer", "cash"]),
     query("sortBy")
       .optional()
-      .isIn(["clientName", "dueDate", "createdAt", "marginAmount", "status"]),
+      .isIn(["clientName", "createdAt", "marginAmount", "status"]),
     query("sortOrder").optional().isIn(["asc", "desc"]),
   ],
   async (req, res) => {
@@ -126,7 +145,7 @@ router.get(
       console.log("🔍 Exécution de la requête MongoDB...");
       const [notes, total] = await Promise.all([
         SettlementNote.find(filter)
-          .populate("subject", "name category")
+          .populate("subjects.subjectId", "name category")
           .populate("createdBy", "firstName lastName")
           .sort(sort)
           .skip(skip)
@@ -162,7 +181,7 @@ router.get("/:id", async (req, res) => {
     }
 
     const note = await SettlementNote.findById(id)
-      .populate("subject", "name category description")
+      .populate("subjects.subjectId", "name category description")
       .populate("createdBy", "firstName lastName")
       .lean();
 
@@ -185,11 +204,21 @@ router.post(
   async (req, res) => {
     try {
       console.log("🔍 POST /api/settlement-notes - Début de la requête");
-      console.log("🔍 Données reçues:", req.body);
+      console.log("🔍 Données reçues:", {
+        ...req.body,
+        paymentScheduleType: typeof req.body.paymentSchedule,
+        hasPaymentSchedule: 'paymentSchedule' in req.body,
+        paymentScheduleValue: req.body.paymentSchedule
+      });
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log("Erreurs de validation:", errors.array());
+        console.log("❌ Erreurs de validation:", errors.array());
+        console.log("❌ Structure paymentSchedule reçue:", {
+          type: typeof req.body.paymentSchedule,
+          value: req.body.paymentSchedule,
+          isPresent: 'paymentSchedule' in req.body
+        });
         return res.status(400).json({
           error: "Validation failed",
           details: errors.array(),
@@ -198,55 +227,58 @@ router.post(
 
       const {
         familyId,
-        studentId,
+        studentIds,
         clientName,
         department,
         paymentMethod,
-        subjectId,
-        hourlyRate,
-        quantity,
-        professorSalary,
+        subjects,
         charges,
-        dueDate,
+        paymentSchedule,
         notes,
       } = req.body;
 
       console.log("🔍 Paramètres extraits:", {
         familyId,
-        studentId,
+        studentIds,
         clientName,
         department,
         paymentMethod,
-        subjectId,
-        hourlyRate,
-        quantity,
-        professorSalary,
+        subjects,
         charges,
-        dueDate,
+        paymentSchedule,
       });
 
-      // Vérifier que la matière existe
-      const subjectExists = await Subject.findById(subjectId);
-      if (!subjectExists) {
-        return res.status(400).json({ error: "Subject not found" });
+      // Vérifier que toutes les matières existent
+      const subjectIds = subjects.map(s => s.subjectId);
+      const existingSubjects = await Subject.find({ _id: { $in: subjectIds } });
+      if (existingSubjects.length !== subjectIds.length) {
+        return res.status(400).json({ error: "Une ou plusieurs matières introuvables" });
       }
 
       // Créer la note de règlement
-      const settlementNote = new SettlementNote({
+      const settlementNoteData = {
         familyId,
-        studentId, // Ajout du studentId dans le modèle
+        studentIds, // Tableau d'élèves
         clientName,
         department,
         paymentMethod,
-        subject: subjectId,
-        hourlyRate,
-        quantity,
-        professorSalary,
+        subjects, // Tableau de matières avec détails
         charges,
-        dueDate: new Date(dueDate),
         notes,
         createdBy: req.user.id,
-      });
+      };
+
+      // Ajouter l'échéancier si fourni
+      if (paymentSchedule && paymentSchedule.paymentMethod) {
+        settlementNoteData.paymentSchedule = {
+          paymentMethod: paymentSchedule.paymentMethod,
+          numberOfInstallments: paymentSchedule.numberOfInstallments,
+          dayOfMonth: paymentSchedule.dayOfMonth,
+          installments: [] // Les échéances seront générées plus tard si nécessaire
+        };
+      }
+
+      const settlementNote = new SettlementNote(settlementNoteData);
 
       await settlementNote.save();
 
@@ -280,7 +312,7 @@ router.post(
 
       // Récupérer la note avec les données populées
       const populatedNote = await SettlementNote.findById(settlementNote._id)
-        .populate("subject", "name category")
+        .populate("subjects.subjectId", "name category")
         .populate("createdBy", "firstName lastName")
         .populate("couponSeriesId", "totalCoupons usedCoupons status")
         .lean();
@@ -341,7 +373,7 @@ router.put(
         quantity,
         professorSalary,
         charges,
-        dueDate,
+        paymentSchedule,
         notes,
       } = req.body;
 
@@ -360,24 +392,35 @@ router.put(
       }
 
       // Mettre à jour la note
+      const updateData = {
+        familyId,
+        clientName,
+        department,
+        paymentMethod,
+        subject: subjectId,
+        hourlyRate,
+        quantity,
+        professorSalary,
+        charges,
+        notes,
+      };
+
+      // Ajouter l'échéancier si fourni
+      if (paymentSchedule && paymentSchedule.paymentMethod) {
+        updateData.paymentSchedule = {
+          paymentMethod: paymentSchedule.paymentMethod,
+          numberOfInstallments: paymentSchedule.numberOfInstallments,
+          dayOfMonth: paymentSchedule.dayOfMonth,
+          installments: paymentSchedule.installments || []
+        };
+      }
+
       const updatedNote = await SettlementNote.findByIdAndUpdate(
         id,
-        {
-          familyId,
-          clientName,
-          department,
-          paymentMethod,
-          subject: subjectId,
-          hourlyRate,
-          quantity,
-          professorSalary,
-          charges,
-          dueDate: dueDate ? new Date(dueDate) : undefined,
-          notes,
-        },
+        updateData,
         { new: true, runValidators: true }
       )
-        .populate("subject", "name category")
+        .populate("subjects.subjectId", "name category")
         .populate("createdBy", "firstName lastName")
         .lean();
 
@@ -398,10 +441,29 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
       return res.status(400).json({ error: "Invalid settlement note ID" });
     }
 
-    const note = await SettlementNote.findByIdAndDelete(id);
+    const note = await SettlementNote.findById(id);
     if (!note) {
       return res.status(404).json({ error: "Settlement note not found" });
     }
+
+    // Supprimer en cascade : coupons et séries liés
+    const CouponSeries = require("../models/CouponSeries");
+    const Coupon = require("../models/Coupon");
+
+    // Trouver la série de coupons liée
+    const couponSeries = await CouponSeries.findOne({ settlementNoteId: id });
+    if (couponSeries) {
+      // Supprimer tous les coupons de la série
+      await Coupon.deleteMany({ couponSeriesId: couponSeries._id });
+      console.log(`Suppression des coupons de la série ${couponSeries._id}`);
+      
+      // Supprimer la série de coupons
+      await CouponSeries.findByIdAndDelete(couponSeries._id);
+      console.log(`Suppression de la série de coupons ${couponSeries._id}`);
+    }
+
+    // Supprimer la note de règlement
+    await SettlementNote.findByIdAndDelete(id);
 
     // Retirer l'ID de la note de règlement de la famille
     const Family = require("../models/Family");
@@ -409,7 +471,11 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
       $pull: { settlementNotes: id },
     });
 
-    res.json({ message: "Settlement note deleted successfully" });
+    res.json({ 
+      message: "Settlement note deleted successfully",
+      deletedCoupons: couponSeries ? "yes" : "no",
+      deletedSeries: couponSeries ? "yes" : "no"
+    });
   } catch (error) {
     console.error("Delete settlement note error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -433,7 +499,7 @@ router.patch("/:id/mark-paid", authorize(["admin"]), async (req, res) => {
     await note.markAsPaid();
 
     const updatedNote = await SettlementNote.findById(id)
-      .populate("subject", "name category")
+      .populate("subjects.subjectId", "name category")
       .populate("createdBy", "firstName lastName")
       .lean();
 
@@ -468,7 +534,7 @@ router.get("/", authorize(["admin"]), async (req, res) => {
 
     const [notes, total] = await Promise.all([
       SettlementNote.find(filter)
-        .populate("subject", "name category")
+        .populate("subjects.subjectId", "name category")
         .populate("createdBy", "firstName lastName")
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -574,7 +640,7 @@ router.get("/:id", authorize(["admin"]), async (req, res) => {
     }
 
     const note = await SettlementNote.findById(id)
-      .populate("subject", "name category")
+      .populate("subjects.subjectId", "name category")
       .populate("createdBy", "firstName lastName")
       .populate("couponSeriesId", "totalCoupons usedCoupons status")
       .lean();
