@@ -18,6 +18,13 @@ const couponSeriesSchema = new mongoose.Schema(
       ref: "Student",
       required: [true, "ID de l'élève requis"],
     },
+    // Nouveau champ pour supporter multiples élèves (optionnel pour compatibilité)
+    studentIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student",
+      },
+    ],
     totalCoupons: {
       type: Number,
       required: [true, "Nombre total de coupons requis"],
@@ -45,6 +52,27 @@ const couponSeriesSchema = new mongoose.Schema(
       ref: "Subject",
       required: [true, "Matière requise"],
     },
+    // Nouveau champ pour supporter multiples matières (optionnel pour compatibilité)
+    subjects: [
+      {
+        subjectId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Subject",
+        },
+        hourlyRate: {
+          type: Number,
+          min: [0, "Le tarif doit être positif"],
+        },
+        quantity: {
+          type: Number,
+          min: [1, "La quantité doit être au moins 1"],
+        },
+        professorSalary: {
+          type: Number,
+          min: [0, "Le salaire doit être positif"],
+        },
+      },
+    ],
     hourlyRate: {
       type: Number,
       required: [true, "Tarif horaire requis"],

@@ -1,22 +1,10 @@
 import type { CouponSeries, CreateCouponSeriesData } from "../types/coupon";
-
-const API_BASE_URL =
-  (import.meta.env.VITE_API_URL || "http://localhost:3000") + "/api";
+import { apiClient } from "../utils/apiClient";
 
 class CouponSeriesService {
-  private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem("token");
-    return {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    };
-  }
-
   async createCouponSeries(
     data: CreateCouponSeriesData
   ): Promise<CouponSeries> {
-    const headers = this.getAuthHeaders();
-
     // Mapper les données du format frontend vers le format API
     const apiData = {
       family: data.familyId,
@@ -31,130 +19,65 @@ class CouponSeriesService {
       sendNotification: data.sendNotification,
     };
 
-    console.log("🔍 Création série - Headers:", headers);
     console.log("🔍 Création série - Données originales:", data);
     console.log("🔍 Création série - Données mappées:", apiData);
 
-    const response = await fetch(`${API_BASE_URL}/coupon-series`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(apiData),
-    });
-
-    console.log("🔍 Création série - Status:", response.status);
-    console.log(
-      "🔍 Création série - Headers réponse:",
-      Object.fromEntries(response.headers.entries())
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
+    try {
+      const result = await apiClient.post<CouponSeries>("/api/coupon-series", apiData);
+      console.log("🔍 Création série - Succès:", result);
+      return result;
+    } catch (error) {
       console.error("🔍 Création série - Erreur API:", error);
-      console.error(
-        "🔍 Création série - Détails de validation:",
-        error.details
-      );
-
-      // Construire un message d'erreur plus détaillé
-      let errorMessage =
-        error.message || "Erreur lors de la création de la série de coupons";
-
-      if (error.details && Array.isArray(error.details)) {
-        const validationErrors = error.details
-          .map(
-            (detail: { path: string; msg: string }) =>
-              `${detail.path}: ${detail.msg}`
-          )
-          .join(", ");
-        errorMessage = `Erreurs de validation: ${validationErrors}`;
-      }
-
-      throw new Error(errorMessage);
+      throw error;
     }
-
-    const result = await response.json();
-    console.log("🔍 Création série - Succès:", result);
-    return result;
   }
 
   async getCouponSeries(): Promise<CouponSeries[]> {
-    const headers = this.getAuthHeaders();
-    console.log("🔍 Headers envoyés:", headers);
-    console.log("🔍 Token stocké:", localStorage.getItem("token"));
+    console.log("🔍 Récupération des séries de coupons...");
 
-    const response = await fetch(`${API_BASE_URL}/coupon-series`, {
-      method: "GET",
-      headers,
-    });
+    try {
+      const data = await apiClient.get<{ data: CouponSeries[] }>("/api/coupon-series");
+      console.log("🔍 Données reçues:", data);
 
-    console.log("🔍 Status de la réponse:", response.status);
-    console.log(
-      "🔍 Headers de la réponse:",
-      Object.fromEntries(response.headers.entries())
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
+      // Extraire les données du format de réponse paginée
+      return data.data || [];
+    } catch (error) {
       console.error("🔍 Erreur de l'API:", error);
-      throw new Error(
-        error.message || "Erreur lors de la récupération des séries de coupons"
-      );
+      throw error;
     }
-
-    const data = await response.json();
-    console.log("🔍 Données reçues:", data);
-
-    // Extraire les données du format de réponse paginée
-    return data.data || [];
   }
 
   async getCouponSeriesById(id: string): Promise<CouponSeries> {
-    const response = await fetch(`${API_BASE_URL}/coupon-series/${id}`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la récupération de la série de coupons"
-      );
+    try {
+      const data = await apiClient.get<{ series: CouponSeries } | CouponSeries>(`/api/coupon-series/${id}`);
+      console.log("🔍 Données série reçues:", data);
+      
+      // Le backend peut retourner { series: {...} } ou directement les données
+      return (data as any).series || data;
+    } catch (error) {
+      console.error("🔍 Erreur lors de la récupération de la série:", error);
+      throw error;
     }
-
-    return response.json();
   }
 
   async updateCouponSeries(
     id: string,
     data: Partial<CreateCouponSeriesData>
   ): Promise<CouponSeries> {
-    const response = await fetch(`${API_BASE_URL}/coupon-series/${id}`, {
-      method: "PUT",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la mise à jour de la série de coupons"
-      );
+    try {
+      return await apiClient.put<CouponSeries>(`/api/coupon-series/${id}`, data);
+    } catch (error) {
+      console.error("🔍 Erreur lors de la mise à jour de la série:", error);
+      throw error;
     }
-
-    return response.json();
   }
 
   async deleteCouponSeries(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/coupon-series/${id}`, {
-      method: "DELETE",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la suppression de la série de coupons"
-      );
+    try {
+      await apiClient.delete<void>(`/api/coupon-series/${id}`);
+    } catch (error) {
+      console.error("🔍 Erreur lors de la suppression de la série:", error);
+      throw error;
     }
   }
 
@@ -164,19 +87,17 @@ class CouponSeriesService {
     inactive: number;
     expired: number;
   }> {
-    const response = await fetch(`${API_BASE_URL}/coupon-series/stats`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || "Erreur lors de la récupération des statistiques"
-      );
+    try {
+      return await apiClient.get<{
+        total: number;
+        active: number;
+        inactive: number;
+        expired: number;
+      }>("/api/coupon-series/stats");
+    } catch (error) {
+      console.error("🔍 Erreur lors de la récupération des statistiques:", error);
+      throw error;
     }
-
-    return response.json();
   }
 }
 

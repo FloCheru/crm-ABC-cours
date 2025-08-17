@@ -89,12 +89,9 @@ router.get(
           .populate({
             path: "couponSeriesId",
             populate: [
-              { path: "familyId", select: "familyName" },
+              { path: "familyId", select: "primaryContact.firstName primaryContact.lastName primaryContact.email" },
               { path: "studentId", select: "firstName lastName" },
-              {
-                path: "professorId",
-                select: "personalInfo.firstName personalInfo.lastName",
-              },
+              { path: "subject", select: "name category" },
             ],
           })
           .populate("usedBy", "firstName lastName")
@@ -127,9 +124,9 @@ router.get("/:id", async (req, res) => {
       .populate({
         path: "couponSeriesId",
         populate: [
-          { path: "familyId", select: "familyName contact address" },
+          { path: "familyId", select: "primaryContact.firstName primaryContact.lastName primaryContact.email address" },
           { path: "studentId", select: "firstName lastName schoolLevel" },
-          { path: "professorId", select: "personalInfo professional.subjects" },
+          { path: "subject", select: "name category" },
         ],
       })
       .populate("usedBy", "firstName lastName email")
@@ -189,9 +186,8 @@ router.post("/:id/use", useCouponValidation, async (req, res) => {
     }
 
     // Vérification des permissions - seul le professeur assigné ou un admin peut valider
-    const isAssignedProfessor =
-      req.user.role === "professor" &&
-      couponSeries.professorId.toString() === req.user._id.toString();
+    // TODO: Implémenter la logique d'assignation de professeur une fois le modèle mis à jour
+    const isAssignedProfessor = false; // Temporaire: pas de professorId dans CouponSeries
     const isAdmin = req.user.role === "admin";
 
     if (!isAssignedProfessor && !isAdmin) {
@@ -215,7 +211,7 @@ router.post("/:id/use", useCouponValidation, async (req, res) => {
       .populate({
         path: "couponSeriesId",
         populate: [
-          { path: "familyId", select: "familyName" },
+          { path: "familyId", select: "primaryContact.firstName primaryContact.lastName" },
           { path: "studentId", select: "firstName lastName" },
         ],
       })
@@ -353,10 +349,8 @@ router.patch(
       }
 
       // Vérifications des permissions
-      const isAssignedProfessor =
-        req.user.role === "professor" &&
-        coupon.couponSeriesId.professorId.toString() ===
-          req.user._id.toString();
+      // TODO: Implémenter la logique d'assignation de professeur une fois le modèle mis à jour
+      const isAssignedProfessor = false; // Temporaire: pas de professorId dans CouponSeries
       const isAdmin = req.user.role === "admin";
 
       if (ratingType === "professor" && !isAssignedProfessor && !isAdmin) {
@@ -479,7 +473,7 @@ router.get("/usage-history/:professorId", async (req, res) => {
         .populate({
           path: "couponSeriesId",
           populate: [
-            { path: "familyId", select: "familyName" },
+            { path: "familyId", select: "primaryContact.firstName primaryContact.lastName" },
             { path: "studentId", select: "firstName lastName" },
           ],
         })
