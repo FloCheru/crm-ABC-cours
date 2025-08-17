@@ -11,6 +11,7 @@ interface AuthState {
   // Actions
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  logoutAndRedirect: () => void;
   setUser: (user: AuthResponse['user'] | null) => void;
   setToken: (token: string | null) => void;
   initializeAuth: () => void;
@@ -47,6 +48,20 @@ export const useAuthStore = create<AuthState>()(
             token: null,
             isAuthenticated: false,
           });
+        },
+
+        logoutAndRedirect: () => {
+          authService.logout();
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+          });
+          
+          // Rediriger vers la page de connexion
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
         },
         
         setUser: (user) => set({ user, isAuthenticated: !!user }),

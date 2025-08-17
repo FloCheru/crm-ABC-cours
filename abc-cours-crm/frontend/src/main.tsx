@@ -7,11 +7,16 @@ import {
   Login,
   UnderDevelopment,
   CouponSeriesCreate,
-  Dashboard,
+  CouponsList,
   SettlementCreate,
+  SettlementDashboard,
+  SettlementDetails,
+  Prospects,
 } from "./pages";
+import { SeriesDetails } from "./pages/admin/coupons/SeriesDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuthStore } from "./stores";
+import { useAuthInitialization } from "./hooks/useAuthInitialization";
 import { useEffect } from "react";
 
 // Basename vide pour Vercel (domaine dédié)
@@ -20,6 +25,9 @@ const basename = "";
 // Composant pour initialiser l'auth au démarrage
 function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  
+  // Initialiser l'authentification et la gestion automatique de déconnexion
+  useAuthInitialization();
   
   useEffect(() => {
     initializeAuth();
@@ -47,10 +55,34 @@ function App() {
             }
           />
           <Route
+            path="/admin/coupons/list"
+            element={
+              <ProtectedRoute>
+                <CouponsList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/coupons/:seriesId/coupons"
+            element={
+              <ProtectedRoute>
+                <SeriesDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/prospects"
+            element={
+              <ProtectedRoute>
+                <Prospects />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <SettlementDashboard />
               </ProtectedRoute>
             }
           />
@@ -59,6 +91,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SettlementCreate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard/:noteId"
+            element={
+              <ProtectedRoute>
+                <SettlementDetails />
               </ProtectedRoute>
             }
           />

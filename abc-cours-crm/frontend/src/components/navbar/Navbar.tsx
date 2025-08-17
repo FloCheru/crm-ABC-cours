@@ -22,9 +22,16 @@ interface NavbarProps {
 
 // Items de navigation fixes
 const NAV_ITEMS = [
-  { label: "Admin", path: "/admin/coupons" },
+  { 
+    label: "Admin", 
+    path: "/admin/coupons",
+    submenu: [
+      { label: "Séries de coupons", path: "/admin/coupons" },
+      { label: "Coupons", path: "/admin/coupons/list" },
+    ]
+  },
   { label: "Professeurs", path: "/under-development" },
-  { label: "Prospects", path: "/under-development" },
+  { label: "Prospects", path: "/prospects" },
   { label: "Clients", path: "/under-development" },
   { label: "Tableau de bord", path: "/admin/dashboard" },
   { label: "Candidats", path: "/under-development" },
@@ -81,10 +88,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     >
       <ul className="navbar__nav">
         {NAV_ITEMS.map((item, index) => {
-          const isActive = activePath === item.path;
+          const isActive = activePath === item.path || 
+            (item.submenu && item.submenu.some(sub => activePath === sub.path));
 
           return (
-            <li key={index} className="navbar__item">
+            <li key={index} className={`navbar__item ${item.submenu ? 'navbar__item--dropdown' : ''}`}>
               <a
                 href={item.path}
                 className={`navbar__link ${
@@ -94,7 +102,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                 aria-current={isActive ? "page" : undefined}
               >
                 {item.label}
+                {item.submenu && <span className="navbar__dropdown-arrow">▼</span>}
               </a>
+              
+              {item.submenu && (
+                <ul className="navbar__submenu">
+                  {item.submenu.map((subItem, subIndex) => (
+                    <li key={subIndex} className="navbar__submenu-item">
+                      <a
+                        href={subItem.path}
+                        className={`navbar__submenu-link ${
+                          activePath === subItem.path ? "navbar__submenu-link--active" : ""
+                        }`}
+                        onClick={(event) => handleClick(subItem.path, event)}
+                      >
+                        {subItem.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           );
         })}
