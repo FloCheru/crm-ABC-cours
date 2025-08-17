@@ -122,6 +122,7 @@ const startServer = async () => {
       console.log(`🚀 Serveur démarré sur le port ${PORT}`);
       console.log(`📊 Mode: ${process.env.NODE_ENV || "development"}`);
       console.log(`🌐 URL: http://localhost:${PORT}`);
+      console.log(`✅ Backend prêt pour les tests`);
       console.log(`🎯 Environnement: ${envFile}`);
     });
   } catch (error) {
