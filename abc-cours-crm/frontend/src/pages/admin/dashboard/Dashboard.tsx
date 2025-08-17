@@ -354,7 +354,11 @@ export const Dashboard: React.FC = () => {
                 variant: "secondary",
                 onClick: () => navigate("/admin/dashboard/create"),
               },
-              { text: "Exporter", variant: "secondary" },
+              { 
+                text: "Tableau NDR", 
+                variant: "secondary",
+                onClick: () => navigate("/admin/dashboard/settlements"),
+              },
             ]}
           />
           <ButtonGroup
