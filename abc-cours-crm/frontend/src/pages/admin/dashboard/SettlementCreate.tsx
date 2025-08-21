@@ -147,7 +147,7 @@ export const SettlementCreate: React.FC = () => {
 
     // Vérifier le mode de règlement
     logger.debug("🔍 Vérification paymentMethod:", formData.paymentMethod);
-    if (!formData.paymentMethod) {
+    if (formData.paymentMethod === '') {
       errors.paymentMethod = "Le mode de règlement est obligatoire";
       logger.debug("🔍 ERREUR: Mode de règlement manquant");
     }
