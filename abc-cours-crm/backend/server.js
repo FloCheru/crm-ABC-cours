@@ -14,10 +14,25 @@ const envFile =
 
 dotenv.config({ path: path.join(__dirname, envFile) });
 
-// Debug (à supprimer en production)
-console.log("🔍 Environnement chargé:", envFile);
-console.log("🔍 NODE_ENV:", process.env.NODE_ENV);
-console.log("🔍 MONGODB_URI défini:", !!process.env.MONGODB_URI);
+// Import du logger automatique
+const logger = require("./utils/autoLogger");
+
+// Redirection des console.error vers AutoLogger
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  // Garder l'affichage console original
+  originalConsoleError(...args);
+  // Ajouter au fichier de log via AutoLogger
+  const message = args.map(arg => 
+    typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+  ).join(' ');
+  logger.error(message, true); // forceSync = true for errors
+};
+
+// Debug avec logger
+logger.info(`🔍 Environnement chargé: ${envFile}`);
+logger.info(`🔍 NODE_ENV: ${process.env.NODE_ENV}`);
+logger.info(`🔍 MONGODB_URI défini: ${!!process.env.MONGODB_URI}`);
 
 // Import des routes
 const authRoutes = require("./routes/auth");
@@ -29,6 +44,8 @@ const subjectRoutes = require("./routes/subjects");
 const couponRoutes = require("./routes/coupons");
 const couponSeriesRoutes = require("./routes/couponSeries");
 const settlementNotesRoutes = require("./routes/settlementNotes");
+const pdfRoutes = require("./routes/pdf");
+const debugRoutes = require("./routes/debug");
 
 // Import de la configuration de la base de données
 const connectDB = require("./config/database");
@@ -45,6 +62,8 @@ app.use(
     origin: [
       "http://localhost:5173", // local
       "http://localhost:5174", // local Vite (port par défaut)
+      "http://localhost:5178", // local Vite (port alternatif)
+      "http://localhost:5177", // local Vite (port alternatif)
       "https://crm-abc-cours.vercel.app", // production
       "https://flocheru.github.io", // GitHub Pages
       process.env.FRONTEND_URL, // Backup Railway
@@ -60,12 +79,29 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-// Middleware de logging
-app.use(morgan("combined"));
+// Middleware de logging Morgan intégré avec AutoLogger
+const customMorganStream = {
+  write: (message) => {
+    // Retirer le \n final de Morgan pour éviter les doubles retours à la ligne
+    const cleanMessage = message.replace(/\n$/, '');
+    logger.info(cleanMessage);
+  }
+};
+
+// Morgan avec écriture via AutoLogger
+app.use(morgan("combined")); // Console
+app.use(morgan("combined", { stream: customMorganStream })); // Fichier via AutoLogger
 
 // Middleware pour parser le JSON
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Middleware de logging automatique des requêtes
+app.use((req, res, next) => {
+  const isTestRequest = req.headers["x-test-mode"] === "true";
+  logger.info(`${req.method} ${req.path}`, isTestRequest);
+  next();
+});
 
 // Middleware pour servir les fichiers uploadés
 app.use("/uploads", express.static("uploads"));
@@ -99,10 +135,14 @@ app.use("/api/subjects", subjectRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/coupon-series", couponSeriesRoutes);
 app.use("/api/settlement-notes", settlementNotesRoutes);
+app.use("/api", pdfRoutes);
+app.use("/debug", debugRoutes);
 
 // Middleware de gestion d'erreurs
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  const isTestRequest = req.headers["x-test-mode"] === "true";
+  logger.error(`${req.method} ${req.path} - ${err.message}`, isTestRequest);
+
   res.status(500).json({
     message: "Erreur interne du serveur",
     error: process.env.NODE_ENV === "development" ? err.message : {},
@@ -111,6 +151,11 @@ app.use((err, req, res, next) => {
 
 // Route 404
 app.use("*", (req, res) => {
+  const isTestRequest = req.headers["x-test-mode"] === "true";
+  logger.warn(
+    `404 - Route non trouvée: ${req.method} ${req.path}`,
+    isTestRequest
+  );
   res.status(404).json({ message: "Route non trouvée" });
 });
 
@@ -119,14 +164,15 @@ const startServer = async () => {
   try {
     await connectDB();
     app.listen(PORT, () => {
-      console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-      console.log(`📊 Mode: ${process.env.NODE_ENV || "development"}`);
-      console.log(`🌐 URL: http://localhost:${PORT}`);
-      console.log(`✅ Backend prêt pour les tests`);
-      console.log(`🎯 Environnement: ${envFile}`);
+      logger.info(`🚀 Serveur démarré sur le port ${PORT}`);
+      logger.info(`📊 Mode: ${process.env.NODE_ENV || "development"}`);
+      logger.info(`🌐 URL: http://localhost:${PORT}`);
+      logger.info(`✅ Backend prêt pour les tests`);
+      logger.info(`🎯 Environnement: ${envFile}`);
+      logger.info(`📝 Logs automatiques activés: backend/logs/server.log`);
     });
   } catch (error) {
-    console.error("Erreur lors du démarrage du serveur:", error);
+    logger.error(`Erreur lors du démarrage du serveur: ${error.message}`);
     process.exit(1);
   }
 };
