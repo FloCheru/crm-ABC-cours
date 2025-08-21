@@ -54,10 +54,6 @@ export const CouponsList: React.FC = () => {
     console.log("Recherche:", searchTerm, "Statut:", statusFilter);
   };
 
-  const handleFilter = () => {
-    // Implémenter les filtres si nécessaire
-    console.log("Filtres appliqués");
-  };
 
   const handleReset = () => {
     setSearchTerm("");
@@ -168,7 +164,7 @@ export const CouponsList: React.FC = () => {
     {
       key: "professor",
       label: "Professeur",
-      render: (_: unknown, row: TableRowData) => (
+      render: () => (
         <div className="text-sm text-gray-500">
           À implémenter
         </div>

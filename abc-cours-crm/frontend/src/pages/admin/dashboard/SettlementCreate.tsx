@@ -147,7 +147,7 @@ export const SettlementCreate: React.FC = () => {
 
     // Vérifier le mode de règlement
     logger.debug("🔍 Vérification paymentMethod:", formData.paymentMethod);
-    if (!formData.paymentMethod || formData.paymentMethod === "") {
+    if (!formData.paymentMethod) {
       errors.paymentMethod = "Le mode de règlement est obligatoire";
       logger.debug("🔍 ERREUR: Mode de règlement manquant");
     }
@@ -219,19 +219,6 @@ export const SettlementCreate: React.FC = () => {
     return isValid;
   };
 
-  // Fonction pour vérifier si le formulaire est valide
-  const isFormValid = () => {
-    return (
-      formData.studentIds.length > 0 &&
-      formData.subjects.length > 0 &&
-      commonRates.hourlyRate &&
-      commonRates.quantity &&
-      commonRates.professorSalary &&
-      parseFloat(commonRates.hourlyRate) > 0 &&
-      parseInt(commonRates.quantity) > 0 &&
-      parseFloat(commonRates.professorSalary) > 0
-    );
-  };
 
   // Charger les données des matières et des familles
   useEffect(() => {
@@ -2322,9 +2309,7 @@ export const SettlementCreate: React.FC = () => {
                               ...prev,
                               paymentSchedule: {
                                 ...prev.paymentSchedule,
-                                paymentMethod: e.target.value as
-                                  | "PRLV"
-                                  | "check",
+                                paymentMethod: e.target.value as "PRLV" | "check",
                               },
                             }))
                           }
