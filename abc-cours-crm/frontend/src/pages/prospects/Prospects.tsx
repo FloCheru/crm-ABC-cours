@@ -84,7 +84,7 @@ export const Prospects: React.FC = () => {
       setFamilyData(prevData => 
         prevData.map(family => 
           family._id === prospectId 
-            ? { ...family, prospectStatus: newStatus }
+            ? { ...family, prospectStatus: newStatus } as Family
             : family
         )
       );
@@ -110,7 +110,7 @@ export const Prospects: React.FC = () => {
     setFamilyData(prevData => 
       prevData.map(family => 
         family._id === familyId 
-          ? { ...family, nextActionDate: newDate }
+          ? { ...family, nextActionDate: newDate } as Family
           : family
       )
     );

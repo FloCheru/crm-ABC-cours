@@ -4,7 +4,7 @@ import { apiClient } from './apiClient';
 type LogoutFunction = () => void;
 
 class RateLimitedApiClient {
-  private requestCache = new Map<string, Promise<any>>();
+  private requestCache = new Map<string, Promise<unknown>>();
   private requestTimestamps = new Map<string, number>();
   private minRequestInterval = 100; // 100ms minimum between same requests
   private retryDelay = 1000; // 1 second initial retry delay
@@ -31,7 +31,7 @@ class RateLimitedApiClient {
     const existingPromise = this.requestCache.get(requestKey);
     if (existingPromise) {
       try {
-        return await existingPromise;
+        return await existingPromise as T;
       } catch (error) {
         // If cached request failed, we'll make a new one
         this.requestCache.delete(requestKey);

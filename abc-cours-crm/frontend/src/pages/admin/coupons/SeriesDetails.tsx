@@ -111,8 +111,8 @@ export const SeriesDetails: React.FC = () => {
     {
       key: "code",
       label: "N°",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium">{row.code}</div>
+      render: (_: unknown, _row: TableRowData) => (
+        <div className="font-medium">{_row.code}</div>
       ),
     },
     {
@@ -163,29 +163,29 @@ export const SeriesDetails: React.FC = () => {
     {
       key: "status",
       label: "Statut",
-      render: (_: unknown, row: TableRowData) => (
+      render: (_: unknown, _row: TableRowData) => (
         <StatusBadge
           variant={
-            row.status === "available"
+            _row.status === "available"
               ? "disponible"
-              : row.status === "used"
+              : _row.status === "used"
               ? "active"
-              : row.status === "expired"
+              : _row.status === "expired"
               ? "bloquee"
-              : row.status === "cancelled"
+              : _row.status === "cancelled"
               ? "terminee"
               : "disponible"
           }
         >
-          {row.status === "available"
+          {_row.status === "available"
             ? "Disponible"
-            : row.status === "used"
+            : _row.status === "used"
             ? "Utilisé"
-            : row.status === "expired"
+            : _row.status === "expired"
             ? "Expiré"
-            : row.status === "cancelled"
+            : _row.status === "cancelled"
             ? "Annulé"
-            : row.status}
+            : _row.status}
         </StatusBadge>
       ),
     },

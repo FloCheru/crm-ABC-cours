@@ -18,7 +18,7 @@ interface AppState {
 
 export const useAppStore = create<AppState>()(
   devtools(
-    (set, _get) => ({
+    (set) => ({
       // Refresh state
       refreshTrigger: 0,
       triggerRefresh: () => {

@@ -58,15 +58,13 @@ export const couponService = {
       }
     });
 
-    const response = await apiClient.get(`/api/coupons?${params.toString()}`);
+    const response = await apiClient.get(`/api/coupons?${params.toString()}`) as ApiResponse<Coupon[]> | ApiResponse<PaginatedResponse<Coupon>>;
     
     // L'API retourne un objet paginé, on extrait les données
-    const typedResponse = response as ApiResponse<Coupon[]> | ApiResponse<PaginatedResponse<Coupon>>;
-    
-    if ('data' in typedResponse && Array.isArray(typedResponse.data)) {
-      return typedResponse.data;
-    } else if ('data' in typedResponse && typedResponse.data && typeof typedResponse.data === 'object' && 'data' in typedResponse.data) {
-      const paginatedData = typedResponse.data as PaginatedResponse<Coupon>;
+    if ('data' in response && Array.isArray(response.data)) {
+      return response.data;
+    } else if ('data' in response && response.data && typeof response.data === 'object' && 'data' in response.data) {
+      const paginatedData = response.data as PaginatedResponse<Coupon>;
       return paginatedData.data;
     }
     
@@ -77,18 +75,16 @@ export const couponService = {
    * Récupère les détails d'un coupon spécifique
    */
   async getCouponById(couponId: string): Promise<Coupon> {
-    const response = await apiClient.get(`/api/coupons/${couponId}`);
-    const typedResponse = response as ApiResponse<{ coupon: Coupon }>;
-    return typedResponse.data.coupon;
+    const response = await apiClient.get(`/api/coupons/${couponId}`) as ApiResponse<{ coupon: Coupon }>;
+    return response.data.coupon;
   },
 
   /**
    * Marque un coupon comme utilisé
    */
   async useCoupon(couponId: string, sessionData: UseCouponData): Promise<Coupon> {
-    const response = await apiClient.post(`/api/coupons/${couponId}/use`, sessionData);
-    const typedResponse = response as ApiResponse<{ coupon: Coupon }>;
-    return typedResponse.data.coupon;
+    const response = await apiClient.post(`/api/coupons/${couponId}/use`, sessionData) as ApiResponse<{ coupon: Coupon }>;
+    return response.data.coupon;
   },
 
   /**
@@ -97,9 +93,8 @@ export const couponService = {
   async cancelCouponUsage(couponId: string, reason: string): Promise<Coupon> {
     const response = await apiClient.post(`/api/coupons/${couponId}/cancel-usage`, {
       reason,
-    });
-    const typedResponse = response as ApiResponse<{ coupon: Coupon }>;
-    return typedResponse.data.coupon;
+    }) as ApiResponse<{ coupon: Coupon }>;
+    return response.data.coupon;
   },
 
   /**
@@ -113,9 +108,8 @@ export const couponService = {
       comment?: string;
     }
   ): Promise<Coupon> {
-    const response = await apiClient.patch(`/api/coupons/${couponId}/rating`, ratingData);
-    const typedResponse = response as ApiResponse<{ coupon: Coupon }>;
-    return typedResponse.data.coupon;
+    const response = await apiClient.patch(`/api/coupons/${couponId}/rating`, ratingData) as ApiResponse<{ coupon: Coupon }>;
+    return response.data.coupon;
   },
 
   /**
@@ -126,13 +120,12 @@ export const couponService = {
     availableCoupons: Coupon[];
     count: number;
   }> {
-    const response = await apiClient.get(`/api/coupons/available/by-series/${seriesId}`);
-    const typedResponse = response as ApiResponse<{
+    const response = await apiClient.get(`/api/coupons/available/by-series/${seriesId}`) as ApiResponse<{
       series: any;
       availableCoupons: Coupon[];
       count: number;
     }>;
-    return typedResponse.data;
+    return response.data;
   },
 
   /**
@@ -169,8 +162,7 @@ export const couponService = {
 
     const response = await apiClient.get(
       `/api/coupons/usage-history/${professorId}?${params.toString()}`
-    );
-    const typedResponse = response as ApiResponse<{
+    ) as ApiResponse<{
       data: Coupon[];
       stats: {
         totalSessions: number;
@@ -183,6 +175,6 @@ export const couponService = {
       limit: number;
       totalPages: number;
     }>;
-    return typedResponse.data;
+    return response.data;
   },
 };
