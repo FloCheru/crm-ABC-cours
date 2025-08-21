@@ -1,0 +1,487 @@
+/* Styles pour le PDF Note de Règlement */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #333;
+}
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm;
+    margin: 0 auto;
+    background: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    page-break-after: always;
+}
+
+.page:last-child {
+    page-break-after: avoid;
+}
+
+/* En-tête */
+.header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 15px;
+}
+
+.company-info {
+    flex: 1;
+}
+
+.company-name {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2563eb;
+    margin-bottom: 8px;
+}
+
+.company-details {
+    font-size: 10px;
+    color: #666;
+    line-height: 1.3;
+}
+
+.document-info {
+    text-align: right;
+    flex: 1;
+}
+
+.document-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1e40af;
+    margin-bottom: 8px;
+}
+
+.document-number {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.document-date {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Section client */
+.client-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+}
+
+.client-info, .payment-info {
+    flex: 1;
+}
+
+.client-info h3, .payment-info h3 {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #1e40af;
+}
+
+.client-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.client-address, .client-department {
+    font-size: 11px;
+    margin-bottom: 2px;
+    color: #555;
+}
+
+.payment-method {
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Section prestations */
+.services-section {
+    margin-bottom: 25px;
+}
+
+.services-section h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #1e40af;
+}
+
+.services-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+
+.services-table th {
+    background-color: #2563eb;
+    color: white;
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.services-table td {
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 11px;
+}
+
+.services-table td.number {
+    text-align: right;
+    font-weight: bold;
+}
+
+.services-table tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+/* Section récapitulatif */
+.summary-section {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f1f5f9;
+    border-radius: 8px;
+}
+
+.summary-section h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #1e40af;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background-color: white;
+    border-radius: 4px;
+    border-left: 4px solid #e5e7eb;
+}
+
+.summary-item.highlight {
+    border-left-color: #22c55e;
+    font-weight: bold;
+}
+
+.summary-item .label {
+    font-size: 12px;
+    color: #666;
+}
+
+.summary-item .value {
+    font-size: 12px;
+    font-weight: bold;
+    color: #1f2937;
+}
+
+/* Section échéancier */
+.schedule-section {
+    margin-bottom: 25px;
+}
+
+.schedule-section h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #1e40af;
+}
+
+.schedule-info {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #fef3c7;
+    border-radius: 6px;
+}
+
+.schedule-info p {
+    margin-bottom: 4px;
+    font-size: 11px;
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.schedule-table th {
+    background-color: #f59e0b;
+    color: white;
+    padding: 8px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.schedule-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 11px;
+}
+
+.schedule-table td.number {
+    text-align: right;
+    font-weight: bold;
+}
+
+.status {
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background-color: #fbbf24;
+    color: #92400e;
+}
+
+.status-paid {
+    background-color: #34d399;
+    color: #065f46;
+}
+
+.status-failed {
+    background-color: #f87171;
+    color: #991b1b;
+}
+
+/* Section notes */
+.notes-section {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #fef7ff;
+    border-radius: 8px;
+    border-left: 4px solid #a855f7;
+}
+
+.notes-section h3 {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #7c3aed;
+}
+
+.notes-text {
+    font-size: 11px;
+    line-height: 1.5;
+    color: #555;
+}
+
+/* Pied de page */
+.footer {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.signature-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.signature-client, .signature-company {
+    text-align: center;
+    width: 200px;
+}
+
+.signature-client p, .signature-company p {
+    font-size: 11px;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.signature-box {
+    height: 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background-color: #f9fafb;
+}
+
+.footer-info {
+    text-align: center;
+    font-size: 9px;
+    color: #9ca3af;
+}
+
+/* Styles spécifiques pour la page coupons */
+.coupons-page {
+    font-size: 11px;
+}
+
+.coupons-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #fef3c7;
+    border-radius: 8px;
+}
+
+.coupons-summary h3 {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #92400e;
+}
+
+.coupons-summary p {
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+
+/* Grille des coupons */
+.coupons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.coupon {
+    border: 2px solid #2563eb;
+    border-radius: 8px;
+    padding: 12px;
+    background-color: white;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+.coupon-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.coupon-number {
+    font-weight: bold;
+    font-size: 12px;
+    color: #1e40af;
+}
+
+.coupon-series {
+    font-size: 10px;
+    color: #666;
+}
+
+.coupon-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.coupon-field {
+    display: flex;
+    align-items: center;
+}
+
+.coupon-field label {
+    font-size: 9px;
+    font-weight: bold;
+    min-width: 60px;
+    color: #374151;
+}
+
+.coupon-line {
+    flex: 1;
+    height: 20px;
+    border-bottom: 1px solid #d1d5db;
+    margin-left: 8px;
+    font-size: 10px;
+    padding-top: 2px;
+}
+
+.coupon-footer {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.coupon-signature {
+    font-size: 8px;
+    color: #666;
+}
+
+/* Styles d'impression */
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .page {
+        box-shadow: none;
+        margin: 0;
+        padding: 15mm;
+    }
+    
+    .page:not(:last-child) {
+        page-break-after: always;
+    }
+}
+
+/* Responsive pour aperçu web */
+@media screen and (max-width: 768px) {
+    .page {
+        width: 100%;
+        padding: 15px;
+        margin: 10px;
+    }
+    
+    .header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .client-section {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .coupons-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .signature-section {
+        flex-direction: column;
+        gap: 20px;
+    }
+}

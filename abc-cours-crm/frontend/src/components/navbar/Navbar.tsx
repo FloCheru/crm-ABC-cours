@@ -28,11 +28,12 @@ const NAV_ITEMS = [
     submenu: [
       { label: "Séries de coupons", path: "/admin/coupons" },
       { label: "Coupons", path: "/admin/coupons/list" },
+      { label: "Prévisualisation PDF", path: "/admin/pdf-preview" },
     ]
   },
   { label: "Professeurs", path: "/under-development" },
   { label: "Prospects", path: "/prospects" },
-  { label: "Clients", path: "/under-development" },
+  { label: "Clients", path: "/clients" },
   { label: "Tableau de bord", path: "/admin/dashboard" },
   { label: "Candidats", path: "/under-development" },
   { label: "ATP", path: "/under-development" },
