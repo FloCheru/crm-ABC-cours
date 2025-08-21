@@ -6,7 +6,7 @@
   background-color: var(--surface-primary);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--shadow-card);
 }
 
@@ -172,6 +172,7 @@
 @media (max-width: 768px) {
   .table-wrapper {
     overflow-x: auto;
+    overflow-y: visible;
   }
 
   .table {
