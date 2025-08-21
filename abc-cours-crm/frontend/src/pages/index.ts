@@ -7,4 +7,6 @@ export { Dashboard } from "./admin/dashboard/Dashboard";
 export { SettlementCreate } from "./admin/dashboard/SettlementCreate";
 export { SettlementDashboard } from "./admin/dashboard/SettlementDashboard";
 export { SettlementDetails } from "./admin/dashboard/SettlementDetails";
+export { default as PdfPreview } from "./admin/PdfPreview";
 export { Prospects } from "./prospects/Prospects";
+export { Clients } from "./clients/Clients";

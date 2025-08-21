@@ -11,7 +11,9 @@ import {
   SettlementCreate,
   SettlementDashboard,
   SettlementDetails,
+  PdfPreview,
   Prospects,
+  Clients,
 } from "./pages";
 import { SeriesDetails } from "./pages/admin/coupons/SeriesDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -79,6 +81,14 @@ function App() {
             }
           />
           <Route
+            path="/clients"
+            element={
+              <ProtectedRoute>
+                <Clients />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/dashboard"
             element={
               <ProtectedRoute>
@@ -99,6 +109,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SettlementDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/pdf-preview"
+            element={
+              <ProtectedRoute>
+                <PdfPreview />
               </ProtectedRoute>
             }
           />
