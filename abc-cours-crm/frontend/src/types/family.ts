@@ -38,9 +38,9 @@ export interface Family {
   status: 'prospect' | 'client';
   notes?: string;
   // Champs spécifiques aux prospects
-  prospectStatus?: 'en_reflexion' | 'interesse_prof_a_trouver' | 'injoignable' | 'ndr_editee' | 'premier_cours_effectue' | 'rdv_prospect' | 'ne_va_pas_convertir';
+  prospectStatus?: 'en_reflexion' | 'interesse_prof_a_trouver' | 'injoignable' | 'ndr_editee' | 'premier_cours_effectue' | 'rdv_prospect' | 'ne_va_pas_convertir' | null;
   nextActionReminderSubject?: string; // Objet du rappel
-  nextActionDate?: Date; // Date de la prochaine action (RRR)
+  nextActionDate?: Date | null; // Date de la prochaine action (RRR)
   source?: string; // Source du prospect
   createdBy: string; // ObjectId ref
   students:

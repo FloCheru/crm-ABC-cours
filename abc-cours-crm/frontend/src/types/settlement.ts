@@ -67,8 +67,8 @@ export interface CreateSettlementNoteData {
   // Échéancier
   paymentSchedule?: {
     paymentMethod: "PRLV" | "check";
-    numberOfInstallments: number;
-    dayOfMonth: number; // Jour du mois (1-31) pour le prélèvement ou remise des chèques
+    numberOfInstallments?: number;
+    dayOfMonth?: number; // Jour du mois (1-31) pour le prélèvement ou remise des chèques
   };
   // Champs calculés automatiquement
   marginPercentage: number;

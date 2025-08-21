@@ -163,7 +163,7 @@ export const Prospects: React.FC = () => {
     const searchLower = searchTerm.toLowerCase();
     const fullName = `${family.primaryContact.firstName} ${family.primaryContact.lastName}`.toLowerCase();
     const email = family.primaryContact.email?.toLowerCase() || "";
-    const phone = family.primaryContact.phone || "";
+    const phone = family.primaryContact.primaryPhone || "";
     const address = `${family.address.street} ${family.address.city}`.toLowerCase();
 
     return (
@@ -438,13 +438,15 @@ export const Prospects: React.FC = () => {
         <ModalWrapper
           isOpen={isCreateProspectModalOpen}
           onClose={() => setIsCreateProspectModalOpen(false)}
-          title="Créer un nouveau prospect"
         >
-          <EntityForm
-            entityType="family"
-            onSubmit={handleCreateProspectSubmit}
-            onCancel={() => setIsCreateProspectModalOpen(false)}
-          />
+          <div>
+            <h2 className="text-xl font-bold mb-4">Créer un nouveau prospect</h2>
+            <EntityForm
+              entityType="family"
+              onSubmit={(data) => handleCreateProspectSubmit(data as CreateFamilyData)}
+              onCancel={() => setIsCreateProspectModalOpen(false)}
+            />
+          </div>
         </ModalWrapper>
       )}
     </div>

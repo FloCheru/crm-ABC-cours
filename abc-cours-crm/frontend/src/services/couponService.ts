@@ -45,10 +45,10 @@ export const couponService = {
     const response = await apiClient.get(`/api/coupons?${params.toString()}`);
     
     // L'API retourne un objet paginé, on extrait les données
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    } else if (response.data?.data && Array.isArray(response.data.data)) {
-      return response.data.data;
+    if ((response as any).data && Array.isArray((response as any).data)) {
+      return (response as any).data;
+    } else if ((response as any).data?.data && Array.isArray((response as any).data.data)) {
+      return (response as any).data.data;
     }
     
     return [];
@@ -59,7 +59,7 @@ export const couponService = {
    */
   async getCouponById(couponId: string): Promise<Coupon> {
     const response = await apiClient.get(`/api/coupons/${couponId}`);
-    return response.data.coupon;
+    return (response as any).data.coupon;
   },
 
   /**
