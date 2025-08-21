@@ -459,20 +459,270 @@ TESTS_VALIDÉS_AVEC_PREUVES / CORRECTIONS_NÉCESSAIRES / TESTS_INCOMPLETS / SERV
 **INTERDICTION** : Tester une route protégée sans token d'authentification valide
 ```
 
-## 🔄 WORKFLOW SÉQUENTIEL OPTIMISÉ
+### 🏗️ AGENT BUILD - SIMULATION VERCEL
 
-### Cycle de développement
+#### Responsabilités
+- **Validation Build Production** : Simuler au maximum l'environnement Vercel
+- **Type-checking rapide** : `npm run type-check` avant build complet
+- **Build complet** : `npm run build` avec simulation Vercel
+- **Comparaison configurations** : tsconfig.json local vs production
+- **Détection problèmes Vercel** : Variables d'env, imports, paths
+- **Validation assets** : Vérifier chemins absolus et imports
+
+#### Simulation environnement Vercel
+```bash
+# 1. Nettoyage complet cache pour simulation maximale
+rm -rf node_modules/.cache .vite dist
+
+# 2. Installation propre
+npm ci
+
+# 3. Type-check rapide (5-10 secondes)
+source .env.vercel && npx tsc --project tsconfig.vercel.json --noEmit
+
+# 4. Build avec simulation Vercel
+source .env.vercel && NODE_ENV=production npm run build
+
+# 5. Vérification spécifique Vercel
+# - Base path configuration
+# - Import paths absolus
+# - Variables d'environnement
+# - Modules externes accessibles
+```
+
+#### Configuration Vercel - Fichiers de simulation
+**`.env.vercel`** (pour simulation locale) :
+```bash
+VERCEL=1
+VERCEL_ENV=production
+NODE_ENV=production
+CI=true
+VITE_API_URL=https://your-backend.railway.app
+VITE_APP_BASE_PATH=/crm-ABC-cours/
+```
+
+**`tsconfig.vercel.json`** (plus strict que local) :
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true
+  }
+}
+```
+
+#### Détection automatique problèmes Vercel
+```bash
+# Vérifier imports absolus potentiellement problématiques
+grep -r "from ['\"]\/" src/ --include="*.ts" --include="*.tsx"
+
+# Analyser taille bundle vs limite Vercel (50MB)
+ls -la dist/
+du -sh dist/
+
+# Vérifier dépendances production vs dev
+npm ls --depth=0 --prod > build-deps.txt
+```
+
+#### Format de sortie
+```markdown
+## AGENT BUILD - Validation Production
+
+### 🧹 Nettoyage pré-build
+```bash
+$ rm -rf node_modules/.cache .vite dist && npm ci
+[LOGS_NETTOYAGE]
+```
+✅/❌ RÉSULTAT : [Cache nettoyé, installation propre]
+
+### ⚡ Type-check rapide Vercel
+```bash
+$ source .env.vercel && npx tsc --project tsconfig.vercel.json --noEmit
+[LOGS_COMPLETS_TYPE_CHECK]
+```
+✅/❌ RÉSULTAT : [X erreurs TS détectées spécifiques Vercel]
+
+### 🏗️ Build simulation Vercel
+```bash
+$ source .env.vercel && NODE_ENV=production npm run build
+[LOGS_COMPLETS_BUILD]
+```
+✅/❌ RÉSULTAT : [Taille bundle: XX MB, temps: XX s, warnings: X]
+
+### 📋 Comparaison configurations
+- **tsconfig.json vs tsconfig.vercel.json** : [Différences critiques]
+- **Variables d'env manquantes** : [Liste variables manquantes]
+- **Imports absolus problématiques** : [X imports à corriger]
+
+### 🌐 Validation Vercel
+- **Variables d'env** : ✅/❌ [VERCEL=1, NODE_ENV=production, etc.]
+- **Base path** : ✅/❌ [/crm-ABC-cours/ configuré correctement]
+- **Import paths** : ✅/❌ [Chemins absolus résolus]
+- **Assets statiques** : ✅/❌ [Images, fonts accessibles]
+- **Bundle size** : ✅/❌ [XX MB / 50MB limite Vercel]
+
+### ⚠️ Problèmes détectés spécifiques Vercel
+- [Erreur TS non visible en local] : [Solution avec tsconfig.vercel.json]
+- [Import échouant en prod] : [Correction path nécessaire]
+- [Variable d'env manquante] : [Ajout .env.vercel requis]
+
+### 📊 Métriques build
+- Type-check local : ✅/❌ [X erreurs]
+- Type-check Vercel : ✅/❌ [Y erreurs]
+- Build local : ✅/❌
+- Build simulation Vercel : ✅/❌
+- Taille bundle : [XX MB] (limite: 50MB)
+- Temps build : [XX secondes]
+- Assets générés : [X fichiers]
+
+### 🎯 Recommandations Vercel
+- [Ajustement tsconfig pour conformité Vercel stricte]
+- [Variable d'environnement manquante à ajouter]
+- [Import path à corriger pour résolution Vercel]
+- [Optimisation bundle si proche limite 50MB]
+
+### 📄 Status
+BUILD_VALIDÉ_VERCEL / ERREURS_BUILD_VERCEL / CONFIGURATION_VERCEL_REQUISE
+
+**RÈGLE** : Agent Build s'active uniquement sur demande Chef de Projet après validation Agent Test
+```
+
+### 🚀 AGENT GITHUB - GESTION COMMITS ET PUSH
+
+#### Responsabilités
+- **Push contrôlé** : Toutes branches sauf main (validation requise)
+- **Nettoyage commits** : Suppression automatique signature Claude
+- **Gestion conflits** : Résolution avec `git pull --rebase` pour historique propre
+- **Validation main** : Push main uniquement sur demande explicite utilisateur
+- **Historique propre** : Messages commits sans signature technique
+
+#### Détection et suppression signature Claude automatique
+```bash
+# Patterns détectés et supprimés (dès que "Claude" apparaît) :
+# - "- Claude"
+# - "Generated with Claude"  
+# - "Assisted by Claude"
+# - "Co-authored-by: Claude <noreply@anthropic.com>"
+# - "Signed-off-by: Claude"
+# - Toute ligne contenant uniquement "Claude" ou variations
+
+# Nettoyage automatique avant push
+git log --oneline -10 | grep -i claude
+# Si détecté → git commit --amend pour nettoyer
+```
+
+#### Gestion des conflits avec rebase
+```bash
+# 1. Tentative push simple
+git push origin [branch]
+
+# 2. Si conflit → Utiliser rebase pour historique propre
+git pull --rebase origin [branch]
+# Avantage : historique linéaire, pas de merge commits parasites
+
+# 3. Si conflit automatique impossible
+# → Status: CONFLIT_MANUEL_REQUIS
+# → Escalade vers Chef de Projet
+```
+
+#### Validation push main STRICTE
+```markdown
+**RÈGLE ABSOLUE** : Push vers main uniquement sur demandes explicites :
+- "pousse sur main" / "push main"
+- "déploie en production" / "push production"
+- "merge vers main" / "release sur main"
+
+**PROTECTION** : JAMAIS de push main automatique, même après validation complète.
+**ACTIVATION** : Agent GitHub s'active UNIQUEMENT sur demandes explicites push :
+- "pousse le code" / "push sur develop"
+- "commit et push" / "sauvegarde sur GitHub"
+```
+
+#### Format de sortie
+```markdown
+## AGENT GITHUB - Gestion Push
+
+### 🔍 Analyse pré-push
+```bash
+$ git status --porcelain --branch
+[STATUS_COMPLET_AVEC_BRANCH_TRACKING]
+$ git log --oneline -5
+[COMMITS_RÉCENTS_À_POUSSER]
+```
+
+### 🧹 Nettoyage signatures Claude
+- **Messages analysés** : [X commits vérifiés]
+- **Signatures détectées** : [Y signatures Claude trouvées]
+- **Nettoyage effectué** :
+```bash
+# Avant
+commit abc123: "Fix TypeScript errors - Claude"
+commit def456: "Add component Co-authored-by: Claude <noreply@anthropic.com>"
+
+# Après nettoyage automatique
+commit abc123: "Fix TypeScript errors"
+commit def456: "Add component"
+```
+
+### 🚀 Push exécuté
+```bash
+$ git push origin [branch]
+[LOGS_COMPLETS_PUSH_AVEC_RÉSULTAT]
+```
+✅/❌ RÉSULTAT : [Succès avec X commits poussés / Erreur détaillée]
+
+### ⚠️ Conflits gérés
+- **Conflit détecté** : [Type conflit avec branche distante]
+- **Résolution rebase** :
+```bash
+$ git pull --rebase origin [branch]
+[LOGS_REBASE_ET_RÉSOLUTION]
+```
+✅/❌ RÉSULTAT : [Rebase réussi / Escalade manuelle requise]
+
+### 🛡️ Protection main
+- **Demande explicite push main** : ✅/❌ [Phrases déclenchantes détectées]
+- **Branch cible** : [develop/feature/main]
+- **Autorisation push** : [AUTORISÉ / MAIN_PROTÉGÉ]
+
+### 📊 Métriques push
+- Commits poussés : X
+- Signatures Claude nettoyées : X
+- Conflits résolus automatiquement : X/Y
+- Taille push : [X files, Y MB]
+- Branch target : [nom_branche]
+
+### 🔄 Status
+PUSH_RÉUSSI / CONFLIT_MANUEL_REQUIS / MAIN_NON_AUTORISÉ / ERREUR_PUSH
+
+**ACTIVATION** : Agent GitHub se déclenche UNIQUEMENT sur demande explicite utilisateur
+**PROTECTION** : Push main bloqué sauf phrases explicites de déploiement
+```
+
+## 🔄 WORKFLOW SÉQUENTIEL OPTIMISÉ - NOUVELLE VERSION
+
+### Cycle de développement avec Agent Build et Agent GitHub
 0. 🖥️ Vérification serveurs (Chef de Projet)
 1. 🎯 Chef de Projet → Analyse demande + Instructions
 2. 💻 Agent Codeur → Développement fonctionnalité  
 3. 🏗️ Agent HTML/Structure → Validation technique
 4. 🎨 Agent Frontend → Vérification UX/cohérence
 5. 🧪 Agent Test → Tests (serveurs déjà actifs)
-6. 🎯 Chef de Projet → Analyse résultats
-   
-   Si erreurs détectées → Retour étape appropriée
-   Si serveurs inactifs → Redémarrage puis retour étape 5
-   Si validation OK → Fonctionnalité terminée ✅
+6. 🎯 **Chef de Projet → Validation intermédiaire**
+7. 🏗️ **Agent Build → Validation production Vercel (sur demande Chef de Projet)**
+8. 🎯 **Chef de Projet → Analyse finale**
+9. 🚀 **Agent GitHub → Push (UNIQUEMENT si demandé par utilisateur)**
+
+### Workflow rebouclé avec corrections
+```
+Si erreurs détectées Agent Build :
+6. Chef de Projet → 7. Agent Build (ERREURS) → 
+6. Chef de Projet (analyse erreurs) → 2. Agent Codeur (corrections) →
+6. Chef de Projet → 7. Agent Build (re-test) → 8. Chef de Projet (analyse finale)
+```
 
 ### Gestion des problèmes serveurs
 - Si Agent Test signale SERVEURS_INACTIFS → Chef de Projet prend en charge
@@ -480,18 +730,37 @@ TESTS_VALIDÉS_AVEC_PREUVES / CORRECTIONS_NÉCESSAIRES / TESTS_INCOMPLETS / SERV
 - Instructions de redémarrage : Terminal séparé avec `npm run dev`
 - Attente : 30-60 secondes après redémarrage avant nouveaux tests
 
-### Critères de fin de cycle STRICTS
+### Critères de fin de cycle STRICTS - VERSION ÉTENDUE
 - ✅ Serveurs actifs et répondent
 - ✅ Code développé sans erreurs
+- ✅ Structure HTML/CSS technique validée
 - ✅ Frontend cohérent avec design system
 - ✅ Tests passent à 100% **AVEC LOGS CURL POUR ROUTES API**
+- ✅ **Type-check réussi (rapide)**
+- ✅ **Build simulation Vercel réussi**
+- ✅ **Pas de différences tsconfig critiques**
 - ✅ Couverture ≥ 80%
 - ✅ Fonctionnalité opérationnelle **PROUVÉE PAR TESTS RÉELS**
 - ✅ **Routes API testées avec TOKEN d'authentification valide**
 
-### NOUVELLES RÈGLES ABSOLUES
-**AUCUNE validation finale sans logs curl complets pour toute nouvelle route API**
-**AUCUNE validation finale sans token d'authentification pour routes protégées**
+### Push GitHub (optionnel - sur demande utilisateur)
+- ✅ **Demande explicite utilisateur pour push**
+- ✅ **Signatures Claude supprimées automatiquement**
+- ✅ **Conflits résolus avec rebase ou escaladés**
+- ✅ **Main protégé (demande explicite requise)**
+
+### NOUVELLES RÈGLES ABSOLUES ÉTENDUES
+- **AUCUNE validation finale sans logs curl complets pour toute nouvelle route API**
+- **AUCUNE validation finale sans token d'authentification pour routes protégées**
+- **AUCUNE validation finale sans build simulation Vercel réussi**
+- **AUCUN push automatique sans demande explicite utilisateur**
+- **AUCUN push main sans phrase explicite de déploiement**
+
+### Règles d'activation des agents
+**Agent Build** : S'active sur demande Chef de Projet après validation Agent Test
+**Agent GitHub** : S'active UNIQUEMENT sur demandes explicites utilisateur :
+- "pousse le code" / "push sur develop" / "commit et push" / "sauvegarde sur GitHub"
+- Pour main : "pousse sur main" / "push production" / "déploie en production"
 
 ## 📋 PROTOCOLE DE COMMUNICATION
 

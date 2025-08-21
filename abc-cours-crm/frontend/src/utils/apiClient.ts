@@ -57,7 +57,7 @@ class ApiClient {
       logger.debug("=== DÉBOGAGE RÉPONSE HTTP ===");
       logger.debug("Status:", response.status);
       logger.debug("Status Text:", response.statusText);
-      logger.debug("Headers:", Object.fromEntries(response.headers.entries()));
+      logger.debug("Headers:", Array.from(response.headers.entries()));
       logger.debug("=== FIN DÉBOGAGE RÉPONSE HTTP ===");
 
       if (!response.ok) {
@@ -132,24 +132,33 @@ class ApiClient {
     );
     logger.debug("=== FIN DÉBOGAGE APICLIENT POST ===");
 
-    return this.request<T>(endpoint, {
+    const config: RequestInit = {
       method: "POST",
-      body: data ? JSON.stringify(data) : undefined,
-    });
+    };
+    if (data) {
+      config.body = JSON.stringify(data);
+    }
+    return this.request<T>(endpoint, config);
   }
 
   async put<T>(endpoint: string, data?: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
+    const config: RequestInit = {
       method: "PUT",
-      body: data ? JSON.stringify(data) : undefined,
-    });
+    };
+    if (data) {
+      config.body = JSON.stringify(data);
+    }
+    return this.request<T>(endpoint, config);
   }
 
   async patch<T>(endpoint: string, data?: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
+    const config: RequestInit = {
       method: "PATCH",
-      body: data ? JSON.stringify(data) : undefined,
-    });
+    };
+    if (data) {
+      config.body = JSON.stringify(data);
+    }
+    return this.request<T>(endpoint, config);
   }
 
   async delete<T>(endpoint: string): Promise<T> {
