@@ -147,6 +147,8 @@ router.get(
         SettlementNote.find(filter)
           .populate("subjects.subjectId", "name category")
           .populate("createdBy", "firstName lastName")
+          .populate("familyId", "address.postalCode")
+          .populate("studentIds", "firstName lastName")
           .sort(sort)
           .skip(skip)
           .limit(pageLimit)
@@ -156,7 +158,37 @@ router.get(
 
       console.log("🔍 Résultats:", { notesCount: notes.length, total });
 
-      const response = buildPaginatedResponse(notes, total, page, pageLimit);
+      // Fonction pour extraire le département depuis le code postal
+      const extractDepartmentFromPostalCode = (postalCode) => {
+        if (!postalCode || typeof postalCode !== 'string') return "";
+        
+        const cleanPostalCode = postalCode.trim();
+        if (cleanPostalCode.length < 2) return "";
+        
+        // Si le code postal commence par 97 (DOM-TOM), prendre les 3 premiers chiffres
+        if (cleanPostalCode.startsWith("97") && cleanPostalCode.length >= 3) {
+          return cleanPostalCode.substring(0, 3);
+        }
+        
+        // Sinon, prendre les 2 premiers chiffres (métropole)
+        return cleanPostalCode.substring(0, 2);
+      };
+
+      // Enrichir les notes avec le département extrait du code postal
+      const enrichedNotes = notes.map(note => {
+        const extractedDepartment = note.familyId?.address?.postalCode 
+          ? extractDepartmentFromPostalCode(note.familyId.address.postalCode)
+          : "";
+        
+        return {
+          ...note,
+          extractedDepartment, // Nouveau champ avec le département extrait
+          // Mettre à jour le département existant avec le département extrait s'il est vide
+          department: note.department || extractedDepartment
+        };
+      });
+
+      const response = buildPaginatedResponse(enrichedNotes, total, page, pageLimit);
 
       console.log("🔍 Réponse envoyée avec succès");
       res.json({
@@ -183,13 +215,43 @@ router.get("/:id", async (req, res) => {
     const note = await SettlementNote.findById(id)
       .populate("subjects.subjectId", "name category description")
       .populate("createdBy", "firstName lastName")
+      .populate("familyId", "address.postalCode")
+      .populate("studentIds", "firstName lastName")
       .lean();
 
     if (!note) {
       return res.status(404).json({ error: "Settlement note not found" });
     }
 
-    res.json(note);
+    // Fonction pour extraire le département depuis le code postal
+    const extractDepartmentFromPostalCode = (postalCode) => {
+      if (!postalCode || typeof postalCode !== 'string') return "";
+      
+      const cleanPostalCode = postalCode.trim();
+      if (cleanPostalCode.length < 2) return "";
+      
+      // Si le code postal commence par 97 (DOM-TOM), prendre les 3 premiers chiffres
+      if (cleanPostalCode.startsWith("97") && cleanPostalCode.length >= 3) {
+        return cleanPostalCode.substring(0, 3);
+      }
+      
+      // Sinon, prendre les 2 premiers chiffres (métropole)
+      return cleanPostalCode.substring(0, 2);
+    };
+
+    // Enrichir la note avec le département extrait du code postal
+    const extractedDepartment = note.familyId?.address?.postalCode 
+      ? extractDepartmentFromPostalCode(note.familyId.address.postalCode)
+      : "";
+    
+    const enrichedNote = {
+      ...note,
+      extractedDepartment, // Nouveau champ avec le département extrait
+      // Mettre à jour le département existant avec le département extrait s'il est vide
+      department: note.department || extractedDepartment
+    };
+
+    res.json(enrichedNote);
   } catch (error) {
     console.error("Get settlement note details error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -314,6 +376,7 @@ router.post(
       const populatedNote = await SettlementNote.findById(settlementNote._id)
         .populate("subjects.subjectId", "name category")
         .populate("createdBy", "firstName lastName")
+        .populate("studentIds", "firstName lastName")
         .populate("couponSeriesId", "totalCoupons usedCoupons status")
         .lean();
 
@@ -422,6 +485,7 @@ router.put(
       )
         .populate("subjects.subjectId", "name category")
         .populate("createdBy", "firstName lastName")
+        .populate("studentIds", "firstName lastName")
         .lean();
 
       res.json(updatedNote);
@@ -501,6 +565,7 @@ router.patch("/:id/mark-paid", authorize(["admin"]), async (req, res) => {
     const updatedNote = await SettlementNote.findById(id)
       .populate("subjects.subjectId", "name category")
       .populate("createdBy", "firstName lastName")
+      .populate("studentIds", "firstName lastName")
       .lean();
 
     res.json(updatedNote);
@@ -536,6 +601,7 @@ router.get("/", authorize(["admin"]), async (req, res) => {
       SettlementNote.find(filter)
         .populate("subjects.subjectId", "name category")
         .populate("createdBy", "firstName lastName")
+        .populate("studentIds", "firstName lastName")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
@@ -642,6 +708,7 @@ router.get("/:id", authorize(["admin"]), async (req, res) => {
     const note = await SettlementNote.findById(id)
       .populate("subjects.subjectId", "name category")
       .populate("createdBy", "firstName lastName")
+      .populate("studentIds", "firstName lastName")
       .populate("couponSeriesId", "totalCoupons usedCoupons status")
       .lean();
 

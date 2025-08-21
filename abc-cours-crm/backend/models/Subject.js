@@ -40,7 +40,7 @@ const subjectSchema = new mongoose.Schema(
 );
 
 // Index pour améliorer les performances
-subjectSchema.index({ name: 1 });
+// Note: name déjà indexé via unique: true dans le schéma
 subjectSchema.index({ category: 1 });
 subjectSchema.index({ isActive: 1 });
 

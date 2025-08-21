@@ -1,4 +1,4 @@
-import { logger } from './logger';
+import { logger } from "./logger";
 
 // Type pour éviter l'import circulaire
 type LogoutFunction = () => void;
@@ -7,13 +7,20 @@ class ApiClient {
   private baseURL: string;
   private logoutCallback: LogoutFunction | null = null;
 
-  constructor(baseURL: string = import.meta.env.VITE_API_URL || "http://localhost:3000") {
+  constructor(
+    baseURL: string = import.meta.env.VITE_API_URL || "http://localhost:3000"
+  ) {
     this.baseURL = baseURL;
   }
 
   // Méthode pour enregistrer le callback de logout
   setLogoutCallback(callback: LogoutFunction) {
     this.logoutCallback = callback;
+  }
+
+  // Méthode pour récupérer le token
+  getToken(): string | null {
+    return localStorage.getItem("token");
   }
 
   private async request<T>(
@@ -50,10 +57,7 @@ class ApiClient {
       logger.debug("=== DÉBOGAGE RÉPONSE HTTP ===");
       logger.debug("Status:", response.status);
       logger.debug("Status Text:", response.statusText);
-      logger.debug(
-        "Headers:",
-        Object.fromEntries(response.headers.entries())
-      );
+      logger.debug("Headers:", Object.fromEntries(response.headers.entries()));
       logger.debug("=== FIN DÉBOGAGE RÉPONSE HTTP ===");
 
       if (!response.ok) {
@@ -65,17 +69,17 @@ class ApiClient {
         // Gestion spécifique de l'expiration du token
         if (response.status === 401 || response.status === 403) {
           logger.warn("Token expiré ou invalide, déconnexion automatique");
-          
+
           // Appeler le callback de logout s'il est défini
           if (this.logoutCallback) {
             this.logoutCallback();
           }
-          
+
           // Rediriger vers la page de connexion après un court délai
           setTimeout(() => {
             // Utiliser l'API History pour éviter les problèmes de contexte React
-            if (typeof window !== 'undefined') {
-              window.location.href = '/login';
+            if (typeof window !== "undefined") {
+              window.location.href = "/login";
             }
           }, 100);
         }

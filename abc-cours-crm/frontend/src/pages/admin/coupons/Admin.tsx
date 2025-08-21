@@ -186,9 +186,8 @@ export const Admin: React.FC = () => {
       key: "subject",
       label: "Matière",
       render: (_: unknown, row: TableRowData) => (
-        <div>
-          <div className="font-medium">{row.subject?.name}</div>
-          <div className="text-sm text-gray-500">{row.subject?.category}</div>
+        <div className="font-medium">
+          {row.subject?.name || "Matière inconnue"}
         </div>
       ),
     },
@@ -264,7 +263,7 @@ export const Admin: React.FC = () => {
             variant="error"
             onClick={() => handleDeleteSeries(row._id)}
           >
-            Supprimer
+            ✕
           </Button>
         </div>
       ),
@@ -277,7 +276,7 @@ export const Admin: React.FC = () => {
       <Breadcrumb
         items={[
           { label: "Admin", href: "/admin" },
-          { label: "Coupons", href: "/admin/coupons" },
+          { label: "Séries", href: "/admin/coupons" },
         ]}
       />
       <Container layout="flex-col">

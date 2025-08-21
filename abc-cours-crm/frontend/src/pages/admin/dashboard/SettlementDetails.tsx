@@ -5,7 +5,10 @@ import {
   Breadcrumb,
   Container,
   Button,
+  ButtonGroup,
+  SummaryCard,
   StatusBadge,
+  FormCard,
 } from "../../../components";
 import { PDFGenerator } from "../../../components/pdf/PDFGenerator";
 import { settlementService } from "../../../services/settlementService";
@@ -168,47 +171,63 @@ export const SettlementDetails: React.FC = () => {
       />
       <Container layout="flex-col">
         <div className="flex justify-between items-center mb-6">
-          <h1>Note de règlement</h1>
-          <div className="flex gap-3">
-            <Button variant="secondary" onClick={handleBack}>
-              Retour
-            </Button>
-            <Button variant="primary" onClick={handleEdit}>
-              Modifier
-            </Button>
-          </div>
+          <h1>Note de règlement NDR {settlementNote._id.substring(settlementNote._id.length - 8).toUpperCase()}</h1>
+          <ButtonGroup
+            variant="double"
+            buttons={[
+              { text: "Retour", variant: "secondary", onClick: handleBack },
+              { text: "Modifier", variant: "primary", onClick: handleEdit }
+            ]}
+          />
         </div>
 
+        {/* Métriques principales */}
+        <Container layout="grid">
+          <SummaryCard
+            title="INFORMATIONS FINANCIÈRES"
+            metrics={[
+              {
+                value: `${ca.toFixed(2)} €`,
+                label: "Chiffre d'affaires",
+                variant: "primary",
+              },
+              {
+                value: `${marge.toFixed(2)} €`,
+                label: "Marge",
+                variant: marge >= 0 ? "success" : "danger",
+              },
+              {
+                value: `${totalSalary.toFixed(2)} €`,
+                label: "Total salaire prof",
+                variant: "secondary",
+              },
+            ]}
+          />
+          <SummaryCard
+            title="DÉTAILS NDR"
+            metrics={[
+              {
+                value: settlementNote._id.substring(settlementNote._id.length - 8).toUpperCase(),
+                label: "N° NDR",
+                variant: "primary",
+              },
+              {
+                value: new Date(settlementNote.createdAt).toLocaleDateString("fr-FR"),
+                label: "Date de création",
+                variant: "secondary",
+              },
+              {
+                value: getAsCode(settlementNote.department),
+                label: "A/S",
+                variant: "primary",
+              },
+            ]}
+          />
+        </Container>
+
         {/* Informations générales */}
-        <Container layout="flex-col" className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Informations générales</h2>
+        <FormCard title="Informations générales">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                N° NDR
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {settlementNote._id.substring(settlementNote._id.length - 8).toUpperCase()}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date de création
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {new Date(settlementNote.createdAt).toLocaleDateString("fr-FR")} à{" "}
-                {new Date(settlementNote.createdAt).toLocaleTimeString("fr-FR", {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Statut
-              </label>
-              <StatusBadge status={settlementNote.status} />
-            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Client (Famille)
@@ -227,18 +246,15 @@ export const SettlementDetails: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                A/S
+                Statut
               </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded font-bold">
-                {getAsCode(settlementNote.department)}
-              </p>
+              <StatusBadge status={settlementNote.status} />
             </div>
           </div>
-        </Container>
+        </FormCard>
 
         {/* Détails du cours */}
-        <Container layout="flex-col" className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Détails du cours</h2>
+        <FormCard title="Détails du cours">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -281,23 +297,14 @@ export const SettlementDetails: React.FC = () => {
               </p>
             </div>
           </div>
-        </Container>
+        </FormCard>
 
-        {/* Calculs financiers */}
-        <Container layout="flex-col" className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Calculs financiers</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Détails financiers */}
+        <FormCard title="Détails financiers">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Chiffre d'affaires (CA)
-              </label>
-              <p className="text-sm bg-blue-50 px-3 py-2 rounded text-blue-700 font-medium">
-                {ca.toFixed(2)} €
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Salaire professeur
+                Salaire professeur (unitaire)
               </label>
               <p className="text-sm bg-gray-50 px-3 py-2 rounded">
                 {getSubjectValue(settlementNote, 'professorSalary').toFixed(2)} € / unité
@@ -305,31 +312,18 @@ export const SettlementDetails: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Total salaire
+                Total salaire professeur
               </label>
               <p className="text-sm bg-gray-50 px-3 py-2 rounded">
                 {totalSalary.toFixed(2)} €
               </p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Marge
-              </label>
-              <p className={`text-sm px-3 py-2 rounded font-medium ${
-                marge >= 0 
-                  ? "bg-green-50 text-green-700" 
-                  : "bg-red-50 text-red-700"
-              }`}>
-                {marge.toFixed(2)} €
-              </p>
-            </div>
           </div>
-        </Container>
+        </FormCard>
 
         {/* Échéancier */}
         {settlementNote.paymentSchedule && (
-          <Container layout="flex-col" className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Échéancier de paiement</h2>
+          <FormCard title="Échéancier de paiement">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -397,31 +391,29 @@ export const SettlementDetails: React.FC = () => {
                 </div>
               </div>
             )}
-          </Container>
+          </FormCard>
         )}
 
         {/* Notes supplémentaires */}
         {settlementNote.notes && (
-          <Container layout="flex-col" className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Notes</h2>
+          <FormCard title="Notes">
             <p className="text-sm bg-gray-50 px-3 py-2 rounded whitespace-pre-wrap">
               {settlementNote.notes}
             </p>
-          </Container>
+          </FormCard>
         )}
 
         {/* Génération PDF */}
         <PDFGenerator settlementNote={settlementNote} />
 
         {/* Informations de création */}
-        <Container layout="flex-col" className="bg-gray-50 rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Informations de création</h2>
+        <FormCard title="Informations de création">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Créé par
               </label>
-              <p className="text-sm">
+              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
                 {settlementNote.createdBy?.firstName} {settlementNote.createdBy?.lastName}
               </p>
             </div>
@@ -429,13 +421,16 @@ export const SettlementDetails: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Dernière modification
               </label>
-              <p className="text-sm">
+              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
                 {new Date(settlementNote.updatedAt).toLocaleDateString("fr-FR")} à{" "}
-                {new Date(settlementNote.updatedAt).toLocaleTimeString("fr-FR")}
+                {new Date(settlementNote.updatedAt).toLocaleTimeString("fr-FR", {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
               </p>
             </div>
           </div>
-        </Container>
+        </FormCard>
       </Container>
     </div>
   );

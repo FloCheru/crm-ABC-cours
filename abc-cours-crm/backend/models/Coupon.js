@@ -78,8 +78,8 @@ const couponSchema = new mongoose.Schema(
 );
 
 // Index pour améliorer les performances
+// Note: code déjà indexé via unique: true dans le schéma
 couponSchema.index({ couponSeriesId: 1, code: 1 }, { unique: true });
-couponSchema.index({ code: 1 }, { unique: true });
 couponSchema.index({ familyId: 1 });
 couponSchema.index({ status: 1 });
 couponSchema.index({ usedDate: 1 });

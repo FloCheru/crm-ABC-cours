@@ -1,12 +1,14 @@
 import { rateLimitedApiClient } from "../utils";
+import { apiClient } from "../utils/apiClient";
 import type { CreateSettlementNoteData } from "../types/settlement";
 
 interface SettlementNote {
   _id: string;
-  familyId: string;
-  studentIds: string[];
+  familyId: string | { _id: string; address: { postalCode: string } };
+  studentIds: string[] | Array<{ _id: string; firstName: string; lastName: string }>;
   clientName: string;
   department: string;
+  extractedDepartment?: string; // Département extrait automatiquement du code postal
   paymentMethod: "card" | "check" | "transfer" | "cash" | "PRLV";
   subjects: Array<{
     subjectId: string | { _id: string; name: string; category: string };
@@ -48,6 +50,16 @@ interface SettlementNote {
     status: "active" | "completed" | "expired";
   };
   totalCoupons?: number;
+  // Champs pour la gestion des PDFs générés
+  generatedPDFs?: Array<{
+    _id: string;
+    fileName: string;
+    filePath: string;
+    type: "ndr" | "coupons" | "both";
+    fileSize: number;
+    totalPages: number;
+    generatedAt: string;
+  }>;
   createdBy: {
     _id: string;
     firstName: string;
@@ -163,6 +175,141 @@ class SettlementService {
         "Erreur lors de la suppression de la note de règlement:",
         error
       );
+      throw error;
+    }
+  }
+
+  // Méthodes pour la gestion des PDFs
+  async generatePDF(
+    settlementNoteId: string, 
+    type: "ndr" | "coupons" | "both" = "ndr"
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      pdfId: string;
+      fileName: string;
+      type: string;
+      fileSize: number;
+      generatedAt: string;
+    };
+  }> {
+    try {
+      console.log(`🔄 Génération PDF - Note: ${settlementNoteId}, Type: ${type}`);
+      const response = await rateLimitedApiClient.post(
+        `/api/settlement-notes/${settlementNoteId}/generate-pdf`,
+        { type }
+      );
+      console.log(`✅ PDF généré avec succès:`, response);
+      return response as any;
+    } catch (error) {
+      console.error("Erreur lors de la génération du PDF:", error);
+      throw error;
+    }
+  }
+
+  async listPDFs(settlementNoteId: string): Promise<{
+    success: boolean;
+    data: Array<{
+      id: string;
+      fileName: string;
+      type: "ndr" | "coupons" | "both";
+      fileSize: number;
+      totalPages: number;
+      generatedAt: string;
+    }>;
+  }> {
+    try {
+      const response = await rateLimitedApiClient.get(
+        `/api/settlement-notes/${settlementNoteId}/pdfs`
+      );
+      return response as any;
+    } catch (error) {
+      console.error("Erreur lors de la récupération des PDFs:", error);
+      throw error;
+    }
+  }
+
+  async downloadPDF(settlementNoteId: string, pdfId: string): Promise<Blob> {
+    try {
+      console.log(`⬇️ Téléchargement PDF - Note: ${settlementNoteId}, PDF: ${pdfId}`);
+      
+      // Utiliser apiClient pour bénéficier de l'authentification automatique
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/pdfs/${settlementNoteId}/${pdfId}/download`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiClient.getToken()}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      console.log(`✅ PDF téléchargé:`, blob);
+      return blob;
+    } catch (error) {
+      console.error("Erreur lors du téléchargement du PDF:", error);
+      throw error;
+    }
+  }
+
+  async previewPDF(settlementNoteId: string, pdfId: string): Promise<void> {
+    try {
+      console.log(`👁️ Prévisualisation PDF - Note: ${settlementNoteId}, PDF: ${pdfId}`);
+      
+      // Faire une requête authentifiée pour récupérer le PDF
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/pdfs/${settlementNoteId}/${pdfId}/preview`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiClient.getToken()}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      // Convertir en Blob
+      const blob = await response.blob();
+      
+      // Créer une URL locale pour le PDF
+      const pdfUrl = URL.createObjectURL(blob);
+      
+      // Ouvrir dans un nouvel onglet
+      const newWindow = window.open(pdfUrl, '_blank');
+      
+      // Nettoyer l'URL après un délai pour éviter les fuites mémoire
+      if (newWindow) {
+        setTimeout(() => {
+          URL.revokeObjectURL(pdfUrl);
+        }, 1000);
+      }
+      
+      console.log(`✅ PDF ouvert dans un nouvel onglet`);
+    } catch (error) {
+      console.error("Erreur lors de la prévisualisation du PDF:", error);
+      throw error;
+    }
+  }
+
+  async deletePDF(settlementNoteId: string, pdfId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      console.log(`🗑️ Suppression PDF - Note: ${settlementNoteId}, PDF: ${pdfId}`);
+      const response = await rateLimitedApiClient.delete(
+        `/api/pdfs/${settlementNoteId}/${pdfId}`
+      );
+      console.log(`✅ PDF supprimé:`, response);
+      return response as any;
+    } catch (error) {
+      console.error("Erreur lors de la suppression du PDF:", error);
       throw error;
     }
   }

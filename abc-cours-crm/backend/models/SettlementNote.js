@@ -27,6 +27,11 @@ const settlementNoteSchema = new mongoose.Schema(
       enum: ["card", "check", "transfer", "cash"],
       required: [true, "Mode de règlement requis"],
     },
+    paymentType: {
+      type: String,
+      enum: ["immediate_advance", "tax_credit_n1"],
+      required: false,
+    },
     subjects: [{
       subjectId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -166,8 +171,16 @@ const settlementNoteSchema = new mongoose.Schema(
       },
       type: {
         type: String,
-        enum: ["settlement_note", "invoice", "receipt"],
-        default: "settlement_note",
+        enum: ["ndr", "coupons", "both"],
+        default: "ndr",
+      },
+      totalPages: {
+        type: Number,
+        default: 1,
+      },
+      fileSize: {
+        type: Number,
+        required: true,
       },
     }],
   },

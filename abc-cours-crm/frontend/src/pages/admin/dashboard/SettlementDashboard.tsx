@@ -14,7 +14,10 @@ import { settlementService } from "../../../services/settlementService";
 import type { SettlementNote } from "../../../services/settlementService";
 
 // Type pour les données du tableau avec l'id requis
-type TableRowData = SettlementNote & { id: string };
+type TableRowData = SettlementNote & { 
+  id: string;
+  extractedDepartment?: string;
+};
 
 // Fonctions utilitaires pour extraire les valeurs des subjects
 const getSubjectValue = (note: SettlementNote, field: 'hourlyRate' | 'quantity' | 'professorSalary'): number => {
@@ -90,6 +93,38 @@ export const SettlementDashboard: React.FC = () => {
 
     loadSettlementNotes();
   }, []);
+
+  // Fonction pour extraire le département depuis le code postal
+  const extractDepartmentFromPostalCode = (postalCode: string): string => {
+    if (!postalCode || typeof postalCode !== 'string') return "";
+
+    // Nettoyer le code postal (enlever les espaces)
+    const cleanPostalCode = postalCode.trim();
+
+    // Vérifier la longueur minimale
+    if (cleanPostalCode.length < 2) return "";
+
+    // Si le code postal commence par 97 (DOM-TOM), prendre les 3 premiers chiffres
+    if (cleanPostalCode.startsWith("97") && cleanPostalCode.length >= 3) {
+      return cleanPostalCode.substring(0, 3);
+    }
+
+    // Sinon, prendre les 2 premiers chiffres (métropole)
+    return cleanPostalCode.substring(0, 2);
+  };
+
+  // Fonction pour traduire les méthodes de paiement en français
+  const getPaymentMethodLabel = (paymentMethod: string): string => {
+    const translations: Record<string, string> = {
+      card: "Carte bancaire",
+      check: "Chèque",
+      transfer: "Virement",
+      cash: "Espèces",
+      PRLV: "Prélèvement"
+    };
+    
+    return translations[paymentMethod] || paymentMethod;
+  };
 
   // Fonction pour déterminer A/S selon le département
   const getAsCode = (department: string): string => {
@@ -259,17 +294,58 @@ export const SettlementDashboard: React.FC = () => {
       ),
     },
     {
+      key: "student",
+      label: "Élève",
+      render: (_: unknown, row: TableRowData) => {
+        // Vérifier si studentIds existe et est un array avec au moins un élément
+        if (row.studentIds && Array.isArray(row.studentIds) && row.studentIds.length > 0) {
+          const firstStudent = row.studentIds[0];
+          
+          // Si l'élève est un objet populé avec firstName et lastName
+          if (typeof firstStudent === 'object' && firstStudent.firstName && firstStudent.lastName) {
+            return (
+              <div className="text-sm">
+                {firstStudent.firstName} {firstStudent.lastName}
+                {row.studentIds.length > 1 && (
+                  <span className="text-gray-500 ml-1">+{row.studentIds.length - 1}</span>
+                )}
+              </div>
+            );
+          }
+        }
+        
+        return <div className="text-sm text-gray-500">Non défini</div>;
+      },
+    },
+    {
       key: "department",
-      label: "Dpt",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.department || "N/A"}</div>
-      ),
+      label: "DPT",
+      render: (_: unknown, row: TableRowData) => {
+        // Utiliser d'abord le département extrait, puis le département existant, sinon extraire du code postal
+        let displayDepartment = row.extractedDepartment || row.department;
+        
+        // Si aucun département n'est disponible, essayer d'extraire à partir des données de famille
+        if (!displayDepartment && typeof row.familyId === 'object' && row.familyId?.address?.postalCode) {
+          displayDepartment = extractDepartmentFromPostalCode(row.familyId.address.postalCode);
+        }
+        
+        return (
+          <div className="text-sm font-medium">
+            {displayDepartment || "N/A"}
+          </div>
+        );
+      },
     },
     {
       key: "paymentMethod",
       label: "Paiement",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.paymentMethod}</div>
+        <div className="text-sm">
+          {getPaymentMethodLabel(row.paymentMethod)}
+          {row.paymentType === "immediate_advance" && (
+            <span className="text-red-600 font-bold ml-1">*</span>
+          )}
+        </div>
       ),
     },
     {
@@ -282,9 +358,19 @@ export const SettlementDashboard: React.FC = () => {
     {
       key: "asCode",
       label: "A/S",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-bold text-sm">{getAsCode(row.department)}</div>
-      ),
+      render: (_: unknown, row: TableRowData) => {
+        // Utiliser d'abord le département extrait, puis le département existant, sinon extraire du code postal
+        let department = row.extractedDepartment || row.department;
+        
+        // Si aucun département n'est disponible, essayer d'extraire à partir des données de famille
+        if (!department && typeof row.familyId === 'object' && row.familyId?.address?.postalCode) {
+          department = extractDepartmentFromPostalCode(row.familyId.address.postalCode);
+        }
+        
+        return (
+          <div className="font-bold text-sm">{getAsCode(department)}</div>
+        );
+      },
     },
     {
       key: "pu",
@@ -385,7 +471,7 @@ export const SettlementDashboard: React.FC = () => {
             variant="error"
             onClick={() => handleDeleteNote(row._id)}
           >
-            Supprimer
+            ✕
           </Button>
         </div>
       ),

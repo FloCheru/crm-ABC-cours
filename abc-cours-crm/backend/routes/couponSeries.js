@@ -603,6 +603,29 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
     const deleteCouponsResult = await Coupon.deleteMany({ couponSeriesId: id });
     console.log("🔍 Coupons supprimés:", deleteCouponsResult.deletedCount);
 
+    // Supprimer la NDR liée (suppression en cascade)
+    const SettlementNote = require("../models/SettlementNote");
+    const Family = require("../models/Family");
+    
+    let deletedNDR = false;
+    if (series.settlementNoteId) {
+      console.log("🔍 Suppression de la NDR liée:", series.settlementNoteId);
+      const ndr = await SettlementNote.findById(series.settlementNoteId);
+      if (ndr) {
+        // Supprimer la NDR
+        await SettlementNote.findByIdAndDelete(series.settlementNoteId);
+        console.log("🔍 NDR supprimée:", series.settlementNoteId);
+        
+        // Retirer la référence NDR de la famille
+        await Family.findByIdAndUpdate(ndr.familyId, {
+          $pull: { settlementNotes: series.settlementNoteId },
+        });
+        console.log("🔍 Référence NDR retirée de la famille:", ndr.familyId);
+        
+        deletedNDR = true;
+      }
+    }
+
     // Supprimer la série
     console.log("🔍 Suppression de la série...");
     await CouponSeries.findByIdAndDelete(id);
@@ -611,6 +634,8 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
     res.json({
       message: "Coupon series deleted successfully",
       deletedCoupons: deleteCouponsResult.deletedCount,
+      deletedSettlementNote: deletedNDR,
+      settlementNoteId: deletedNDR ? series.settlementNoteId : null,
     });
   } catch (error) {
     console.error("Erreur dans DELETE /api/coupon-series/:id:", error);

@@ -157,6 +157,15 @@ export const CouponsList: React.FC = () => {
       ),
     },
     {
+      key: "subject",
+      label: "Matière",
+      render: (_: unknown, row: TableRowData) => (
+        <div className="text-sm">
+          {row.couponSeriesId?.subject?.name || "Matière inconnue"}
+        </div>
+      ),
+    },
+    {
       key: "professor",
       label: "Professeur",
       render: (_: unknown, row: TableRowData) => (

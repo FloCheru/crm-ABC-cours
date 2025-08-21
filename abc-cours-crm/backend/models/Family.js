@@ -113,6 +113,10 @@ const familySchema = new mongoose.Schema(
         type: String,
         trim: true,
       },
+      ceNumber: {
+        type: String,
+        trim: true,
+      },
     },
     status: {
       type: String,
@@ -134,6 +138,19 @@ const familySchema = new mongoose.Schema(
     },
     nextActionReminderSubject: {
       type: String,
+      enum: [
+        "Actions à définir",
+        "Présenter nos cours",
+        "Envoyer le devis",
+        "Relancer après devis",
+        "Planifier rendez-vous",
+        "Editer la NDR",
+        "Négocier les tarifs",
+        "Organiser cours d'essai",
+        "Confirmer les disponibilités",
+        "Suivre satisfaction parent"
+      ],
+      default: "Actions à définir",
       trim: true,
     },
     nextActionDate: {
