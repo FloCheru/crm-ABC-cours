@@ -17,6 +17,28 @@ import { settlementService } from "../../services/settlementService";
 import type { Family } from "../../types/family";
 import type { FamilyStats } from "../../services/familyService";
 import type { SettlementNote } from "../../services/settlementService";
+
+// Types pour les sujets avec typage sûr
+interface SubjectWithName {
+  _id: string;
+  name: string;
+}
+
+interface SubjectData {
+  subjectId: string | SubjectWithName;
+  subjectName?: string;
+  name?: string;
+  hourlyRate?: number;
+  quantity?: number;
+  professorSalary?: number;
+}
+
+// Type pour étudiant avec garantie de structure
+interface StudentData {
+  _id: string;
+  firstName: string;
+  lastName: string;
+}
 import { useRefresh } from "../../hooks/useRefresh";
 import "./Clients.css";
 
@@ -36,10 +58,15 @@ const getSubjectValue = (note: SettlementNote, field: 'hourlyRate' | 'quantity' 
 const getAllSubjectNames = (note: SettlementNote): string => {
   if (!note.subjects || note.subjects.length === 0) return "Aucune matière";
   return note.subjects.map(subject => {
-    if (typeof subject.subjectId === 'object' && subject.subjectId && 'name' in subject.subjectId) {
-      return (subject.subjectId as any).name;
+    const subjectData = subject as SubjectData;
+    
+    // Si subjectId est un objet avec un nom
+    if (typeof subjectData.subjectId === 'object' && subjectData.subjectId && 'name' in subjectData.subjectId) {
+      return (subjectData.subjectId as SubjectWithName).name;
     }
-    return (subject as any).subjectName || (subject as any).name || "Matière";
+    
+    // Sinon, essayer subjectName ou name directement
+    return subjectData.subjectName || subjectData.name || "Matière";
   }).join(", ");
 };
 
@@ -356,10 +383,11 @@ export const Clients: React.FC = () => {
         if (Array.isArray(familyStudents)) {
           for (const student of familyStudents) {
             if (typeof student === 'object' && student !== null && '_id' in student) {
+              const studentData = student as StudentData;
               typedStudents.push({
-                _id: (student as any)._id,
-                firstName: (student as any).firstName,
-                lastName: (student as any).lastName
+                _id: studentData._id,
+                firstName: studentData.firstName,
+                lastName: studentData.lastName
               });
             }
           }

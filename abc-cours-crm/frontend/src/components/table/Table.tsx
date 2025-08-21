@@ -150,7 +150,7 @@ export const Table: React.FC<TableProps> = ({
 
     // Rendu automatique pour les statuts
     if (column.key === "status" || column.key === "statut") {
-      return <StatusBadge status={value} />;
+      return <StatusBadge status={value as StatusVariant} />;
     }
 
     return value;

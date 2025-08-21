@@ -389,7 +389,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
     if (Object.keys(additionalProps).length > 0) {
       setFormData((prev) => ({ ...prev, ...additionalProps }));
     }
-  }, [additionalProps.familyId]); // Surveiller seulement familyId qui peut changer
+  }, [additionalProps?.familyId]); // Accès sécurisé à familyId
 
   // Obtenir la valeur d'un champ imbriqué (ex: "address.street")
   const getNestedValue = (

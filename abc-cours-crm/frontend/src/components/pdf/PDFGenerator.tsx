@@ -8,7 +8,13 @@ interface PDFGeneratorProps {
 
 export const PDFGenerator: React.FC<PDFGeneratorProps> = ({ settlementNote }) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedPDFs, setGeneratedPDFs] = useState<any[]>([]);
+  const [generatedPDFs, setGeneratedPDFs] = useState<Array<{
+    id: string;
+    fileName: string;
+    type: 'ndr' | 'coupons' | 'both';
+    fileSize: number;
+    generatedAt: string;
+  }>>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Charger la liste des PDFs existants

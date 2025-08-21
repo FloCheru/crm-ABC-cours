@@ -580,7 +580,8 @@ export const SettlementCreate: React.FC = () => {
       // Si pas d'échéancier, ne pas inclure le champ du tout
 
       // Supprimer les champs qui n'existent que côté frontend
-      const { hasPaymentSchedule, subjectId, ...cleanedData } = dataToSend as any;
+      const { hasPaymentSchedule, ...cleanedData } = dataToSend;
+      // Note: subjectId n'existe pas à ce niveau, il est dans subjects[].subjectId
       const finalData = cleanedData;
 
       // 🔍 LOG AVANT ENVOI À L'API
