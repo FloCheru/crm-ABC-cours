@@ -106,7 +106,7 @@ class RateLimitedApiClient {
         this.requestCache.delete(requestKey);
       }, this.minRequestInterval);
       
-      return result;
+      return result as T;
     } catch (error) {
       this.requestCache.delete(requestKey);
       throw error;

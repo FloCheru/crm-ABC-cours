@@ -67,7 +67,7 @@ export const couponService = {
    */
   async useCoupon(couponId: string, sessionData: UseCouponData): Promise<Coupon> {
     const response = await apiClient.post(`/api/coupons/${couponId}/use`, sessionData);
-    return response.data.coupon;
+    return (response as any).data.coupon;
   },
 
   /**
@@ -77,7 +77,7 @@ export const couponService = {
     const response = await apiClient.post(`/api/coupons/${couponId}/cancel-usage`, {
       reason,
     });
-    return response.data.coupon;
+    return (response as any).data.coupon;
   },
 
   /**
@@ -92,7 +92,7 @@ export const couponService = {
     }
   ): Promise<Coupon> {
     const response = await apiClient.patch(`/api/coupons/${couponId}/rating`, ratingData);
-    return response.data.coupon;
+    return (response as any).data.coupon;
   },
 
   /**
@@ -104,7 +104,7 @@ export const couponService = {
     count: number;
   }> {
     const response = await apiClient.get(`/api/coupons/available/by-series/${seriesId}`);
-    return response.data;
+    return (response as any).data;
   },
 
   /**
@@ -142,6 +142,6 @@ export const couponService = {
     const response = await apiClient.get(
       `/api/coupons/usage-history/${professorId}?${params.toString()}`
     );
-    return response.data;
+    return (response as any).data;
   },
 };
