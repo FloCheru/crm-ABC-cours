@@ -20,9 +20,6 @@ export interface FamilyFormData {
     email?: string;
     relationship?: string;
   };
-  financialInfo: {
-    paymentMethod: "card" | "check" | "transfer" | "cash";
-  };
   notes?: string;
 }
 

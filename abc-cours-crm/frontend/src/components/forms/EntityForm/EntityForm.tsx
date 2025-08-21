@@ -60,6 +60,21 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         group: "primaryContact",
       },
       {
+        key: "primaryContact.relationship",
+        label: "Lien de parenté",
+        type: "select",
+        required: false,
+        group: "primaryContact",
+        options: [
+          { value: "père", label: "Père" },
+          { value: "mère", label: "Mère" },
+          { value: "tuteur_legal", label: "Tuteur légal" },
+          { value: "grand_parent", label: "Grand-parent" },
+          { value: "oncle_tante", label: "Oncle/Tante" },
+          { value: "autre", label: "Autre" },
+        ],
+      },
+      {
         key: "primaryContact.secondaryPhone",
         label: "Téléphone secondaire",
         type: "tel",
@@ -112,9 +127,63 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
       },
       {
         key: "secondaryContact.relationship",
-        label: "Lien avec la famille",
-        type: "text",
+        label: "Lien de parenté",
+        type: "select",
+        required: false,
         group: "secondaryContact",
+        options: [
+          { value: "père", label: "Père" },
+          { value: "mère", label: "Mère" },
+          { value: "tuteur_legal", label: "Tuteur légal" },
+          { value: "grand_parent", label: "Grand-parent" },
+          { value: "oncle_tante", label: "Oncle/Tante" },
+          { value: "autre", label: "Autre" },
+        ],
+      },
+      // Nouveaux champs famille
+      {
+        key: "primaryContact.dateOfBirth",
+        label: "Date de naissance",
+        type: "date",
+        group: "primaryContact",
+      },
+      // Adresse de facturation
+      {
+        key: "billingAddress.street",
+        label: "Adresse de facturation (si différente)",
+        type: "text",
+        group: "billing",
+      },
+      {
+        key: "billingAddress.city",
+        label: "Ville de facturation",
+        type: "text",
+        group: "billing",
+      },
+      {
+        key: "billingAddress.postalCode",
+        label: "Code postal de facturation",
+        type: "text",
+        group: "billing",
+      },
+      // Informations entreprise
+      {
+        key: "companyInfo.urssafNumber",
+        label: "N° URSSAF",
+        type: "text",
+        group: "company",
+      },
+      {
+        key: "companyInfo.siretNumber",
+        label: "N° SIRET",
+        type: "text",
+        group: "company",
+      },
+      {
+        key: "companyInfo.ceNumber",
+        label: "N° CE",
+        type: "text",
+        group: "company",
       },
       { key: "notes", label: "Notes", type: "textarea", group: "notes" },
     ],
@@ -176,19 +245,6 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         group: "school",
       },
 
-      // Contact
-      {
-        key: "contact.email",
-        label: "Email de l'élève",
-        type: "email",
-        group: "contact",
-      },
-      {
-        key: "contact.phone",
-        label: "Téléphone de l'élève",
-        type: "tel",
-        group: "contact",
-      },
 
       // Notes
       { key: "notes", label: "Notes", type: "textarea", group: "notes" },
@@ -645,9 +701,10 @@ export const EntityForm: React.FC<EntityFormProps> = ({
         <h3 className="entity-form__group-title">
           {groupName === "primaryContact" && "Contact principal"}
           {groupName === "secondaryContact" && "Contact secondaire"}
+          {groupName === "billing" && "Adresse de facturation"}
+          {groupName === "company" && "Informations entreprise"}
           {groupName === "personal" && "Informations personnelles"}
           {groupName === "school" && "Scolarité"}
-          {groupName === "contact" && "Contact"}
           {groupName === "professional" && "Statut professionnel"}
           {groupName === "general" && "Informations générales"}
           {groupName === "notes" && "Notes"}

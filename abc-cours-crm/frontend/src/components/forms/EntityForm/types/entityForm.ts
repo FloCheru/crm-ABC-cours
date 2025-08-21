@@ -19,7 +19,6 @@ export interface FamilyFormData {
   "secondaryContact.email"?: string;
   "secondaryContact.phone"?: string;
   "secondaryContact.relationship"?: string;
-  "financialInfo.paymentMethod": "card" | "check" | "transfer" | "cash";
   notes?: string;
 }
 
