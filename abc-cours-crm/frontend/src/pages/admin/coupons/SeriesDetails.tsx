@@ -118,7 +118,7 @@ export const SeriesDetails: React.FC = () => {
     {
       key: "series",
       label: "Série",
-      render: () => {
+      render: (_: unknown, _row: TableRowData) => {
         if (!series) return "Chargement...";
         const familyName = series.familyId?.primaryContact
           ? `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`
@@ -132,7 +132,7 @@ export const SeriesDetails: React.FC = () => {
     {
       key: "family",
       label: "Famille",
-      render: () => {
+      render: (_: unknown, _row: TableRowData) => {
         if (!series?.familyId?.primaryContact) return "Famille inconnue";
         return `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`;
       },
@@ -140,7 +140,7 @@ export const SeriesDetails: React.FC = () => {
     {
       key: "student",
       label: "Élève",
-      render: () => {
+      render: (_: unknown, _row: TableRowData) => {
         if (!series?.studentId) return "Élève inconnu";
         return `${series.studentId.firstName} ${series.studentId.lastName}`;
       },
@@ -148,14 +148,14 @@ export const SeriesDetails: React.FC = () => {
     {
       key: "professor",
       label: "Professeur",
-      render: () => (
+      render: (_: unknown, _row: TableRowData) => (
         <div className="text-gray-500 italic">À implémenter</div>
       ),
     },
     {
       key: "unitPrice",
       label: "PU",
-      render: () => {
+      render: (_: unknown, _row: TableRowData) => {
         if (!series || !series.hourlyRate) return "...";
         return `${series.hourlyRate.toFixed(2)} €`;
       },
