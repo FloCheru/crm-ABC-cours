@@ -15,7 +15,9 @@
       "Bash(timeout:*)",
       "Bash(rm:*)",
       "Bash(npx typescript:*)",
-      "Bash(./node_modules/.bin/tsc:*)"
+      "Bash(./node_modules/.bin/tsc:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)"
     ]
   },
   "enableAllProjectMcpServers": true,
