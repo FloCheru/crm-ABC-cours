@@ -7,7 +7,6 @@ import {
   Button,
   ButtonGroup,
   SummaryCard,
-  StatusBadge,
   FormCard,
 } from "../../../components";
 import { PDFGenerator } from "../../../components/pdf/PDFGenerator";
@@ -194,7 +193,7 @@ export const SettlementDetails: React.FC = () => {
               {
                 value: `${marge.toFixed(2)} €`,
                 label: "Marge",
-                variant: marge >= 0 ? "success" : "danger",
+                variant: marge >= 0 ? "success" : "error",
               },
               {
                 value: `${totalSalary.toFixed(2)} €`,
@@ -248,7 +247,21 @@ export const SettlementDetails: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Statut
               </label>
-              <StatusBadge status={settlementNote.status} />
+              <div
+                className={`px-2 py-1 rounded border text-xs ${
+                  settlementNote.status === "paid"
+                    ? "bg-green-100 text-green-800 border-green-200"
+                    : settlementNote.status === "overdue"
+                    ? "bg-red-100 text-red-800 border-red-200"
+                    : "bg-yellow-100 text-yellow-800 border-yellow-200"
+                }`}
+              >
+                {settlementNote.status === "paid"
+                  ? "Payé"
+                  : settlementNote.status === "overdue"
+                  ? "En retard"
+                  : "En attente"}
+              </div>
             </div>
           </div>
         </FormCard>

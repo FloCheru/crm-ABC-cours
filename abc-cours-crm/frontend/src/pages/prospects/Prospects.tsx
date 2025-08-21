@@ -272,7 +272,7 @@ export const Prospects: React.FC = () => {
       label: "RRR",
       render: (_: unknown, row: TableRowData) => (
         <DatePicker
-          value={row.nextActionDate}
+          value={row.nextActionDate || null}
           familyId={row._id}
           onUpdate={handleNextActionDateUpdate}
         />
@@ -443,7 +443,7 @@ export const Prospects: React.FC = () => {
             <h2 className="text-xl font-bold mb-4">Créer un nouveau prospect</h2>
             <EntityForm
               entityType="family"
-              onSubmit={(data) => handleCreateProspectSubmit(data as CreateFamilyData)}
+              onSubmit={async (data) => await handleCreateProspectSubmit(data as CreateFamilyData)}
               onCancel={() => setIsCreateProspectModalOpen(false)}
             />
           </div>

@@ -93,7 +93,7 @@ class RateLimitedApiClient {
     }
 
     // Create the request promise
-    const requestPromise = this.retryWith429Handling(() => apiClient.get(url));
+    const requestPromise = this.retryWith429Handling(() => apiClient.get<T>(url));
     
     // Cache the promise
     this.requestCache.set(requestKey, requestPromise);
@@ -106,7 +106,7 @@ class RateLimitedApiClient {
         this.requestCache.delete(requestKey);
       }, this.minRequestInterval);
       
-      return result as T;
+      return result;
     } catch (error) {
       this.requestCache.delete(requestKey);
       throw error;

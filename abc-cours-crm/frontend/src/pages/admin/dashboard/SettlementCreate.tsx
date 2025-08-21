@@ -562,11 +562,6 @@ export const SettlementCreate: React.FC = () => {
       
       logger.debug("🔍 Validation réussie - poursuite du processus");
 
-      // Si la validation passe, on peut continuer avec les valeurs
-      const hourlyRate = parseFloat(commonRates.hourlyRate);
-      const quantity = parseInt(commonRates.quantity);
-      const professorSalary = parseFloat(commonRates.professorSalary);
-
       // Préparer les données à envoyer avec les tarifs communs appliqués
       const dataToSend = {
         ...formData,
@@ -585,19 +580,16 @@ export const SettlementCreate: React.FC = () => {
       // Si pas d'échéancier, ne pas inclure le champ du tout
 
       // Supprimer les champs qui n'existent que côté frontend
-      delete dataToSend.hasPaymentSchedule;
-      // Supprimer le champ subjectId qui pourrait être resté de l'ancien système
-      if (dataToSend.subjectId) {
-        delete dataToSend.subjectId;
-      }
+      const { hasPaymentSchedule, subjectId, ...cleanedData } = dataToSend as any;
+      const finalData = cleanedData;
 
       // 🔍 LOG AVANT ENVOI À L'API
       logger.debug("🚀 Envoi des données à l'API:", {
-        ...dataToSend,
+        ...finalData,
         paymentScheduleStatus: formData.hasPaymentSchedule
           ? "activé"
           : "désactivé",
-        hasPaymentScheduleField: "paymentSchedule" in dataToSend,
+        hasPaymentScheduleField: "paymentSchedule" in finalData,
       });
 
       // Sauvegarder les informations famille et élèves modifiées avant de créer la NDR
@@ -696,7 +688,7 @@ export const SettlementCreate: React.FC = () => {
       }
 
       // Créer la note de règlement
-      await settlementService.createSettlementNote(dataToSend);
+      await settlementService.createSettlementNote(finalData);
 
       // NAVIGUER D'ABORD
       logger.debug("🚀 Navigation vers le Dashboard");
@@ -717,57 +709,6 @@ export const SettlementCreate: React.FC = () => {
     }
   };
 
-  // Fonction pour créer un nouvel élève dans la famille
-  const createStudentInFamily = async (studentName: string) => {
-    if (!formData.familyId) {
-      throw new Error("ID de famille requis pour créer un élève");
-    }
-
-    // Parser le nom (format: "Prénom Nom")
-    const nameParts = studentName.trim().split(" ");
-    const firstName = nameParts[0] || "";
-    const lastName = nameParts.slice(1).join(" ") || "";
-
-    if (!firstName || !lastName) {
-      throw new Error("Format du nom invalide. Utilisez 'Prénom Nom'");
-    }
-
-    // Créer l'élève via l'API
-    const studentData = {
-      firstName,
-      lastName,
-      dateOfBirth: new Date(), // Date par défaut
-      school: {
-        name: "À définir",
-        level: "primaire",
-        grade: "À définir",
-      },
-      contact: {
-        email: "",
-        phone: "",
-      },
-      family: formData.familyId,
-    };
-
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL || "http://localhost:3000/api"}/students`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(studentData),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Erreur lors de la création de l'élève");
-    }
-
-    return response.json();
-  };
 
   // Fonction pour ouvrir la modal de création de famille
   const handleCreateNewFamily = () => {
@@ -2303,13 +2244,15 @@ export const SettlementCreate: React.FC = () => {
                           Mode de règlement *
                         </label>
                         <select
-                          value={formData.paymentSchedule.paymentMethod}
+                          value={formData.paymentSchedule?.paymentMethod || "PRLV"}
                           onChange={(e) =>
                             setFormData((prev) => ({
                               ...prev,
                               paymentSchedule: {
                                 ...prev.paymentSchedule,
                                 paymentMethod: e.target.value as "PRLV" | "check",
+                                numberOfInstallments: prev.paymentSchedule?.numberOfInstallments || 1,
+                                dayOfMonth: prev.paymentSchedule?.dayOfMonth || 1,
                               },
                             }))
                           }
@@ -2328,14 +2271,16 @@ export const SettlementCreate: React.FC = () => {
                           type="number"
                           min="1"
                           max="12"
-                          value={formData.paymentSchedule.numberOfInstallments}
+                          value={formData.paymentSchedule?.numberOfInstallments || 1}
                           onChange={(e) =>
                             setFormData((prev) => ({
                               ...prev,
                               paymentSchedule: {
                                 ...prev.paymentSchedule,
+                                paymentMethod: prev.paymentSchedule?.paymentMethod || "PRLV",
                                 numberOfInstallments:
                                   parseInt(e.target.value) || 1,
+                                dayOfMonth: prev.paymentSchedule?.dayOfMonth || 1,
                               },
                             }))
                           }
@@ -2346,18 +2291,20 @@ export const SettlementCreate: React.FC = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Jour de{" "}
-                          {formData.paymentSchedule.paymentMethod === "PRLV"
+                          {formData.paymentSchedule?.paymentMethod === "PRLV"
                             ? "prélèvement"
                             : "remise"}{" "}
                           *
                         </label>
                         <select
-                          value={formData.paymentSchedule.dayOfMonth}
+                          value={formData.paymentSchedule?.dayOfMonth || 1}
                           onChange={(e) =>
                             setFormData((prev) => ({
                               ...prev,
                               paymentSchedule: {
                                 ...prev.paymentSchedule,
+                                paymentMethod: prev.paymentSchedule?.paymentMethod || "PRLV",
+                                numberOfInstallments: prev.paymentSchedule?.numberOfInstallments || 1,
                                 dayOfMonth: parseInt(e.target.value),
                               },
                             }))

@@ -31,27 +31,15 @@ const getSubjectValue = (note: SettlementNote, field: 'hourlyRate' | 'quantity' 
   return note.subjects[0][field] || 0;
 };
 
-const getTotalSubjectValue = (note: SettlementNote, field: 'hourlyRate' | 'quantity' | 'professorSalary'): number => {
-  if (!note.subjects || note.subjects.length === 0) return 0;
-  return note.subjects.reduce((sum, subject) => sum + (subject[field] || 0), 0);
-};
-
-const getSubjectName = (note: SettlementNote): string => {
-  if (!note.subjects || note.subjects.length === 0) return "N/A";
-  const firstSubject = note.subjects[0];
-  if (typeof firstSubject.subjectId === 'object') {
-    return firstSubject.subjectId.name;
-  }
-  return "Matière";
-};
+// getTotalSubjectValue and getSubjectName removed as they were unused
 
 const getAllSubjectNames = (note: SettlementNote): string => {
   if (!note.subjects || note.subjects.length === 0) return "Aucune matière";
   return note.subjects.map(subject => {
-    if (typeof subject.subjectId === 'object') {
-      return subject.subjectId.name;
+    if (typeof subject.subjectId === 'object' && subject.subjectId && 'name' in subject.subjectId) {
+      return (subject.subjectId as any).name;
     }
-    return subject.subjectName || subject.name || "Matière";
+    return (subject as any).subjectName || (subject as any).name || "Matière";
   }).join(", ");
 };
 
@@ -79,7 +67,7 @@ const getStudentName = (note: SettlementNote, familyStudents?: Array<{_id: strin
     .map(studentId => {
       const student = familyStudents.find(s => s._id === studentId);
       console.log("🔍 Match search:", { 
-        searchingFor: studentId?.substring(studentId.length - 8), 
+        searchingFor: typeof studentId === 'string' ? studentId.substring(studentId.length - 8) : studentId, 
         found: student ? `${student.firstName} ${student.lastName}` : null 
       });
       return student ? `${student.firstName} ${student.lastName}` : null;
@@ -363,9 +351,22 @@ export const Clients: React.FC = () => {
         // Récupérer les étudiants de la famille sélectionnée
         const selectedFamily = familyData.find(f => f._id === selectedFamilyId);
         const familyStudents = selectedFamily?.students || [];
+        // Convertir en format attendu par getStudentName
+        const typedStudents: {_id: string, firstName: string, lastName: string}[] = [];
+        if (Array.isArray(familyStudents)) {
+          for (const student of familyStudents) {
+            if (typeof student === 'object' && student !== null && '_id' in student) {
+              typedStudents.push({
+                _id: (student as any)._id,
+                firstName: (student as any).firstName,
+                lastName: (student as any).lastName
+              });
+            }
+          }
+        }
         return (
           <div className="text-sm">
-            {getStudentName(row, familyStudents)}
+            {getStudentName(row, typedStudents)}
           </div>
         );
       },
@@ -501,27 +502,7 @@ export const Clients: React.FC = () => {
     id: ndr._id,
   }));
 
-  // Fonction pour obtenir la couleur selon le statut du prospect (conservé pour compatibilité)
-  const getProspectStatusColor = (status?: string) => {
-    switch (status) {
-      case "en_reflexion":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      case "interesse_prof_a_trouver":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "injoignable":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "ndr_editee":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "premier_cours_effectue":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "rdv_prospect":
-        return "bg-pink-100 text-pink-800 border-pink-200";
-      case "ne_va_pas_convertir":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      default:
-        return "bg-green-100 text-green-800 border-green-200"; // Vert pour les clients
-    }
-  };
+  // Note: getProspectStatusColor removed as it was unused
 
   // Configuration des colonnes du tableau
   const clientsColumns = [
@@ -610,7 +591,7 @@ export const Clients: React.FC = () => {
           <div className="table__actions">
             <Button
               size="sm"
-              variant="success"
+              variant="primary"
               onClick={() => navigate(`/admin/dashboard/create?familyId=${row._id}`)}
               title="Créer une nouvelle note de règlement"
             >
@@ -637,7 +618,7 @@ export const Clients: React.FC = () => {
     },
   ];
 
-  const handleCreateClientSubmit = async (data: CreateFamilyData) => {
+  const handleCreateClientSubmit = async (data: Record<string, unknown>) => {
     try {
       // Ajouter le statut client aux données
       const clientData = {
@@ -645,7 +626,7 @@ export const Clients: React.FC = () => {
         status: "client" as const,
       };
 
-      await familyService.createFamily(clientData);
+      await familyService.createFamily(clientData as CreateFamilyData);
       setIsCreateClientModalOpen(false);
       loadClientData(); // Recharger les données
     } catch (err) {
@@ -748,7 +729,6 @@ export const Clients: React.FC = () => {
         <ModalWrapper
           isOpen={isCreateClientModalOpen}
           onClose={() => setIsCreateClientModalOpen(false)}
-          title="Créer un nouveau client"
         >
           <EntityForm
             entityType="family"

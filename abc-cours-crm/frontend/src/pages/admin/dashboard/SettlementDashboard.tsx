@@ -26,10 +26,6 @@ const getSubjectValue = (note: SettlementNote, field: 'hourlyRate' | 'quantity' 
   return note.subjects[0][field] || 0;
 };
 
-const getTotalSubjectValue = (note: SettlementNote, field: 'hourlyRate' | 'quantity' | 'professorSalary'): number => {
-  if (!note.subjects || note.subjects.length === 0) return 0;
-  return note.subjects.reduce((sum, subject) => sum + (subject[field] || 0), 0);
-};
 
 const getSubjectName = (note: SettlementNote): string => {
   if (!note.subjects || note.subjects.length === 0) return "N/A";
@@ -342,7 +338,7 @@ export const SettlementDashboard: React.FC = () => {
       render: (_: unknown, row: TableRowData) => (
         <div className="text-sm">
           {getPaymentMethodLabel(row.paymentMethod)}
-          {row.paymentType === "immediate_advance" && (
+          {(row as any).paymentType === "immediate_advance" && (
             <span className="text-red-600 font-bold ml-1">*</span>
           )}
         </div>
@@ -382,7 +378,7 @@ export const SettlementDashboard: React.FC = () => {
     {
       key: "tva",
       label: "TVA",
-      render: (_: unknown, row: TableRowData) => (
+      render: () => (
         <div className="text-sm text-gray-500 italic">-</div>
       ),
     },
@@ -407,14 +403,14 @@ export const SettlementDashboard: React.FC = () => {
     {
       key: "charges",
       label: "Charges",
-      render: (_: unknown, row: TableRowData) => (
+      render: () => (
         <div className="text-sm text-gray-500 italic">-</div>
       ),
     },
     {
       key: "encaissement",
       label: "Frais encaissement",
-      render: (_: unknown, row: TableRowData) => (
+      render: () => (
         <div className="text-sm text-gray-500 italic">-</div>
       ),
     },
