@@ -34,6 +34,7 @@ router.get("/", async (req, res) => {
     const skip = (page - 1) * limit;
 
     const families = await Family.find(filter)
+      .populate('students', 'firstName lastName level')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -150,7 +151,7 @@ router.post(
 
       const family = new Family({
         ...req.body,
-        createdBy: req.user.id, // Ajouter automatiquement l'ID de l'utilisateur créateur
+        createdBy: req.user._id, // Ajouter automatiquement l'ID de l'utilisateur créateur
       });
       await family.save();
 
@@ -256,6 +257,121 @@ router.patch(
   }
 );
 
+// @route   PATCH /api/families/:id/prospect-status
+// @desc    Mettre à jour le statut prospect d'une famille
+// @access  Private (Admin)
+router.patch(
+  "/:id/prospect-status",
+  [
+    authorize(["admin"]),
+    body("prospectStatus")
+      .optional()
+      .isIn([
+        "en_reflexion",
+        "interesse_prof_a_trouver", 
+        "injoignable",
+        "ndr_editee",
+        "premier_cours_effectue",
+        "rdv_prospect",
+        "ne_va_pas_convertir"
+      ])
+      .withMessage("Statut prospect invalide"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Données invalides",
+          errors: errors.array(),
+        });
+      }
+
+      const { prospectStatus } = req.body;
+      
+      const family = await Family.findByIdAndUpdate(
+        req.params.id,
+        { 
+          prospectStatus: prospectStatus || null,
+          updatedAt: new Date()
+        },
+        { new: true, runValidators: true }
+      );
+
+      if (!family) {
+        return res.status(404).json({ message: "Famille non trouvée" });
+      }
+
+      res.json({
+        message: "Statut prospect mis à jour avec succès",
+        family,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du statut prospect:", error);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
+
+// @route   PATCH /api/families/:id/reminder-subject
+// @desc    Mettre à jour l'objet du rappel d'une famille
+// @access  Private (Admin)
+router.patch(
+  "/:id/reminder-subject",
+  [
+    authorize(["admin"]),
+    body("nextActionReminderSubject")
+      .optional()
+      .isIn([
+        "Actions à définir",
+        "Présenter nos cours",
+        "Envoyer le devis",
+        "Relancer après devis",
+        "Planifier rendez-vous",
+        "Editer la NDR",
+        "Négocier les tarifs",
+        "Organiser cours d'essai",
+        "Confirmer les disponibilités",
+        "Suivre satisfaction parent"
+      ])
+      .withMessage("Objet de rappel invalide"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Données invalides",
+          errors: errors.array(),
+        });
+      }
+
+      const { nextActionReminderSubject } = req.body;
+      
+      const family = await Family.findByIdAndUpdate(
+        req.params.id,
+        { 
+          nextActionReminderSubject: nextActionReminderSubject || "Actions à définir",
+          updatedAt: new Date()
+        },
+        { new: true, runValidators: true }
+      );
+
+      if (!family) {
+        return res.status(404).json({ message: "Famille non trouvée" });
+      }
+
+      res.json({
+        message: "Objet du rappel mis à jour avec succès",
+        family,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'objet du rappel:", error);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
+
 // @route   DELETE /api/families/:id
 // @desc    Supprimer une famille
 // @access  Private (Admin)
@@ -267,23 +383,82 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
       return res.status(404).json({ message: "Famille non trouvée" });
     }
 
-    // Vérifier s'il y a des élèves associés
-    const studentsCount = await Student.countDocuments({
+    // Supprimer tous les élèves associés à cette famille (suppression en cascade)
+    console.log(`🔍 Suppression en cascade des élèves pour la famille ${req.params.id}`);
+    const deletedStudents = await Student.deleteMany({
       family: req.params.id,
     });
-    if (studentsCount > 0) {
-      return res.status(400).json({
-        message: "Impossible de supprimer une famille avec des élèves",
-      });
-    }
+    console.log(`🔍 ${deletedStudents.deletedCount} élèves supprimés`);
 
+    // Supprimer la famille
     await Family.findByIdAndDelete(req.params.id);
 
-    res.json({ message: "Famille supprimée avec succès" });
+    res.json({ 
+      message: "Famille supprimée avec succès",
+      deletedStudents: deletedStudents.deletedCount
+    });
   } catch (error) {
     console.error("Erreur lors de la suppression de la famille:", error);
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
+
+// @route   PATCH /api/families/:id/next-action-date
+// @desc    Mettre à jour la date de prochaine action d'une famille
+// @access  Private (Admin)
+router.patch(
+  "/:id/next-action-date",
+  [
+    authorize(["admin"]),
+    body("nextActionDate")
+      .optional()
+      .custom((value) => {
+        // Accepter null ou une date valide
+        if (value === null || value === undefined) {
+          return true;
+        }
+        const date = new Date(value);
+        if (isNaN(date.getTime())) {
+          throw new Error("Date invalide");
+        }
+        return true;
+      })
+      .withMessage("Date de prochaine action invalide"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Données invalides",
+          errors: errors.array(),
+        });
+      }
+
+      const { nextActionDate } = req.body;
+      
+      const family = await Family.findByIdAndUpdate(
+        req.params.id,
+        { 
+          nextActionDate: nextActionDate ? new Date(nextActionDate) : null,
+          updatedAt: new Date()
+        },
+        { new: true, runValidators: true }
+      );
+
+      if (!family) {
+        return res.status(404).json({ message: "Famille non trouvée" });
+      }
+
+      res.json({
+        message: "Date de prochaine action mise à jour avec succès",
+        family,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la date de prochaine action:", error);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
 
 module.exports = router;

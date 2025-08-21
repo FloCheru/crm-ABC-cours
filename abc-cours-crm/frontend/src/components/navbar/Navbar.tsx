@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
-import { authService } from "../../services/authService";
-import type { AuthResponse } from "../../services/authService";
+import { useAuth } from "../../hooks/useAuth";
 
 interface NavbarProps {
   /**
@@ -23,10 +22,18 @@ interface NavbarProps {
 
 // Items de navigation fixes
 const NAV_ITEMS = [
-  { label: "Admin", path: "/admin/coupons" },
+  { 
+    label: "Admin", 
+    path: "/admin/coupons",
+    submenu: [
+      { label: "Séries de coupons", path: "/admin/coupons" },
+      { label: "Coupons", path: "/admin/coupons/list" },
+      { label: "Prévisualisation PDF", path: "/admin/pdf-preview" },
+    ]
+  },
   { label: "Professeurs", path: "/under-development" },
-  { label: "Prospects", path: "/under-development" },
-  { label: "Clients", path: "/under-development" },
+  { label: "Prospects", path: "/prospects" },
+  { label: "Clients", path: "/clients" },
   { label: "Tableau de bord", path: "/admin/dashboard" },
   { label: "Candidats", path: "/under-development" },
   { label: "ATP", path: "/under-development" },
@@ -53,28 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
 }) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<AuthResponse["user"] | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // Vérifier l'état d'authentification au chargement et lors des changements
-  useEffect(() => {
-    const checkAuth = () => {
-      const currentUser = authService.getUser();
-      const authenticated = authService.isAuthenticated();
-      setUser(currentUser);
-      setIsAuthenticated(authenticated);
-    };
-
-    checkAuth();
-
-    // Écouter les changements dans localStorage
-    const handleStorageChange = () => {
-      checkAuth();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  const { user, isAuthenticated, logout } = useAuth();
 
   const handleClick = (path: string, event: React.MouseEvent) => {
     console.log(path);
@@ -88,15 +74,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     navigate("/login");
   };
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      setIsAuthenticated(false);
-      setUser(null);
-      navigate("/login");
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-    }
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   const classes = ["navbar", className].filter(Boolean).join(" ");
@@ -109,10 +89,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     >
       <ul className="navbar__nav">
         {NAV_ITEMS.map((item, index) => {
-          const isActive = activePath === item.path;
+          const isActive = activePath === item.path || 
+            (item.submenu && item.submenu.some(sub => activePath === sub.path));
 
           return (
-            <li key={index} className="navbar__item">
+            <li key={index} className={`navbar__item ${item.submenu ? 'navbar__item--dropdown' : ''}`}>
               <a
                 href={item.path}
                 className={`navbar__link ${
@@ -122,7 +103,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                 aria-current={isActive ? "page" : undefined}
               >
                 {item.label}
+                {item.submenu && <span className="navbar__dropdown-arrow">▼</span>}
               </a>
+              
+              {item.submenu && (
+                <ul className="navbar__submenu">
+                  {item.submenu.map((subItem, subIndex) => (
+                    <li key={subIndex} className="navbar__submenu-item">
+                      <a
+                        href={subItem.path}
+                        className={`navbar__submenu-link ${
+                          activePath === subItem.path ? "navbar__submenu-link--active" : ""
+                        }`}
+                        onClick={(event) => handleClick(subItem.path, event)}
+                      >
+                        {subItem.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           );
         })}

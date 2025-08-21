@@ -1,0 +1,134 @@
+/* Composant StatusDot - Point coloré interactif */
+.status-dot-container {
+  position: relative;
+  display: inline-block;
+}
+
+.status-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: block;
+}
+
+.status-dot:hover {
+  transform: scale(1.2);
+  border-color: #374151;
+}
+
+.status-dot:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Couleurs des statuts */
+.status-dot--en-reflexion {
+  background-color: #a855f7;
+}
+
+.status-dot--interesse-prof-a-trouver {
+  background-color: #dc2626;
+}
+
+.status-dot--injoignable {
+  background-color: #2563eb;
+}
+
+.status-dot--ndr-editee {
+  background-color: #fbbf24;
+}
+
+.status-dot--premier-cours-effectue {
+  background-color: #16a34a;
+}
+
+.status-dot--rdv-prospect {
+  background-color: #ec4899;
+}
+
+.status-dot--ne-va-pas-convertir {
+  background-color: #ffffff;
+  border: 2px solid #000000;
+}
+
+.status-dot--default {
+  background-color: #d1d5db;
+}
+
+/* Dropdown menu */
+.status-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 9999;
+  min-width: 200px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+  margin-top: 4px;
+}
+
+/* Dropdown menu vers le haut */
+.status-dropdown--upward {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: 4px;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.status-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+}
+
+.status-dropdown-item:hover {
+  background-color: #f3f4f6;
+}
+
+.status-dropdown-item:focus {
+  outline: none;
+  background-color: #e5e7eb;
+}
+
+.status-dropdown-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dropdown-label {
+  color: #374151;
+  font-weight: 500;
+}
+
+/* Loading state */
+.status-dot--loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}

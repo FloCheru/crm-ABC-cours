@@ -183,25 +183,18 @@ describe("Families API Tests", () => {
   describe("POST /api/families", () => {
     it("should create a new family", async () => {
       const newFamily = {
-        name: "New Family",
         address: {
           street: "New Street",
           city: "New City",
           postalCode: "54321",
         },
-        contact: {
+        primaryContact: {
+          firstName: "New",
+          lastName: "Parent",
           primaryPhone: "0123456789",
           email: "new@family.fr",
         },
-        parents: [
-          {
-            firstName: "New",
-            lastName: "Parent",
-            phone: "0123456789",
-            email: "new@parent.fr",
-            isPrimaryContact: true,
-          },
-        ],
+        status: "prospect",
       };
 
       const response = await request(app)
@@ -210,8 +203,9 @@ describe("Families API Tests", () => {
         .send(newFamily)
         .expect(201);
 
-      expect(response.body.family.name).toBe("New Family");
-      expect(response.body.family.contact.email).toBe("new@family.fr");
+      expect(response.body.family.primaryContact.firstName).toBe("New");
+      expect(response.body.family.primaryContact.lastName).toBe("Parent");
+      expect(response.body.family.primaryContact.email).toBe("new@family.fr");
       expect(response.body.family).toHaveProperty("_id");
     });
 
@@ -232,23 +226,17 @@ describe("Families API Tests", () => {
 
     it("should validate email format", async () => {
       const invalidFamily = {
-        name: "Test Family",
         address: {
           street: "Test Street",
           city: "Test City",
           postalCode: "12345",
         },
-        contact: {
+        primaryContact: {
+          firstName: "Test",
+          lastName: "Parent", 
           primaryPhone: "0123456789",
           email: "invalid-email",
         },
-        parents: [
-          {
-            firstName: "Test",
-            lastName: "Parent",
-            isPrimaryContact: true,
-          },
-        ],
       };
 
       const response = await request(app)

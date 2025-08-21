@@ -103,16 +103,17 @@ export const Admin: React.FC = () => {
 
   // Filtrer les données selon le terme de recherche
   const filteredData = couponsData.filter(
-    (series) =>
-      (series.familyId?.name || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (series.subject?.name || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (series.createdBy?.firstName + " " + series.createdBy?.lastName || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
+    (series) => {
+      const familyName = series.familyId?.primaryContact 
+        ? `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`
+        : "";
+      const subjectName = series.subject?.name || "";
+      const creatorName = series.createdBy?.firstName + " " + series.createdBy?.lastName || "";
+      
+      return familyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             subjectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             creatorName.toLowerCase().includes(searchTerm.toLowerCase());
+    }
   );
 
   // Transformer les données pour le tableau (ajouter l'id requis)
@@ -121,7 +122,10 @@ export const Admin: React.FC = () => {
     id: series._id, // Ajouter l'id requis par le composant Table
   }));
 
-  // Calculer les statistiques
+  // Calculer les statistiques des séries
+  const totalSeries = couponsData.length;
+  const activeSeries = couponsData.filter(series => series.status === 'active').length;
+  const completedSeries = couponsData.filter(series => series.status === 'completed').length;
   const totalCoupons = couponsData.reduce(
     (sum, series) => sum + series.totalCoupons,
     0
@@ -130,10 +134,7 @@ export const Admin: React.FC = () => {
     (sum, series) => sum + series.usedCoupons,
     0
   );
-  const totalAmount = couponsData.reduce(
-    (sum, series) => sum + series.hourlyRate * series.totalCoupons,
-    0
-  );
+  const remainingCoupons = totalCoupons - usedCoupons;
 
   const couponsColumns = [
     {
@@ -141,7 +142,9 @@ export const Admin: React.FC = () => {
       label: "Nom de la série",
       render: (_: unknown, row: TableRowData) => {
         // Construire le nom : Nomdefamille_mois_année
-        const familyName = row.familyId?.name || "Famille inconnue";
+        const familyName = row.familyId?.primaryContact 
+          ? `${row.familyId.primaryContact.firstName} ${row.familyId.primaryContact.lastName}`
+          : "Famille inconnue";
         const createdAt = new Date(row.createdAt);
         const month = (createdAt.getMonth() + 1).toString().padStart(2, "0");
         const year = createdAt.getFullYear();
@@ -159,7 +162,11 @@ export const Admin: React.FC = () => {
       label: "Famille",
       render: (_: unknown, row: TableRowData) => (
         <div>
-          <div className="font-medium">{row.familyId?.name}</div>
+          <div className="font-medium">
+            {row.familyId?.primaryContact 
+              ? `${row.familyId.primaryContact.firstName} ${row.familyId.primaryContact.lastName}`
+              : "Famille inconnue"}
+          </div>
         </div>
       ),
     },
@@ -179,9 +186,8 @@ export const Admin: React.FC = () => {
       key: "subject",
       label: "Matière",
       render: (_: unknown, row: TableRowData) => (
-        <div>
-          <div className="font-medium">{row.subject?.name}</div>
-          <div className="text-sm text-gray-500">{row.subject?.category}</div>
+        <div className="font-medium">
+          {row.subject?.name || "Matière inconnue"}
         </div>
       ),
     },
@@ -243,21 +249,21 @@ export const Admin: React.FC = () => {
             variant="secondary"
             onClick={() => handleViewCoupons(row._id)}
           >
-            Voir les coupons
+            👁️
           </Button>
           <Button
             size="sm"
             variant="primary"
             onClick={() => handleEditSeries(row._id)}
           >
-            Modifier
+            ✏️
           </Button>
           <Button
             size="sm"
             variant="error"
             onClick={() => handleDeleteSeries(row._id)}
           >
-            Supprimer
+            ✕
           </Button>
         </div>
       ),
@@ -270,7 +276,7 @@ export const Admin: React.FC = () => {
       <Breadcrumb
         items={[
           { label: "Admin", href: "/admin" },
-          { label: "Coupons", href: "/admin/coupons" },
+          { label: "Séries", href: "/admin/coupons" },
         ]}
       />
       <Container layout="flex-col">
@@ -284,25 +290,33 @@ export const Admin: React.FC = () => {
 
         <Container layout="grid" padding="none">
           <SummaryCard
-            title="SYNTHESE GLOBALE"
+            title="SÉRIES"
             metrics={[
               {
-                value: `${totalAmount.toFixed(2)} €`,
-                label: "Montant total",
+                value: totalSeries,
+                label: "Nombre total de séries",
                 variant: "primary",
               },
               {
-                value: totalCoupons,
-                label: "Total Coupons",
+                value: activeSeries,
+                label: "Séries en cours",
                 variant: "success",
               },
             ]}
           />
           <SummaryCard
-            title="UTILISATION"
+            title="STATUT SÉRIES"
             metrics={[
-              { value: usedCoupons, label: "Utilisés", variant: "primary" },
-              { value: totalCoupons, label: "Restants", variant: "success" },
+              { 
+                value: completedSeries, 
+                label: "Séries clôturées", 
+                variant: "primary" 
+              },
+              { 
+                value: remainingCoupons, 
+                label: "Coupons restants", 
+                variant: "success" 
+              },
             ]}
           />
         </Container>

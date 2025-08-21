@@ -12,6 +12,7 @@ const {
   buildPaginationQuery,
   buildPaginatedResponse,
 } = require("../utils/dbHelpers");
+const { generateCouponCode } = require("../services/couponGenerationService");
 
 const router = express.Router();
 
@@ -143,7 +144,7 @@ router.get(
       console.log("🔍 Exécution de la requête MongoDB...");
       const [series, total] = await Promise.all([
         CouponSeries.find(filter)
-          .populate("familyId", "name contact.email")
+          .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email")
           .populate("studentId", "firstName lastName level")
           .populate("subject", "name category")
           .populate("createdBy", "firstName lastName")
@@ -193,7 +194,7 @@ router.get("/:id", async (req, res) => {
     }
 
     const series = await CouponSeries.findById(id)
-      .populate("familyId", "name contact address")
+      .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email address")
       .populate("studentId", "firstName lastName level")
       .populate("subject", "name category description")
       .populate("createdBy", "firstName lastName")
@@ -206,7 +207,7 @@ router.get("/:id", async (req, res) => {
     // Récupérer tous les coupons de cette série
     const coupons = await Coupon.find({ couponSeriesId: id })
       .populate("usedBy", "firstName lastName")
-      .sort({ couponNumber: 1 })
+      .sort({ code: 1 })
       .lean();
 
     // Statistiques de la série
@@ -393,10 +394,11 @@ router.post(
       console.log("🔍 Création des coupons individuels...");
       const coupons = [];
       for (let i = 1; i <= totalCoupons; i++) {
+        const couponCode = generateCouponCode(series._id.toString(), i);
         coupons.push({
           couponSeriesId: series._id,
           familyId: family,
-          couponNumber: i,
+          code: couponCode,
           status: "available",
         });
       }
@@ -406,7 +408,7 @@ router.post(
 
       // Retourner la série créée avec tous les détails
       const createdSeries = await CouponSeries.findById(series._id)
-        .populate("familyId", "name contact.email")
+        .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email")
         .populate("studentId", "firstName lastName level")
         .populate("subject", "name category")
         .populate("createdBy", "firstName lastName");
@@ -481,7 +483,7 @@ router.patch(
       res.json({
         message: `Series status changed to ${status}`,
         series: await CouponSeries.findById(id)
-          .populate("familyId", "name")
+          .populate("familyId", "primaryContact.firstName primaryContact.lastName")
           .populate("studentId", "firstName lastName level")
           .populate("createdBy", "firstName lastName"),
       });
@@ -529,7 +531,7 @@ router.get("/stats/overview", authorize(["admin"]), async (req, res) => {
           $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         }, // 30 jours
       })
-        .populate("familyId", "name contact.email")
+        .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email")
         .populate("studentId", "firstName lastName")
         .select(
           "familyId studentId subject expirationDate totalCoupons usedCoupons"
@@ -601,6 +603,29 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
     const deleteCouponsResult = await Coupon.deleteMany({ couponSeriesId: id });
     console.log("🔍 Coupons supprimés:", deleteCouponsResult.deletedCount);
 
+    // Supprimer la NDR liée (suppression en cascade)
+    const SettlementNote = require("../models/SettlementNote");
+    const Family = require("../models/Family");
+    
+    let deletedNDR = false;
+    if (series.settlementNoteId) {
+      console.log("🔍 Suppression de la NDR liée:", series.settlementNoteId);
+      const ndr = await SettlementNote.findById(series.settlementNoteId);
+      if (ndr) {
+        // Supprimer la NDR
+        await SettlementNote.findByIdAndDelete(series.settlementNoteId);
+        console.log("🔍 NDR supprimée:", series.settlementNoteId);
+        
+        // Retirer la référence NDR de la famille
+        await Family.findByIdAndUpdate(ndr.familyId, {
+          $pull: { settlementNotes: series.settlementNoteId },
+        });
+        console.log("🔍 Référence NDR retirée de la famille:", ndr.familyId);
+        
+        deletedNDR = true;
+      }
+    }
+
     // Supprimer la série
     console.log("🔍 Suppression de la série...");
     await CouponSeries.findByIdAndDelete(id);
@@ -609,6 +634,8 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
     res.json({
       message: "Coupon series deleted successfully",
       deletedCoupons: deleteCouponsResult.deletedCount,
+      deletedSettlementNote: deletedNDR,
+      settlementNoteId: deletedNDR ? series.settlementNoteId : null,
     });
   } catch (error) {
     console.error("Erreur dans DELETE /api/coupon-series/:id:", error);

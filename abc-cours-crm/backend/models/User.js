@@ -51,7 +51,7 @@ const userSchema = new mongoose.Schema(
 );
 
 // Index pour améliorer les performances
-userSchema.index({ email: 1 });
+// Note: email déjà indexé via unique: true dans le schéma
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 
@@ -60,7 +60,7 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   try {
-    const salt = await bcrypt.genSalt(12);
+    const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (error) {

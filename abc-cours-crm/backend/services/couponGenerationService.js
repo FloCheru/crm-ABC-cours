@@ -108,25 +108,51 @@ class CouponGenerationService {
    */
   static async generateCouponSeries(settlementNote, createdBy) {
     try {
-      // Calculer le nombre de coupons basé sur la quantité d'heures
-      const totalCoupons = Math.ceil(settlementNote.quantity);
-
-      // Vérifier que l'élève est spécifié
-      if (!settlementNote.studentId) {
-        throw new Error("ID de l'élève requis pour créer la série de coupons");
+      // Gérer la compatibilité avec l'ancien format (studentId) et le nouveau (studentIds)
+      let studentIds = [];
+      if (settlementNote.studentIds && Array.isArray(settlementNote.studentIds)) {
+        studentIds = settlementNote.studentIds;
+      } else if (settlementNote.studentId) {
+        studentIds = [settlementNote.studentId];
       }
 
-      // Créer la série de coupons
+      // Vérifier qu'au moins un élève est spécifié
+      if (!studentIds || studentIds.length === 0) {
+        throw new Error("Au moins un élève requis pour créer la série de coupons");
+      }
+
+      // Calculer le nombre total de coupons basé sur les matières et quantités
+      let totalCoupons = 0;
+      if (settlementNote.subjects && Array.isArray(settlementNote.subjects)) {
+        // Nouveau format avec multiples matières
+        totalCoupons = settlementNote.subjects.reduce((sum, subject) => {
+          return sum + Math.ceil(subject.quantity);
+        }, 0) * studentIds.length; // Multiplier par le nombre d'élèves
+      } else {
+        // Ancien format avec une seule matière
+        totalCoupons = Math.ceil(settlementNote.quantity) * studentIds.length;
+      }
+
+      // Créer la série de coupons (adapter pour multiples élèves/matières)
       const couponSeries = new CouponSeries({
         settlementNoteId: settlementNote._id,
         familyId: settlementNote.familyId,
-        studentId: settlementNote.studentId,
+        studentId: studentIds[0], // Garder le premier pour compatibilité
+        studentIds: studentIds, // Nouveau champ pour multiples élèves
         totalCoupons,
         usedCoupons: 0,
         status: "active",
-        subject: settlementNote.subject,
-        hourlyRate: settlementNote.hourlyRate,
-        professorSalary: settlementNote.professorSalary,
+        // Gérer les matières multiples ou unique
+        subject: settlementNote.subjects && settlementNote.subjects.length > 0 
+          ? settlementNote.subjects[0].subjectId 
+          : settlementNote.subject,
+        subjects: settlementNote.subjects, // Nouveau champ pour multiples matières
+        hourlyRate: settlementNote.subjects && settlementNote.subjects.length > 0
+          ? settlementNote.subjects[0].hourlyRate
+          : settlementNote.hourlyRate,
+        professorSalary: settlementNote.subjects && settlementNote.subjects.length > 0
+          ? settlementNote.subjects[0].professorSalary
+          : settlementNote.professorSalary,
         createdBy,
         coupons: [], // Sera rempli après création des coupons
       });
@@ -144,7 +170,7 @@ class CouponGenerationService {
         // Debug: vérifier que le code n'est pas null
         console.log("🔍 DEBUG - Génération coupon:", {
           seriesId: couponSeries._id.toString(),
-          couponNumber: i,
+          couponIndex: i,
           couponCode: couponCode,
         });
 
@@ -303,3 +329,7 @@ class CouponGenerationService {
 }
 
 module.exports = CouponGenerationService;
+
+// Export des fonctions utilitaires pour usage direct
+module.exports.generateCouponCode = generateCouponCode;
+module.exports.generateUniqueCouponCode = generateUniqueCouponCode;

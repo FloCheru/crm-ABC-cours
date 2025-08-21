@@ -73,6 +73,79 @@
 }
 
 /* ==========================================================================
+     DROPDOWN / SOUS-MENU
+     ========================================================================== */
+
+.navbar__item--dropdown {
+  position: relative;
+}
+
+.navbar__dropdown-arrow {
+  margin-left: var(--spacing-xs);
+  font-size: 0.8em;
+  transition: transform var(--transition-fast);
+}
+
+.navbar__item--dropdown:hover .navbar__dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.navbar__submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: var(--primary);
+  box-shadow: var(--shadow-navbar);
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all var(--transition-fast);
+  z-index: 200;
+}
+
+.navbar__item--dropdown:hover .navbar__submenu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.navbar__submenu-item {
+  width: 100%;
+}
+
+.navbar__submenu-link {
+  display: block;
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--text-on-primary);
+  text-decoration: none;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-normal);
+  transition: all var(--transition-fast);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+.navbar__submenu-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.navbar__submenu-link--active {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: var(--font-weight-medium);
+}
+
+.navbar__submenu-item:last-child .navbar__submenu-link {
+  border-bottom: none;
+}
+
+/* ==========================================================================
      AUTHENTIFICATION
      ========================================================================== */
 

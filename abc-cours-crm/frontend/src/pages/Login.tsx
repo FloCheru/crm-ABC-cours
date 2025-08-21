@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Input, Button } from "../components";
-import { authService } from "../services/authService";
+import { useAuth } from "../hooks/useAuth";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useAuth();
+  
   const [credentials, setCredentials] = useState({
     email: "",
     password: "",
@@ -22,7 +24,7 @@ export const Login: React.FC = () => {
     setError("");
 
     try {
-      await authService.login(credentials);
+      await login(credentials.email, credentials.password);
       // Rediriger vers la page d'origine ou la page par défaut
       navigate(from, { replace: true });
     } catch (error) {
@@ -83,7 +85,7 @@ export const Login: React.FC = () => {
             value={credentials.email}
             onChange={(e) => handleChange("email", e.target.value)}
             required
-            placeholder="admin@abc-cours.fr"
+            placeholder="admin@abc-cours.com"
           />
 
           <Input
@@ -116,7 +118,7 @@ export const Login: React.FC = () => {
           <p>
             <strong>Comptes de test :</strong>
           </p>
-          <p>Admin: admin@abc-cours.fr / admin123</p>
+          <p>Admin: admin@abc-cours.com / admin123</p>
           {/* <p>Professeur: prof@abc-cours.com / prof123</p>
           <p>Famille: famille@abc-cours.com / famille123</p> */}
         </div>

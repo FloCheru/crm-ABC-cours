@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Navbar,
@@ -6,6 +6,7 @@ import {
   Container,
   Button,
   Input,
+  FormCard,
 } from "../../../components";
 // Nouveaux imports
 import { EntityForm } from "../../../components/forms/EntityForm/EntityForm";
@@ -17,7 +18,7 @@ import { subjectService } from "../../../services/subjectService";
 import type { CreateSettlementNoteData } from "../../../types/settlement";
 import type { Subject } from "../../../types/subject";
 import type { Family } from "../../../types/family";
-import { useRefresh } from "../../../contexts/RefreshContext";
+import { useRefresh } from "../../../hooks/useRefresh";
 import { logger } from "../../../utils/logger";
 
 // Import des types partagés
@@ -34,7 +35,26 @@ export const SettlementCreate: React.FC = () => {
 
   const [families, setFamilies] = useState<Family[]>([]);
   const [students, setStudents] = useState<
-    Array<{ _id: string; firstName: string; lastName: string; level?: string }>
+    Array<{
+      _id: string;
+      firstName: string;
+      lastName: string;
+      level?: string;
+      courseLocation?: {
+        type?: "domicile" | "professeur" | "autre";
+        address?: {
+          street?: string;
+          city?: string;
+          postalCode?: string;
+        };
+        otherDetails?: string;
+      };
+      contact?: {
+        phone?: string;
+        email?: string;
+      };
+      availability?: string;
+    }>
   >([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,24 +63,31 @@ export const SettlementCreate: React.FC = () => {
   // États pour les popups de création
   const [showFamilyModal, setShowFamilyModal] = useState(false);
   const [showStudentModal, setShowStudentModal] = useState(false);
+  const [showSubjectSelectionModal, setShowSubjectSelectionModal] =
+    useState(false);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [isModalLoading, setIsModalLoading] = useState(false);
   const [showStudentSelect, setShowStudentSelect] = useState(false);
+  const [sameBillingAddress, setSameBillingAddress] = useState(true);
 
-  // Log pour déboguer l'état de la modal
-  logger.debug("🔍 DEBUG - Rendu - showStudentModal:", showStudentModal);
-
-  const [formData, setFormData] = useState<CreateSettlementNoteData>({
+  const [formData, setFormData] = useState<
+    CreateSettlementNoteData & { hasPaymentSchedule: boolean }
+  >({
     familyId: familyId || "",
-    studentId: "",
+    studentIds: [],
     clientName: "",
     department: "",
-    paymentMethod: "card",
-    subjectId: "",
-    hourlyRate: 0,
-    quantity: 1,
-    professorSalary: 0,
+    paymentMethod: "",
+    paymentType: "",
+    subjects: [],
     charges: 0,
-    dueDate: new Date(),
+    // Échéancier
+    hasPaymentSchedule: false,
+    paymentSchedule: {
+      paymentMethod: "PRLV" as const,
+      numberOfInstallments: 1,
+      dayOfMonth: 1,
+    },
     notes: "",
     // Champs calculés automatiquement
     marginPercentage: 0,
@@ -68,6 +95,143 @@ export const SettlementCreate: React.FC = () => {
     chargesToPay: 0,
     salaryToPay: 0,
   });
+
+  // États séparés pour les tarifs communs
+  const [commonRates, setCommonRates] = useState({
+    hourlyRate: "",
+    quantity: "",
+    professorSalary: "",
+  });
+
+  // États pour la validation
+  const [validationErrors, setValidationErrors] = useState<{
+    students?: string;
+    subjects?: string;
+    rates?: string;
+    clientBirthDate?: string;
+    paymentMethod?: string;
+    studentLocation?: string;
+    studentAddress?: string;
+  }>({});
+  
+  // Ref pour conserver les erreurs en cas de re-rendu
+  const validationErrorsRef = useRef<typeof validationErrors>({});
+
+  // Fonction pour valider le formulaire
+  const validateForm = () => {
+    logger.debug("🔍 === DÉBUT validateForm ===");
+    const errors: typeof validationErrors = {};
+
+    // Vérifier les élèves sélectionnés
+    logger.debug("🔍 Vérification élèves - studentIds:", formData.studentIds);
+    if (formData.studentIds.length === 0) {
+      errors.students = "Au moins un élève doit être sélectionné";
+      logger.debug("🔍 ERREUR: Aucun élève sélectionné");
+    }
+
+    // Vérifier les matières sélectionnées
+    logger.debug("🔍 Vérification matières - subjects:", formData.subjects);
+    if (formData.subjects.length === 0) {
+      errors.subjects = "Au moins une matière doit être sélectionnée";
+      logger.debug("🔍 ERREUR: Aucune matière sélectionnée");
+    }
+
+    // Vérifier la date de naissance du client
+    const selectedFamily = families.find((f) => f._id === formData.familyId);
+    logger.debug("🔍 Vérification date naissance - famille:", selectedFamily);
+    logger.debug("🔍 Date de naissance:", selectedFamily?.primaryContact?.dateOfBirth);
+    if (selectedFamily && !selectedFamily.primaryContact.dateOfBirth) {
+      errors.clientBirthDate = "La date de naissance du client est obligatoire";
+      logger.debug("🔍 ERREUR: Date de naissance manquante");
+    }
+
+    // Vérifier le mode de règlement
+    logger.debug("🔍 Vérification paymentMethod:", formData.paymentMethod);
+    if (!formData.paymentMethod || formData.paymentMethod === "") {
+      errors.paymentMethod = "Le mode de règlement est obligatoire";
+      logger.debug("🔍 ERREUR: Mode de règlement manquant");
+    }
+
+    // Vérifier les informations des élèves sélectionnés
+    logger.debug("🔍 Vérification informations élèves - étudiants sélectionnés:", formData.studentIds.length);
+    if (formData.studentIds.length > 0) {
+      for (const studentId of formData.studentIds) {
+        const student = students.find((s) => s._id === studentId);
+        logger.debug("🔍 Vérification élève:", studentId, student);
+        if (student) {
+          // Vérifier le lieu des cours
+          logger.debug("🔍 Lieu des cours:", student.courseLocation?.type);
+          if (!student.courseLocation?.type) {
+            errors.studentLocation = "Le lieu des cours est obligatoire pour tous les élèves";
+            logger.debug("🔍 ERREUR: Lieu des cours manquant pour élève", studentId);
+            break;
+          }
+          
+          // Vérifier l'adresse, ville et code postal
+          logger.debug("🔍 Adresse élève:", {
+            street: student.courseLocation?.address?.street,
+            city: student.courseLocation?.address?.city,
+            postalCode: student.courseLocation?.address?.postalCode
+          });
+          if (!student.courseLocation?.address?.street ||
+              !student.courseLocation?.address?.city ||
+              !student.courseLocation?.address?.postalCode) {
+            errors.studentAddress = "L'adresse complète (rue, ville, code postal) est obligatoire pour tous les élèves";
+            logger.debug("🔍 ERREUR: Adresse incomplète pour élève", studentId);
+            break;
+          }
+        }
+      }
+    }
+
+    // Vérifier les tarifs communs
+    logger.debug("🔍 Vérification tarifs communs:", commonRates);
+    const hourlyRate = parseFloat(commonRates.hourlyRate);
+    const quantity = parseInt(commonRates.quantity);
+    const professorSalary = parseFloat(commonRates.professorSalary);
+
+    if (
+      !commonRates.hourlyRate ||
+      !commonRates.quantity ||
+      !commonRates.professorSalary ||
+      isNaN(hourlyRate) ||
+      isNaN(quantity) ||
+      isNaN(professorSalary) ||
+      hourlyRate <= 0 ||
+      quantity <= 0 ||
+      professorSalary <= 0
+    ) {
+      errors.rates = "Tous les champs de tarification doivent être remplis avec des valeurs valides";
+      logger.debug("🔍 ERREUR: Tarifs invalides");
+    }
+
+    logger.debug("🔍 Erreurs collectées:", errors);
+    logger.debug("🔍 Nombre d'erreurs:", Object.keys(errors).length);
+    
+    const isValid = Object.keys(errors).length === 0;
+    logger.debug("🔍 === FIN validateForm ===", "isValid:", isValid);
+    
+    // Mettre à jour à la fois l'état et la ref
+    validationErrorsRef.current = errors;
+    setValidationErrors(errors);
+    
+    // Retourner le résultat
+    return isValid;
+  };
+
+  // Fonction pour vérifier si le formulaire est valide
+  const isFormValid = () => {
+    return (
+      formData.studentIds.length > 0 &&
+      formData.subjects.length > 0 &&
+      commonRates.hourlyRate &&
+      commonRates.quantity &&
+      commonRates.professorSalary &&
+      parseFloat(commonRates.hourlyRate) > 0 &&
+      parseInt(commonRates.quantity) > 0 &&
+      parseFloat(commonRates.professorSalary) > 0
+    );
+  };
 
   // Charger les données des matières et des familles
   useEffect(() => {
@@ -154,17 +318,8 @@ export const SettlementCreate: React.FC = () => {
           }
         }
 
-        // Sélectionner automatiquement la première matière si disponible
-        if (subjectsData.length > 0) {
-          setFormData((prev) => ({
-            ...prev,
-            subjectId: subjectsData[0]._id,
-          }));
-          logger.debug(
-            "Première matière sélectionnée:",
-            subjectsData[0].name
-          );
-        }
+        // Note: Plus besoin de sélectionner automatiquement une matière
+        // car maintenant on utilise la sélection multiple
       } catch (err) {
         logger.error("Erreur lors du chargement des données:", err);
         setError("Impossible de charger les données. Veuillez réessayer.");
@@ -174,22 +329,29 @@ export const SettlementCreate: React.FC = () => {
     loadData();
   }, [familyId]);
 
-  // Calculer automatiquement les valeurs dérivées
+  // Calculer automatiquement les valeurs dérivées basées sur les tarifs communs et les matières
   useEffect(() => {
-    const salaryToPay = formData.professorSalary * formData.quantity;
-    const chargesToPay = formData.charges * formData.quantity;
-    const totalAmount = formData.hourlyRate * formData.quantity;
+    const numberOfSubjects = formData.subjects.length;
+    const hourlyRate = parseFloat(commonRates.hourlyRate) || 0;
+    const quantity = parseInt(commonRates.quantity) || 0;
+    const professorSalary = parseFloat(commonRates.professorSalary) || 0;
+
+    // Calculs corrects - pas de multiplication par numberOfSubjects
+    const salaryToPay = professorSalary * quantity; // Salaire pour les heures données
+    const chargesToPay = formData.charges * quantity; // Charges pour les heures données
+    const totalAmount = hourlyRate * quantity; // CA pour les heures données
     const marginAmount = totalAmount - salaryToPay - chargesToPay;
     const marginPercentage =
       totalAmount > 0 ? (marginAmount / totalAmount) * 100 : 0;
 
     // 🔍 LOGS DE DÉBOGAGE - Calcul des valeurs dérivées
-    logger.debug("🔍 === CALCUL VALEURS DÉRIVÉES ===");
+    logger.debug("🔍 === CALCUL VALEURS DÉRIVÉES (CORRIGÉ) ===");
     logger.debug("🔍 Inputs:", {
-      professorSalary: formData.professorSalary,
+      numberOfSubjects,
+      hourlyRate,
+      quantity,
+      professorSalary,
       charges: formData.charges,
-      hourlyRate: formData.hourlyRate,
-      quantity: formData.quantity,
     });
     logger.debug("🔍 Calculs:", {
       salaryToPay,
@@ -207,12 +369,20 @@ export const SettlementCreate: React.FC = () => {
       marginAmount,
       marginPercentage,
     }));
-  }, [
-    formData.professorSalary,
-    formData.charges,
-    formData.hourlyRate,
-    formData.quantity,
-  ]);
+  }, [formData.subjects, formData.charges, commonRates]);
+
+  // Note: Validation supprimée - les erreurs ne s'affichent qu'au clic du bouton
+  
+  // Surveiller les changements de l'état validationErrors
+  useEffect(() => {
+    logger.debug("🔍 État validationErrors mis à jour:", validationErrors);
+    logger.debug("🔍 Clés des erreurs:", Object.keys(validationErrors));
+  }, [validationErrors]);
+
+  // Surveiller les changements de paymentMethod pour voir s'il se réinitialise
+  useEffect(() => {
+    logger.debug("🔍 PaymentMethod changé:", formData.paymentMethod);
+  }, [formData.paymentMethod]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -243,7 +413,7 @@ export const SettlementCreate: React.FC = () => {
         familyId: familyId,
         clientName: `${family.primaryContact.firstName} ${family.primaryContact.lastName}`,
         department: family.address.city || "",
-        studentId: "", // Réinitialiser l'élève sélectionné
+        studentIds: [], // Réinitialiser les élèves sélectionnés
       }));
 
       // Charger les élèves de la nouvelle famille
@@ -263,7 +433,7 @@ export const SettlementCreate: React.FC = () => {
         // Sélectionner automatiquement le premier élève
         setFormData((prev) => ({
           ...prev,
-          studentId: studentsArray[0]._id,
+          studentIds: [studentsArray[0]._id],
         }));
       } else {
         setStudents([]);
@@ -274,7 +444,74 @@ export const SettlementCreate: React.FC = () => {
     }
   };
 
+  // Gérer la sélection multiple d'élèves
+  const handleStudentSelection = (studentId: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      studentIds: checked
+        ? [...prev.studentIds, studentId]
+        : prev.studentIds.filter((id) => id !== studentId),
+    }));
+  };
+
+  // Ouvrir la modal de sélection des matières
+  const openSubjectSelectionModal = () => {
+    // Initialiser avec les matières déjà sélectionnées
+    setSelectedSubjectIds(formData.subjects.map((s) => s.subjectId));
+    setShowSubjectSelectionModal(true);
+  };
+
+  // Gérer la sélection d'une matière dans la modal
+  const handleSubjectSelection = (subjectId: string, checked: boolean) => {
+    setSelectedSubjectIds((prev) =>
+      checked ? [...prev, subjectId] : prev.filter((id) => id !== subjectId)
+    );
+  };
+
+  // Confirmer la sélection des matières
+  const confirmSubjectSelection = () => {
+    // Appliquer les tarifs communs à toutes les matières sélectionnées
+    const newSubjects = selectedSubjectIds.map((subjectId) => ({
+      subjectId,
+      hourlyRate: commonRates.hourlyRate || "",
+      quantity: commonRates.quantity || "",
+      professorSalary: commonRates.professorSalary || "",
+    }));
+
+    setFormData((prev) => ({
+      ...prev,
+      subjects: newSubjects,
+    }));
+
+    setShowSubjectSelectionModal(false);
+  };
+
+  // Gérer les changements des tarifs communs
+  const handleCommonRateChange = (
+    field: keyof typeof commonRates,
+    value: string
+  ) => {
+    setCommonRates((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    // Mettre à jour toutes les matières existantes avec la nouvelle valeur
+    if (formData.subjects.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        subjects: prev.subjects.map((subject) => ({
+          ...subject,
+          [field]: value,
+        })),
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("🚨 HANDLESUBMIT APPELÉ !"); // Log basique pour s'assurer que la fonction est appelée
+    logger.debug("🚨 HANDLESUBMIT APPELÉ !");
+    
     e.preventDefault();
     setIsLoading(true);
     setError("");
@@ -289,9 +526,9 @@ export const SettlementCreate: React.FC = () => {
       "✅" + (formData.familyId ? "" : "MANQUANT")
     );
     logger.debug(
-      "  - studentId:",
-      formData.studentId,
-      "✅" + (formData.studentId ? "" : "MANQUANT")
+      "  - studentIds:",
+      formData.studentIds,
+      "✅" + (formData.studentIds.length > 0 ? "" : "MANQUANT")
     );
     logger.debug(
       "  - clientName:",
@@ -304,59 +541,175 @@ export const SettlementCreate: React.FC = () => {
       "✅" + (formData.department ? "" : "MANQUANT")
     );
     logger.debug(
-      "  - subjectId:",
-      formData.subjectId,
-      "✅" + (formData.subjectId ? "" : "MANQUANT")
-    );
-    logger.debug(
-      "  - hourlyRate:",
-      formData.hourlyRate,
-      "✅" + (formData.hourlyRate > 0 ? "" : "DOIT ÊTRE > 0")
-    );
-    logger.debug(
-      "  - quantity:",
-      formData.quantity,
-      "✅" + (formData.quantity > 0 ? "" : "DOIT ÊTRE > 0")
-    );
-    logger.debug(
-      "  - professorSalary:",
-      formData.professorSalary,
-      "✅" + (formData.professorSalary > 0 ? "" : "DOIT ÊTRE > 0")
+      "  - subjects:",
+      formData.subjects,
+      "✅" + (formData.subjects.length > 0 ? "" : "MANQUANT")
     );
     logger.debug(
       "  - charges:",
       formData.charges,
       "✅" + (formData.charges > 0 ? "" : "DOIT ÊTRE > 0")
     );
-    logger.debug(
-      "  - dueDate:",
-      formData.dueDate,
-      "✅" + (formData.dueDate ? "" : "MANQUANT")
-    );
+    logger.debug("  - hasPaymentSchedule:", formData.hasPaymentSchedule, "✅");
     logger.debug("  - paymentMethod:", formData.paymentMethod, "✅");
     logger.debug("🔍 === FIN DÉBOGAGE ===");
 
     try {
-      // Si c'est un nouvel élève (pas un ID MongoDB), le créer d'abord
-      if (
-        formData.studentId &&
-        !formData.studentId.match(/^[0-9a-fA-F]{24}$/)
-      ) {
-        logger.debug("🔍 Création d'un nouvel élève:", formData.studentId);
+      // Valider le formulaire et afficher les erreurs uniquement au clic
+      logger.debug("🔍 === DÉBUT VALIDATION ===");
+      const isValid = validateForm();
+      logger.debug("🔍 Résultat validation:", isValid);
+      
+      if (!isValid) {
+        // La validation a échoué, les erreurs ont été mises à jour dans l'état
+        logger.debug("🔍 Validation échouée - arrêt du processus");
+        setIsLoading(false);
+        
+        // Forcer le re-rendu pour s'assurer que les erreurs s'affichent
+        setTimeout(() => {
+          logger.debug("🔍 État validationErrors après timeout:", validationErrors);
+          logger.debug("🔍 Ref validationErrorsRef après timeout:", validationErrorsRef.current);
+        }, 100);
+        return;
+      }
+      
+      logger.debug("🔍 Validation réussie - poursuite du processus");
 
-        // Créer l'élève dans la famille
-        const newStudent = await createStudentInFamily(formData.studentId);
+      // Si la validation passe, on peut continuer avec les valeurs
+      const hourlyRate = parseFloat(commonRates.hourlyRate);
+      const quantity = parseInt(commonRates.quantity);
+      const professorSalary = parseFloat(commonRates.professorSalary);
 
-        // Mettre à jour le studentId avec l'ID créé
-        formData.studentId = newStudent._id;
-        logger.debug("Nouvel élève créé avec l'ID:", newStudent._id);
+      // Préparer les données à envoyer avec les tarifs communs appliqués
+      const dataToSend = {
+        ...formData,
+        subjects: formData.subjects.map((subject) => ({
+          subjectId: subject.subjectId,
+          hourlyRate: parseFloat(commonRates.hourlyRate),
+          quantity: parseInt(commonRates.quantity),
+          professorSalary: parseFloat(commonRates.professorSalary),
+        })),
+      };
+
+      // Ajouter l'échéancier seulement s'il est activé et valide
+      if (formData.hasPaymentSchedule && formData.paymentSchedule) {
+        dataToSend.paymentSchedule = formData.paymentSchedule;
+      }
+      // Si pas d'échéancier, ne pas inclure le champ du tout
+
+      // Supprimer les champs qui n'existent que côté frontend
+      delete dataToSend.hasPaymentSchedule;
+      // Supprimer le champ subjectId qui pourrait être resté de l'ancien système
+      if (dataToSend.subjectId) {
+        delete dataToSend.subjectId;
       }
 
       // 🔍 LOG AVANT ENVOI À L'API
-      logger.debug("🚀 Envoi des données à l'API:", formData);
+      logger.debug("🚀 Envoi des données à l'API:", {
+        ...dataToSend,
+        paymentScheduleStatus: formData.hasPaymentSchedule
+          ? "activé"
+          : "désactivé",
+        hasPaymentScheduleField: "paymentSchedule" in dataToSend,
+      });
+
+      // Sauvegarder les informations famille et élèves modifiées avant de créer la NDR
+      try {
+        // Mettre à jour les informations de la famille si elles ont été modifiées
+        if (formData.familyId) {
+          const selectedFamily = families.find(
+            (f) => f._id === formData.familyId
+          );
+          if (selectedFamily) {
+            const updatedFamilyData = {
+              // Inclure les nouvelles informations modifiées dans l'interface
+              ...selectedFamily,
+              primaryContact: {
+                ...selectedFamily.primaryContact,
+                dateOfBirth: selectedFamily.primaryContact.dateOfBirth,
+              },
+              billingAddress: selectedFamily.billingAddress,
+              companyInfo: selectedFamily.companyInfo,
+            };
+
+            logger.debug("🔄 Mise à jour famille:", updatedFamilyData);
+
+            const familyResponse = await fetch(
+              `${
+                import.meta.env.VITE_API_URL || "http://localhost:3000/api"
+              }/families/${formData.familyId}`,
+              {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify(updatedFamilyData),
+              }
+            );
+
+            if (!familyResponse.ok) {
+              logger.warn(
+                "⚠️ Erreur lors de la mise à jour de la famille:",
+                await familyResponse.text()
+              );
+            } else {
+              logger.debug("✅ Famille mise à jour avec succès");
+            }
+          }
+        }
+
+        // Mettre à jour les informations des élèves sélectionnés
+        for (const studentId of formData.studentIds) {
+          const studentData = students.find((s) => s._id === studentId);
+          if (studentData) {
+            const updatedStudentData = {
+              courseLocation: studentData.courseLocation,
+              contact: studentData.contact,
+              availability: studentData.availability,
+            };
+
+            logger.debug(
+              "🔄 Mise à jour élève:",
+              studentId,
+              updatedStudentData
+            );
+
+            const studentResponse = await fetch(
+              `${
+                import.meta.env.VITE_API_URL || "http://localhost:3000/api"
+              }/students/${studentId}`,
+              {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify(updatedStudentData),
+              }
+            );
+
+            if (!studentResponse.ok) {
+              logger.warn(
+                "⚠️ Erreur lors de la mise à jour de l'élève:",
+                studentId,
+                await studentResponse.text()
+              );
+            } else {
+              logger.debug("✅ Élève mis à jour avec succès:", studentId);
+            }
+          }
+        }
+      } catch (updateError) {
+        logger.warn(
+          "⚠️ Erreur lors de la mise à jour des données famille/élèves:",
+          updateError
+        );
+        // Ne pas bloquer la création de NDR si les mises à jour échouent
+      }
 
       // Créer la note de règlement
-      await settlementService.createSettlementNote(formData);
+      await settlementService.createSettlementNote(dataToSend);
 
       // NAVIGUER D'ABORD
       logger.debug("🚀 Navigation vers le Dashboard");
@@ -487,13 +840,8 @@ export const SettlementCreate: React.FC = () => {
         if (!data.address || typeof data.address !== "object") {
           throw new Error("Objet address manquant");
         }
-        if (!data.financialInfo || typeof data.financialInfo !== "object") {
-          throw new Error("Objet financialInfo manquant");
-        }
-
         const primaryContact = data.primaryContact as Record<string, unknown>;
         const address = data.address as Record<string, unknown>;
-        const financialInfo = data.financialInfo as Record<string, unknown>;
 
         if (
           !primaryContact.firstName ||
@@ -546,15 +894,6 @@ export const SettlementCreate: React.FC = () => {
           throw new Error("Code postal requis");
         }
 
-        // Vérifier le mode de paiement
-        if (
-          !financialInfo.paymentMethod ||
-          typeof financialInfo.paymentMethod !== "string" ||
-          financialInfo.paymentMethod.trim() === ""
-        ) {
-          throw new Error("Mode de paiement requis");
-        }
-
         return data as unknown as FamilyFormData;
       };
 
@@ -566,10 +905,6 @@ export const SettlementCreate: React.FC = () => {
         unknown
       >;
       const address = validatedData.address as Record<string, unknown>;
-      const financialInfo = validatedData.financialInfo as Record<
-        string,
-        unknown
-      >;
       const secondaryContact = validatedData.secondaryContact as
         | Record<string, unknown>
         | undefined;
@@ -599,9 +934,6 @@ export const SettlementCreate: React.FC = () => {
                 relationship: secondaryContact.relationship || undefined,
               }
             : undefined,
-        financialInfo: {
-          paymentMethod: financialInfo.paymentMethod,
-        },
         notes: validatedData.notes || undefined,
         status: "prospect" as const,
         createdBy: (() => {
@@ -612,10 +944,7 @@ export const SettlementCreate: React.FC = () => {
           }
           const user = JSON.parse(userStr);
           if (!user.id) {
-            logger.error(
-              "ID utilisateur manquant dans l'objet user:",
-              user
-            );
+            logger.error("ID utilisateur manquant dans l'objet user:", user);
             throw new Error("ID utilisateur manquant");
           }
           return user.id;
@@ -960,10 +1289,10 @@ export const SettlementCreate: React.FC = () => {
         setShowStudentSelect(true);
       }
 
-      // Sélectionner automatiquement le nouvel élève
+      // Ajouter automatiquement le nouvel élève aux sélectionnés
       setFormData((prev) => ({
         ...prev,
-        studentId: formattedStudent._id,
+        studentIds: [...prev.studentIds, formattedStudent._id],
       }));
 
       // Fermer la modal
@@ -1013,43 +1342,72 @@ export const SettlementCreate: React.FC = () => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Informations client</h3>
 
-              <div>
-                <label
-                  htmlFor="familyId"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Choisir un client *
-                </label>
-                <div className="flex space-x-2">
-                  <select
-                    id="familyId"
-                    name="familyId"
-                    value={formData.familyId}
-                    onChange={(e) => handleFamilyChange(e.target.value)}
-                    required
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              {/* Sélecteur famille - seulement si pas de familyId en paramètre */}
+              {!familyId && (
+                <div>
+                  <label
+                    htmlFor="familyId"
+                    className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    <option key="default" value="">
-                      Sélectionner une famille
-                    </option>
-                    {families.map((family) => (
-                      <option key={family._id} value={family._id}>
-                        {family.primaryContact?.firstName}{" "}
-                        {family.primaryContact?.lastName}
+                    Choisir un client *
+                  </label>
+                  <div className="flex space-x-2">
+                    <select
+                      id="familyId"
+                      name="familyId"
+                      value={formData.familyId}
+                      onChange={(e) => handleFamilyChange(e.target.value)}
+                      required
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option key="default" value="">
+                        Sélectionner une famille
                       </option>
-                    ))}
-                  </select>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCreateNewFamily}
-                    className="whitespace-nowrap"
-                  >
-                    + Nouveau client
-                  </Button>
+                      {families.map((family) => (
+                        <option key={family._id} value={family._id}>
+                          {family.primaryContact?.firstName}{" "}
+                          {family.primaryContact?.lastName}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCreateNewFamily}
+                      className="whitespace-nowrap"
+                    >
+                      + Nouveau client
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Information client sélectionné - quand familyId est en paramètre */}
+              {familyId && formData.familyId && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h4 className="text-md font-semibold text-blue-800 mb-2">
+                    Client sélectionné
+                  </h4>
+                  {(() => {
+                    const selectedFamily = families.find(
+                      (f) => f._id === formData.familyId
+                    );
+                    if (!selectedFamily) return <p className="text-gray-500">Chargement...</p>;
+                    
+                    return (
+                      <div className="text-sm">
+                        <p className="font-medium">
+                          {selectedFamily.primaryContact.firstName} {selectedFamily.primaryContact.lastName}
+                        </p>
+                        <p className="text-gray-600">
+                          {selectedFamily.address.street}, {selectedFamily.address.postalCode} {selectedFamily.address.city}
+                        </p>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
 
               {/* Informations détaillées du client sélectionné */}
               {formData.familyId &&
@@ -1060,42 +1418,338 @@ export const SettlementCreate: React.FC = () => {
                   if (!selectedFamily) return null;
 
                   return (
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Nom: </span>
-                          <span className="ml-2 font-medium">
-                            {selectedFamily.primaryContact.lastName}
-                          </span>
+                    <div className="space-y-4">
+                      {/* Informations de base (lecture seule) */}
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Nom: </span>
+                            <span className="ml-2 font-medium">
+                              {selectedFamily.primaryContact.lastName}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Prénom: </span>
+                            <span className="ml-2 font-medium">
+                              {selectedFamily.primaryContact.firstName}
+                            </span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-gray-600">Adresse: </span>
+                            <span className="ml-2 font-medium">
+                              {selectedFamily.address.street}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Code postal: </span>
+                            <span className="ml-2 font-medium">
+                              {selectedFamily.address.postalCode}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Ville: </span>
+                            <span className="ml-2 font-medium">
+                              {selectedFamily.address.city}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-gray-600">Prénom: </span>
-                          <span className="ml-2 font-medium">
-                            {selectedFamily.primaryContact.firstName}
-                          </span>
+                      </div>
+
+                      {/* Encart informations famille additionnelles */}
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h4 className="text-md font-semibold text-blue-800 mb-3">
+                          Informations famille complémentaires
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Date de naissance */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Date de naissance
+                            </label>
+                            <Input
+                              type="date"
+                              value={
+                                selectedFamily.primaryContact.dateOfBirth
+                                  ? new Date(
+                                      selectedFamily.primaryContact.dateOfBirth
+                                    )
+                                      .toISOString()
+                                      .split("T")[0]
+                                  : ""
+                              }
+                              onChange={(e) => {
+                                // Mise à jour de la famille dans l'état local
+                                setFamilies((prev) =>
+                                  prev.map((f) =>
+                                    f._id === selectedFamily._id
+                                      ? {
+                                          ...f,
+                                          primaryContact: {
+                                            ...f.primaryContact,
+                                            dateOfBirth: e.target.value
+                                              ? new Date(e.target.value)
+                                              : undefined,
+                                          },
+                                        }
+                                      : f
+                                  )
+                                );
+                              }}
+                            />
+                            {validationErrors.clientBirthDate && (
+                              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                                {validationErrors.clientBirthDate}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* N° URSSAF */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              N° URSSAF
+                            </label>
+                            <Input
+                              type="text"
+                              value={
+                                selectedFamily.companyInfo?.urssafNumber || ""
+                              }
+                              onChange={(e) => {
+                                setFamilies((prev) =>
+                                  prev.map((f) =>
+                                    f._id === selectedFamily._id
+                                      ? {
+                                          ...f,
+                                          companyInfo: {
+                                            ...f.companyInfo,
+                                            urssafNumber: e.target.value,
+                                          },
+                                        }
+                                      : f
+                                  )
+                                );
+                              }}
+                              placeholder="Numéro URSSAF"
+                            />
+                          </div>
+
+                          {/* N° SIRET */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              N° SIRET
+                            </label>
+                            <Input
+                              type="text"
+                              value={
+                                selectedFamily.companyInfo?.siretNumber || ""
+                              }
+                              onChange={(e) => {
+                                setFamilies((prev) =>
+                                  prev.map((f) =>
+                                    f._id === selectedFamily._id
+                                      ? {
+                                          ...f,
+                                          companyInfo: {
+                                            ...f.companyInfo,
+                                            siretNumber: e.target.value,
+                                          },
+                                        }
+                                      : f
+                                  )
+                                );
+                              }}
+                              placeholder="Numéro SIRET"
+                            />
+                          </div>
+
+                          {/* N° CE */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              N° CE
+                            </label>
+                            <Input
+                              type="text"
+                              value={selectedFamily.companyInfo?.ceNumber || ""}
+                              onChange={(e) => {
+                                setFamilies((prev) =>
+                                  prev.map((f) =>
+                                    f._id === selectedFamily._id
+                                      ? {
+                                          ...f,
+                                          companyInfo: {
+                                            ...f.companyInfo,
+                                            ceNumber: e.target.value,
+                                          },
+                                        }
+                                      : f
+                                  )
+                                );
+                              }}
+                              placeholder="Numéro CE"
+                            />
+                          </div>
                         </div>
-                        <div className="col-span-2">
-                          <span className="text-gray-600">Adresse: </span>
-                          <span className="ml-2 font-medium">
-                            {selectedFamily.address.street}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Code postal: </span>
-                          <span className="ml-2 font-medium">
-                            {selectedFamily.address.postalCode}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Ville: </span>
-                          <span className="ml-2 font-medium">
-                            {selectedFamily.address.city}
-                          </span>
+
+                        {/* Adresse de facturation */}
+                        <div className="mt-4">
+                          <div className="flex items-center mb-3">
+                            <input
+                              type="checkbox"
+                              id="sameBillingAddress"
+                              checked={sameBillingAddress}
+                              onChange={(e) => {
+                                setSameBillingAddress(e.target.checked);
+                                if (e.target.checked) {
+                                  // Copier l'adresse principale vers l'adresse de facturation
+                                  setFamilies((prev) =>
+                                    prev.map((f) =>
+                                      f._id === selectedFamily._id
+                                        ? {
+                                            ...f,
+                                            billingAddress: {
+                                              street: f.address.street,
+                                              city: f.address.city,
+                                              postalCode: f.address.postalCode,
+                                            },
+                                          }
+                                        : f
+                                    )
+                                  );
+                                }
+                              }}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-2"
+                            />
+                            <label
+                              htmlFor="sameBillingAddress"
+                              className="text-sm font-medium text-gray-700"
+                            >
+                              L'adresse de facturation est la même adresse que
+                              le domicile.
+                            </label>
+                          </div>
+
+                          {!sameBillingAddress && (
+                            <>
+                              <h5 className="text-sm font-medium text-gray-700 mb-2">
+                                Adresse de facturation
+                              </h5>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                  <Input
+                                    type="text"
+                                    value={
+                                      selectedFamily.billingAddress?.street ||
+                                      ""
+                                    }
+                                    onChange={(e) => {
+                                      setFamilies((prev) =>
+                                        prev.map((f) =>
+                                          f._id === selectedFamily._id
+                                            ? {
+                                                ...f,
+                                                billingAddress: {
+                                                  ...f.billingAddress,
+                                                  street: e.target.value,
+                                                  city:
+                                                    f.billingAddress?.city ||
+                                                    "",
+                                                  postalCode:
+                                                    f.billingAddress
+                                                      ?.postalCode || "",
+                                                },
+                                              }
+                                            : f
+                                        )
+                                      );
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <Input
+                                    type="text"
+                                    value={
+                                      selectedFamily.billingAddress
+                                        ?.postalCode || ""
+                                    }
+                                    onChange={(e) => {
+                                      setFamilies((prev) =>
+                                        prev.map((f) =>
+                                          f._id === selectedFamily._id
+                                            ? {
+                                                ...f,
+                                                billingAddress: {
+                                                  ...f.billingAddress,
+                                                  postalCode: e.target.value,
+                                                  street:
+                                                    f.billingAddress?.street ||
+                                                    "",
+                                                  city:
+                                                    f.billingAddress?.city ||
+                                                    "",
+                                                },
+                                              }
+                                            : f
+                                        )
+                                      );
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <Input
+                                    type="text"
+                                    value={
+                                      selectedFamily.billingAddress?.city || ""
+                                    }
+                                    onChange={(e) => {
+                                      setFamilies((prev) =>
+                                        prev.map((f) =>
+                                          f._id === selectedFamily._id
+                                            ? {
+                                                ...f,
+                                                billingAddress: {
+                                                  ...f.billingAddress,
+                                                  city: e.target.value,
+                                                  street:
+                                                    f.billingAddress?.street ||
+                                                    "",
+                                                  postalCode:
+                                                    f.billingAddress
+                                                      ?.postalCode || "",
+                                                },
+                                              }
+                                            : f
+                                        )
+                                      );
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
                   );
                 })()}
+
+              <div>
+                <label
+                  htmlFor="paymentType"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Type de paiement
+                </label>
+                <select
+                  id="paymentType"
+                  name="paymentType"
+                  value={formData.paymentType}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Sélectionner un type de paiement</option>
+                  <option value="immediate_advance">Avance immédiate</option>
+                  <option value="tax_credit_n1">Crédit d'impôt N+1</option>
+                </select>
+              </div>
 
               <div>
                 <label
@@ -1112,11 +1766,17 @@ export const SettlementCreate: React.FC = () => {
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
+                  <option value="">Sélectionner un mode de règlement</option>
                   <option value="card">Carte</option>
                   <option value="check">Chèque</option>
                   <option value="transfer">Virement</option>
                   <option value="cash">Espèces</option>
                 </select>
+                {validationErrors.paymentMethod && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    {validationErrors.paymentMethod}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1125,154 +1785,489 @@ export const SettlementCreate: React.FC = () => {
               <h3 className="text-lg font-semibold">Informations cours</h3>
 
               <div>
-                <label
-                  htmlFor="studentId"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Élève concerné *
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Élèves concernés *
                 </label>
-                <div className="flex space-x-2">
+                <div className="space-y-2">
                   {formData.familyId && showStudentSelect ? (
-                    // Select d'élève quand il y en a
-                    <select
-                      value={formData.studentId}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          studentId: e.target.value,
-                        }))
-                      }
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option key="default" value="">
-                        Sélectionner un élève
-                      </option>
-                      {students.map((student) => (
-                        <option key={student._id} value={student._id}>
-                          {student.firstName} {student.lastName}
-                        </option>
-                      ))}
-                    </select>
+                    // Checkboxes pour sélection multiple d'élèves
+                    <div className="border border-gray-300 rounded-md p-3 max-h-40 overflow-y-auto">
+                      {students.length > 0 ? (
+                        students.map((student) => (
+                          <div
+                            key={student._id}
+                            className="flex items-center mb-2"
+                          >
+                            <input
+                              type="checkbox"
+                              id={`student-${student._id}`}
+                              checked={formData.studentIds.includes(
+                                student._id
+                              )}
+                              onChange={(e) =>
+                                handleStudentSelection(
+                                  student._id,
+                                  e.target.checked
+                                )
+                              }
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <label
+                              htmlFor={`student-${student._id}`}
+                              className="ml-2 text-sm text-gray-700 cursor-pointer"
+                            >
+                              {student.firstName} {student.lastName}
+                            </label>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 text-sm">
+                          Aucun élève trouvé pour cette famille
+                        </p>
+                      )}
+                    </div>
                   ) : formData.familyId && !showStudentSelect ? (
                     // Message quand la famille n'a pas d'élève
-                    <div className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-500 italic">
+                    <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-500 italic">
                       Le client n'a pas d'élève
                     </div>
                   ) : (
                     // Affichage par défaut quand aucune famille n'est sélectionnée
-                    <div className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-400 italic">
+                    <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-400 italic">
                       Sélectionnez d'abord une famille
                     </div>
                   )}
-                  {/* Bouton "+ Nouvel élève" - affiché uniquement si une famille est sélectionnée */}
-                  {formData.familyId && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCreateNewStudent}
-                      className="whitespace-nowrap"
-                    >
-                      + Nouvel élève
-                    </Button>
+                  <div className="flex justify-between items-center">
+                    {formData.studentIds.length > 0 && (
+                      <div className="text-sm text-blue-600">
+                        {formData.studentIds.length} élève(s) sélectionné(s)
+                      </div>
+                    )}
+                    {formData.familyId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCreateNewStudent}
+                        className="whitespace-nowrap"
+                      >
+                        + Nouvel élève
+                      </Button>
+                    )}
+                  </div>
+                  {validationErrors.students && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                      {validationErrors.students}
+                    </div>
                   )}
                 </div>
               </div>
 
+              {/* Informations élèves complémentaires */}
+              {formData.studentIds.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="text-md font-medium text-gray-900">
+                    Informations élèves complémentaires
+                  </h4>
+
+                  {formData.studentIds.map((studentId) => {
+                    const student = students.find((s) => s._id === studentId);
+                    if (!student) return null;
+
+                    return (
+                      <FormCard
+                        key={studentId}
+                        title={`${student.firstName} ${student.lastName}`}
+                        icon="👨‍🎓"
+                      >
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Lieu des cours */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Lieu des cours
+                            </label>
+                            <select
+                              value={
+                                students.find((s) => s._id === studentId)
+                                  ?.courseLocation?.type || ""
+                              }
+                              onChange={(e) => {
+                                setStudents((prev) =>
+                                  prev.map((s) =>
+                                    s._id === studentId
+                                      ? {
+                                          ...s,
+                                          courseLocation: {
+                                            ...s.courseLocation,
+                                            type: e.target.value as
+                                              | "domicile"
+                                              | "professeur"
+                                              | "autre",
+                                          },
+                                        }
+                                      : s
+                                  )
+                                );
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="">Sélectionner un lieu</option>
+                              <option value="domicile">À domicile</option>
+                              <option value="professeur">
+                                Chez le professeur
+                              </option>
+                              <option value="autre">Autre</option>
+                            </select>
+                          </div>
+
+                          {/* Adresse de l'élève */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Adresse
+                            </label>
+                            <input
+                              type="text"
+                              value={
+                                students.find((s) => s._id === studentId)
+                                  ?.courseLocation?.address?.street || ""
+                              }
+                              onChange={(e) => {
+                                setStudents((prev) =>
+                                  prev.map((s) =>
+                                    s._id === studentId
+                                      ? {
+                                          ...s,
+                                          courseLocation: {
+                                            ...s.courseLocation,
+                                            address: {
+                                              ...s.courseLocation?.address,
+                                              street: e.target.value,
+                                            },
+                                          },
+                                        }
+                                      : s
+                                  )
+                                );
+                              }}
+                              placeholder="Adresse de l'élève"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          {/* Ville de l'élève */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Ville
+                            </label>
+                            <input
+                              type="text"
+                              value={
+                                students.find((s) => s._id === studentId)
+                                  ?.courseLocation?.address?.city || ""
+                              }
+                              onChange={(e) => {
+                                setStudents((prev) =>
+                                  prev.map((s) =>
+                                    s._id === studentId
+                                      ? {
+                                          ...s,
+                                          courseLocation: {
+                                            ...s.courseLocation,
+                                            address: {
+                                              ...s.courseLocation?.address,
+                                              city: e.target.value,
+                                            },
+                                          },
+                                        }
+                                      : s
+                                  )
+                                );
+                              }}
+                              placeholder="Ville"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          {/* Code postal de l'élève */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Code postal
+                            </label>
+                            <input
+                              type="text"
+                              value={
+                                students.find((s) => s._id === studentId)
+                                  ?.courseLocation?.address?.postalCode || ""
+                              }
+                              onChange={(e) => {
+                                setStudents((prev) =>
+                                  prev.map((s) =>
+                                    s._id === studentId
+                                      ? {
+                                          ...s,
+                                          courseLocation: {
+                                            ...s.courseLocation,
+                                            address: {
+                                              ...s.courseLocation?.address,
+                                              postalCode: e.target.value,
+                                            },
+                                          },
+                                        }
+                                      : s
+                                  )
+                                );
+                              }}
+                              placeholder="Code postal"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          {/* Téléphone élève */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Téléphone élève
+                            </label>
+                            <input
+                              type="tel"
+                              value={
+                                students.find((s) => s._id === studentId)
+                                  ?.contact?.phone || ""
+                              }
+                              onChange={(e) => {
+                                setStudents((prev) =>
+                                  prev.map((s) =>
+                                    s._id === studentId
+                                      ? {
+                                          ...s,
+                                          contact: {
+                                            ...s.contact,
+                                            phone: e.target.value,
+                                          },
+                                        }
+                                      : s
+                                  )
+                                );
+                              }}
+                              placeholder="Numéro de téléphone"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          {/* Précisions lieu autre */}
+                          {students.find((s) => s._id === studentId)
+                            ?.courseLocation?.type === "autre" && (
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Précisions (lieu autre)
+                              </label>
+                              <textarea
+                                value={
+                                  students.find((s) => s._id === studentId)
+                                    ?.courseLocation?.otherDetails || ""
+                                }
+                                onChange={(e) => {
+                                  setStudents((prev) =>
+                                    prev.map((s) =>
+                                      s._id === studentId
+                                        ? {
+                                            ...s,
+                                            courseLocation: {
+                                              ...s.courseLocation,
+                                              otherDetails: e.target.value,
+                                            },
+                                          }
+                                        : s
+                                    )
+                                  );
+                                }}
+                                placeholder="Précisions sur le lieu de cours"
+                                rows={2}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                          )}
+
+                          {/* Disponibilités */}
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Disponibilités
+                            </label>
+                            <textarea
+                              value={
+                                students.find((s) => s._id === studentId)
+                                  ?.availability || ""
+                              }
+                              onChange={(e) => {
+                                setStudents((prev) =>
+                                  prev.map((s) =>
+                                    s._id === studentId
+                                      ? { ...s, availability: e.target.value }
+                                      : s
+                                  )
+                                );
+                              }}
+                              placeholder="Horaires de disponibilité de l'élève"
+                              rows={3}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Messages d'erreur pour cet élève */}
+                        {validationErrors.studentLocation && (
+                          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                            {validationErrors.studentLocation}
+                          </div>
+                        )}
+                        {validationErrors.studentAddress && (
+                          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                            {validationErrors.studentAddress}
+                          </div>
+                        )}
+                      </FormCard>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Sélection des matières */}
               <div>
-                <label
-                  htmlFor="subjectId"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Matière *
-                </label>
-                <select
-                  id="subjectId"
-                  name="subjectId"
-                  value={formData.subjectId}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Sélectionner une matière</option>
-                  {subjects.map((subject) => (
-                    <option key={subject._id} value={subject._id}>
-                      {subject.name} ({subject.category})
-                    </option>
-                  ))}
-                </select>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Matières sélectionnées *
+                  </label>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={openSubjectSelectionModal}
+                    disabled={subjects.length === 0}
+                  >
+                    Sélectionner les matières
+                  </Button>
+                </div>
+
                 {subjects.length === 0 && (
-                  <p className="text-sm text-red-600 mt-1">
+                  <p className="text-sm text-red-600 mb-3">
                     Aucune matière disponible. Veuillez en créer une d'abord.
                   </p>
                 )}
-              </div>
 
-              <div>
-                <label
-                  htmlFor="hourlyRate"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Tarif horaire (€) *
-                </label>
-                <Input
-                  id="hourlyRate"
-                  name="hourlyRate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.hourlyRate}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="0.00"
-                />
-              </div>
+                {formData.subjects.length === 0 && subjects.length > 0 && (
+                  <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                    <p className="text-gray-500 mb-2">
+                      Aucune matière sélectionnée
+                    </p>
+                  </div>
+                )}
 
-              <div>
-                <label
-                  htmlFor="quantity"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Quantité (heures) *
-                </label>
-                <Input
-                  id="quantity"
-                  name="quantity"
-                  type="number"
-                  min="1"
-                  value={formData.quantity}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="1"
-                />
+                {validationErrors.subjects && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    {validationErrors.subjects}
+                  </div>
+                )}
+
+                {formData.subjects.length > 0 && (
+                  <div className="space-y-4">
+                    {/* Liste des matières sélectionnées */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-blue-800 mb-2">
+                        {formData.subjects.length} matière(s) sélectionnée(s):
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.subjects.map((subject) => {
+                          const subjectInfo = subjects.find(
+                            (s) => s._id === subject.subjectId
+                          );
+                          return (
+                            <span
+                              key={subject.subjectId}
+                              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                            >
+                              {subjectInfo ? subjectInfo.name : "Matière"}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Tarifs communs */}
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <h4 className="text-md font-medium text-gray-800 mb-4">
+                        Tarification commune pour toutes les matières
+                      </h4>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Tarif horaire (€) *
+                          </label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={commonRates.hourlyRate}
+                            onChange={(e) =>
+                              handleCommonRateChange(
+                                "hourlyRate",
+                                e.target.value
+                              )
+                            }
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Quantité (heures) *
+                          </label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={commonRates.quantity}
+                            onChange={(e) =>
+                              handleCommonRateChange("quantity", e.target.value)
+                            }
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Salaire professeur (€/h) *
+                          </label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={commonRates.professorSalary}
+                            onChange={(e) =>
+                              handleCommonRateChange(
+                                "professorSalary",
+                                e.target.value
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                      </div>
+                      {validationErrors.rates && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                          {validationErrors.rates}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Informations financières */}
+            {/* Informations financières globales */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">
-                Informations financières
+                Informations financières globales
               </h3>
-
-              <div>
-                <label
-                  htmlFor="professorSalary"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Salaire du professeur (€/h) *
-                </label>
-                <Input
-                  id="professorSalary"
-                  name="professorSalary"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.professorSalary}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="0.00"
-                />
-              </div>
 
               <div>
                 <label
@@ -1294,21 +2289,109 @@ export const SettlementCreate: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label
-                  htmlFor="dueDate"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Date d'échéance *
-                </label>
-                <Input
-                  id="dueDate"
-                  name="dueDate"
-                  type="date"
-                  value={formData.dueDate.toISOString().split("T")[0]}
-                  onChange={handleInputChange}
-                  required
-                />
+              {/* Échéancier */}
+              <div className="col-span-2">
+                <div className="border rounded-lg p-4">
+                  <label className="flex items-center mb-3">
+                    <input
+                      type="checkbox"
+                      checked={formData.hasPaymentSchedule}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          hasPaymentSchedule: e.target.checked,
+                        }))
+                      }
+                      className="mr-2"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Créer un échéancier de paiement
+                    </span>
+                  </label>
+
+                  {formData.hasPaymentSchedule && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Mode de règlement *
+                        </label>
+                        <select
+                          value={formData.paymentSchedule.paymentMethod}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              paymentSchedule: {
+                                ...prev.paymentSchedule,
+                                paymentMethod: e.target.value as
+                                  | "PRLV"
+                                  | "check",
+                              },
+                            }))
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="PRLV">Prélèvement</option>
+                          <option value="check">Chèque</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nombre d'échéances *
+                        </label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="12"
+                          value={formData.paymentSchedule.numberOfInstallments}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              paymentSchedule: {
+                                ...prev.paymentSchedule,
+                                numberOfInstallments:
+                                  parseInt(e.target.value) || 1,
+                              },
+                            }))
+                          }
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Jour de{" "}
+                          {formData.paymentSchedule.paymentMethod === "PRLV"
+                            ? "prélèvement"
+                            : "remise"}{" "}
+                          *
+                        </label>
+                        <select
+                          value={formData.paymentSchedule.dayOfMonth}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              paymentSchedule: {
+                                ...prev.paymentSchedule,
+                                dayOfMonth: parseInt(e.target.value),
+                              },
+                            }))
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        >
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                            (day) => (
+                              <option key={day} value={day}>
+                                {day} {day === 1 ? "er" : ""}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </Container>
@@ -1332,37 +2415,55 @@ export const SettlementCreate: React.FC = () => {
             />
           </div>
 
-          {/* Calculs automatiques */}
+          {/* Résumé financier global */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-semibold mb-3">Calculs automatiques</h4>
+            <h4 className="font-semibold mb-3">Résumé financier global</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Salaire à verser:</span>
+                <span className="text-gray-600">Nombre de matières:</span>
                 <span className="ml-2 font-medium">
-                  {(formData.professorSalary * formData.quantity).toFixed(2)} €
+                  {formData.subjects.length}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Total heures:</span>
+                <span className="ml-2 font-medium">
+                  {parseInt(commonRates.quantity) || 0} h
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Salaire total à verser:</span>
+                <span className="ml-2 font-medium">
+                  {formData.salaryToPay.toFixed(2)} €
                 </span>
               </div>
               <div>
                 <span className="text-gray-600">Charges à verser:</span>
                 <span className="ml-2 font-medium">
-                  {(formData.charges * formData.quantity).toFixed(2)} €
+                  {formData.chargesToPay.toFixed(2)} €
                 </span>
               </div>
               <div>
-                <span className="text-gray-600">Montant total:</span>
-                <span className="ml-2 font-medium">
-                  {(formData.hourlyRate * formData.quantity).toFixed(2)} €
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">Marge:</span>
-                <span className="ml-2 font-medium">
+                <span className="text-gray-600">Chiffre d'affaires total:</span>
+                <span className="ml-2 font-medium text-blue-600">
                   {(
-                    formData.hourlyRate * formData.quantity -
-                    formData.professorSalary * formData.quantity -
-                    formData.charges * formData.quantity
+                    (parseFloat(commonRates.hourlyRate) || 0) *
+                    (parseInt(commonRates.quantity) || 0)
                   ).toFixed(2)}{" "}
                   €
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Marge totale:</span>
+                <span
+                  className={`ml-2 font-medium ${
+                    formData.marginAmount >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {formData.marginAmount.toFixed(2)} € (
+                  {formData.marginPercentage.toFixed(1)}%)
                 </span>
               </div>
             </div>
@@ -1428,6 +2529,133 @@ export const SettlementCreate: React.FC = () => {
           isLoading={isModalLoading}
         />
       </ModalWrapper>
+
+      {/* Modal sélection des matières */}
+      {showSubjectSelectionModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full mx-4"
+            style={{
+              maxWidth: "600px",
+              height: "500px",
+              backgroundColor: "white",
+              borderRadius: "8px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {/* Header fixe */}
+            <div
+              className="px-6 py-4 border-b border-gray-200"
+              style={{
+                padding: "16px 24px",
+                borderBottom: "1px solid #e5e7eb",
+                flexShrink: 0,
+              }}
+            >
+              <h3 className="text-lg font-semibold">
+                Sélectionner les matières
+              </h3>
+            </div>
+
+            {/* Liste avec scroll forcé */}
+            <div
+              style={{
+                height: "340px",
+                overflowY: "auto",
+                overflowX: "hidden",
+                padding: "16px 24px",
+                flex: 1,
+              }}
+            >
+              <div className="space-y-2">
+                {subjects.length > 0 ? (
+                  subjects.map((subject) => (
+                    <div
+                      key={subject._id}
+                      className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        id={`subject-modal-${subject._id}`}
+                        checked={selectedSubjectIds.includes(subject._id)}
+                        onChange={(e) =>
+                          handleSubjectSelection(subject._id, e.target.checked)
+                        }
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label
+                        htmlFor={`subject-modal-${subject._id}`}
+                        className="ml-3 flex-1 cursor-pointer"
+                      >
+                        <div className="font-medium text-gray-900">
+                          {subject.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {subject.category}
+                        </div>
+                      </label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-4">
+                    Aucune matière disponible
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer fixe */}
+            <div
+              className="px-6 py-4 border-t border-gray-200 bg-gray-50"
+              style={{
+                padding: "16px 24px",
+                borderTop: "1px solid #e5e7eb",
+                backgroundColor: "#f9fafb",
+                flexShrink: 0,
+              }}
+            >
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  {selectedSubjectIds.length} matière(s) sélectionnée(s)
+                </div>
+                <div className="flex space-x-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowSubjectSelectionModal(false)}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={confirmSubjectSelection}
+                    disabled={selectedSubjectIds.length === 0}
+                  >
+                    Confirmer la sélection
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

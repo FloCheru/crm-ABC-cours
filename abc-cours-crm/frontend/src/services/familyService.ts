@@ -1,5 +1,6 @@
 import { apiClient } from "../utils";
 import type { Family } from "../types/family";
+import type { ProspectStatus } from "../components/StatusDot";
 
 export interface FamilyStats {
   total: number;
@@ -62,6 +63,26 @@ class FamilyService {
   ): Promise<Family> {
     const response = (await apiClient.patch(`/api/families/${id}/status`, {
       status,
+    })) as FamilyResponse;
+    return response.family;
+  }
+
+  async updateProspectStatus(
+    id: string,
+    prospectStatus: ProspectStatus | null
+  ): Promise<Family> {
+    const response = (await apiClient.patch(`/api/families/${id}/prospect-status`, {
+      prospectStatus,
+    })) as FamilyResponse;
+    return response.family;
+  }
+
+  async updateNextActionDate(
+    id: string,
+    nextActionDate: Date | null
+  ): Promise<Family> {
+    const response = (await apiClient.patch(`/api/families/${id}/next-action-date`, {
+      nextActionDate: nextActionDate ? nextActionDate.toISOString() : null,
     })) as FamilyResponse;
     return response.family;
   }

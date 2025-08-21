@@ -45,6 +45,14 @@ const familySchema = new mongoose.Schema(
         lowercase: true,
         trim: true,
       },
+      dateOfBirth: {
+        type: Date,
+      },
+      relationship: {
+        type: String,
+        trim: true,
+        default: "Contact principal",
+      },
     },
     secondaryContact: {
       firstName: {
@@ -69,6 +77,9 @@ const familySchema = new mongoose.Schema(
         trim: true,
         default: "Contact secondaire",
       },
+      dateOfBirth: {
+        type: Date,
+      },
     },
     // Notes de règlement liées à cette famille
     settlementNotes: [
@@ -77,10 +88,77 @@ const familySchema = new mongoose.Schema(
         ref: "SettlementNote",
       },
     ],
+    // Adresse de facturation (optionnelle)
+    billingAddress: {
+      street: {
+        type: String,
+        trim: true,
+      },
+      city: {
+        type: String,
+        trim: true,
+      },
+      postalCode: {
+        type: String,
+        trim: true,
+      },
+    },
+    // Informations entreprise
+    companyInfo: {
+      urssafNumber: {
+        type: String,
+        trim: true,
+      },
+      siretNumber: {
+        type: String,
+        trim: true,
+      },
+      ceNumber: {
+        type: String,
+        trim: true,
+      },
+    },
     status: {
       type: String,
       enum: ["prospect", "client"],
       default: "prospect",
+    },
+    // Champs spécifiques aux prospects
+    prospectStatus: {
+      type: String,
+      enum: [
+        "en_reflexion",
+        "interesse_prof_a_trouver", 
+        "injoignable",
+        "ndr_editee",
+        "premier_cours_effectue",
+        "rdv_prospect",
+        "ne_va_pas_convertir"
+      ],
+    },
+    nextActionReminderSubject: {
+      type: String,
+      enum: [
+        "Actions à définir",
+        "Présenter nos cours",
+        "Envoyer le devis",
+        "Relancer après devis",
+        "Planifier rendez-vous",
+        "Editer la NDR",
+        "Négocier les tarifs",
+        "Organiser cours d'essai",
+        "Confirmer les disponibilités",
+        "Suivre satisfaction parent"
+      ],
+      default: "Actions à définir",
+      trim: true,
+    },
+    nextActionDate: {
+      type: Date,
+    },
+    source: {
+      type: String,
+      trim: true,
     },
     notes: {
       type: String,
@@ -132,5 +210,14 @@ familySchema.methods.getSecondaryContact = function () {
 familySchema.methods.getFullAddress = function () {
   return `${this.address.street}, ${this.address.postalCode} ${this.address.city}`;
 };
+
+// Virtual pour le nom de famille (contact principal)
+familySchema.virtual('name').get(function() {
+  return `${this.primaryContact.firstName} ${this.primaryContact.lastName}`;
+});
+
+// Assurer que les virtuals sont inclus lors de JSON.stringify
+familySchema.set('toJSON', { virtuals: true });
+familySchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model("Family", familySchema);

@@ -16,7 +16,7 @@ import { familyService } from "../../../services/familyService";
 import { settlementService } from "../../../services/settlementService";
 import type { Family } from "../../../types/family";
 import type { FamilyStats } from "../../../services/familyService";
-import { useRefresh } from "../../../contexts/RefreshContext";
+import { useRefresh } from "../../../hooks/useRefresh";
 import { logger } from "../../../utils/logger";
 
 // Type pour les données du tableau avec l'id requis
@@ -354,7 +354,11 @@ export const Dashboard: React.FC = () => {
                 variant: "secondary",
                 onClick: () => navigate("/admin/dashboard/create"),
               },
-              { text: "Exporter", variant: "secondary" },
+              { 
+                text: "Tableau NDR", 
+                variant: "secondary",
+                onClick: () => navigate("/admin/dashboard/settlements"),
+              },
             ]}
           />
           <ButtonGroup

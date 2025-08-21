@@ -7,19 +7,36 @@ import {
   Login,
   UnderDevelopment,
   CouponSeriesCreate,
-  Dashboard,
+  CouponsList,
   SettlementCreate,
+  SettlementDashboard,
+  SettlementDetails,
+  PdfPreview,
+  Prospects,
+  Clients,
 } from "./pages";
+import { SeriesDetails } from "./pages/admin/coupons/SeriesDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { RefreshProvider } from "./contexts/RefreshContext";
+import { useAuthStore } from "./stores";
+import { useAuthInitialization } from "./hooks/useAuthInitialization";
+import { useEffect } from "react";
 
 // Basename vide pour Vercel (domaine dédié)
 const basename = "";
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <RefreshProvider>
-      <BrowserRouter basename={basename}>
+// Composant pour initialiser l'auth au démarrage
+function App() {
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  
+  // Initialiser l'authentification et la gestion automatique de déconnexion
+  useAuthInitialization();
+  
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+  
+  return (
+    <BrowserRouter basename={basename}>
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
@@ -40,10 +57,42 @@ createRoot(document.getElementById("root")!).render(
             }
           />
           <Route
+            path="/admin/coupons/list"
+            element={
+              <ProtectedRoute>
+                <CouponsList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/coupons/:seriesId/coupons"
+            element={
+              <ProtectedRoute>
+                <SeriesDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/prospects"
+            element={
+              <ProtectedRoute>
+                <Prospects />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clients"
+            element={
+              <ProtectedRoute>
+                <Clients />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <SettlementDashboard />
               </ProtectedRoute>
             }
           />
@@ -56,6 +105,22 @@ createRoot(document.getElementById("root")!).render(
             }
           />
           <Route
+            path="/admin/dashboard/:noteId"
+            element={
+              <ProtectedRoute>
+                <SettlementDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/pdf-preview"
+            element={
+              <ProtectedRoute>
+                <PdfPreview />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/under-development"
             element={
               <ProtectedRoute>
@@ -64,7 +129,12 @@ createRoot(document.getElementById("root")!).render(
             }
           />
         </Routes>
-      </BrowserRouter>
-    </RefreshProvider>
+    </BrowserRouter>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
   </StrictMode>
 );

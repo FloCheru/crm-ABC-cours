@@ -5,23 +5,43 @@ export interface Family {
     city: string;
     postalCode: string;
   };
+  // Adresse de facturation (si différente)
+  billingAddress?: {
+    street: string;
+    city: string;
+    postalCode: string;
+  };
+  // Informations entreprise
+  companyInfo?: {
+    urssafNumber?: string;
+    siretNumber?: string;
+    ceNumber?: string;
+  };
   primaryContact: {
     firstName: string;
     lastName: string;
     primaryPhone: string;
     secondaryPhone?: string;
     email: string;
+    dateOfBirth?: Date;
+    relationship?: string; // Lien de parenté
   };
   secondaryContact?: {
     firstName?: string;
     lastName?: string;
     phone?: string;
     email?: string;
-    relationship?: string;
+    relationship?: string; // Lien de parenté
+    dateOfBirth?: Date;
   };
   settlementNotes: string[]; // ObjectId refs
   status: 'prospect' | 'client';
   notes?: string;
+  // Champs spécifiques aux prospects
+  prospectStatus?: 'en_reflexion' | 'interesse_prof_a_trouver' | 'injoignable' | 'ndr_editee' | 'premier_cours_effectue' | 'rdv_prospect' | 'ne_va_pas_convertir';
+  nextActionReminderSubject?: string; // Objet du rappel
+  nextActionDate?: Date; // Date de la prochaine action (RRR)
+  source?: string; // Source du prospect
   createdBy: string; // ObjectId ref
   students:
     | string[]
@@ -49,6 +69,17 @@ export interface Student {
     email: string;
     phone: string;
   };
+  courseLocation: {
+    type: "domicile" | "professeur" | "autre";
+    address?: {
+      street: string;
+      city: string;
+      postalCode: string;
+    };
+    otherDetails?: string;
+  };
+  availability?: string;
+  comments?: string;
   subjects: {
     [key: string]: {
       level: string;
@@ -69,19 +100,34 @@ export interface CreateFamilyData {
     city: string;
     postalCode: string;
   };
+  // Adresse de facturation (si différente)
+  billingAddress?: {
+    street: string;
+    city: string;
+    postalCode: string;
+  };
+  // Informations entreprise
+  companyInfo?: {
+    urssafNumber?: string;
+    siretNumber?: string;
+    ceNumber?: string;
+  };
   primaryContact: {
     firstName: string;
     lastName: string;
     primaryPhone: string;
     secondaryPhone?: string;
     email: string;
+    dateOfBirth?: Date;
+    relationship?: string; // Lien de parenté
   };
   secondaryContact?: {
     firstName?: string;
     lastName?: string;
     phone?: string;
     email?: string;
-    relationship?: string;
+    relationship?: string; // Lien de parenté
+    dateOfBirth?: Date;
   };
   status?: 'prospect' | 'client';
   notes?: string;
@@ -100,6 +146,17 @@ export interface CreateStudentData {
     email: string;
     phone: string;
   };
+  courseLocation?: {
+    type: "domicile" | "professeur" | "autre";
+    address?: {
+      street: string;
+      city: string;
+      postalCode: string;
+    };
+    otherDetails?: string;
+  };
+  availability?: string;
+  comments?: string;
   subjects: {
     [key: string]: {
       level: string;

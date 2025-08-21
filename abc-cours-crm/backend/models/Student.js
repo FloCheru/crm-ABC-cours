@@ -57,6 +57,39 @@ const studentSchema = new mongoose.Schema(
       phone: String,
       email: String,
     },
+    courseLocation: {
+      type: {
+        type: String,
+        enum: ["domicile", "professeur", "autre"],
+        default: "domicile",
+      },
+      address: {
+        street: {
+          type: String,
+          trim: true,
+        },
+        city: {
+          type: String,
+          trim: true,
+        },
+        postalCode: {
+          type: String,
+          trim: true,
+        },
+      },
+      otherDetails: {
+        type: String,
+        trim: true,
+      },
+    },
+    availability: {
+      type: String,
+      trim: true,
+    },
+    comments: {
+      type: String,
+      trim: true,
+    },
     medicalInfo: {
       allergies: [String],
       conditions: [String],
