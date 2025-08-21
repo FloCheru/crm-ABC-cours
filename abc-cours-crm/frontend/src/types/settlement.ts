@@ -1,10 +1,11 @@
 export interface SettlementNote {
   _id: string;
   familyId: string;
-  studentIds: string[]; // Tableau d'IDs d'élèves
+  studentIds: string[] | Array<{ _id: string; firstName: string; lastName: string }>; // Tableau d'IDs d'élèves ou objets populés
   clientName: string;
   department: string;
   paymentMethod: "card" | "check" | "transfer" | "cash" | "PRLV";
+  paymentType?: "immediate_advance" | "tax_credit_n1" | "";
   subjects: Array<{
     subjectId: string;
     name?: string; // Nom populé depuis la DB
@@ -53,7 +54,8 @@ export interface CreateSettlementNoteData {
   studentIds: string[]; // Support multiple students
   clientName: string;
   department: string;
-  paymentMethod: "card" | "check" | "transfer" | "cash" | "PRLV";
+  paymentMethod: "card" | "check" | "transfer" | "cash" | "PRLV" | "";
+  paymentType?: "immediate_advance" | "tax_credit_n1" | "";
   subjects: Array<{
     subjectId: string;
     hourlyRate: number | string; // Peut être string pendant la saisie

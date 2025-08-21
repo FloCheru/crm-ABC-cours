@@ -217,6 +217,38 @@ router.put(
   }
 );
 
+// @route   POST /api/auth/refresh
+// @desc    Renouvellement du token JWT
+// @access  Private
+router.post("/refresh", authenticate, async (req, res) => {
+  try {
+    // L'utilisateur est déjà authentifié grâce au middleware authenticate
+    // Générer un nouveau token
+    const newToken = generateToken(req.user._id);
+    
+    // Mettre à jour la dernière activité
+    req.user.lastLogin = new Date();
+    await req.user.save();
+    
+    res.json({
+      message: "Token renouvelé avec succès",
+      token: newToken,
+      user: {
+        id: req.user._id,
+        email: req.user.email,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        role: req.user.role,
+        isActive: req.user.isActive,
+        lastLogin: req.user.lastLogin,
+      },
+    });
+  } catch (error) {
+    console.error("Erreur lors du renouvellement du token:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 // @route   POST /api/auth/logout
 // @desc    Déconnexion (côté client)
 // @access  Private

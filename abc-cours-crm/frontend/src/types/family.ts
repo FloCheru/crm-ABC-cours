@@ -15,6 +15,7 @@ export interface Family {
   companyInfo?: {
     urssafNumber?: string;
     siretNumber?: string;
+    ceNumber?: string;
   };
   primaryContact: {
     firstName: string;
@@ -68,6 +69,17 @@ export interface Student {
     email: string;
     phone: string;
   };
+  courseLocation: {
+    type: "domicile" | "professeur" | "autre";
+    address?: {
+      street: string;
+      city: string;
+      postalCode: string;
+    };
+    otherDetails?: string;
+  };
+  availability?: string;
+  comments?: string;
   subjects: {
     [key: string]: {
       level: string;
@@ -98,6 +110,7 @@ export interface CreateFamilyData {
   companyInfo?: {
     urssafNumber?: string;
     siretNumber?: string;
+    ceNumber?: string;
   };
   primaryContact: {
     firstName: string;
@@ -133,6 +146,17 @@ export interface CreateStudentData {
     email: string;
     phone: string;
   };
+  courseLocation?: {
+    type: "domicile" | "professeur" | "autre";
+    address?: {
+      street: string;
+      city: string;
+      postalCode: string;
+    };
+    otherDetails?: string;
+  };
+  availability?: string;
+  comments?: string;
   subjects: {
     [key: string]: {
       level: string;

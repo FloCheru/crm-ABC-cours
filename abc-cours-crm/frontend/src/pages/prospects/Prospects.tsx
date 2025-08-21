@@ -9,6 +9,8 @@ import {
   Input,
   Button,
   Table,
+  ReminderSubjectDropdown,
+  DatePicker,
 } from "../../components";
 import { ModalWrapper } from "../../components/ui/ModalWrapper/ModalWrapper";
 import { EntityForm } from "../../components/forms/EntityForm";
@@ -16,6 +18,8 @@ import { familyService } from "../../services/familyService";
 import type { Family } from "../../types/family";
 import type { FamilyStats } from "../../services/familyService";
 import { useRefresh } from "../../hooks/useRefresh";
+import { StatusDot, type ProspectStatus } from "../../components/StatusDot";
+import "./Prospects.css";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Family & { id: string };
@@ -66,19 +70,79 @@ export const Prospects: React.FC = () => {
     setIsCreateProspectModalOpen(true);
   };
 
-  const handleConvertToClient = async (prospectId: string) => {
-    try {
-      // TODO: Implémenter la conversion prospect -> client
-      console.log("Convertir prospect en client:", prospectId);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erreur lors de la conversion"
-      );
-    }
-  };
 
   const handleCreateSettlementNote = (familyId: string) => {
     navigate(`/admin/dashboard/create?familyId=${familyId}`);
+  };
+
+  // Gérer le changement de statut d'un prospect - optimisé pour éviter le rechargement complet
+  const handleStatusChange = async (prospectId: string, newStatus: ProspectStatus | null) => {
+    try {
+      await familyService.updateProspectStatus(prospectId, newStatus);
+      
+      // Mise à jour locale optimisée au lieu du rechargement complet
+      setFamilyData(prevData => 
+        prevData.map(family => 
+          family._id === prospectId 
+            ? { ...family, prospectStatus: newStatus }
+            : family
+        )
+      );
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du statut:", error);
+      throw error; // Relancer l'erreur pour que le StatusDot puisse gérer l'affichage
+    }
+  };
+
+  // Gérer le changement d'objet de rappel - optimisé pour éviter le rechargement complet
+  const handleReminderSubjectUpdate = (familyId: string, newSubject: string) => {
+    setFamilyData(prevData => 
+      prevData.map(family => 
+        family._id === familyId 
+          ? { ...family, nextActionReminderSubject: newSubject }
+          : family
+      )
+    );
+  };
+
+  // Gérer le changement de date de rappel - optimisé pour éviter le rechargement complet
+  const handleNextActionDateUpdate = (familyId: string, newDate: Date | null) => {
+    setFamilyData(prevData => 
+      prevData.map(family => 
+        family._id === familyId 
+          ? { ...family, nextActionDate: newDate }
+          : family
+      )
+    );
+  };
+
+  // Gérer la suppression d'un prospect
+  const handleDeleteProspect = async (prospectId: string) => {
+    const prospect = familyData.find(f => f._id === prospectId);
+    const fullName = prospect ? `${prospect.primaryContact.firstName} ${prospect.primaryContact.lastName}` : "ce prospect";
+    
+    if (window.confirm(
+      `Êtes-vous sûr de vouloir supprimer ${fullName} ?\n\n` +
+      `Cette action supprimera également tous les élèves associés et ne peut pas être annulée.`
+    )) {
+      try {
+        await familyService.deleteFamily(prospectId);
+        
+        // Mise à jour locale pour retirer le prospect supprimé
+        setFamilyData(prevData => prevData.filter(family => family._id !== prospectId));
+        
+        // Mettre à jour les statistiques
+        setStats(prevStats => prevStats ? {
+          ...prevStats,
+          prospects: prevStats.prospects - 1
+        } : null);
+        
+        console.log(`Prospect ${fullName} supprimé avec succès`);
+      } catch (error) {
+        console.error("Erreur lors de la suppression du prospect:", error);
+        alert("Erreur lors de la suppression du prospect");
+      }
+    }
   };
 
   const handleSearch = () => {
@@ -115,20 +179,6 @@ export const Prospects: React.FC = () => {
     ...family,
     id: family._id,
   }));
-
-  // Fonction pour obtenir la couleur selon le statut du prospect
-  const getProspectStatusColor = (status?: string) => {
-    switch (status) {
-      case 'en_reflexion': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'interesse_prof_a_trouver': return 'bg-red-100 text-red-800 border-red-200';
-      case 'injoignable': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'ndr_editee': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'premier_cours_effectue': return 'bg-green-100 text-green-800 border-green-200';
-      case 'rdv_prospect': return 'bg-pink-100 text-pink-800 border-pink-200';
-      case 'ne_va_pas_convertir': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
 
   // Configuration des colonnes du tableau
   const prospectsColumns = [
@@ -199,37 +249,33 @@ export const Prospects: React.FC = () => {
       key: "reminderSubject",
       label: "Objet du rappel",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">
-          {row.nextActionReminderSubject || "-"}
-        </div>
+        <ReminderSubjectDropdown
+          value={row.nextActionReminderSubject || "Actions à définir"}
+          familyId={row._id}
+          onUpdate={handleReminderSubjectUpdate}
+        />
       ),
     },
     {
       key: "status",
       label: "Statut",
       render: (_: unknown, row: TableRowData) => (
-        <div className={`px-2 py-1 rounded border text-xs ${getProspectStatusColor(row.prospectStatus)}`}>
-          {row.prospectStatus === 'en_reflexion' && 'En réflexion'}
-          {row.prospectStatus === 'interesse_prof_a_trouver' && 'Intéressé, prof à trouver'}
-          {row.prospectStatus === 'injoignable' && 'Injoignable'}
-          {row.prospectStatus === 'ndr_editee' && 'NDR éditée'}
-          {row.prospectStatus === 'premier_cours_effectue' && 'Premier cours effectué'}
-          {row.prospectStatus === 'rdv_prospect' && 'RDV prospect'}
-          {row.prospectStatus === 'ne_va_pas_convertir' && 'Ne va pas convertir'}
-          {!row.prospectStatus && 'Non défini'}
-        </div>
+        <StatusDot
+          status={row.prospectStatus as ProspectStatus}
+          prospectId={row._id}
+          onStatusChange={handleStatusChange}
+        />
       ),
     },
     {
       key: "nextActionDate",
       label: "RRR",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">
-          {row.nextActionDate 
-            ? new Date(row.nextActionDate).toLocaleDateString("fr-FR")
-            : "-"
-          }
-        </div>
+        <DatePicker
+          value={row.nextActionDate}
+          familyId={row._id}
+          onUpdate={handleNextActionDateUpdate}
+        />
       ),
     },
     {
@@ -241,13 +287,6 @@ export const Prospects: React.FC = () => {
             ? row.students.map(s => typeof s === 'string' ? s : `${s.firstName} ${s.lastName}`).join(", ")
             : "Aucun"}
         </div>
-      ),
-    },
-    {
-      key: "source",
-      label: "Source",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.source || "Non spécifié"}</div>
       ),
     },
     {
@@ -267,16 +306,17 @@ export const Prospects: React.FC = () => {
           <Button
             size="sm"
             variant="primary"
-            onClick={() => handleConvertToClient(row._id)}
-          >
-            Convertir en client
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
             onClick={() => handleCreateSettlementNote(row._id)}
           >
             Créer NDR
+          </Button>
+          <Button
+            size="sm"
+            variant="error"
+            onClick={() => handleDeleteProspect(row._id)}
+            title="Supprimer le prospect"
+          >
+            ✕
           </Button>
         </div>
       ),

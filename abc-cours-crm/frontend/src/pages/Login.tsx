@@ -85,7 +85,7 @@ export const Login: React.FC = () => {
             value={credentials.email}
             onChange={(e) => handleChange("email", e.target.value)}
             required
-            placeholder="admin@abc-cours.fr"
+            placeholder="admin@abc-cours.com"
           />
 
           <Input
@@ -118,7 +118,7 @@ export const Login: React.FC = () => {
           <p>
             <strong>Comptes de test :</strong>
           </p>
-          <p>Admin: admin@abc-cours.fr / admin123</p>
+          <p>Admin: admin@abc-cours.com / admin123</p>
           {/* <p>Professeur: prof@abc-cours.com / prof123</p>
           <p>Famille: famille@abc-cours.com / famille123</p> */}
         </div>

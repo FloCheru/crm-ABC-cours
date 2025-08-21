@@ -1,7 +1,14 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
-require("dotenv").config();
+const path = require("path");
+
+// Configuration d'environnement propre
+const envFile = process.env.NODE_ENV === "production" 
+  ? ".env.production" 
+  : ".env.development";
+
+require("dotenv").config({ path: path.join(__dirname, "..", envFile) });
 
 const users = [
   {
@@ -21,11 +28,11 @@ const users = [
     isActive: true,
   },
   {
-    email: "famille@abc-cours.com",
-    password: "famille123",
+    email: "prof2@abc-cours.com",
+    password: "prof123",
     firstName: "Marie",
     lastName: "Martin",
-    role: "family",
+    role: "professor",
     isActive: true,
   },
 ];
