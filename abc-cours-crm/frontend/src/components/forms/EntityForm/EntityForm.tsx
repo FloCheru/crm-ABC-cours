@@ -17,6 +17,8 @@ interface FieldConfig {
   options?: { value: string; label: string }[];
   validation?: (value: string | number | boolean) => string | undefined;
   group?: string; // Pour grouper les champs
+  conditional?: { field: string; value: any }; // Pour affichage conditionnel
+  defaultValue?: any; // Valeur par défaut
 }
 
 interface EntityConfig {
@@ -28,8 +30,8 @@ interface EntityConfig {
 // Configurations pour chaque type d'entité
 const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
   family: {
-    title: "Créer une nouvelle famille",
-    submitButtonText: "Créer la famille",
+    title: "Ajouter un nouveau prospect",
+    submitButtonText: "Ajouter le prospect",
     fields: [
       {
         key: "primaryContact.lastName",
@@ -58,6 +60,17 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         type: "email",
         required: true,
         group: "primaryContact",
+      },
+      {
+        key: "primaryContact.gender",
+        label: "Civilité",
+        type: "select",
+        required: true,
+        group: "primaryContact",
+        options: [
+          { value: "M.", label: "M." },
+          { value: "Mme", label: "Mme" },
+        ],
       },
       {
         key: "primaryContact.relationship",
@@ -149,22 +162,32 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
       },
       // Adresse de facturation
       {
+        key: "sameAddress",
+        label: "L'adresse de facturation est la même que l'adresse principale",
+        type: "checkbox",
+        group: "billing",
+        defaultValue: false,
+      },
+      {
         key: "billingAddress.street",
         label: "Adresse de facturation (si différente)",
         type: "text",
         group: "billing",
+        conditional: { field: "sameAddress", value: false },
       },
       {
-        key: "billingAddress.city",
+        key: "billingAddress.city", 
         label: "Ville de facturation",
         type: "text",
         group: "billing",
+        conditional: { field: "sameAddress", value: false },
       },
       {
         key: "billingAddress.postalCode",
-        label: "Code postal de facturation",
+        label: "Code postal de facturation", 
         type: "text",
         group: "billing",
+        conditional: { field: "sameAddress", value: false },
       },
       // Informations entreprise
       {
@@ -240,11 +263,12 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
       {
         key: "school.grade",
         label: "Classe",
-        type: "text",
+        type: "select",
         required: true,
         group: "school",
+        conditional: { field: "school.level", value: "any" }, // S'affiche si un niveau est sélectionné
+        options: [], // Options dynamiques basées sur school.level
       },
-
 
       // Notes
       { key: "notes", label: "Notes", type: "textarea", group: "notes" },
@@ -381,7 +405,26 @@ export const EntityForm: React.FC<EntityFormProps> = ({
   // Initialiser les données du formulaire
   useEffect(() => {
     const initData = { ...additionalProps, ...initialData };
+    
+    // Initialiser les valeurs par défaut des champs
+    const config = ENTITY_CONFIGS[entityType];
+    config.fields.forEach((field) => {
+      if (field.defaultValue !== undefined) {
+        const currentValue = getNestedValue(initData, field.key);
+        // Initialiser si la valeur n'existe pas (undefined) ou si c'est une checkbox
+        if (currentValue === undefined || currentValue === null || currentValue === "") {
+          setNestedValue(initData, field.key, field.defaultValue);
+          logger.debug(`INIT - Valeur par défaut définie pour "${field.key}":`, field.defaultValue);
+        }
+      }
+    });
+    
     setFormData(initData);
+    console.log(`🚀 INIT DEBUG - FormData après initialisation:`, {
+      initData,
+      sameAddress: initData.sameAddress,
+      keys: Object.keys(initData)
+    });
   }, []); // Une seule fois au montage
 
   // Mettre à jour seulement si les props changent vraiment
@@ -395,7 +438,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
   const getNestedValue = (
     obj: Record<string, unknown>,
     path: string
-  ): string => {
+  ): any => {
     const value = path.split(".").reduce((current, key) => {
       if (current && typeof current === "object" && key in current) {
         return (current as Record<string, unknown>)[key];
@@ -403,8 +446,8 @@ export const EntityForm: React.FC<EntityFormProps> = ({
       return undefined;
     }, obj as unknown);
 
-    // Retourner une chaîne vide si la valeur est undefined/null
-    return value?.toString() || "";
+    // Retourner la valeur telle quelle (peut être boolean, string, etc.)
+    return value;
   };
 
   // Définir la valeur d'un champ imbriqué
@@ -450,6 +493,40 @@ export const EntityForm: React.FC<EntityFormProps> = ({
     return result;
   };
 
+  // Obtenir les options dynamiques pour le champ classe
+  const getClassOptions = (schoolLevel: string): { value: string; label: string }[] => {
+    const classMapping: Record<string, { value: string; label: string }[]> = {
+      primaire: [
+        { value: "CP", label: "CP" },
+        { value: "CE1", label: "CE1" },
+        { value: "CE2", label: "CE2" },
+        { value: "CM1", label: "CM1" },
+        { value: "CM2", label: "CM2" },
+      ],
+      collège: [
+        { value: "6ème", label: "6ème" },
+        { value: "5ème", label: "5ème" },
+        { value: "4ème", label: "4ème" },
+        { value: "3ème", label: "3ème" },
+      ],
+      lycée: [
+        { value: "Seconde", label: "Seconde" },
+        { value: "Première", label: "Première" },
+        { value: "Terminale", label: "Terminale" },
+      ],
+      supérieur: [
+        { value: "L1", label: "L1" },
+        { value: "L2", label: "L2" },
+        { value: "L3", label: "L3" },
+        { value: "M1", label: "M1" },
+        { value: "M2", label: "M2" },
+        { value: "Doctorat", label: "Doctorat" },
+      ],
+    };
+
+    return classMapping[schoolLevel] || [];
+  };
+
   // Gérer les changements de champs
   const handleFieldChange = (fieldKey: string, value: unknown) => {
     logger.debug(`CHANGEMENT - Champ "${fieldKey}" modifié:`, {
@@ -464,7 +541,38 @@ export const EntityForm: React.FC<EntityFormProps> = ({
         JSON.stringify(prev, null, 2)
       );
 
-      const newData = setNestedValue(prev, fieldKey, value);
+      let newData = setNestedValue(prev, fieldKey, value);
+
+      // Logique spéciale pour la case "même adresse"
+      if (fieldKey === "sameAddress" && value === true) {
+        // Copier l'adresse principale vers l'adresse de facturation
+        if (newData.address) {
+          newData = {
+            ...newData,
+            billingAddress: {
+              street: newData.address.street || "",
+              city: newData.address.city || "",
+              postalCode: newData.address.postalCode || "",
+            },
+          };
+        }
+      } else if (fieldKey === "sameAddress" && value === false) {
+        // Vider l'adresse de facturation pour permettre la saisie manuelle
+        newData = {
+          ...newData,
+          billingAddress: {
+            street: "",
+            city: "",
+            postalCode: "",
+          },
+        };
+      }
+
+      // Logique spéciale pour le niveau scolaire - réinitialiser la classe
+      if (fieldKey === "school.level") {
+        newData = setNestedValue(newData, "school.grade", "");
+        logger.debug("CHANGEMENT - Classe réinitialisée suite au changement de niveau");
+      }
 
       logger.debug(
         "CHANGEMENT - formData après modification:",
@@ -597,13 +705,76 @@ export const EntityForm: React.FC<EntityFormProps> = ({
     }
   };
 
+  // Vérifier si un champ doit être affiché (logique conditionnelle)
+  const shouldShowField = (field: FieldConfig): boolean => {
+    if (!field.conditional) return true;
+    
+    const conditionValue = getNestedValue(formData, field.conditional.field);
+    
+    // Logique spéciale pour "any" - s'affiche si une valeur existe et n'est pas vide
+    if (field.conditional.value === "any") {
+      const shouldShow = conditionValue && conditionValue.toString().trim() !== "";
+      
+      // Debug pour school.grade
+      if (field.key === "school.grade") {
+        console.log(`🔍 CONDITIONAL DEBUG - Champ classe "${field.key}":`, {
+          conditionField: field.conditional.field,
+          conditionValueExpected: field.conditional.value,
+          conditionValueActual: conditionValue,
+          shouldShow,
+          schoolLevel: getNestedValue(formData, "school.level")
+        });
+      }
+      
+      return shouldShow;
+    }
+    
+    // Convertir les valeurs booléennes pour comparaison stricte
+    let actualValue = conditionValue;
+    let expectedValue = field.conditional.value;
+    
+    // Si on attend une valeur booléenne, s'assurer que la comparaison est correcte
+    if (typeof expectedValue === "boolean") {
+      actualValue = Boolean(conditionValue);
+    }
+    
+    const shouldShow = actualValue === expectedValue;
+    
+    // Debug pour billingAddress
+    if (field.key.includes("billingAddress")) {
+      console.log(`🔍 CONDITIONAL DEBUG - Champ "${field.key}":`, {
+        conditionField: field.conditional.field,
+        conditionValueExpected: field.conditional.value,
+        conditionValueActual: conditionValue,
+        conditionValueType: typeof conditionValue,
+        shouldShow,
+        formDataSameAddress: formData.sameAddress,
+        formDataKeys: Object.keys(formData)
+      });
+    }
+    
+    return shouldShow;
+  };
+
   // Rendu d'un champ
   const renderField = (field: FieldConfig) => {
+    // Vérifier si le champ doit être affiché
+    if (!shouldShowField(field)) {
+      return null;
+    }
+
     const value = getNestedValue(formData, field.key);
     const error = errors[field.key];
 
     switch (field.type) {
       case "select":
+        // Options dynamiques pour le champ classe basées sur le niveau scolaire
+        let selectOptions = field.options || [];
+        if (field.key === "school.grade") {
+          const schoolLevel = getNestedValue(formData, "school.level")?.toString() || "";
+          selectOptions = getClassOptions(schoolLevel);
+        }
+
         return (
           <div>
             <label htmlFor={field.key} className="input-label">
@@ -614,13 +785,13 @@ export const EntityForm: React.FC<EntityFormProps> = ({
             </label>
             <select
               id={field.key}
-              value={value}
+              value={value?.toString() || ""}
               onChange={(e) => handleFieldChange(field.key, e.target.value)}
               required={field.required}
               className={`input ${error ? "input--error" : ""}`}
             >
               <option value="">Sélectionner...</option>
-              {field.options?.map(
+              {selectOptions.map(
                 (option: { value: string; label: string }) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -642,7 +813,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
             </label>
             <textarea
               id={field.key}
-              value={value}
+              value={value?.toString() || ""}
               onChange={(e) => handleFieldChange(field.key, e.target.value)}
               required={field.required}
               placeholder={field.placeholder}
@@ -677,7 +848,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
           <Input
             id={field.key}
             type={field.type}
-            value={value}
+            value={value?.toString() || ""}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
             required={field.required}
             placeholder={field.placeholder}

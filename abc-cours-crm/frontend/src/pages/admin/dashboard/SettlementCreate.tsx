@@ -1794,7 +1794,7 @@ export const SettlementCreate: React.FC = () => {
 
               {/* Informations élèves complémentaires */}
               {formData.studentIds.length > 0 && (
-                <div className="space-y-4">
+                <div className="space-y-4 mt-6">
                   <h4 className="text-md font-medium text-gray-900">
                     Informations élèves complémentaires
                   </h4>

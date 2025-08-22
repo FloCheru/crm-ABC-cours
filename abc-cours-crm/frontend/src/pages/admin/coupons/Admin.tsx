@@ -12,6 +12,7 @@ import {
   StatusBadge,
 } from "../../../components";
 import { couponSeriesService } from "../../../services/couponSeriesService";
+import { useCouponSeriesCache } from "../../../hooks/useCouponSeriesCache";
 import type { CouponSeries } from "../../../types/coupon";
 
 // Type pour les données du tableau avec l'id requis
@@ -20,39 +21,24 @@ type TableRowData = CouponSeries & { id: string };
 export const Admin: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [couponsData, setCouponsData] = useState<CouponSeries[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { couponSeriesData, isFromCache, isLoading } = useCouponSeriesCache();
   const [error, setError] = useState<string>("");
+  
+  // Données extraites du cache
+  const couponsData = couponSeriesData?.couponSeries || [];
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Charger les données des séries de coupons
+  // Log pour indiquer si les données proviennent du cache
   useEffect(() => {
-    const loadCouponSeries = async () => {
-      try {
-        setIsLoading(true);
-        setError("");
-        const data = await couponSeriesService.getCouponSeries();
-        console.log("🔍 Données reçues du service:", data);
-        console.log("🔍 Type de données:", typeof data);
-        console.log("🔍 Est un tableau:", Array.isArray(data));
-        if (Array.isArray(data) && data.length > 0) {
-          console.log("🔍 Premier élément:", data[0]);
-          console.log("🔍 familyId du premier élément:", data[0].familyId);
-        }
-        setCouponsData(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Erreur lors du chargement"
-        );
-        console.error("Erreur lors du chargement des séries de coupons:", err);
-        setCouponsData([]); // Initialiser avec un tableau vide en cas d'erreur
-      } finally {
-        setIsLoading(false);
+    if (couponSeriesData) {
+      console.log(`📊 Séries de coupons: Données ${isFromCache ? 'récupérées depuis le cache' : 'chargées depuis l\'API'}`);
+      console.log("🔍 Données reçues:", couponSeriesData);
+      if (couponSeriesData.couponSeries.length > 0) {
+        console.log("🔍 Premier élément:", couponSeriesData.couponSeries[0]);
+        console.log("🔍 familyId du premier élément:", couponSeriesData.couponSeries[0].familyId);
       }
-    };
-
-    loadCouponSeries();
-  }, []);
+    }
+  }, [couponSeriesData, isFromCache]);
 
   const handleCreateSeries = () => {
     navigate("/admin/coupons/create");
@@ -74,9 +60,7 @@ export const Admin: React.FC = () => {
     ) {
       try {
         await couponSeriesService.deleteCouponSeries(seriesId);
-        // Recharger les données après suppression
-        const updatedData = await couponSeriesService.getCouponSeries();
-        setCouponsData(updatedData);
+        // Les données seront automatiquement rafraîchies par le système de cache
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Erreur lors de la suppression"
