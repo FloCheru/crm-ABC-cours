@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useCache } from './useCache';
-import { familyService } from '../services/familyService';
-import type { Family, FamilyStats } from '../types/family';
+import { familyService, type FamilyStats } from '../services/familyService';
+import type { Family } from '../types/family';
 
 interface ProspectsData {
   prospects: Family[];

@@ -135,6 +135,12 @@ export interface CreateFamilyData {
   notes?: string;
 }
 
+export interface FamilyStats {
+  total: number;
+  prospects: number;
+  clients: number;
+}
+
 export interface CreateStudentData {
   firstName: string;
   lastName: string;

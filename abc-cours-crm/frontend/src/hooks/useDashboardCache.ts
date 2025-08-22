@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { useCache } from './useCache';
-import { familyService } from '../services/familyService';
+import { familyService, type FamilyStats } from '../services/familyService';
 import { settlementService } from '../services/settlementService';
-import type { Family, FamilyStats } from '../types/family';
+import type { Family } from '../types/family';
 
 interface DashboardData {
   families: Family[];

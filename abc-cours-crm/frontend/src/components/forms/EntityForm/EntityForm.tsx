@@ -546,13 +546,14 @@ export const EntityForm: React.FC<EntityFormProps> = ({
       // Logique spéciale pour la case "même adresse"
       if (fieldKey === "sameAddress" && value === true) {
         // Copier l'adresse principale vers l'adresse de facturation
-        if (newData.address) {
+        if (newData.address && typeof newData.address === 'object') {
+          const address = newData.address as { street?: string; city?: string; postalCode?: string };
           newData = {
             ...newData,
             billingAddress: {
-              street: newData.address.street || "",
-              city: newData.address.city || "",
-              postalCode: newData.address.postalCode || "",
+              street: address.street || "",
+              city: address.city || "",
+              postalCode: address.postalCode || "",
             },
           };
         }

@@ -212,6 +212,74 @@ PRÊT_POUR_DÉVELOPPEMENT / SERVEURS_À_REDÉMARRER
 - Conventions de nommage cohérentes
 - Commentaires sur logique complexe
 
+#### ⚠️ RÈGLES OBLIGATOIRES VERCEL - À RESPECTER IMPÉRATIVEMENT
+
+##### 1. **Imports TypeScript Stricts**
+```typescript
+// ❌ INTERDIT - Imports depuis types qui n'existent pas
+import type { Family, FamilyStats } from '../types/family';
+
+// ✅ OBLIGATOIRE - Imports depuis services qui exportent les types
+import { familyService, type FamilyStats } from '../services/familyService';
+import type { Family } from '../types/family';
+```
+
+##### 2. **Variables Non Utilisées (Mode Strict)**
+```typescript
+// ❌ INTERDIT - Variables déclarées mais non utilisées
+const { refreshTrigger } = useRefresh();
+import { settlementService } from "..."; // Non utilisé
+const [error, setError] = useState(""); // setError non utilisé
+
+// ✅ OBLIGATOIRE - Commenter ou utiliser techniquement
+// const { refreshTrigger } = useRefresh(); // Géré par le cache
+// import { settlementService } from "..."; // Commenté si non utilisé
+console.log('State available:', !!setError); // Utilisation technique
+```
+
+##### 3. **Type Safety Renforcé**
+```typescript
+// ❌ INTERDIT - Accès propriétés sur types génériques
+if (newData.address) {
+  newData.address.street || "" // Property 'street' does not exist on type '{}'
+}
+
+// ✅ OBLIGATOIRE - Type casting sécurisé
+if (newData.address && typeof newData.address === 'object') {
+  const address = newData.address as { street?: string; city?: string; postalCode?: string };
+  address.street || ""
+}
+```
+
+##### 4. **Dependencies Dev Obligatoires**
+```typescript
+// ✅ OBLIGATOIRE - Toujours inclure dans package.json
+{
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
+```
+
+##### 5. **Export des Types depuis Services**
+```typescript
+// ✅ OBLIGATOIRE - Types métier dans services, pas dans types/
+export interface FamilyStats {
+  total: number;
+  prospects: number;
+  clients: number;
+}
+```
+
+#### 🚨 CONTRÔLE QUALITÉ OBLIGATOIRE
+**Avant tout commit, l'Agent Codeur DOIT vérifier :**
+- [ ] Aucun import depuis types/ pour des interfaces qui n'y sont pas
+- [ ] Aucune variable déclarée non utilisée (mode strict)
+- [ ] Type casting sécurisé pour tous les accès propriétés
+- [ ] Dependencies TypeScript présentes en dev
+- [ ] Types exportés depuis les bons services
+
 #### Format de sortie
 ```markdown
 ## AGENT CODEUR - Développement
@@ -468,6 +536,87 @@ TESTS_VALIDÉS_AVEC_PREUVES / CORRECTIONS_NÉCESSAIRES / TESTS_INCOMPLETS / SERV
 - **Comparaison configurations** : tsconfig.json local vs production
 - **Détection problèmes Vercel** : Variables d'env, imports, paths
 - **Validation assets** : Vérifier chemins absolus et imports
+
+#### 🔍 CONTRÔLES PRÉVENTIFS OBLIGATOIRES
+
+**L'Agent Build DOIT SYSTÉMATIQUEMENT vérifier AVANT le build :**
+
+##### 1. **Audit Imports TypeScript**
+```bash
+# Rechercher imports problématiques depuis types/
+grep -r "from.*types.*FamilyStats" src/ --include="*.ts" --include="*.tsx"
+grep -r "import.*FamilyStats.*from.*types" src/ --include="*.ts" --include="*.tsx"
+
+# ✅ Aucun résultat = OK
+# ❌ Résultats trouvés = ERREUR À SIGNALER
+```
+
+##### 2. **Détection Variables Non Utilisées**
+```bash
+# Test TypeScript strict rapide pour détecter variables non utilisées
+npx tsc --noEmit --strict --noUnusedLocals --noUnusedParameters
+
+# ✅ No errors = OK  
+# ❌ TS6133 errors = VARIABLES NON UTILISÉES À SIGNALER
+```
+
+##### 3. **Vérification Dependencies Dev**
+```bash
+# Vérifier présence TypeScript en dev
+npm list typescript --depth=0 2>/dev/null || echo "MANQUANT"
+npm list @types/node --depth=0 2>/dev/null || echo "MANQUANT"
+
+# ✅ Versions affichées = OK
+# ❌ "MANQUANT" = DEPENDENCIES À INSTALLER
+```
+
+##### 4. **Scan Type Safety**
+```bash
+# Chercher accès propriétés potentiellement non sûrs
+grep -r "\.address\." src/ --include="*.ts" --include="*.tsx"
+grep -r "newData\.\w*\." src/ --include="*.ts" --include="*.tsx"
+
+# Analyser manuellement pour type casting manquant
+```
+
+#### 📋 RAPPORT OBLIGATOIRE À L'AGENT CODEUR
+
+**Si problèmes détectés, l'Agent Build DOIT envoyer :**
+
+```markdown
+## 🚨 AGENT BUILD - Problèmes Vercel Détectés
+
+### ❌ Erreurs Critiques à Corriger
+
+#### Import TypeScript Incorrect
+**Fichier**: `src/hooks/useExample.ts:5`
+```typescript
+// ❌ PROBLÈME DÉTECTÉ
+import type { Family, FamilyStats } from '../types/family';
+
+// ✅ CORRECTION REQUISE
+import { familyService, type FamilyStats } from '../services/familyService';
+```
+
+#### Variables Non Utilisées (Mode Strict)
+**Fichier**: `src/pages/Example.tsx:15`
+```typescript
+// ❌ PROBLÈME DÉTECTÉ (TS6133)
+const { refreshTrigger } = useRefresh(); // Déclaré mais non utilisé
+
+// ✅ CORRECTION REQUISE
+// const { refreshTrigger } = useRefresh(); // Géré par le cache
+```
+
+### 📋 Actions Requises Agent Codeur
+1. Corriger imports FamilyStats depuis services
+2. Commenter/utiliser variables non utilisées  
+3. Ajouter type casting sécurisé si nécessaire
+4. Installer dependencies TypeScript manquantes
+
+### 🚫 Status Build
+BUILD_BLOQUÉ_CORRECTIONS_REQUISES
+```
 
 #### Simulation environnement Vercel
 ```bash
@@ -755,6 +904,14 @@ Si erreurs détectées Agent Build :
 - **AUCUNE validation finale sans build simulation Vercel réussi**
 - **AUCUN push automatique sans demande explicite utilisateur**
 - **AUCUN push main sans phrase explicite de déploiement**
+
+### 🚨 RÈGLES CRITIQUES VERCEL (NOUVELLES)
+- **AUCUN développement sans vérification imports TypeScript stricts**
+- **AUCUNE variable déclarée non utilisée tolérée (mode strict)**
+- **AUCUN type casting non sécurisé autorisé**  
+- **AUCUN build sans dependencies TypeScript en dev**
+- **AGENT BUILD DOIT faire contrôles préventifs avant chaque build**
+- **AGENT BUILD DOIT bloquer si problèmes Vercel détectés**
 
 ### Règles d'activation des agents
 **Agent Build** : S'active sur demande Chef de Projet après validation Agent Test

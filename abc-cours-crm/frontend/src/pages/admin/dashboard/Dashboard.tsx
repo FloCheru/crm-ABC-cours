@@ -13,10 +13,7 @@ import {
 import { ModalWrapper } from "../../../components/ui/ModalWrapper/ModalWrapper";
 import { EntityForm } from "../../../components/forms/EntityForm";
 import { familyService } from "../../../services/familyService";
-import { settlementService } from "../../../services/settlementService";
 import type { Family } from "../../../types/family";
-import type { FamilyStats } from "../../../services/familyService";
-import { useRefresh } from "../../../hooks/useRefresh";
 import { useDashboardCache } from "../../../hooks/useDashboardCache";
 import { logger } from "../../../utils/logger";
 
@@ -27,7 +24,7 @@ type CreateFamilyData = Omit<Family, "_id" | "createdAt" | "updatedAt">;
 export const Dashboard: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { refreshTrigger } = useRefresh();
+  // const { refreshTrigger } = useRefresh(); // Géré par le cache
   const { dashboardData, isFromCache, isLoading } = useDashboardCache();
   const [error, setError] = useState<string>("");
   

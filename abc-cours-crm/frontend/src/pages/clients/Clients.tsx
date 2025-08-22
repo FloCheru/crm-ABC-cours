@@ -15,7 +15,7 @@ import { EntityForm } from "../../components/forms/EntityForm";
 import { familyService } from "../../services/familyService";
 import { settlementService } from "../../services/settlementService";
 import type { Family } from "../../types/family";
-import type { FamilyStats } from "../../services/familyService";
+// import type { FamilyStats } from "../../services/familyService"; // Non utilisé avec cache
 import type { SettlementNote } from "../../services/settlementService";
 
 // Types pour les sujets avec typage sûr
@@ -39,7 +39,7 @@ interface StudentData {
   firstName: string;
   lastName: string;
 }
-import { useRefresh } from "../../hooks/useRefresh";
+// import { useRefresh } from "../../hooks/useRefresh"; // Géré par le cache
 import { useClientsCache } from "../../hooks/useClientsCache";
 import "./Clients.css";
 
@@ -110,7 +110,7 @@ const getStudentName = (note: SettlementNote, familyStudents?: Array<{_id: strin
 export const Clients: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { refreshTrigger } = useRefresh();
+  // const { refreshTrigger } = useRefresh(); // Géré par le cache
   const { clientsData, isFromCache, isLoading } = useClientsCache();
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");

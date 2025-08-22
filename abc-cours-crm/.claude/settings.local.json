@@ -17,7 +17,8 @@
       "Bash(npx typescript:*)",
       "Bash(./node_modules/.bin/tsc:*)",
       "WebSearch",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(npx tsc:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

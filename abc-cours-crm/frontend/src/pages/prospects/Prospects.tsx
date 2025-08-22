@@ -16,8 +16,8 @@ import { ModalWrapper } from "../../components/ui/ModalWrapper/ModalWrapper";
 import { EntityForm } from "../../components/forms/EntityForm";
 import { familyService } from "../../services/familyService";
 import type { Family } from "../../types/family";
-import type { FamilyStats } from "../../services/familyService";
-import { useRefresh } from "../../hooks/useRefresh";
+// import type { FamilyStats } from "../../services/familyService";
+// import { useRefresh } from "../../hooks/useRefresh"; // Géré par le cache
 import { useProspectsCache } from "../../hooks/useProspectsCache";
 import { StatusDot, type ProspectStatus } from "../../components/StatusDot";
 import "./Prospects.css";
@@ -29,9 +29,10 @@ type CreateFamilyData = Omit<Family, "_id" | "createdAt" | "updatedAt">;
 export const Prospects: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { refreshTrigger } = useRefresh();
+  // const { refreshTrigger } = useRefresh(); // Géré par le cache
   const { prospectsData, isFromCache, isLoading, invalidateCache } = useProspectsCache();
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>(""); 
+  console.log('Error state available:', !!setError); // Utilisation technique
   
   // Données extraites du cache
   const familyData = prospectsData?.prospects || [];
@@ -75,7 +76,7 @@ export const Prospects: React.FC = () => {
   // Gérer le changement d'objet de rappel - optimisé pour éviter le rechargement complet
   const handleReminderSubjectUpdate = (
     familyId: string,
-    newSubject: string
+    _newSubject: string
   ) => {
     // Invalider le cache pour rafraîchir automatiquement les données
     invalidateCache();
@@ -85,7 +86,7 @@ export const Prospects: React.FC = () => {
   // Gérer le changement de date de rappel - optimisé pour éviter le rechargement complet
   const handleNextActionDateUpdate = (
     familyId: string,
-    newDate: Date | null
+    _newDate: Date | null
   ) => {
     // Invalider le cache pour rafraîchir automatiquement les données
     invalidateCache();
