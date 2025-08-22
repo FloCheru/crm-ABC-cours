@@ -25,6 +25,7 @@ export interface Family {
     email: string;
     dateOfBirth?: Date;
     relationship?: string; // Lien de parenté
+    gender: "M." | "Mme";
   };
   secondaryContact?: {
     firstName?: string;
@@ -120,6 +121,7 @@ export interface CreateFamilyData {
     email: string;
     dateOfBirth?: Date;
     relationship?: string; // Lien de parenté
+    gender: "M." | "Mme";
   };
   secondaryContact?: {
     firstName?: string;
@@ -131,6 +133,12 @@ export interface CreateFamilyData {
   };
   status?: 'prospect' | 'client';
   notes?: string;
+}
+
+export interface FamilyStats {
+  total: number;
+  prospects: number;
+  clients: number;
 }
 
 export interface CreateStudentData {

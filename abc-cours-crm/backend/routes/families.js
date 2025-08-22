@@ -130,6 +130,12 @@ router.post(
       .isEmail()
       .normalizeEmail()
       .withMessage("Email valide requis"),
+    body("primaryContact.gender")
+      .trim()
+      .notEmpty()
+      .withMessage("Civilité requise")
+      .isIn(["M.", "Mme"])
+      .withMessage("Civilité doit être M. ou Mme"),
     body("address.street").trim().notEmpty().withMessage("Adresse requise"),
     body("address.city").trim().notEmpty().withMessage("Ville requise"),
     body("address.postalCode")

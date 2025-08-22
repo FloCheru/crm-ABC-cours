@@ -13,10 +13,8 @@ import {
 import { ModalWrapper } from "../../../components/ui/ModalWrapper/ModalWrapper";
 import { EntityForm } from "../../../components/forms/EntityForm";
 import { familyService } from "../../../services/familyService";
-import { settlementService } from "../../../services/settlementService";
 import type { Family } from "../../../types/family";
-import type { FamilyStats } from "../../../services/familyService";
-import { useRefresh } from "../../../hooks/useRefresh";
+import { useDashboardCache } from "../../../hooks/useDashboardCache";
 import { logger } from "../../../utils/logger";
 
 // Type pour les données du tableau avec l'id requis
@@ -26,77 +24,29 @@ type CreateFamilyData = Omit<Family, "_id" | "createdAt" | "updatedAt">;
 export const Dashboard: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { refreshTrigger } = useRefresh();
-  const [familyData, setFamilyData] = useState<Family[]>([]);
-  const [stats, setStats] = useState<FamilyStats | null>(null);
-  const [settlementCounts, setSettlementCounts] = useState<
-    Record<string, number>
-  >({});
-  const [isLoading, setIsLoading] = useState(true);
+  // const { refreshTrigger } = useRefresh(); // Géré par le cache
+  const { dashboardData, isFromCache, isLoading } = useDashboardCache();
   const [error, setError] = useState<string>("");
+  
+  // Données extraites du cache
+  const familyData = dashboardData?.families || [];
+  const stats = dashboardData?.stats || null;
+  const settlementCounts = dashboardData?.settlementCounts || {};
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateFamilyModalOpen, setIsCreateFamilyModalOpen] = useState(false);
 
-  // Fonction pour charger les données des familles
-  const loadFamilyData = async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const [data, statsData] = await Promise.all([
-        familyService.getFamilies(),
-        familyService.getFamilyStats(),
-      ]);
-      const families = Array.isArray(data) ? data : [];
-      setFamilyData(families);
-      setStats(statsData);
-
-      // Charger le nombre de notes de règlement pour chaque famille
-      const counts: Record<string, number> = {};
-      for (const family of families) {
-        try {
-          const count = await settlementService.getSettlementNotesCountByFamily(
-            family._id
-          );
-          counts[family._id] = count;
-        } catch (err) {
-          logger.error(
-            `Erreur lors du comptage pour la famille ${family._id}:`,
-            err
-          );
-          counts[family._id] = 0;
-        }
-      }
-      setSettlementCounts(counts);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erreur lors du chargement"
-      );
-      logger.error("Erreur lors du chargement des familles:", err);
-      setFamilyData([]);
-    } finally {
-      setIsLoading(false);
+  // Log pour indiquer si les données proviennent du cache
+  useEffect(() => {
+    if (dashboardData) {
+      console.log(`📊 Dashboard: Données ${isFromCache ? 'récupérées depuis le cache' : 'chargées depuis l\'API'}`);
     }
-  };
-
-  // Charger les données au montage du composant ET quand refreshTrigger change
-  useEffect(() => {
-    logger.debug(
-      "Dashboard: Chargement des données (trigger:",
-      refreshTrigger,
-      ")"
-    );
-    loadFamilyData();
-  }, [refreshTrigger]);
-
-  // Log supplémentaire pour déboguer
-  useEffect(() => {
-    logger.debug("Dashboard: refreshTrigger a changé:", refreshTrigger);
-  }, [refreshTrigger]);
+  }, [dashboardData, isFromCache]);
 
   // Fonction pour rafraîchir manuellement (optionnel)
   const handleManualRefresh = () => {
     logger.debug("Rafraîchissement manuel déclenché");
-    loadFamilyData();
+    // Le rafraîchissement sera géré par le système de cache
+    window.location.reload();
   };
 
   const handleCreateFamily = () => {
@@ -427,7 +377,7 @@ export const Dashboard: React.FC = () => {
             try {
               await familyService.createFamily(data as CreateFamilyData);
               setIsCreateFamilyModalOpen(false);
-              handleManualRefresh();
+              // Les données seront automatiquement rafraîchies par le système de cache
             } catch (err) {
               setError(
                 err instanceof Error

@@ -53,6 +53,12 @@ const familySchema = new mongoose.Schema(
         trim: true,
         default: "Contact principal",
       },
+      gender: {
+        type: String,
+        required: [true, "Civilité requise"],
+        enum: ["M.", "Mme"],
+        trim: true,
+      },
     },
     secondaryContact: {
       firstName: {

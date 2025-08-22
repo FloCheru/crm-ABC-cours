@@ -28,7 +28,7 @@ const NAV_ITEMS = [
     submenu: [
       { label: "Séries de coupons", path: "/admin/coupons" },
       { label: "Coupons", path: "/admin/coupons/list" },
-      { label: "Prévisualisation PDF", path: "/admin/pdf-preview" },
+      { label: "Aperçu Template", path: "/admin/template-preview" },
     ]
   },
   { label: "Professeurs", path: "/under-development" },

@@ -15,7 +15,7 @@ import { EntityForm } from "../../components/forms/EntityForm";
 import { familyService } from "../../services/familyService";
 import { settlementService } from "../../services/settlementService";
 import type { Family } from "../../types/family";
-import type { FamilyStats } from "../../services/familyService";
+// import type { FamilyStats } from "../../services/familyService"; // Non utilisé avec cache
 import type { SettlementNote } from "../../services/settlementService";
 
 // Types pour les sujets avec typage sûr
@@ -39,7 +39,8 @@ interface StudentData {
   firstName: string;
   lastName: string;
 }
-import { useRefresh } from "../../hooks/useRefresh";
+// import { useRefresh } from "../../hooks/useRefresh"; // Géré par le cache
+import { useClientsCache } from "../../hooks/useClientsCache";
 import "./Clients.css";
 
 // Type pour les données du tableau avec l'id requis
@@ -109,16 +110,16 @@ const getStudentName = (note: SettlementNote, familyStudents?: Array<{_id: strin
 export const Clients: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { refreshTrigger } = useRefresh();
-  const [familyData, setFamilyData] = useState<Family[]>([]);
-  const [stats, setStats] = useState<FamilyStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // const { refreshTrigger } = useRefresh(); // Géré par le cache
+  const { clientsData, isFromCache, isLoading } = useClientsCache();
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateClientModalOpen, setIsCreateClientModalOpen] = useState(false);
-  const [firstNDRDates, setFirstNDRDates] = useState<{
-    [familyId: string]: string;
-  }>({});
+  
+  // Données extraites du cache
+  const familyData = clientsData?.clients || [];
+  const stats = clientsData?.stats || null;
+  const firstNDRDates = clientsData?.firstNDRDates || {};
   const [isNDRModalOpen, setIsNDRModalOpen] = useState(false);
   const [selectedFamilyId, setSelectedFamilyId] = useState<string>("");
   const [selectedFamilyNDRs, setSelectedFamilyNDRs] = useState<
@@ -126,68 +127,12 @@ export const Clients: React.FC = () => {
   >([]);
   const [isLoadingNDRs, setIsLoadingNDRs] = useState(false);
 
-  // Fonction pour charger les données des clients uniquement
-  const loadClientData = async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const [data, statsData] = await Promise.all([
-        familyService.getFamilies(),
-        familyService.getFamilyStats(),
-      ]);
-      const families = Array.isArray(data) ? data : [];
-
-      // Filtrer pour ne garder que les clients
-      const clients = families.filter((family) => family.status === "client");
-      setFamilyData(clients);
-      setStats(statsData);
-
-      // Charger les dates de première NDR pour chaque client
-      const ndrDates: { [familyId: string]: string } = {};
-      await Promise.all(
-        clients.map(async (client) => {
-          try {
-            const ndrList = await settlementService.getSettlementNotesByFamily(
-              client._id
-            );
-            if (ndrList.length > 0) {
-              // Trier par date de création et prendre la première
-              const sortedNDRs = ndrList.sort(
-                (a, b) =>
-                  new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime()
-              );
-              ndrDates[client._id] = new Date(
-                sortedNDRs[0].createdAt
-              ).toLocaleDateString("fr-FR");
-            }
-          } catch (err) {
-            console.error(
-              `Erreur lors du chargement des NDR pour ${client._id}:`,
-              err
-            );
-            // En cas d'erreur, utiliser la date de création de la famille
-            ndrDates[client._id] = new Date(
-              client.createdAt
-            ).toLocaleDateString("fr-FR");
-          }
-        })
-      );
-      setFirstNDRDates(ndrDates);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erreur lors du chargement"
-      );
-      console.error("Erreur lors du chargement des clients:", err);
-      setFamilyData([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Log pour indiquer si les données proviennent du cache
   useEffect(() => {
-    loadClientData();
-  }, [refreshTrigger]);
+    if (clientsData) {
+      console.log(`📊 Clients: Données ${isFromCache ? 'récupérées depuis le cache' : 'chargées depuis l\'API'}`);
+    }
+  }, [clientsData, isFromCache]);
 
   const handleCreateClient = () => {
     setIsCreateClientModalOpen(true);
@@ -233,7 +178,7 @@ export const Clients: React.FC = () => {
 
   const handleReset = () => {
     setSearchTerm("");
-    loadClientData();
+    // Les données seront automatiquement rafraîchies par le système de cache
   };
 
   // Gérer la suppression d'un client
@@ -248,14 +193,8 @@ export const Clients: React.FC = () => {
       try {
         await familyService.deleteFamily(clientId);
         
-        // Mise à jour locale pour retirer le client supprimé
-        setFamilyData(prevData => prevData.filter(family => family._id !== clientId));
-        
-        // Mettre à jour les statistiques
-        setStats(prevStats => prevStats ? {
-          ...prevStats,
-          clients: prevStats.clients - 1
-        } : null);
+        // Note: Les mises à jour locales seront gérées par le système de cache
+        // lors du prochain rafraîchissement automatique
         
         console.log(`Client ${fullName} supprimé avec succès`);
       } catch (error) {
@@ -656,7 +595,7 @@ export const Clients: React.FC = () => {
 
       await familyService.createFamily(clientData as CreateFamilyData);
       setIsCreateClientModalOpen(false);
-      loadClientData(); // Recharger les données
+      // Les données seront automatiquement rafraîchies par le système de cache
     } catch (err) {
       console.error("Erreur lors de la création du client:", err);
       throw err;

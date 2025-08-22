@@ -16,7 +16,9 @@
     "lint": "cd frontend && npm run lint"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@types/node": "^24.3.0",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.9.2"
   },
   "workspaces": [
     "frontend",

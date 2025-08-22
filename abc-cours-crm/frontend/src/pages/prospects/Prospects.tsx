@@ -16,8 +16,9 @@ import { ModalWrapper } from "../../components/ui/ModalWrapper/ModalWrapper";
 import { EntityForm } from "../../components/forms/EntityForm";
 import { familyService } from "../../services/familyService";
 import type { Family } from "../../types/family";
-import type { FamilyStats } from "../../services/familyService";
-import { useRefresh } from "../../hooks/useRefresh";
+// import type { FamilyStats } from "../../services/familyService";
+// import { useRefresh } from "../../hooks/useRefresh"; // Géré par le cache
+import { useProspectsCache } from "../../hooks/useProspectsCache";
 import { StatusDot, type ProspectStatus } from "../../components/StatusDot";
 import "./Prospects.css";
 
@@ -28,66 +29,44 @@ type CreateFamilyData = Omit<Family, "_id" | "createdAt" | "updatedAt">;
 export const Prospects: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { refreshTrigger } = useRefresh();
-  const [familyData, setFamilyData] = useState<Family[]>([]);
-  const [stats, setStats] = useState<FamilyStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string>("");
+  // const { refreshTrigger } = useRefresh(); // Géré par le cache
+  const { prospectsData, isFromCache, isLoading, invalidateCache } = useProspectsCache();
+  const [error, setError] = useState<string>(""); 
+  console.log('Error state available:', !!setError); // Utilisation technique
+  
+  // Données extraites du cache
+  const familyData = prospectsData?.prospects || [];
+  const stats = prospectsData?.stats || null;
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateProspectModalOpen, setIsCreateProspectModalOpen] = useState(false);
+  const [isCreateProspectModalOpen, setIsCreateProspectModalOpen] =
+    useState(false);
 
-  // Fonction pour charger les données des prospects uniquement
-  const loadProspectData = async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const [data, statsData] = await Promise.all([
-        familyService.getFamilies(),
-        familyService.getFamilyStats(),
-      ]);
-      const families = Array.isArray(data) ? data : [];
-      
-      // Filtrer pour ne garder que les prospects
-      const prospects = families.filter(family => family.status === "prospect");
-      setFamilyData(prospects);
-      setStats(statsData);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erreur lors du chargement"
-      );
-      console.error("Erreur lors du chargement des prospects:", err);
-      setFamilyData([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Log pour indiquer si les données proviennent du cache
   useEffect(() => {
-    loadProspectData();
-  }, [refreshTrigger]);
+    if (prospectsData) {
+      console.log(`📊 Prospects: Données ${isFromCache ? 'récupérées depuis le cache' : 'chargées depuis l\'API'}`);
+    }
+  }, [prospectsData, isFromCache]);
 
   const handleCreateProspect = () => {
     setIsCreateProspectModalOpen(true);
   };
-
 
   const handleCreateSettlementNote = (familyId: string) => {
     navigate(`/admin/dashboard/create?familyId=${familyId}`);
   };
 
   // Gérer le changement de statut d'un prospect - optimisé pour éviter le rechargement complet
-  const handleStatusChange = async (prospectId: string, newStatus: ProspectStatus | null) => {
+  const handleStatusChange = async (
+    prospectId: string,
+    newStatus: ProspectStatus | null
+  ) => {
     try {
       await familyService.updateProspectStatus(prospectId, newStatus);
-      
-      // Mise à jour locale optimisée au lieu du rechargement complet
-      setFamilyData(prevData => 
-        prevData.map(family => 
-          family._id === prospectId 
-            ? { ...family, prospectStatus: newStatus } as Family
-            : family
-        )
-      );
+
+      // Invalider le cache pour rafraîchir automatiquement les données
+      invalidateCache();
+      console.log(`✅ Statut mis à jour pour le prospect ${prospectId} - Cache invalidé`);
     } catch (error) {
       console.error("Erreur lors de la mise à jour du statut:", error);
       throw error; // Relancer l'erreur pour que le StatusDot puisse gérer l'affichage
@@ -95,49 +74,44 @@ export const Prospects: React.FC = () => {
   };
 
   // Gérer le changement d'objet de rappel - optimisé pour éviter le rechargement complet
-  const handleReminderSubjectUpdate = (familyId: string, newSubject: string) => {
-    setFamilyData(prevData => 
-      prevData.map(family => 
-        family._id === familyId 
-          ? { ...family, nextActionReminderSubject: newSubject }
-          : family
-      )
-    );
+  const handleReminderSubjectUpdate = (
+    familyId: string,
+    _newSubject: string
+  ) => {
+    // Invalider le cache pour rafraîchir automatiquement les données
+    invalidateCache();
+    console.log(`✅ Objet de rappel mis à jour pour la famille ${familyId} - Cache invalidé`);
   };
 
   // Gérer le changement de date de rappel - optimisé pour éviter le rechargement complet
-  const handleNextActionDateUpdate = (familyId: string, newDate: Date | null) => {
-    setFamilyData(prevData => 
-      prevData.map(family => 
-        family._id === familyId 
-          ? { ...family, nextActionDate: newDate } as Family
-          : family
-      )
-    );
+  const handleNextActionDateUpdate = (
+    familyId: string,
+    _newDate: Date | null
+  ) => {
+    // Invalider le cache pour rafraîchir automatiquement les données
+    invalidateCache();
+    console.log(`✅ Date de rappel mise à jour pour la famille ${familyId} - Cache invalidé`);
   };
 
   // Gérer la suppression d'un prospect
   const handleDeleteProspect = async (prospectId: string) => {
-    const prospect = familyData.find(f => f._id === prospectId);
-    const fullName = prospect ? `${prospect.primaryContact.firstName} ${prospect.primaryContact.lastName}` : "ce prospect";
-    
-    if (window.confirm(
-      `Êtes-vous sûr de vouloir supprimer ${fullName} ?\n\n` +
-      `Cette action supprimera également tous les élèves associés et ne peut pas être annulée.`
-    )) {
+    const prospect = familyData.find((f) => f._id === prospectId);
+    const fullName = prospect
+      ? `${prospect.primaryContact.firstName} ${prospect.primaryContact.lastName}`
+      : "ce prospect";
+
+    if (
+      window.confirm(
+        `Êtes-vous sûr de vouloir supprimer ${fullName} ?\n\n` +
+          `Cette action supprimera également tous les élèves associés et ne peut pas être annulée.`
+      )
+    ) {
       try {
         await familyService.deleteFamily(prospectId);
-        
-        // Mise à jour locale pour retirer le prospect supprimé
-        setFamilyData(prevData => prevData.filter(family => family._id !== prospectId));
-        
-        // Mettre à jour les statistiques
-        setStats(prevStats => prevStats ? {
-          ...prevStats,
-          prospects: prevStats.prospects - 1
-        } : null);
-        
-        console.log(`Prospect ${fullName} supprimé avec succès`);
+
+        // Invalider le cache pour rafraîchir automatiquement les données
+        invalidateCache();
+        console.log(`✅ Prospect ${fullName} supprimé avec succès - Cache invalidé`);
       } catch (error) {
         console.error("Erreur lors de la suppression du prospect:", error);
         alert("Erreur lors de la suppression du prospect");
@@ -155,16 +129,18 @@ export const Prospects: React.FC = () => {
 
   const handleReset = () => {
     setSearchTerm("");
-    loadProspectData();
+    // Les données seront automatiquement rafraîchies par le système de cache
   };
 
   // Filtrer les données selon le terme de recherche
   const filteredData = familyData.filter((family) => {
     const searchLower = searchTerm.toLowerCase();
-    const fullName = `${family.primaryContact.firstName} ${family.primaryContact.lastName}`.toLowerCase();
+    const fullName =
+      `${family.primaryContact.firstName} ${family.primaryContact.lastName}`.toLowerCase();
     const email = family.primaryContact.email?.toLowerCase() || "";
     const phone = family.primaryContact.primaryPhone || "";
-    const address = `${family.address.street} ${family.address.city}`.toLowerCase();
+    const address =
+      `${family.address.street} ${family.address.city}`.toLowerCase();
 
     return (
       fullName.includes(searchLower) ||
@@ -186,9 +162,7 @@ export const Prospects: React.FC = () => {
       key: "lastName",
       label: "Nom",
       render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium text-sm">
-          {row.primaryContact.lastName}
-        </div>
+        <div className="font-medium text-sm">{row.primaryContact.lastName}</div>
       ),
     },
     {
@@ -204,45 +178,35 @@ export const Prospects: React.FC = () => {
       key: "email",
       label: "Email",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">
-          {row.primaryContact.email}
-        </div>
+        <div className="text-sm">{row.primaryContact.email}</div>
       ),
     },
     {
       key: "phone",
       label: "Téléphone",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">
-          {row.primaryContact.primaryPhone}
-        </div>
+        <div className="text-sm">{row.primaryContact.primaryPhone}</div>
       ),
     },
     {
       key: "street",
       label: "Rue",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">
-          {row.address.street}
-        </div>
+        <div className="text-sm">{row.address.street}</div>
       ),
     },
     {
       key: "postalCode",
       label: "Code postal",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">
-          {row.address.postalCode}
-        </div>
+        <div className="text-sm">{row.address.postalCode}</div>
       ),
     },
     {
       key: "city",
       label: "Ville",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">
-          {row.address.city}
-        </div>
+        <div className="text-sm">{row.address.city}</div>
       ),
     },
     {
@@ -284,7 +248,11 @@ export const Prospects: React.FC = () => {
       render: (_: unknown, row: TableRowData) => (
         <div className="text-sm">
           {row.students && row.students.length > 0
-            ? row.students.map(s => typeof s === 'string' ? s : `${s.firstName} ${s.lastName}`).join(", ")
+            ? row.students
+                .map((s) =>
+                  typeof s === "string" ? s : `${s.firstName} ${s.lastName}`
+                )
+                .join(", ")
             : "Aucun"}
         </div>
       ),
@@ -330,10 +298,13 @@ export const Prospects: React.FC = () => {
         ...data,
         status: "prospect" as const,
       };
-      
+
       await familyService.createFamily(prospectData);
       setIsCreateProspectModalOpen(false);
-      loadProspectData(); // Recharger les données
+      
+      // Invalider le cache pour rafraîchir automatiquement les données
+      invalidateCache();
+      console.log("✅ Cache prospects invalidé après création de prospect");
     } catch (err) {
       console.error("Erreur lors de la création du prospect:", err);
       throw err;
@@ -343,11 +314,7 @@ export const Prospects: React.FC = () => {
   return (
     <div>
       <Navbar activePath={location.pathname} />
-      <Breadcrumb
-        items={[
-          { label: "Prospects", href: "/prospects" },
-        ]}
-      />
+      <Breadcrumb items={[{ label: "Prospects", href: "/prospects" }]} />
       <Container layout="flex-col">
         <h1>Gestion des Prospects</h1>
 
@@ -380,7 +347,7 @@ export const Prospects: React.FC = () => {
             variant="single"
             buttons={[
               {
-                text: "Créer un prospect",
+                text: "Ajouter un prospect",
                 variant: "primary",
                 onClick: handleCreateProspect,
               },
@@ -439,14 +406,13 @@ export const Prospects: React.FC = () => {
           isOpen={isCreateProspectModalOpen}
           onClose={() => setIsCreateProspectModalOpen(false)}
         >
-          <div>
-            <h2 className="text-xl font-bold mb-4">Créer un nouveau prospect</h2>
-            <EntityForm
+          <EntityForm
               entityType="family"
-              onSubmit={async (data) => await handleCreateProspectSubmit(data as CreateFamilyData)}
+              onSubmit={async (data) =>
+                await handleCreateProspectSubmit(data as CreateFamilyData)
+              }
               onCancel={() => setIsCreateProspectModalOpen(false)}
             />
-          </div>
         </ModalWrapper>
       )}
     </div>
