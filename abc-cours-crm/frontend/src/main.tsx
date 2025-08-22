@@ -15,6 +15,7 @@ import {
   Prospects,
   Clients,
 } from "./pages";
+import { TemplatePreview } from "./pages/admin/TemplatePreview";
 import { SeriesDetails } from "./pages/admin/coupons/SeriesDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuthStore } from "./stores";
@@ -117,6 +118,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PdfPreview />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/template-preview"
+            element={
+              <ProtectedRoute>
+                <TemplatePreview />
               </ProtectedRoute>
             }
           />

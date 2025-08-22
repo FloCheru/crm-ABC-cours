@@ -41,13 +41,16 @@ class PDFGenerationService {
       const pdfMetadata = await this.savePDF(pdfBuffer, settlementNote, type);
       
       // Mettre à jour la note de règlement avec les métadonnées du PDF
-      await this.updateSettlementNoteWithPDF(settlementNoteId, pdfMetadata);
+      const pdfId = await this.updateSettlementNoteWithPDF(settlementNoteId, pdfMetadata);
       
-      console.log(`✅ PDF généré avec succès: ${pdfMetadata.fileName}`);
+      console.log(`✅ PDF généré avec succès: ${pdfMetadata.fileName} (ID: ${pdfId})`);
       
       return {
         success: true,
-        pdfMetadata,
+        pdfMetadata: {
+          ...pdfMetadata,
+          _id: pdfId
+        },
         filePath: pdfMetadata.filePath
       };
 
@@ -64,12 +67,22 @@ class PDFGenerationService {
     const data = {
       // Informations de base
       noteNumber: `NDR-${settlementNote._id.toString().slice(-8).toUpperCase()}`,
-      formattedDate: new Date().toLocaleDateString('fr-FR'),
-      generationDate: new Date().toLocaleDateString('fr-FR'),
+      formattedDate: new Date().toLocaleDateString('fr-FR', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      }),
+      generationDate: new Date().toLocaleDateString('fr-FR', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
       
       // Client
       clientName: settlementNote.clientName,
-      clientAddress: settlementNote.familyId?.address || 'Adresse non renseignée',
+      clientAddress: this.formatClientAddress(settlementNote.familyId),
       department: settlementNote.department,
       
       // Mode de paiement
@@ -84,7 +97,7 @@ class PDFGenerationService {
       subjects: await this.formatSubjects(settlementNote.subjects),
       
       // Totaux
-      totalQuantity: settlementNote.totalQuantity || 0,
+      totalQuantity: settlementNote.totalQuantity || this.calculateTotalQuantity(settlementNote),
       totalRevenue: this.calculateTotalRevenue(settlementNote),
       salaryToPay: settlementNote.salaryToPay || 0,
       chargesToPay: settlementNote.chargesToPay || 0,
@@ -127,6 +140,19 @@ class PDFGenerationService {
       data.coupons = this.generateCouponsData(settlementNote);
     }
 
+    // Logging pour debug
+    console.log('🔍 Données préparées pour le template:', {
+      noteNumber: data.noteNumber,
+      clientName: data.clientName,
+      clientAddress: data.clientAddress,
+      totalRevenue: data.totalRevenue,
+      totalQuantity: data.totalQuantity,
+      subjectsCount: data.subjects?.length,
+      hasPaymentSchedule: !!data.paymentSchedule,
+      includeCoupons: data.includeCoupons,
+      totalCoupons: data.totalCoupons
+    });
+
     return data;
   }
 
@@ -141,6 +167,15 @@ class PDFGenerationService {
       professorSalary: subject.professorSalary || 0,
       total: (subject.hourlyRate || 0) * (subject.quantity || 0)
     }));
+  }
+
+  /**
+   * Calcule le total des heures
+   */
+  calculateTotalQuantity(settlementNote) {
+    return settlementNote.subjects.reduce((total, subject) => {
+      return total + (subject.quantity || 0);
+    }, 0);
   }
 
   /**
@@ -325,7 +360,7 @@ class PDFGenerationService {
    * Met à jour la note de règlement avec les métadonnées du PDF
    */
   async updateSettlementNoteWithPDF(settlementNoteId, pdfMetadata) {
-    await SettlementNote.findByIdAndUpdate(
+    const result = await SettlementNote.findByIdAndUpdate(
       settlementNoteId,
       {
         $push: {
@@ -338,29 +373,57 @@ class PDFGenerationService {
             generatedAt: new Date()
           }
         }
-      }
+      },
+      { new: true }
     );
+
+    // Retourner l'ID du PDF créé
+    const createdPdf = result.generatedPDFs[result.generatedPDFs.length - 1];
+    return createdPdf._id;
   }
 
   /**
    * Récupère un PDF généré
    */
   async getPDF(settlementNoteId, pdfId) {
+    console.log(`🔍 Recherche PDF - Note: ${settlementNoteId}, PDF ID: ${pdfId}`);
+    
     const settlementNote = await SettlementNote.findById(settlementNoteId);
     if (!settlementNote) {
       throw new Error('Note de règlement non trouvée');
     }
 
-    const pdf = settlementNote.generatedPDFs.id(pdfId);
+    console.log(`📋 PDFs disponibles:`, settlementNote.generatedPDFs.map(p => ({
+      id: p._id,
+      fileName: p.fileName
+    })));
+
+    // Chercher par ID MongoDB d'abord
+    let pdf = settlementNote.generatedPDFs.id(pdfId);
+    
+    // Si pas trouvé, chercher par nom de fichier
     if (!pdf) {
+      pdf = settlementNote.generatedPDFs.find(p => p.fileName === pdfId);
+    }
+    
+    // Si toujours pas trouvé, chercher par partie du nom de fichier
+    if (!pdf) {
+      pdf = settlementNote.generatedPDFs.find(p => p.fileName.includes(pdfId));
+    }
+
+    if (!pdf) {
+      console.log(`❌ PDF non trouvé avec ID: ${pdfId}`);
       throw new Error('PDF non trouvé');
     }
+
+    console.log(`✅ PDF trouvé: ${pdf.fileName} à ${pdf.filePath}`);
 
     // Vérifier que le fichier existe
     try {
       await fs.access(pdf.filePath);
       return pdf;
     } catch (error) {
+      console.log(`❌ Fichier PDF introuvable: ${pdf.filePath}`);
       throw new Error('Fichier PDF introuvable sur le disque');
     }
   }
@@ -382,6 +445,34 @@ class PDFGenerationService {
       totalPages: pdf.totalPages,
       generatedAt: pdf.generatedAt
     }));
+  }
+
+  /**
+   * Formate l'adresse du client
+   */
+  formatClientAddress(family) {
+    if (!family || !family.address) {
+      return 'Adresse non renseignée';
+    }
+    
+    const address = family.address;
+    let formattedAddress = '';
+    
+    if (address.street) formattedAddress += address.street;
+    if (address.city) {
+      if (formattedAddress) formattedAddress += '\n';
+      formattedAddress += address.city;
+    }
+    if (address.postalCode) {
+      if (address.city) {
+        formattedAddress = formattedAddress.replace(address.city, `${address.postalCode} ${address.city}`);
+      } else {
+        if (formattedAddress) formattedAddress += '\n';
+        formattedAddress += address.postalCode;
+      }
+    }
+    
+    return formattedAddress || 'Adresse non renseignée';
   }
 
   /**

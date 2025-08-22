@@ -33,7 +33,7 @@ router.post('/settlement-notes/:id/generate-pdf', authenticateToken, async (req,
       success: true,
       message: 'PDF généré avec succès',
       data: {
-        pdfId: result.pdfMetadata.fileName.replace('.pdf', ''),
+        pdfId: result.pdfMetadata._id,
         fileName: result.pdfMetadata.fileName,
         type: result.pdfMetadata.type,
         fileSize: result.pdfMetadata.fileSize,

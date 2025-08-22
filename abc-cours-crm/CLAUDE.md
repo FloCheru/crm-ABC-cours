@@ -775,3 +775,11 @@ Si erreurs détectées Agent Build :
 - Status clair à la fin de chaque rapport
 - Métriques mesurables quand possible
 - Recommandations actionables
+- AGENT HTML/STRUCTURE doit toujours s'assurer que :\
+- les components sont utilisés dès que possible\
+- il n'y a pas de classe tailwind utilisée mais bien des classes css\
+--> il doit faire son retour des choses à modifier au chef de projet\
+\
+Finalement c'est avant de push quoi que soit qu'on va tester le build avec l'agent testeur, pas à chaque demande
+- il faut impérativement que les tests de l'agent test soit passé avant de valider la fonctionnalité
+- les tests de l'agent test doivent s'effectuer sur base de données temporaire, différente de ma vraie base de données, pour éviter les modifications imprévues

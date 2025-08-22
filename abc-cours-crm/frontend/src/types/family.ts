@@ -25,6 +25,7 @@ export interface Family {
     email: string;
     dateOfBirth?: Date;
     relationship?: string; // Lien de parenté
+    gender: "M." | "Mme";
   };
   secondaryContact?: {
     firstName?: string;
@@ -120,6 +121,7 @@ export interface CreateFamilyData {
     email: string;
     dateOfBirth?: Date;
     relationship?: string; // Lien de parenté
+    gender: "M." | "Mme";
   };
   secondaryContact?: {
     firstName?: string;

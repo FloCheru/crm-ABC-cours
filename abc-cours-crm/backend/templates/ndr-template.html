@@ -1,229 +1,255 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Note de Règlement - {{noteNumber}}</title>
-    <link rel="stylesheet" href="./ndr-styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="./ndr-styles.css" />
+  </head>
+  <body>
     {{#if includeNdr}}
     <!-- PAGE 1: NOTE DE RÈGLEMENT -->
     <div class="page ndr-page">
-        <!-- En-tête -->
-        <header class="header">
-            <div class="company-info">
-                <h1 class="company-name">SOLUTION COURS</h1>
-                <p class="company-details">
-                    SARL au capital de 1 000€<br>
-                    SIRET: 123 456 789 00012<br>
-                    Code APE: 8559A
-                </p>
-            </div>
-            <div class="document-info">
-                <h2 class="document-title">NOTE DE RÈGLEMENT</h2>
-                <p class="document-number">N° {{noteNumber}}</p>
-                <p class="document-date">Date: {{formattedDate}}</p>
-            </div>
-        </header>
+      <!-- En-tête -->
+      <header class="header">
+        <div class="company-info">
+          <h1 class="company-name">SOLUTION COURS</h1>
+          <p class="company-details">
+            SARL au capital de 1 000€<br />
+            SIRET: 123 456 789 00012<br />
+            Code APE: 8559A
+          </p>
+        </div>
+        <div class="document-info">
+          <h2 class="document-title">NOTE DE RÈGLEMENT</h2>
+          <p class="document-number">N° {{noteNumber}}</p>
+          <p class="document-date">Date: {{formattedDate}}</p>
+        </div>
+      </header>
 
-        <!-- Informations client -->
-        <section class="client-section">
-            <div class="client-info">
-                <h3>Client:</h3>
-                <p class="client-name">{{clientName}}</p>
-                <p class="client-address">{{clientAddress}}</p>
-                <p class="client-department">Département: {{department}}</p>
-            </div>
-            <div class="payment-info">
-                <h3>Mode de règlement:</h3>
-                <p class="payment-method">{{paymentMethodLabel}}</p>
-            </div>
-        </section>
+      <!-- Informations client -->
+      <section class="client-section">
+        <div class="client-info">
+          <h3>Client:</h3>
+          <p class="client-name">{{clientName}}</p>
+          <p class="client-address">{{clientAddress}}</p>
+          <p class="client-department">Département: {{department}}</p>
+        </div>
+        <div class="payment-info">
+          <h3>Mode de règlement:</h3>
+          <p class="payment-method">{{paymentMethodLabel}}</p>
+        </div>
+      </section>
 
-        <!-- Prestations -->
-        <section class="services-section">
-            <h3>Prestations:</h3>
-            <table class="services-table">
-                <thead>
-                    <tr>
-                        <th>Matière</th>
-                        <th>Tarif unitaire (€/h)</th>
-                        <th>Quantité (h)</th>
-                        <th>Salaire professeur (€/h)</th>
-                        <th>Total (€)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each subjects}}
-                    <tr>
-                        <td>{{this.subjectName}}</td>
-                        <td class="number">{{this.hourlyRate}}</td>
-                        <td class="number">{{this.quantity}}</td>
-                        <td class="number">{{this.professorSalary}}</td>
-                        <td class="number">{{this.total}}</td>
-                    </tr>
-                    {{/each}}
-                </tbody>
-            </table>
-        </section>
+      <!-- Prestations -->
+      <section class="services-section">
+        <h3>Prestations:</h3>
+        <table class="services-table">
+          <thead>
+            <tr>
+              <th>Matière</th>
+              <th>Tarif unitaire (€/h)</th>
+              <th>Quantité (h)</th>
+              <th>Salaire professeur (€/h)</th>
+              <th>Total (€)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each subjects}}
+            <tr>
+              <td>{{this.subjectName}}</td>
+              <td class="number">{{this.hourlyRate}}</td>
+              <td class="number">{{this.quantity}}</td>
+              <td class="number">{{this.professorSalary}}</td>
+              <td class="number">{{this.total}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </section>
 
-        <!-- Récapitulatif financier -->
-        <section class="summary-section">
-            <h3>Récapitulatif:</h3>
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <span class="label">Total heures:</span>
-                    <span class="value">{{totalQuantity}} h</span>
-                </div>
-                <div class="summary-item">
-                    <span class="label">Chiffre d'affaires:</span>
-                    <span class="value">{{totalRevenue}} €</span>
-                </div>
-                <div class="summary-item">
-                    <span class="label">Salaire à verser:</span>
-                    <span class="value">{{salaryToPay}} €</span>
-                </div>
-                <div class="summary-item">
-                    <span class="label">Charges à verser:</span>
-                    <span class="value">{{chargesToPay}} €</span>
-                </div>
-                <div class="summary-item highlight">
-                    <span class="label">Marge:</span>
-                    <span class="value">{{marginAmount}} € ({{marginPercentage}}%)</span>
-                </div>
-            </div>
-        </section>
+      <!-- Récapitulatif financier -->
+      <section class="summary-section">
+        <h3>Récapitulatif:</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="label">Total heures:</span>
+            <span class="value">{{totalQuantity}} h</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Chiffre d'affaires:</span>
+            <span class="value">{{totalRevenue}} €</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Salaire à verser:</span>
+            <span class="value">{{salaryToPay}} €</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Charges à verser:</span>
+            <span class="value">{{chargesToPay}} €</span>
+          </div>
+          <div class="summary-item highlight">
+            <span class="label">Marge:</span>
+            <span class="value"
+              >{{marginAmount}} € ({{marginPercentage}}%)</span
+            >
+          </div>
+        </div>
+      </section>
 
-        {{#if paymentSchedule}}
-        <!-- Échéancier -->
-        <section class="schedule-section">
-            <h3>Échéancier de paiement:</h3>
-            <div class="schedule-info">
-                <p><strong>Mode:</strong> {{paymentSchedule.paymentMethodLabel}}</p>
-                <p><strong>Nombre d'échéances:</strong> {{paymentSchedule.numberOfInstallments}}</p>
-                <p><strong>Jour du mois:</strong> {{paymentSchedule.dayOfMonth}}</p>
-            </div>
-            <table class="schedule-table">
-                <thead>
-                    <tr>
-                        <th>Échéance</th>
-                        <th>Date</th>
-                        <th>Montant (€)</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each paymentSchedule.installments}}
-                    <tr>
-                        <td>{{@index}}</td>
-                        <td>{{this.formattedDate}}</td>
-                        <td class="number">{{this.amount}}</td>
-                        <td class="status status-{{this.status}}">{{this.statusLabel}}</td>
-                    </tr>
-                    {{/each}}
-                </tbody>
-            </table>
-        </section>
-        {{/if}}
+      {{#if paymentSchedule}}
+      <!-- Échéancier -->
+      <section class="schedule-section">
+        <h3>Échéancier de paiement:</h3>
+        <div class="schedule-info">
+          <p><strong>Mode:</strong> {{paymentSchedule.paymentMethodLabel}}</p>
+          <p>
+            <strong>Nombre d'échéances:</strong>
+            {{paymentSchedule.numberOfInstallments}}
+          </p>
+          <p><strong>Jour du mois:</strong> {{paymentSchedule.dayOfMonth}}</p>
+        </div>
+        <table class="schedule-table">
+          <thead>
+            <tr>
+              <th>Échéance</th>
+              <th>Date</th>
+              <th>Montant (€)</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each paymentSchedule.installments}}
+            <tr>
+              <td>{{@index}}</td>
+              <td>{{this.formattedDate}}</td>
+              <td class="number">{{this.amount}}</td>
+              <td class="status status-{{this.status}}">
+                {{this.statusLabel}}
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </section>
+      {{/if}} {{#if notes}}
+      <!-- Notes -->
+      <section class="notes-section">
+        <h3>Notes:</h3>
+        <p class="notes-text">{{notes}}</p>
+      </section>
+      {{/if}}
 
-        {{#if notes}}
-        <!-- Notes -->
-        <section class="notes-section">
-            <h3>Notes:</h3>
-            <p class="notes-text">{{notes}}</p>
-        </section>
-        {{/if}}
+      <!-- Attestations dynamiques basées sur les coupons -->
+      {{#if includeCoupons}}
+      <div class="attestations-section">
+        {{#each coupons}}
+        <div class="attestation-box">
+          <div class="attestation-title">ATTESTATION D'UNE HEURE DE COURS</div>
+          <div class="attestation-content">
+            <p><strong>{{../studentNames}}</strong></p>
+            <p><strong>N°</strong> {{this.number}} <strong>Émise le</strong> {{../formattedDate}}</p>
+            <p><strong>Date</strong> ________________</p>
+            <p><strong>Signature de l'employeur :</strong></p>
+            <p><em>A remettre à l'enseignant</em></p>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
 
-        <!-- Pied de page -->
-        <footer class="footer">
-            <div class="signature-section">
-                <div class="signature-client">
-                    <p>Signature du client:</p>
-                    <div class="signature-box"></div>
-                </div>
-                <div class="signature-company">
-                    <p>Solution Cours:</p>
-                    <div class="signature-box"></div>
-                </div>
-            </div>
-            <div class="footer-info">
-                <p>Document généré le {{generationDate}}</p>
-            </div>
-        </footer>
+      <!-- Pied de page -->
+      <footer class="footer">
+        <div class="signature-section">
+          <div class="signature-client">
+            <p>Signature du client:</p>
+            <div class="signature-box"></div>
+          </div>
+          <div class="signature-company">
+            <p>Solution Cours:</p>
+            <div class="signature-box"></div>
+          </div>
+        </div>
+        <div class="footer-info">
+          <p>Document généré le {{generationDate}}</p>
+        </div>
+      </footer>
     </div>
-    {{/if}}
-
-    {{#if includeCoupons}}
+    {{/if}} {{#if includeCoupons}}
     <!-- PAGE 2: COUPONS -->
     <div class="page coupons-page">
-        <header class="header">
-            <div class="company-info">
-                <h1 class="company-name">SOLUTION COURS</h1>
-            </div>
-            <div class="document-info">
-                <h2 class="document-title">BONS DE COURS</h2>
-                <p class="document-number">Série: {{couponSeries.code}}</p>
-                <p class="document-date">Date: {{formattedDate}}</p>
-            </div>
-        </header>
+      <header class="header">
+        <div class="company-info">
+          <h1 class="company-name">SOLUTION COURS</h1>
+        </div>
+        <div class="document-info">
+          <h2 class="document-title">BONS DE COURS</h2>
+          <p class="document-number">Série: {{couponSeries.code}}</p>
+          <p class="document-date">Date: {{formattedDate}}</p>
+        </div>
+      </header>
 
-        <section class="coupons-info">
-            <div class="client-info">
-                <h3>Client: {{clientName}}</h3>
-                <p>Département: {{department}}</p>
-            </div>
-            <div class="coupons-summary">
-                <h3>Résumé des coupons:</h3>
-                <p><strong>Total coupons:</strong> {{totalCoupons}}</p>
-                <p><strong>Série:</strong> {{couponSeries.code}}</p>
-                <p><strong>Plage:</strong> {{couponSeries.startNumber}} - {{couponSeries.endNumber}}</p>
-            </div>
-        </section>
+      <section class="coupons-info">
+        <div class="client-info">
+          <h3>Client: {{clientName}}</h3>
+          <p>Département: {{department}}</p>
+        </div>
+        <div class="coupons-summary">
+          <h3>Résumé des coupons:</h3>
+          <p><strong>Total coupons:</strong> {{totalCoupons}}</p>
+          <p><strong>Série:</strong> {{couponSeries.code}}</p>
+          <p>
+            <strong>Plage:</strong> {{couponSeries.startNumber}} -
+            {{couponSeries.endNumber}}
+          </p>
+        </div>
+      </section>
 
-        <!-- Grille des coupons -->
-        <section class="coupons-grid">
-            {{#each coupons}}
-            <div class="coupon">
-                <div class="coupon-header">
-                    <span class="coupon-number">BON N° {{this.number}}</span>
-                    <span class="coupon-series">Série: {{this.series}}</span>
-                </div>
-                <div class="coupon-body">
-                    <div class="coupon-field">
-                        <label>Élève:</label>
-                        <div class="coupon-line">{{../studentNames}}</div>
-                    </div>
-                    <div class="coupon-field">
-                        <label>Matière:</label>
-                        <div class="coupon-line"></div>
-                    </div>
-                    <div class="coupon-field">
-                        <label>Date:</label>
-                        <div class="coupon-line"></div>
-                    </div>
-                    <div class="coupon-field">
-                        <label>Durée:</label>
-                        <div class="coupon-line"></div>
-                    </div>
-                    <div class="coupon-field">
-                        <label>Professeur:</label>
-                        <div class="coupon-line"></div>
-                    </div>
-                </div>
-                <div class="coupon-footer">
-                    <span class="coupon-signature">Signature élève: ________________</span>
-                </div>
+      <!-- Grille des coupons -->
+      <section class="coupons-grid">
+        {{#each coupons}}
+        <div class="coupon">
+          <div class="coupon-header">
+            <span class="coupon-number">BON N° {{this.number}}</span>
+            <span class="coupon-series">Série: {{this.series}}</span>
+          </div>
+          <div class="coupon-body">
+            <div class="coupon-field">
+              <label>Élève:</label>
+              <div class="coupon-line">{{../studentNames}}</div>
             </div>
-            {{/each}}
-        </section>
+            <div class="coupon-field">
+              <label>Matière:</label>
+              <div class="coupon-line"></div>
+            </div>
+            <div class="coupon-field">
+              <label>Date:</label>
+              <div class="coupon-line"></div>
+            </div>
+            <div class="coupon-field">
+              <label>Durée:</label>
+              <div class="coupon-line"></div>
+            </div>
+            <div class="coupon-field">
+              <label>Professeur:</label>
+              <div class="coupon-line"></div>
+            </div>
+          </div>
+          <div class="coupon-footer">
+            <span class="coupon-signature"
+              >Signature élève: ________________</span
+            >
+          </div>
+        </div>
+        {{/each}}
+      </section>
 
-        <footer class="footer">
-            <div class="footer-info">
-                <p>Coupons générés le {{generationDate}}</p>
-            </div>
-        </footer>
+      <footer class="footer">
+        <div class="footer-info">
+          <p>Coupons générés le {{generationDate}}</p>
+        </div>
+      </footer>
     </div>
     {{/if}}
-</body>
+  </body>
 </html>
