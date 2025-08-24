@@ -208,7 +208,41 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         type: "text",
         group: "company",
       },
-      { key: "notes", label: "Notes", type: "textarea", group: "notes" },
+      // Demande de cours
+      {
+        key: "demande.beneficiaryType",
+        label: "Type de bénéficiaire",
+        type: "select",
+        required: true,
+        group: "demande",
+        options: [
+          { value: "adulte", label: "Adulte" },
+          { value: "eleves", label: "Élèves" },
+        ],
+      },
+      {
+        key: "demande.subjects",
+        label: "Matières souhaitées",
+        type: "text",
+        required: true,
+        group: "demande",
+        placeholder: "Ex: Mathématiques, Français (séparées par des virgules)",
+      },
+      {
+        key: "demande.notes",
+        label: "Notes sur la demande",
+        type: "textarea",
+        group: "demande",
+        placeholder: "Précisions sur la demande de cours...",
+      },
+      {
+        key: "plannedTeacher",
+        label: "Professeur prévu",
+        type: "text",
+        group: "demande",
+        placeholder: "Nom du professeur prévu (optionnel)",
+      },
+      { key: "notes", label: "Notes générales", type: "textarea", group: "notes" },
     ],
   },
 
@@ -255,9 +289,9 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         group: "school",
         options: [
           { value: "primaire", label: "Primaire" },
-          { value: "collège", label: "Collège" },
-          { value: "lycée", label: "Lycée" },
-          { value: "supérieur", label: "Supérieur" },
+          { value: "college", label: "Collège" },
+          { value: "lycee", label: "Lycée" },
+          { value: "superieur", label: "Supérieur" },
         ],
       },
       {
@@ -384,6 +418,8 @@ interface EntityFormProps {
   additionalProps?: Record<string, unknown>;
   /** Classes CSS supplémentaires */
   className?: string;
+  /** Mode spécifique pour les familles (prospect/client) */
+  familyMode?: "prospect" | "client";
 }
 
 /**
@@ -397,10 +433,35 @@ export const EntityForm: React.FC<EntityFormProps> = ({
   initialData = {},
   additionalProps = {},
   className = "",
+  familyMode = "prospect",
 }) => {
   const config = ENTITY_CONFIGS[entityType];
+  
+  // Adapter le titre et le texte du bouton selon le mode famille
+  const getDisplayConfig = () => {
+    if (entityType === "family") {
+      if (familyMode === "client") {
+        return {
+          title: "Ajouter un nouveau client",
+          submitButtonText: "Ajouter le client",
+        };
+      } else {
+        return {
+          title: "Ajouter un nouveau prospect",
+          submitButtonText: "Ajouter le prospect",
+        };
+      }
+    }
+    return {
+      title: config.title,
+      submitButtonText: config.submitButtonText,
+    };
+  };
+  
+  const displayConfig = getDisplayConfig();
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string>(""); // Erreur générale de soumission
 
   // Initialiser les données du formulaire
   useEffect(() => {
@@ -503,18 +564,18 @@ export const EntityForm: React.FC<EntityFormProps> = ({
         { value: "CM1", label: "CM1" },
         { value: "CM2", label: "CM2" },
       ],
-      collège: [
-        { value: "6ème", label: "6ème" },
-        { value: "5ème", label: "5ème" },
-        { value: "4ème", label: "4ème" },
-        { value: "3ème", label: "3ème" },
+      college: [
+        { value: "6eme", label: "6ème" },
+        { value: "5eme", label: "5ème" },
+        { value: "4eme", label: "4ème" },
+        { value: "3eme", label: "3ème" },
       ],
-      lycée: [
+      lycee: [
         { value: "Seconde", label: "Seconde" },
-        { value: "Première", label: "Première" },
+        { value: "Premiere", label: "Première" },
         { value: "Terminale", label: "Terminale" },
       ],
-      supérieur: [
+      superieur: [
         { value: "L1", label: "L1" },
         { value: "L2", label: "L2" },
         { value: "L3", label: "L3" },
@@ -698,11 +759,46 @@ export const EntityForm: React.FC<EntityFormProps> = ({
 
     logger.debug("SOUMISSION - Validation réussie, envoi des données");
 
+    // Traitement spécial pour les familles : transformer subjects en tableau
+    let processedData = { ...formData };
+    if (entityType === 'family' && processedData.demande && typeof processedData.demande === 'object') {
+      const demande = processedData.demande as any;
+      if (demande.subjects && typeof demande.subjects === 'string') {
+        demande.subjects = demande.subjects
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s: string) => s.length > 0);
+      }
+    }
+
     try {
-      await onSubmit(formData);
+      // Réinitialiser l'erreur de soumission
+      setSubmitError("");
+      await onSubmit(processedData);
       logger.info("SOUMISSION - Succès de la soumission");
     } catch (error) {
       logger.error("SOUMISSION - Erreur lors de la soumission:", error);
+      
+      // Extraire le message d'erreur
+      let errorMessage = "Une erreur est survenue lors de la création";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error && typeof error === "object" && "message" in error) {
+        errorMessage = (error as any).message;
+      }
+      
+      // Gérer les erreurs de validation spécifiques
+      if (errorMessage.includes("Type de bénéficiaire requis")) {
+        errorMessage = "Le type de bénéficiaire est obligatoire";
+      } else if (errorMessage.includes("validation failed")) {
+        errorMessage = "Certains champs requis sont manquants ou invalides";
+      } else if (errorMessage.includes("email")) {
+        errorMessage = "L'adresse email n'est pas valide";
+      }
+      
+      setSubmitError(errorMessage);
     }
   };
 
@@ -871,15 +967,17 @@ export const EntityForm: React.FC<EntityFormProps> = ({
     return (
       <div key={groupName} className="entity-form__group">
         <h3 className="entity-form__group-title">
+          {groupName === "address" && "Adresse"}
           {groupName === "primaryContact" && "Contact principal"}
           {groupName === "secondaryContact" && "Contact secondaire"}
           {groupName === "billing" && "Adresse de facturation"}
           {groupName === "company" && "Informations entreprise"}
+          {groupName === "demande" && "Demande de cours"}
           {groupName === "personal" && "Informations personnelles"}
           {groupName === "school" && "Scolarité"}
+          {groupName === "notes" && "Notes"}
           {groupName === "professional" && "Statut professionnel"}
           {groupName === "general" && "Informations générales"}
-          {groupName === "notes" && "Notes"}
         </h3>
         <div className="entity-form__fields">
           {groupFields.map((field) => (
@@ -895,10 +993,20 @@ export const EntityForm: React.FC<EntityFormProps> = ({
   return (
     <div className={`entity-form ${className}`}>
       <div className="entity-form__header">
-        <h2>{config.title}</h2>
+        <h2>{displayConfig.title}</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="entity-form__form">
+        {/* Encart d'erreur général */}
+        {submitError && (
+          <div className="entity-form__error-banner">
+            <div className="entity-form__error-content">
+              <span className="entity-form__error-icon">⚠️</span>
+              <span className="entity-form__error-message">{submitError}</span>
+            </div>
+          </div>
+        )}
+
         {/* Rendu dynamique de tous les groupes de champs */}
         {(() => {
           // Récupérer tous les groupes uniques présents dans la configuration
@@ -918,7 +1026,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
             className="entity-form__submit"
             disabled={isLoading}
           >
-            {isLoading ? "Création..." : config.submitButtonText}
+            {isLoading ? "Création..." : displayConfig.submitButtonText}
           </button>
 
           <Button

@@ -535,10 +535,26 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
       $pull: { settlementNotes: id },
     });
 
+    // Vérifier si la famille n'a plus de notes de règlement et changer le statut si nécessaire
+    const family = await Family.findById(note.familyId);
+    if (family && family.status === "client") {
+      // Compter les NDR restantes pour cette famille
+      const remainingNotes = await SettlementNote.countDocuments({ 
+        familyId: note.familyId 
+      });
+      
+      if (remainingNotes === 0) {
+        // Plus aucune NDR, repasser en prospect
+        await Family.findByIdAndUpdate(note.familyId, { status: "prospect" });
+        console.log(`Statut de la famille ${family.primaryContact?.firstName} ${family.primaryContact?.lastName} changé automatiquement de 'client' à 'prospect' (plus de NDR)`);
+      }
+    }
+
     res.json({ 
       message: "Settlement note deleted successfully",
       deletedCoupons: couponSeries ? "yes" : "no",
-      deletedSeries: couponSeries ? "yes" : "no"
+      deletedSeries: couponSeries ? "yes" : "no",
+      statusChanged: family?.status === "client" ? "checked" : "no"
     });
   } catch (error) {
     console.error("Delete settlement note error:", error);

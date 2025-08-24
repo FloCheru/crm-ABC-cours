@@ -79,7 +79,7 @@ export const useCouponSeriesForm = (): UseCouponSeriesFormReturn => {
         try {
           const selectedFam = families.find((f) => f._id === formData.familyId);
           const studentsData = Array.isArray(selectedFam?.students) && selectedFam.students.length > 0 && typeof selectedFam.students[0] === 'object'
-            ? selectedFam.students as Student[]
+            ? (selectedFam.students as unknown as Student[])
             : [];
           setStudents(studentsData);
           setSelectedFamily(

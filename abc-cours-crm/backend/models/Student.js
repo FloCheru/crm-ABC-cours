@@ -29,7 +29,7 @@ const studentSchema = new mongoose.Schema(
       },
       level: {
         type: String,
-        enum: ["primaire", "collège", "lycée", "supérieur"],
+        enum: ["primaire", "college", "lycee", "superieur"],
         required: [true, "Niveau scolaire requis"],
       },
       grade: {
@@ -38,21 +38,6 @@ const studentSchema = new mongoose.Schema(
         trim: true,
       },
     },
-    subjects: [
-      {
-        name: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-        level: {
-          type: String,
-          enum: ["débutant", "intermédiaire", "avancé"],
-          default: "intermédiaire",
-        },
-        notes: String,
-      },
-    ],
     contact: {
       phone: String,
       email: String,

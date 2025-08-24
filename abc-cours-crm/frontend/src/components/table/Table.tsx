@@ -69,6 +69,11 @@ interface TableProps {
    * Classes CSS supplémentaires
    */
   className?: string;
+
+  /**
+   * Callback lors du clic sur une ligne
+   */
+  onRowClick?: (row: TableData) => void;
 }
 
 /**
@@ -97,6 +102,7 @@ export const Table: React.FC<TableProps> = ({
   title,
   emptyMessage = "Aucune donnée disponible",
   className = "",
+  onRowClick,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -191,7 +197,23 @@ export const Table: React.FC<TableProps> = ({
 
         <tbody>
           {currentData.map((row) => (
-            <tr key={row.id} className="table__row">
+            <tr 
+              key={row.id} 
+              className={`table__row ${onRowClick ? 'table__row--clickable' : ''}`}
+              onClick={(e) => {
+                // Vérifier si le clic provient d'un élément interactif
+                const target = e.target as HTMLElement;
+                const isInteractive = target.closest(
+                  '.no-row-click, .table__actions, button, input, select, a, ' +
+                  '.dropdown, .date-picker, .status-dot-container, ' +
+                  '.reminder-subject-dropdown, .status-dropdown'
+                );
+                
+                if (!isInteractive && onRowClick) {
+                  onRowClick(row);
+                }
+              }}
+            >
               {columns.map((column) => (
                 <td key={column.key} className="table__cell">
                   {renderCell(column, row)}

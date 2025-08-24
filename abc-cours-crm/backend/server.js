@@ -92,9 +92,9 @@ const customMorganStream = {
 app.use(morgan("combined")); // Console
 app.use(morgan("combined", { stream: customMorganStream })); // Fichier via AutoLogger
 
-// Middleware pour parser le JSON
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
+// Middleware pour parser le JSON avec UTF-8
+app.use(express.json({ limit: "10mb", charset: "utf-8" }));
+app.use(express.urlencoded({ extended: true, charset: "utf-8" }));
 
 // Middleware de logging automatique des requêtes
 app.use((req, res, next) => {

@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../server');
+const app = require('../../integration/app.test');
 
 describe('Système PDF', () => {
   let token;

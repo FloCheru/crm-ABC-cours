@@ -170,11 +170,35 @@ const familySchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    // Section demande de cours (obligatoire)
+    demande: {
+      beneficiaryType: {
+        type: String,
+        enum: ["adulte", "eleves"],
+        required: [true, "Type de bénéficiaire requis"],
+      },
+      subjects: [
+        {
+          type: String,
+          trim: true,
+        }
+      ],
+      notes: {
+        type: String,
+        trim: true,
+      },
+    },
+    // Professeur prévu
+    plannedTeacher: {
+      type: String,
+      trim: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+    // Students devient optionnel
     students: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -193,6 +217,7 @@ familySchema.index({ "primaryContact.email": 1 });
 familySchema.index({ status: 1 });
 familySchema.index({ createdAt: -1 });
 familySchema.index({ "address.city": 1 });
+familySchema.index({ "demande.beneficiaryType": 1 });
 
 // Méthode pour obtenir le contact principal
 familySchema.methods.getPrimaryContact = function () {

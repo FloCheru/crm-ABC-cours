@@ -82,16 +82,6 @@ describe("Students API Tests", () => {
             level: "collège",
             grade: "4ème",
           },
-          subjects: [
-            {
-              name: "Mathématiques",
-              level: "intermédiaire",
-            },
-            {
-              name: "Français",
-              level: "intermédiaire",
-            },
-          ],
         },
         {
           firstName: "Marie",
@@ -107,12 +97,6 @@ describe("Students API Tests", () => {
             level: "primaire",
             grade: "CM2",
           },
-          subjects: [
-            {
-              name: "Mathématiques",
-              level: "intermédiaire",
-            },
-          ],
         },
       ];
 
@@ -184,12 +168,6 @@ describe("Students API Tests", () => {
           level: "collège",
           grade: "4ème",
         },
-        subjects: [
-          {
-            name: "Mathématiques",
-            level: "intermédiaire",
-          },
-        ],
       });
       await student.save();
       studentId = student._id;
@@ -233,16 +211,6 @@ describe("Students API Tests", () => {
           level: "collège",
           grade: "3ème",
         },
-        subjects: [
-          {
-            name: "Mathématiques",
-            level: "intermédiaire",
-          },
-          {
-            name: "Français",
-            level: "intermédiaire",
-          },
-        ],
       };
 
       const response = await request(app)
@@ -326,12 +294,6 @@ describe("Students API Tests", () => {
           level: "collège",
           grade: "4ème",
         },
-        subjects: [
-          {
-            name: "Mathématiques",
-            level: "intermédiaire",
-          },
-        ],
       });
       await student.save();
       studentId = student._id;
@@ -342,16 +304,6 @@ describe("Students API Tests", () => {
         firstName: "Updated Student",
         "school.level": "lycée",
         "school.grade": "2nde",
-        subjects: [
-          {
-            name: "Mathématiques",
-            level: "intermédiaire",
-          },
-          {
-            name: "Physique",
-            level: "intermédiaire",
-          },
-        ],
       };
 
       const response = await request(app)
@@ -396,12 +348,6 @@ describe("Students API Tests", () => {
           level: "collège",
           grade: "4ème",
         },
-        subjects: [
-          {
-            name: "Mathématiques",
-            level: "intermédiaire",
-          },
-        ],
       });
       await student.save();
       studentId = student._id;
@@ -446,12 +392,6 @@ describe("Students API Tests", () => {
             level: "collège",
             grade: "4ème",
           },
-          subjects: [
-            {
-              name: "Mathématiques",
-              level: "intermédiaire",
-            },
-          ],
         },
         {
           firstName: "Child 2",
@@ -466,12 +406,6 @@ describe("Students API Tests", () => {
             level: "collège",
             grade: "6ème",
           },
-          subjects: [
-            {
-              name: "Mathématiques",
-              level: "intermédiaire",
-            },
-          ],
         },
       ];
 
