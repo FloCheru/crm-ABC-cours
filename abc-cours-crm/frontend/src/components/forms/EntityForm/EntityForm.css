@@ -185,6 +185,47 @@
   font-size: 14px;
 }
 
+/* Encart d'erreur général (banner) */
+.entity-form__error-banner {
+  background-color: var(--error-background, #fef2f2);
+  border: 1px solid var(--error, #ef4444);
+  border-left: 4px solid var(--error, #ef4444);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  animation: slideDown 0.3s ease-out;
+}
+
+.entity-form__error-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.entity-form__error-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.entity-form__error-message {
+  color: var(--error, #ef4444);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+}
+
+/* Animation d'apparition */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ==========================================================================
      ACTIONS (BOUTONS)
      ========================================================================== */

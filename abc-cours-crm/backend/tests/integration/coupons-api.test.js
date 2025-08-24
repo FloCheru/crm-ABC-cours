@@ -1,12 +1,12 @@
 const request = require("supertest");
-const app = require("../server-test");
-const User = require("../models/User");
-const Family = require("../models/Family");
-const Student = require("../models/Student");
-const Professor = require("../models/Professor");
-const CouponSeries = require("../models/CouponSeries");
-const Coupon = require("../models/Coupon");
-const { setupTestDB, teardownTestDB, clearTestDB } = require("./setup");
+const app = require("../../server");
+const User = require("../../models/User");
+const Family = require("../../models/Family");
+const Student = require("../../models/Student");
+const Professor = require("../../models/Professor");
+const CouponSeries = require("../../models/CouponSeries");
+const Coupon = require("../../models/Coupon");
+const { setupTestDB, teardownTestDB, clearTestDB } = require("../setup");
 
 describe("Individual Coupons Tests", () => {
   let adminToken;

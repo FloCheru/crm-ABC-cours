@@ -43,15 +43,24 @@ export interface Family {
   nextActionReminderSubject?: string; // Objet du rappel
   nextActionDate?: Date | null; // Date de la prochaine action (RRR)
   source?: string; // Source du prospect
+  // Section demande de cours (obligatoire)
+  demande: {
+    beneficiaryType: "adulte" | "eleves";
+    subjects: string[];
+    notes?: string;
+  };
+  // Professeur prévu
+  plannedTeacher?: string;
   createdBy: string; // ObjectId ref
-  students:
-    | string[]
-    | Array<{
-        _id: string;
-        firstName: string;
-        lastName: string;
-        level: string;
-      }>; // IDs des élèves ou objets populés
+  // Students optionnel
+  students?: Array<{
+    _id: string;
+    firstName: string;
+    lastName: string;
+    school?: {
+      grade: string;
+    };
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -131,6 +140,14 @@ export interface CreateFamilyData {
     relationship?: string; // Lien de parenté
     dateOfBirth?: Date;
   };
+  // Section demande de cours (obligatoire)
+  demande: {
+    beneficiaryType: "adulte" | "eleves";
+    subjects: string[];
+    notes?: string;
+  };
+  // Professeur prévu
+  plannedTeacher?: string;
   status?: 'prospect' | 'client';
   notes?: string;
 }

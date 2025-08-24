@@ -301,7 +301,16 @@ class PDFGenerationService {
   async generatePDFFromHTML(html) {
     const browser = await puppeteer.launch({
       headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-web-security',
+        '--disable-extensions',
+        '--no-first-run',
+        '--no-default-browser-check'
+      ]
     });
 
     try {
@@ -312,7 +321,7 @@ class PDFGenerationService {
       const css = await fs.readFile(cssPath, 'utf8');
       
       // Injecter le CSS dans le HTML
-      const htmlWithCSS = html.replace('<link rel="stylesheet" href="./ndr-styles.css">', `<style>${css}</style>`);
+      const htmlWithCSS = html.replace('<link rel="stylesheet" href="./ndr-styles.css" />', `<style>${css}</style>`);
       
       await page.setContent(htmlWithCSS, { waitUntil: 'networkidle0' });
 

@@ -1,18 +1,20 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-interface CacheEntry<T> {
-  data: T;
+// Interface CacheEntry supprimée - utilisons CacheState directement
+
+interface CacheState {
+  data: any;
   timestamp: number;
-  ttl: number; // Time to live en millisecondes
+  ttl: number;
 }
 
 interface DataCacheState {
-  // Cache pour les différentes pages
-  prospectsCache: CacheEntry<any> | null;
-  clientsCache: CacheEntry<any> | null;
-  dashboardCache: CacheEntry<any> | null;
-  couponSeriesCache: CacheEntry<any> | null;
+  // Cache unifié optimisé
+  familiesCache: CacheState | null;
+  ndrCache: CacheState | null;
+  couponSeriesCache: CacheState | null;
+  couponsCache: CacheState | null;
   
   // Actions génériques
   setCache: <T>(key: string, data: T, ttl?: number) => void;
@@ -20,56 +22,53 @@ interface DataCacheState {
   invalidateCache: (key: string) => void;
   invalidateAllCache: () => void;
   isExpired: (key: string) => boolean;
-  
-  // Actions spécialisées pour chaque page
-  setProspectsCache: (data: any, ttl?: number) => void;
-  getProspectsCache: () => any | null;
-  setClientsCache: (data: any, ttl?: number) => void;
-  getClientsCache: () => any | null;
-  setDashboardCache: (data: any, ttl?: number) => void;
-  getDashboardCache: () => any | null;
-  setCouponSeriesCache: (data: any, ttl?: number) => void;
-  getCouponSeriesCache: () => any | null;
 }
 
-// TTL par défaut : 5 minutes
-const DEFAULT_TTL = 5 * 60 * 1000;
+// TTL optimisés par type de données
+const CACHE_TTL = {
+  families: 30 * 60 * 1000,    // 30min - données très stables
+  ndr: 15 * 60 * 1000,         // 15min - modérément stables
+  couponSeries: 60 * 60 * 1000, // 60min - très stables
+  coupons: 15 * 60 * 1000,     // 15min - modérément stables
+  default: 5 * 60 * 1000       // 5min - fallback
+};
 
 export const useDataCacheStore = create<DataCacheState>()(
   devtools(
     (set, get) => ({
-      // État initial
-      prospectsCache: null,
-      clientsCache: null,
-      dashboardCache: null,
+      // État initial unifié
+      familiesCache: null,
+      ndrCache: null,
       couponSeriesCache: null,
+      couponsCache: null,
       
-      // Actions génériques
-      setCache: <T>(key: string, data: T, ttl: number = DEFAULT_TTL) => {
-        const cacheEntry: CacheEntry<T> = {
+      // Actions génériques avec TTL auto-optimisé
+      setCache: <T>(key: string, data: T, ttl?: number) => {
+        const optimizedTTL = ttl || CACHE_TTL[key as keyof typeof CACHE_TTL] || CACHE_TTL.default;
+        const cacheState: CacheState = {
           data,
           timestamp: Date.now(),
-          ttl,
+          ttl: optimizedTTL,
         };
         
         set((state) => ({
           ...state,
-          [`${key}Cache`]: cacheEntry,
+          [`${key}Cache`]: cacheState,
         }));
         
-        console.log(`🗄️ Cache: Données sauvegardées pour ${key} (TTL: ${ttl}ms)`);
+        console.log(`🗄️ Cache: Données sauvegardées pour ${key} (TTL: ${optimizedTTL}ms)`);
       },
       
       getCache: <T>(key: string): T | null => {
         const state = get();
-        const cacheEntry = (state as any)[`${key}Cache`] as CacheEntry<T> | null;
+        const cacheState = (state as any)[`${key}Cache`] as CacheState | null;
         
-        if (!cacheEntry) {
+        if (!cacheState) {
           console.log(`🗄️ Cache: Aucune donnée trouvée pour ${key}`);
           return null;
         }
         
-        const isExpired = Date.now() - cacheEntry.timestamp > cacheEntry.ttl;
+        const isExpired = Date.now() - cacheState.timestamp > cacheState.ttl;
         
         if (isExpired) {
           console.log(`🗄️ Cache: Données expirées pour ${key}`);
@@ -82,7 +81,7 @@ export const useDataCacheStore = create<DataCacheState>()(
         }
         
         console.log(`🗄️ Cache: Données valides trouvées pour ${key}`);
-        return cacheEntry.data;
+        return cacheState.data;
       },
       
       invalidateCache: (key: string) => {
@@ -95,54 +94,21 @@ export const useDataCacheStore = create<DataCacheState>()(
       
       invalidateAllCache: () => {
         set({
-          prospectsCache: null,
-          clientsCache: null,
-          dashboardCache: null,
+          familiesCache: null,
+          ndrCache: null,
           couponSeriesCache: null,
+          couponsCache: null,
         });
         console.log('🗄️ Cache: Invalidation complète');
       },
       
       isExpired: (key: string): boolean => {
         const state = get();
-        const cacheEntry = (state as any)[`${key}Cache`];
+        const cacheState = (state as any)[`${key}Cache`];
         
-        if (!cacheEntry) return true;
+        if (!cacheState) return true;
         
-        return Date.now() - cacheEntry.timestamp > cacheEntry.ttl;
-      },
-      
-      // Actions spécialisées
-      setProspectsCache: (data: any, ttl: number = DEFAULT_TTL) => {
-        get().setCache('prospects', data, ttl);
-      },
-      
-      getProspectsCache: () => {
-        return get().getCache('prospects');
-      },
-      
-      setClientsCache: (data: any, ttl: number = DEFAULT_TTL) => {
-        get().setCache('clients', data, ttl);
-      },
-      
-      getClientsCache: () => {
-        return get().getCache('clients');
-      },
-      
-      setDashboardCache: (data: any, ttl: number = DEFAULT_TTL) => {
-        get().setCache('dashboard', data, ttl);
-      },
-      
-      getDashboardCache: () => {
-        return get().getCache('dashboard');
-      },
-      
-      setCouponSeriesCache: (data: any, ttl: number = DEFAULT_TTL) => {
-        get().setCache('couponSeries', data, ttl);
-      },
-      
-      getCouponSeriesCache: () => {
-        return get().getCache('couponSeries');
+        return Date.now() - cacheState.timestamp > cacheState.ttl;
       },
     }),
     {

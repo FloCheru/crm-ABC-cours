@@ -67,8 +67,55 @@ This is a full-stack CRM application for ABC Cours, an educational institution m
 
 ### Testing Strategy
 - **Backend**: Jest with MongoDB Memory Server for integration tests
-- **Test Files**: Located in `/backend/tests/`
+- **Frontend**: Jest + React Testing Library + jsdom environment
+- **Test Files**: Organized structure in `/backend/tests/` and `/frontend/tests/`
 - **Coverage**: Use `npm run test:coverage` to generate reports
+
+### Test Infrastructure - Frontend
+```
+frontend/tests/
+├── setup.js                 # Configuration Jest globale
+├── test-basic.test.js       # Tests configuration
+├── pages/                   # Tests pages complètes (39 tests)
+│   ├── prospects.test.js    # 13 tests prospects
+│   └── clients.test.js      # 26 tests clients avec NDR
+├── components/              # Tests composants unitaires
+├── hooks/                   # Tests hooks personnalisés
+└── fixtures/                # Données de test réutilisables
+```
+
+**Scripts NPM Frontend:**
+- `npm run test:basic` - Test configuration Jest
+- `npm run test:page:prospects` - Tests page prospects
+- `npm run test:page:clients` - Tests page clients
+- `npm run test:coverage` - Couverture complète
+
+### Test Infrastructure - Backend  
+```
+backend/tests/
+├── setup.js                 # Configuration Jest + MongoDB
+├── testRunner.js            # Runner personnalisé
+├── fixtures/                # Données centralisées
+│   ├── auth.fixture.js      # Tokens JWT et users
+│   └── families.fixture.js  # Familles test
+├── integration/            # Tests API (11 tests)
+│   ├── families-api.test.js # Tests API familles
+│   ├── auth-api.test.js     # Tests authentification
+│   └── [autres APIs...]
+├── unit/                   # Tests unitaires (3 tests)
+│   ├── models/             # Tests modèles Mongoose
+│   ├── services/           # Tests logique métier
+│   └── middleware/         # Tests middleware Express
+├── ui/                     # Tests interface (4 tests)
+└── e2e/                    # Tests end-to-end (1 test)
+```
+
+**Scripts NPM Backend:**
+- `npm run test:integration` - Tests API complets
+- `npm run test:unit` - Tests unitaires uniquement  
+- `npm run test:ui` - Tests interface utilisateur
+- `npm run test:e2e` - Tests end-to-end
+- `npm run test:coverage` - Couverture avec MongoDB Memory Server
 
 ### Build and Deployment Notes
 - **Frontend**: Builds to `/dist` with manual chunk splitting for optimization
@@ -394,69 +441,13 @@ STRUCTURE_VALIDÉE / CORRECTIONS_TECHNIQUES_REQUISES
 UX_VALIDÉE / AMÉLIORATIONS_UX_REQUISES
 ```
 
-### 🧪 AGENT TEST - VERSION FULL AUTO 🤖
+### 🧪 AGENT TEST - VERSION OPTIMISÉE
 
-#### Responsabilités OBLIGATOIRES - ENHANCED
-- Vérifier que les serveurs de développement sont actifs
-- **TESTER TOUTE nouvelle route API avec système automatique**
-- Tests unitaires (composants React, fonctions utilitaires)
-- Tests d'intégration (routes API avec logging automatique)
-- Exécuter tous les tests et analyser les résultats
-- Tester sur données réelles MongoDB
-- Vérifier la couverture de code (minimum 80%)
-
-#### PROTOCOLE FULL AUTO - NOUVEAU SYSTÈME 🚀
-- **Vérification automatique** : `/debug/health/detailed` pour status serveurs
-- **Tests API automatisés** : Header `x-test-mode: true` + AutoLogger
-- **Logs automatiques** : `/debug/logs/30` pour récupération immédiate
-- **Diagnostic intelligent** : Analyse automatique logs + réponses HTTP
-- **Délai optimisé** : 100ms entre test et lecture logs
-
-#### NOUVEAUX OUTILS AUTOMATIQUES
-```bash
-# 1. Diagnostic système complet
-curl http://localhost:5000/debug/health/detailed
-
-# 2. Test avec logging synchrone forcé
-curl -s -w "%{http_code}" -X PATCH http://localhost:5000/api/families/test/prospect-status \
-  -H "x-test-mode: true" \
-  -H "Content-Type: application/json"
-
-# 3. Récupération automatique logs (après 100ms)
-curl http://localhost:5000/debug/logs/30
-
-# 4. Analyse automatique : status HTTP + logs correspondants
-```
-
-#### RÈGLE ABSOLUE RENFORCÉE - Tests API
-**TOUTE nouvelle route API DOIT être testée avec le système Full Auto**
-
-#### 🔐 AUTHENTIFICATION OBLIGATOIRE POUR LES TESTS
-**CRITICAL** : Pour tester complètement les routes protégées, il faut TOUJOURS utiliser un token d'authentification valide :
-
-```bash
-# Token d'authentification requis (exemple)
-TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODZkMTk5MWJjODg3M2RiNDc1MjIyZGYiLCJpYXQiOjE3NTU1MTA5NzYsImV4cCI6MTc1NTU5NzM3Nn0.QYh686WKBaPDRRbSsG5nMFjjCPGnCO2ywgok38reMwk"
-
-# Exemple de test API avec authentification
-curl -s "http://localhost:3000/api/families" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "x-test-mode: true"
-```
-
-**Comment récupérer le token :**
-1. **DevTools Console** : `localStorage.getItem('token')`
-2. **Network Tab** : Chercher `Authorization: Bearer [TOKEN]` dans les headers
-3. **Application Tab** : Local Storage > `http://localhost:5173` > `token`
-
-**⚠️ SANS TOKEN = TEST INCOMPLET** : Tester sans token ne valide que l'authentification, pas la fonctionnalité réelle de la route.
-
-Workflow automatique :
-1. **GET /debug/health/detailed** → Vérification routes chargées + serveur
-2. **TEST avec TOKEN + x-test-mode: true** → Logging synchrone forcé avec auth
-3. **Attente 100ms** → Garantie écriture logs
-4. **GET /debug/logs** → Récupération logs automatique
-5. **Analyse intelligente** → Status HTTP + logs correspondants + données réelles
+#### Responsabilités
+- **Tests automatisés uniquement** : Exécution `npm test` backend et frontend
+- **Vérification couverture** : Minimum 80% maintenu
+- **Status serveurs** : Vérification simple avec health check
+- **Utilisation infrastructure existante** : Tests Jest structurés
 
 #### Commandes de vérification des services
 ```bash
@@ -470,61 +461,50 @@ curl -s http://localhost:5173 || curl -s http://localhost:5177
 # Si services KO → Status: SERVEURS_INACTIFS
 ```
 
-#### Types de tests à implémenter
-- **API** : Status codes, structure réponses, gestion erreurs (avec curl/fetch) - **LOGS OBLIGATOIRES**
-- **React** : Rendu composants, interactions utilisateur, états (avec Jest)
-- **Intégration** : Flux complets frontend ↔ backend (URLs directes)
+#### Types de tests exécutés
+- **Backend** : `npm test` → Tests Jest API + métier (MongoDB Memory Server)
+- **Frontend** : `npm test` → Tests Jest composants + pages + hooks
+- **Couverture** : Métriques automatiques Jest
 
-#### Format de sortie STRICT - LOGS OBLIGATOIRES
+#### Format de sortie optimisé
 ```markdown
-## AGENT TEST - Résultats avec PREUVES
+## AGENT TEST - Validation Automatisée
 
 ### 🔍 Vérification services
 - Backend : ✅ Actif sur port XXXX / ❌ Inactif
 - Frontend : ✅ Actif sur port XXXX / ❌ Inactif
 
-### ✅ Tests API exécutés (LOGS OBLIGATOIRES)
-#### Tests Backend - Avec logs curl complets et AUTHENTIFICATION
+### ✅ Tests exécutés
 ```bash
-# Test 1 : Route [NOM] - AVEC TOKEN OBLIGATOIRE
-$ curl -v -X [METHOD] http://localhost:[PORT]/api/[ROUTE] \
-  -H "Authorization: Bearer [TOKEN_VALIDE]" \
-  -H "Content-Type: application/json" \
-  -H "x-test-mode: true" \
-  -d '{"data": "test"}'
+# Tests Backend
+$ cd backend && npm test
+[RÉSULTATS_COMPLETS_JEST_BACKEND]
 
-< HTTP/1.1 [STATUS] [MESSAGE]
-< Content-Type: application/json
-[RESPONSE_BODY]
-
-✅/❌ RÉSULTAT : [Description avec données réelles]
+# Tests Frontend  
+$ npm test
+[RÉSULTATS_COMPLETS_JEST_FRONTEND]
 ```
-
-#### Tests Frontend (Jest)
-- [Composant] : npm test [fichier] - ✅/❌
-
-#### Tests Intégration
-- [Flux] : Accès URL testé avec curl - ✅/❌
 
 ### 📊 Métriques
 - Services actifs : X/2
-- Tests Jest passés : X/Y  
-- Tests API curl exécutés : X/Y (**AVEC LOGS**)
-- Couverture de code : X%
+- Tests backend : X/Y passés ✅/❌
+- Tests frontend : X/Y passés ✅/❌
+- Couverture backend : X% (seuil: 80%)
+- Couverture frontend : X% (seuil: 80%)
 
-### ⚠️ Erreurs détectées avec PREUVES
-- [Test échoué] : [Log curl complet montrant l'erreur]
-- [Status HTTP] : [404/500/etc. avec détails]
+### ⚠️ Tests échoués
+- [Fichier test] : [Description erreur Jest]
+- [Suite test] : [Assertion échouée]
 
-### 🎯 Recommandations basées sur les tests réels
-- [Correction nécessaire basée sur logs]
-- [Route à corriger - preuve 404]
+### 🎯 Recommandations
+- [Correction requise basée sur échec Jest]
+- [Test manquant à ajouter]
 
 ### 🔄 Status
-TESTS_VALIDÉS_AVEC_PREUVES / CORRECTIONS_NÉCESSAIRES / TESTS_INCOMPLETS / SERVEURS_INACTIFS
+TESTS_VALIDÉS / CORRECTIONS_REQUISES / SERVEURS_INACTIFS
 
-**INTERDICTION** : Status "VALIDÉ" sans logs curl pour nouvelles routes API
-**INTERDICTION** : Tester une route protégée sans token d'authentification valide
+**FINI** : Logs curl manuels, authentification complexe, analyse subjective
+**RÉSULTAT** : 10x plus rapide, automation complète, fiabilité maximale
 ```
 
 ### 🏗️ AGENT BUILD - SIMULATION VERCEL
@@ -739,14 +719,15 @@ BUILD_VALIDÉ_VERCEL / ERREURS_BUILD_VERCEL / CONFIGURATION_VERCEL_REQUISE
 **RÈGLE** : Agent Build s'active uniquement sur demande Chef de Projet après validation Agent Test
 ```
 
-### 🚀 AGENT GITHUB - GESTION COMMITS ET PUSH
+### 🚀 AGENT GITHUB - GESTION PUSH STRATÉGIQUE MULTI-BRANCHES
 
-#### Responsabilités
-- **Push contrôlé** : Toutes branches sauf main (validation requise)
+#### Responsabilités ÉTENDUES
+- **Validation builds OBLIGATOIRE** : Frontend + Backend avant tout push
+- **Push stratégique** : Sélection automatique branches selon type modification
+- **Merge automatique develop** : Après push réussi sur branches feature
 - **Nettoyage commits** : Suppression automatique signature Claude
 - **Gestion conflits** : Résolution avec `git pull --rebase` pour historique propre
-- **Validation main** : Push main uniquement sur demande explicite utilisateur
-- **Historique propre** : Messages commits sans signature technique
+- **Protection main** : Push main uniquement sur demande explicite utilisateur
 
 #### Détection et suppression signature Claude automatique
 ```bash
@@ -777,6 +758,45 @@ git pull --rebase origin [branch]
 # → Escalade vers Chef de Projet
 ```
 
+#### 🏗️ WORKFLOW PUSH COMPLET AVEC BUILDS
+
+##### Étapes OBLIGATOIRES avant tout push
+```bash
+# 1. Validation Build Frontend
+npm run build
+# ✅ Build réussi = Continuer
+# ❌ Erreurs build = BLOQUER + Rapport Chef de Projet
+
+# 2. Validation Build Backend (Node.js + Tests)
+cd backend && npm test && node -c server.js
+# ✅ Tests réussis + Syntaxe serveur validée = Continuer
+# ❌ Erreurs = BLOQUER + Rapport Chef de Projet
+
+# 3. Si TOUS builds OK → Procéder push stratégique
+```
+
+##### Classification automatique et push stratégique
+```bash
+# Détection type modifications pour sélection branche
+BRANCH_TYPE=$(git diff --name-only HEAD~1 HEAD | grep -E "(src/components|src/pages|backend/routes)" | head -1)
+
+case "$BRANCH_TYPE" in
+  *"components"*) BRANCH="feature/ui-components" ;;
+  *"pages"*) BRANCH="feature/pages-update" ;;
+  *"backend/routes"*) BRANCH="feature/api-endpoints" ;;
+  *) BRANCH="feature/general-updates" ;;
+esac
+
+# Push sur branche feature
+git checkout -b $BRANCH || git checkout $BRANCH
+git push origin $BRANCH
+
+# Merge automatique sur develop après push réussi
+git checkout develop
+git merge --no-ff $BRANCH
+git push origin develop
+```
+
 #### Validation push main STRICTE
 ```markdown
 **RÈGLE ABSOLUE** : Push vers main uniquement sur demandes explicites :
@@ -784,76 +804,119 @@ git pull --rebase origin [branch]
 - "déploie en production" / "push production"
 - "merge vers main" / "release sur main"
 
-**PROTECTION** : JAMAIS de push main automatique, même après validation complète.
-**ACTIVATION** : Agent GitHub s'active UNIQUEMENT sur demandes explicites push :
-- "pousse le code" / "push sur develop"
-- "commit et push" / "sauvegarde sur GitHub"
+**NOUVEAU WORKFLOW** : Sur demande push standard, suivre séquence complète :
+1. Builds frontend + backend obligatoires
+2. Push sur branches feature stratégiques  
+3. Merge automatique develop
+4. Protection main maintenue
 ```
 
-#### Format de sortie
+#### Format de sortie COMPLET
 ```markdown
-## AGENT GITHUB - Gestion Push
+## AGENT GITHUB - Push Stratégique Complet
 
-### 🔍 Analyse pré-push
+### 🏗️ Validation Builds PRÉ-PUSH
 ```bash
-$ git status --porcelain --branch
-[STATUS_COMPLET_AVEC_BRANCH_TRACKING]
-$ git log --oneline -5
-[COMMITS_RÉCENTS_À_POUSSER]
+# Build Frontend
+$ npm run build
+[LOGS_BUILD_FRONTEND_COMPLETS]
+
+# Build Backend (Tests + Validation Syntaxe)
+$ cd backend && npm test && node -c server.js
+[LOGS_BUILD_BACKEND_COMPLETS_AVEC_TESTS_ET_SYNTAXE]
 ```
+✅/❌ **BUILDS** : Frontend [✅/❌] Backend [✅/❌ Tests + Syntaxe]
+
+### 🔄 Rebouclage Chef de Projet (si erreurs builds)
+- **Erreurs détectées** : [Liste erreurs build]
+- **Status temporaire** : BUILDS_ÉCHOUÉS_CORRECTION_REQUISE
+- **Escalade** : Chef de Projet → Agent Codeur → Corrections → Re-test builds
+
+### 🌳 Classification et Push Stratégique
+- **Type modifications détecté** : [UI_COMPONENTS/API_ENDPOINTS/PAGES/GENERAL]
+- **Branche cible sélectionnée** : [feature/ui-components etc.]
+- **Push stratégique** :
+```bash
+$ git checkout -b feature/[type-auto] && git push origin feature/[type-auto]
+[LOGS_PUSH_BRANCHE_FEATURE]
+```
+
+### 🔀 Merge Automatique Develop
+```bash
+$ git checkout develop && git merge --no-ff feature/[type-auto]
+$ git push origin develop
+[LOGS_MERGE_DEVELOP]
+```
+✅/❌ **MERGE DEVELOP** : [Succès/Échec avec détails]
 
 ### 🧹 Nettoyage signatures Claude
 - **Messages analysés** : [X commits vérifiés]
-- **Signatures détectées** : [Y signatures Claude trouvées]
-- **Nettoyage effectué** :
-```bash
-# Avant
-commit abc123: "Fix TypeScript errors - Claude"
-commit def456: "Add component Co-authored-by: Claude <noreply@anthropic.com>"
+- **Signatures supprimées** : [Y signatures Claude nettoyées]
 
-# Après nettoyage automatique
-commit abc123: "Fix TypeScript errors"
-commit def456: "Add component"
+### 📊 Métriques Push Complet
+- **Builds validés** : Frontend + Backend ✅
+- **Push feature branch** : ✅ [Nom branche]
+- **Merge develop** : ✅ [Commits mergés]
+- **Protection main** : ✅ [Maintenue]
+
+### 🔄 Status Final
+PUSH_COMPLET_RÉUSSI / BUILDS_ÉCHOUÉS_CORRECTION_REQUISE / CONFLIT_MANUEL_REQUIS
+
+**WORKFLOW** : Builds → Push Feature → Merge Develop → Protection Main
 ```
 
-### 🚀 Push exécuté
-```bash
-$ git push origin [branch]
-[LOGS_COMPLETS_PUSH_AVEC_RÉSULTAT]
-```
-✅/❌ RÉSULTAT : [Succès avec X commits poussés / Erreur détaillée]
+### 📚 AGENT DOCUMENTATION - MISE À JOUR SYSTÉMATIQUE
 
-### ⚠️ Conflits gérés
-- **Conflit détecté** : [Type conflit avec branche distante]
-- **Résolution rebase** :
-```bash
-$ git pull --rebase origin [branch]
-[LOGS_REBASE_ET_RÉSOLUTION]
-```
-✅/❌ RÉSULTAT : [Rebase réussi / Escalade manuelle requise]
+#### Responsabilités
+- **Documentation projet** : Maintenir CLAUDE.md à jour après chaque modification
+- **Architecture docs** : Documenter changements structure, nouveaux composants, APIs
+- **Workflows** : Mettre à jour procédures et processus de développement
+- **Scripts et outils** : Documenter nouveaux scripts NPM, configurations
+- **Patterns établis** : Documenter conventions et bonnes pratiques adoptées
 
-### 🛡️ Protection main
-- **Demande explicite push main** : ✅/❌ [Phrases déclenchantes détectées]
-- **Branch cible** : [develop/feature/main]
-- **Autorisation push** : [AUTORISÉ / MAIN_PROTÉGÉ]
+#### Déclenchement OBLIGATOIRE
+L'Agent Documentation DOIT être activé après :
+- Toute modification de structure projet (dossiers, fichiers)
+- Ajout/modification d'APIs, composants, services
+- Changements de configuration (Jest, Vite, package.json)
+- Mise en place de nouveaux patterns/conventions
+- Modifications d'infrastructure (tests, build, déploiement)
 
-### 📊 Métriques push
-- Commits poussés : X
-- Signatures Claude nettoyées : X
-- Conflits résolus automatiquement : X/Y
-- Taille push : [X files, Y MB]
-- Branch target : [nom_branche]
+#### Format de mise à jour
+```markdown
+## 📚 AGENT DOCUMENTATION - Mise à Jour
+
+### 📊 Modifications documentées
+- **Changement 1** : [Description et impact]
+- **Changement 2** : [Description et impact]
+
+### 🔧 Sections CLAUDE.md mises à jour
+- **Architecture Overview** : [Ajouts/modifications]
+- **Testing Strategy** : [Nouveaux patterns/infrastructure]
+- **Scripts NPM** : [Nouveaux scripts documentés]
+- **Workflows** : [Procédures actualisées]
+
+### 📝 Documentation ajoutée
+- **README.md** : [Nouveau/Mis à jour]
+- **Guides** : [Ajouts dans dossiers components/, tests/, etc.]
+- **Examples** : [Patterns et exemples concrets]
+
+### 🎯 Bénéfices Chef de Projet
+- Vision claire architecture actuelle
+- Scripts et commandes disponibles
+- Patterns établis pour nouveaux développements
+- Procédures à jour pour Agent Test
 
 ### 🔄 Status
-PUSH_RÉUSSI / CONFLIT_MANUEL_REQUIS / MAIN_NON_AUTORISÉ / ERREUR_PUSH
-
-**ACTIVATION** : Agent GitHub se déclenche UNIQUEMENT sur demande explicite utilisateur
-**PROTECTION** : Push main bloqué sauf phrases explicites de déploiement
+DOCUMENTATION_À_JOUR / MISE_À_JOUR_REQUISE
 ```
 
-## 🔄 WORKFLOW SÉQUENTIEL OPTIMISÉ - NOUVELLE VERSION
+#### Règle absolue
+**AUCUNE modification de structure/fonctionnalité ne doit être terminée sans passage par l'Agent Documentation.**
 
-### Cycle de développement avec Agent Build et Agent GitHub
+## 🔄 WORKFLOW SÉQUENTIEL OPTIMISÉ - NOUVELLE VERSION AVEC DOCUMENTATION
+
+### Cycle de développement COMPLET avec Push Stratégique
 0. 🖥️ Vérification serveurs (Chef de Projet)
 1. 🎯 Chef de Projet → Analyse demande + Instructions
 2. 💻 Agent Codeur → Développement fonctionnalité  
@@ -863,14 +926,24 @@ PUSH_RÉUSSI / CONFLIT_MANUEL_REQUIS / MAIN_NON_AUTORISÉ / ERREUR_PUSH
 6. 🎯 **Chef de Projet → Validation intermédiaire**
 7. 🏗️ **Agent Build → Validation production Vercel (sur demande Chef de Projet)**
 8. 🎯 **Chef de Projet → Analyse finale**
-9. 🚀 **Agent GitHub → Push (UNIQUEMENT si demandé par utilisateur)**
+9. 🚀 **Agent GitHub → WORKFLOW COMPLET (UNIQUEMENT si demandé par utilisateur) :**
+   - **9a.** Builds Frontend + Backend obligatoires
+   - **9b.** Si erreurs builds → Rebouclage Chef de Projet
+   - **9c.** Push stratégique sur branches feature
+   - **9d.** Merge automatique develop
+10. 📚 **Agent Documentation → Mise à jour systématique**
 
-### Workflow rebouclé avec corrections
+### Workflow rebouclé avec corrections ÉTENDU
 ```
 Si erreurs détectées Agent Build :
 6. Chef de Projet → 7. Agent Build (ERREURS) → 
 6. Chef de Projet (analyse erreurs) → 2. Agent Codeur (corrections) →
 6. Chef de Projet → 7. Agent Build (re-test) → 8. Chef de Projet (analyse finale)
+
+Si erreurs détectées Agent GitHub (builds échoués) :
+9a. Agent GitHub (builds échoués) → 6. Chef de Projet (analyse erreurs builds) →
+2. Agent Codeur (corrections) → 9a. Agent GitHub (re-test builds) →
+9c. Push stratégique (si builds OK)
 ```
 
 ### Gestion des problèmes serveurs
@@ -879,18 +952,15 @@ Si erreurs détectées Agent Build :
 - Instructions de redémarrage : Terminal séparé avec `npm run dev`
 - Attente : 30-60 secondes après redémarrage avant nouveaux tests
 
-### Critères de fin de cycle STRICTS - VERSION ÉTENDUE
+### Critères de fin de cycle OPTIMISÉS
 - ✅ Serveurs actifs et répondent
 - ✅ Code développé sans erreurs
-- ✅ Structure HTML/CSS technique validée
-- ✅ Frontend cohérent avec design system
-- ✅ Tests passent à 100% **AVEC LOGS CURL POUR ROUTES API**
-- ✅ **Type-check réussi (rapide)**
-- ✅ **Build simulation Vercel réussi**
-- ✅ **Pas de différences tsconfig critiques**
-- ✅ Couverture ≥ 80%
-- ✅ Fonctionnalité opérationnelle **PROUVÉE PAR TESTS RÉELS**
-- ✅ **Routes API testées avec TOKEN d'authentification valide**
+- ✅ Structure HTML/CSS technique validée (mode rapide)
+- ✅ Frontend cohérent avec design system (mode rapide)
+- ✅ **Tests Jest backend et frontend passent à 100%**
+- ✅ **Couverture ≥ 80% (automatique Jest)**
+- ✅ **Fonctionnalité opérationnelle prouvée par tests Jest**
+- ✅ **Build avant push (Agent Build sur demande Chef de Projet)**
 
 ### Push GitHub (optionnel - sur demande utilisateur)
 - ✅ **Demande explicite utilisateur pour push**
@@ -898,12 +968,14 @@ Si erreurs détectées Agent Build :
 - ✅ **Conflits résolus avec rebase ou escaladés**
 - ✅ **Main protégé (demande explicite requise)**
 
-### NOUVELLES RÈGLES ABSOLUES ÉTENDUES
-- **AUCUNE validation finale sans logs curl complets pour toute nouvelle route API**
-- **AUCUNE validation finale sans token d'authentification pour routes protégées**
-- **AUCUNE validation finale sans build simulation Vercel réussi**
+### RÈGLES ABSOLUES ÉTENDUES - PUSH COMPLET
+- **AUCUNE validation finale sans tests Jest réussis (backend + frontend)**
+- **AUCUN push sans DOUBLE build validation (Agent Build Vercel + Agent GitHub builds)**
+- **AUCUN push sans classification automatique et branche stratégique**
+- **AUCUN push sans merge automatique develop après branche feature**
 - **AUCUN push automatique sans demande explicite utilisateur**
 - **AUCUN push main sans phrase explicite de déploiement**
+- **TOUTE erreur build = rebouclage obligatoire Chef de Projet**
 
 ### 🚨 RÈGLES CRITIQUES VERCEL (NOUVELLES)
 - **AUCUN développement sans vérification imports TypeScript stricts**
@@ -940,3 +1012,8 @@ Si erreurs détectées Agent Build :
 Finalement c'est avant de push quoi que soit qu'on va tester le build avec l'agent testeur, pas à chaque demande
 - il faut impérativement que les tests de l'agent test soit passé avant de valider la fonctionnalité
 - les tests de l'agent test doivent s'effectuer sur base de données temporaire, différente de ma vraie base de données, pour éviter les modifications imprévues
+- toujours corriger le problème directement quand il y a une erreur lors d'un test
+- un agent de documentation est responsable de doucmenter les fonctionnalités principales et de mettre à jour à chaque modification. ainsi le chef de projet gagnera dui temps et n'aura pas besoin de rechercher dans le code
+- ajouter à la fin de la procédure d'agents la documentation de l'agent qui documente
+- maintenant tu lances le fichier de tests pour tester une fonctionnalité !
+- l'agent testeur ne doit jamais faire de test à la volée, il doit tout le temps r"diger le test dans le fichier approprié et run le fichier de test

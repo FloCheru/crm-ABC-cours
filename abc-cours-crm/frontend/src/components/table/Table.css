@@ -58,6 +58,14 @@
   background-color: var(--surface-tertiary);
 }
 
+.table__row--clickable {
+  cursor: pointer;
+}
+
+.table__row--clickable:hover {
+  background-color: var(--primary-light-hover);
+}
+
 .table__row:not(:last-child) {
   border-bottom: 1px solid var(--border-default);
 }

@@ -6,6 +6,7 @@ interface UseCacheOptions {
   ttl?: number; // Time to live en millisecondes
   forceRefresh?: boolean; // Forcer le rechargement même si le cache existe
   dependencies?: any[]; // Dépendances pour invalider le cache
+  enabled?: boolean; // Activer/désactiver le cache
 }
 
 interface UseCacheResult<T> {
@@ -22,7 +23,7 @@ export function useCache<T>(
   fetchFunction: () => Promise<T>,
   options: UseCacheOptions = {}
 ): UseCacheResult<T> {
-  const { ttl = 5 * 60 * 1000, forceRefresh = false, dependencies = [] } = options;
+  const { ttl = 5 * 60 * 1000, forceRefresh = false, dependencies = [], enabled = true } = options;
   
   const { refreshTrigger } = useAppStore();
   const { getCache, setCache, invalidateCache, isExpired } = useDataCacheStore();
@@ -54,8 +55,13 @@ export function useCache<T>(
     invalidateCache(cacheKey);
   }, [cacheKey, invalidateCache]);
   
-  // Fonction pour charger les données
+  // Fonction pour charger les données (circuit breaker supprimé)
   const loadData = useCallback(async (): Promise<void> => {
+    if (!enabled) {
+      console.log(`⏸️ Cache: Désactivé pour ${cacheKey}`);
+      return;
+    }
+    
     try {
       setIsLoading(true);
       console.log(`🔄 Cache: Chargement des données pour ${cacheKey}`);
@@ -63,12 +69,21 @@ export function useCache<T>(
       setCacheData(data);
       setLastValidData(data); // Sauvegarder comme dernières données valides
       console.log(`✅ Cache: Données chargées pour ${cacheKey}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`❌ Cache: Erreur lors du chargement de ${cacheKey}:`, error);
+      // Log structuré pour debug des erreurs (remplace circuit breaker)
+      console.error('🔍 Cache Error Analysis:', {
+        timestamp: new Date().toISOString(),
+        cacheKey,
+        error: error?.message || 'Unknown error',
+        status: error?.status || 'Unknown status',
+        stack: error?.stack || 'No stack trace'
+      });
+      throw error; // Propager l'erreur pour gestion UI
     } finally {
       setIsLoading(false);
     }
-  }, [cacheKey, fetchFunction, setCacheData]);
+  }, [cacheKey, fetchFunction, setCacheData, enabled]);
   
   // Effect pour gérer le chargement initial et le refresh
   useEffect(() => {
@@ -85,7 +100,7 @@ export function useCache<T>(
   
   // Chargement initial immédiat si pas de données en cache
   useEffect(() => {
-    if (cachedData === null && !isLoading) {
+    if (cachedData === null && !isLoading && enabled) {
       console.log(`🚀 Cache: Chargement initial immédiat pour ${cacheKey}`);
       loadData();
     }

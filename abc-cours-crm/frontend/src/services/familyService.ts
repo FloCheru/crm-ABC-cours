@@ -87,6 +87,13 @@ class FamilyService {
     return response.family;
   }
 
+  async updateFamilyStatus(id: string, status: 'client' | 'prospect'): Promise<Family> {
+    const response = (await apiClient.patch(`/api/families/${id}/status`, {
+      status,
+    })) as FamilyResponse;
+    return response.family;
+  }
+
   async getFamilyStats(): Promise<FamilyStats> {
     const response = (await apiClient.get(
       "/api/families/stats"

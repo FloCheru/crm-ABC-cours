@@ -2,6 +2,11 @@
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 
+// Configuration environnement test obligatoire
+process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = 'test-jwt-secret-key';
+process.env.JWT_EXPIRE = '24h';
+
 let mongoServer;
 
 // Configuration pour les tests

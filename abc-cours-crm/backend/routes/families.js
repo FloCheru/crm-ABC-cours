@@ -34,7 +34,7 @@ router.get("/", async (req, res) => {
     const skip = (page - 1) * limit;
 
     const families = await Family.find(filter)
-      .populate('students', 'firstName lastName level')
+      .populate('students', 'firstName lastName school.grade school.level')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -173,6 +173,16 @@ router.post(
       });
     } catch (error) {
       console.error("Erreur lors de la création de la famille:", error);
+      
+      // Gérer les erreurs de validation Mongoose
+      if (error.name === 'ValidationError') {
+        const errors = Object.values(error.errors).map(err => err.message);
+        return res.status(400).json({ 
+          message: errors.join(', '),
+          errors: errors 
+        });
+      }
+      
       res.status(500).json({ message: "Erreur serveur" });
     }
   }

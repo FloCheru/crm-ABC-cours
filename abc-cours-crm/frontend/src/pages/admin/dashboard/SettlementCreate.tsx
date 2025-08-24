@@ -113,7 +113,7 @@ export const SettlementCreate: React.FC = () => {
     studentLocation?: string;
     studentAddress?: string;
   }>({});
-  
+
   // Ref pour conserver les erreurs en cas de re-rendu
   const validationErrorsRef = useRef<typeof validationErrors>({});
 
@@ -139,7 +139,10 @@ export const SettlementCreate: React.FC = () => {
     // Vérifier la date de naissance du client
     const selectedFamily = families.find((f) => f._id === formData.familyId);
     logger.debug("🔍 Vérification date naissance - famille:", selectedFamily);
-    logger.debug("🔍 Date de naissance:", selectedFamily?.primaryContact?.dateOfBirth);
+    logger.debug(
+      "🔍 Date de naissance:",
+      selectedFamily?.primaryContact?.dateOfBirth
+    );
     if (selectedFamily && !selectedFamily.primaryContact.dateOfBirth) {
       errors.clientBirthDate = "La date de naissance du client est obligatoire";
       logger.debug("🔍 ERREUR: Date de naissance manquante");
@@ -147,13 +150,16 @@ export const SettlementCreate: React.FC = () => {
 
     // Vérifier le mode de règlement
     logger.debug("🔍 Vérification paymentMethod:", formData.paymentMethod);
-    if (formData.paymentMethod === '') {
+    if (formData.paymentMethod === "") {
       errors.paymentMethod = "Le mode de règlement est obligatoire";
       logger.debug("🔍 ERREUR: Mode de règlement manquant");
     }
 
     // Vérifier les informations des élèves sélectionnés
-    logger.debug("🔍 Vérification informations élèves - étudiants sélectionnés:", formData.studentIds.length);
+    logger.debug(
+      "🔍 Vérification informations élèves - étudiants sélectionnés:",
+      formData.studentIds.length
+    );
     if (formData.studentIds.length > 0) {
       for (const studentId of formData.studentIds) {
         const student = students.find((s) => s._id === studentId);
@@ -162,21 +168,28 @@ export const SettlementCreate: React.FC = () => {
           // Vérifier le lieu des cours
           logger.debug("🔍 Lieu des cours:", student.courseLocation?.type);
           if (!student.courseLocation?.type) {
-            errors.studentLocation = "Le lieu des cours est obligatoire pour tous les élèves";
-            logger.debug("🔍 ERREUR: Lieu des cours manquant pour élève", studentId);
+            errors.studentLocation =
+              "Le lieu des cours est obligatoire pour tous les élèves";
+            logger.debug(
+              "🔍 ERREUR: Lieu des cours manquant pour élève",
+              studentId
+            );
             break;
           }
-          
+
           // Vérifier l'adresse, ville et code postal
           logger.debug("🔍 Adresse élève:", {
             street: student.courseLocation?.address?.street,
             city: student.courseLocation?.address?.city,
-            postalCode: student.courseLocation?.address?.postalCode
+            postalCode: student.courseLocation?.address?.postalCode,
           });
-          if (!student.courseLocation?.address?.street ||
-              !student.courseLocation?.address?.city ||
-              !student.courseLocation?.address?.postalCode) {
-            errors.studentAddress = "L'adresse complète (rue, ville, code postal) est obligatoire pour tous les élèves";
+          if (
+            !student.courseLocation?.address?.street ||
+            !student.courseLocation?.address?.city ||
+            !student.courseLocation?.address?.postalCode
+          ) {
+            errors.studentAddress =
+              "L'adresse complète (rue, ville, code postal) est obligatoire pour tous les élèves";
             logger.debug("🔍 ERREUR: Adresse incomplète pour élève", studentId);
             break;
           }
@@ -201,24 +214,24 @@ export const SettlementCreate: React.FC = () => {
       quantity <= 0 ||
       professorSalary <= 0
     ) {
-      errors.rates = "Tous les champs de tarification doivent être remplis avec des valeurs valides";
+      errors.rates =
+        "Tous les champs de tarification doivent être remplis avec des valeurs valides";
       logger.debug("🔍 ERREUR: Tarifs invalides");
     }
 
     logger.debug("🔍 Erreurs collectées:", errors);
     logger.debug("🔍 Nombre d'erreurs:", Object.keys(errors).length);
-    
+
     const isValid = Object.keys(errors).length === 0;
     logger.debug("🔍 === FIN validateForm ===", "isValid:", isValid);
-    
+
     // Mettre à jour à la fois l'état et la ref
     validationErrorsRef.current = errors;
     setValidationErrors(errors);
-    
+
     // Retourner le résultat
     return isValid;
   };
-
 
   // Charger les données des matières et des familles
   useEffect(() => {
@@ -359,7 +372,7 @@ export const SettlementCreate: React.FC = () => {
   }, [formData.subjects, formData.charges, commonRates]);
 
   // Note: Validation supprimée - les erreurs ne s'affichent qu'au clic du bouton
-  
+
   // Surveiller les changements de l'état validationErrors
   useEffect(() => {
     logger.debug("🔍 État validationErrors mis à jour:", validationErrors);
@@ -498,7 +511,7 @@ export const SettlementCreate: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     console.log("🚨 HANDLESUBMIT APPELÉ !"); // Log basique pour s'assurer que la fonction est appelée
     logger.debug("🚨 HANDLESUBMIT APPELÉ !");
-    
+
     e.preventDefault();
     setIsLoading(true);
     setError("");
@@ -546,20 +559,26 @@ export const SettlementCreate: React.FC = () => {
       logger.debug("🔍 === DÉBUT VALIDATION ===");
       const isValid = validateForm();
       logger.debug("🔍 Résultat validation:", isValid);
-      
+
       if (!isValid) {
         // La validation a échoué, les erreurs ont été mises à jour dans l'état
         logger.debug("🔍 Validation échouée - arrêt du processus");
         setIsLoading(false);
-        
+
         // Forcer le re-rendu pour s'assurer que les erreurs s'affichent
         setTimeout(() => {
-          logger.debug("🔍 État validationErrors après timeout:", validationErrors);
-          logger.debug("🔍 Ref validationErrorsRef après timeout:", validationErrorsRef.current);
+          logger.debug(
+            "🔍 État validationErrors après timeout:",
+            validationErrors
+          );
+          logger.debug(
+            "🔍 Ref validationErrorsRef après timeout:",
+            validationErrorsRef.current
+          );
         }, 100);
         return;
       }
-      
+
       logger.debug("🔍 Validation réussie - poursuite du processus");
 
       // Préparer les données à envoyer avec les tarifs communs appliqués
@@ -709,7 +728,6 @@ export const SettlementCreate: React.FC = () => {
       setIsLoading(false);
     }
   };
-
 
   // Fonction pour ouvrir la modal de création de famille
   const handleCreateNewFamily = () => {
@@ -953,6 +971,11 @@ export const SettlementCreate: React.FC = () => {
         notes: apiResponseFamily.notes,
         createdBy: apiResponseFamily.createdBy,
         students: apiResponseFamily.students || [],
+        demande: apiResponseFamily.demande || {
+          beneficiaryType: "eleves",
+          subjects: [],
+          notes: ""
+        },
         createdAt: apiResponseFamily.createdAt,
         updatedAt: apiResponseFamily.updatedAt,
       };
@@ -1322,15 +1345,19 @@ export const SettlementCreate: React.FC = () => {
                     const selectedFamily = families.find(
                       (f) => f._id === formData.familyId
                     );
-                    if (!selectedFamily) return <p className="text-gray-500">Chargement...</p>;
-                    
+                    if (!selectedFamily)
+                      return <p className="text-gray-500">Chargement...</p>;
+
                     return (
                       <div className="text-sm">
                         <p className="font-medium">
-                          {selectedFamily.primaryContact.firstName} {selectedFamily.primaryContact.lastName}
+                          {selectedFamily.primaryContact.firstName}{" "}
+                          {selectedFamily.primaryContact.lastName}
                         </p>
                         <p className="text-gray-600">
-                          {selectedFamily.address.street}, {selectedFamily.address.postalCode} {selectedFamily.address.city}
+                          {selectedFamily.address.street},{" "}
+                          {selectedFamily.address.postalCode}{" "}
+                          {selectedFamily.address.city}
                         </p>
                       </div>
                     );
@@ -1809,7 +1836,6 @@ export const SettlementCreate: React.FC = () => {
                         title={`${student.firstName} ${student.lastName}`}
                         icon="👨‍🎓"
                       >
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {/* Lieu des cours */}
                           <div>
@@ -2042,7 +2068,7 @@ export const SettlementCreate: React.FC = () => {
                             />
                           </div>
                         </div>
-                        
+
                         {/* Messages d'erreur pour cet élève */}
                         {validationErrors.studentLocation && (
                           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -2124,7 +2150,7 @@ export const SettlementCreate: React.FC = () => {
                     {/* Tarifs communs */}
                     <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                       <h4 className="text-md font-medium text-gray-800 mb-4">
-                        Tarification commune pour toutes les matières
+                        Tarification
                       </h4>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -2245,15 +2271,22 @@ export const SettlementCreate: React.FC = () => {
                           Mode de règlement *
                         </label>
                         <select
-                          value={formData.paymentSchedule?.paymentMethod || "PRLV"}
+                          value={
+                            formData.paymentSchedule?.paymentMethod || "PRLV"
+                          }
                           onChange={(e) =>
                             setFormData((prev) => ({
                               ...prev,
                               paymentSchedule: {
                                 ...prev.paymentSchedule,
-                                paymentMethod: e.target.value as "PRLV" | "check",
-                                numberOfInstallments: prev.paymentSchedule?.numberOfInstallments || 1,
-                                dayOfMonth: prev.paymentSchedule?.dayOfMonth || 1,
+                                paymentMethod: e.target.value as
+                                  | "PRLV"
+                                  | "check",
+                                numberOfInstallments:
+                                  prev.paymentSchedule?.numberOfInstallments ||
+                                  1,
+                                dayOfMonth:
+                                  prev.paymentSchedule?.dayOfMonth || 1,
                               },
                             }))
                           }
@@ -2272,16 +2305,20 @@ export const SettlementCreate: React.FC = () => {
                           type="number"
                           min="1"
                           max="12"
-                          value={formData.paymentSchedule?.numberOfInstallments || 1}
+                          value={
+                            formData.paymentSchedule?.numberOfInstallments || 1
+                          }
                           onChange={(e) =>
                             setFormData((prev) => ({
                               ...prev,
                               paymentSchedule: {
                                 ...prev.paymentSchedule,
-                                paymentMethod: prev.paymentSchedule?.paymentMethod || "PRLV",
+                                paymentMethod:
+                                  prev.paymentSchedule?.paymentMethod || "PRLV",
                                 numberOfInstallments:
                                   parseInt(e.target.value) || 1,
-                                dayOfMonth: prev.paymentSchedule?.dayOfMonth || 1,
+                                dayOfMonth:
+                                  prev.paymentSchedule?.dayOfMonth || 1,
                               },
                             }))
                           }
@@ -2304,8 +2341,11 @@ export const SettlementCreate: React.FC = () => {
                               ...prev,
                               paymentSchedule: {
                                 ...prev.paymentSchedule,
-                                paymentMethod: prev.paymentSchedule?.paymentMethod || "PRLV",
-                                numberOfInstallments: prev.paymentSchedule?.numberOfInstallments || 1,
+                                paymentMethod:
+                                  prev.paymentSchedule?.paymentMethod || "PRLV",
+                                numberOfInstallments:
+                                  prev.paymentSchedule?.numberOfInstallments ||
+                                  1,
                                 dayOfMonth: parseInt(e.target.value),
                               },
                             }))
@@ -2519,9 +2559,10 @@ export const SettlementCreate: React.FC = () => {
               <div className="space-y-2">
                 {subjects.length > 0 ? (
                   subjects.map((subject) => (
-                    <div
+                    <label
                       key={subject._id}
-                      className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                      htmlFor={`subject-modal-${subject._id}`}
+                      className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
                     >
                       <input
                         type="checkbox"
@@ -2530,20 +2571,12 @@ export const SettlementCreate: React.FC = () => {
                         onChange={(e) =>
                           handleSubjectSelection(subject._id, e.target.checked)
                         }
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
                       />
-                      <label
-                        htmlFor={`subject-modal-${subject._id}`}
-                        className="ml-3 flex-1 cursor-pointer"
-                      >
-                        <div className="font-medium text-gray-900">
-                          {subject.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {subject.category}
-                        </div>
-                      </label>
-                    </div>
+                      <span className="font-medium text-gray-900">
+                        {subject.name}
+                      </span>
+                    </label>
                   ))
                 ) : (
                   <p className="text-gray-500 text-center py-4">

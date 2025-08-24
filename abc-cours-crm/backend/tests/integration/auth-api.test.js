@@ -1,8 +1,8 @@
 // tests/auth.test.js
 const request = require("supertest");
-const app = require("../server"); // Utiliser le serveur principal
-const User = require("../models/User");
-const { setupTestDB, teardownTestDB, clearTestDB } = require("./setup");
+const app = require("../../server"); // Utiliser le serveur principal
+const User = require("../../models/User");
+const { setupTestDB, teardownTestDB, clearTestDB } = require("../setup");
 
 describe("Authentication Tests", () => {
   beforeAll(async () => {

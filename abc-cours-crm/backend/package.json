@@ -11,7 +11,14 @@
     "seed:users": "node scripts/seedUsers.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:api": "jest tests/integration",
+    "test:ui": "jest tests/ui",
+    "test:e2e": "jest tests/e2e",
+    "test:fixtures": "jest tests/fixtures",
+    "test:prospects": "jest tests/integration/test-prospects.test.js --runInBand"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

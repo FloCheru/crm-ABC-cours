@@ -3,19 +3,55 @@ import { logger } from "./logger";
 // Type pour éviter l'import circulaire
 type LogoutFunction = () => void;
 
+// Interface pour la configuration de retry
+interface RetryConfig {
+  maxRetries: number;
+  baseDelay: number;
+  maxDelay: number;
+  retryableStatuses: number[];
+}
+
+// Configuration par défaut pour les retry
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  baseDelay: 1000, // 1 seconde
+  maxDelay: 30000, // 30 secondes max
+  retryableStatuses: [429, 500, 502, 503, 504], // Codes d'erreur à retry
+};
+
 class ApiClient {
   private baseURL: string;
   private logoutCallback: LogoutFunction | null = null;
+  private retryConfig: RetryConfig;
 
   constructor(
-    baseURL: string = import.meta.env.VITE_API_URL || "http://localhost:3000"
+    baseURL: string = import.meta.env.VITE_API_URL || "http://localhost:3000",
+    retryConfig: RetryConfig = DEFAULT_RETRY_CONFIG
   ) {
     this.baseURL = baseURL;
+    this.retryConfig = retryConfig;
   }
 
   // Méthode pour enregistrer le callback de logout
   setLogoutCallback(callback: LogoutFunction) {
     this.logoutCallback = callback;
+  }
+
+  // Calculer le délai d'attente avec exponential backoff
+  private calculateRetryDelay(attempt: number): number {
+    const delay = this.retryConfig.baseDelay * Math.pow(2, attempt);
+    const jitter = Math.random() * 0.1 * delay; // Ajouter un peu d'aléatoire
+    return Math.min(delay + jitter, this.retryConfig.maxDelay);
+  }
+
+  // Vérifier si le statut est retryable
+  private isRetryableStatus(status: number): boolean {
+    return this.retryConfig.retryableStatuses.includes(status);
+  }
+
+  // Fonction d'attente
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   // Méthode pour récupérer le token
@@ -25,7 +61,8 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    attempt: number = 0
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
 
@@ -95,6 +132,15 @@ class ApiClient {
           );
         }
         logger.error("=== FIN ERREUR HTTP ===");
+
+        // Vérifier si on peut retry cette erreur
+        if (this.isRetryableStatus(response.status) && attempt < this.retryConfig.maxRetries) {
+          const delay = this.calculateRetryDelay(attempt);
+          logger.warn(`Tentative ${attempt + 1}/${this.retryConfig.maxRetries} - Retry dans ${Math.round(delay)}ms`);
+          
+          await this.sleep(delay);
+          return this.request<T>(endpoint, options, attempt + 1);
+        }
 
         throw new Error(`HTTP error! status: ${response.status}`);
       }
