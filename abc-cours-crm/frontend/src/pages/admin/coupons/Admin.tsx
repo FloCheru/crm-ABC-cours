@@ -13,6 +13,7 @@ import {
 } from "../../../components";
 import { couponSeriesService } from "../../../services/couponSeriesService";
 import { useCouponSeriesCache } from "../../../hooks/useCouponSeriesCache";
+import { getFamilyDisplayName, generateCouponSeriesName } from "../../../utils/familyNameUtils";
 import type { CouponSeries } from "../../../types/coupon";
 
 // Type pour les données du tableau avec l'id requis
@@ -88,9 +89,7 @@ export const Admin: React.FC = () => {
   // Filtrer les données selon le terme de recherche
   const filteredData = couponsData.filter(
     (series) => {
-      const familyName = series.familyId?.primaryContact 
-        ? `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`
-        : "";
+      const familyName = getFamilyDisplayName(series.familyId, "");
       const subjectName = series.subject?.name || "";
       const creatorName = series.createdBy?.firstName + " " + series.createdBy?.lastName || "";
       
@@ -125,14 +124,8 @@ export const Admin: React.FC = () => {
       key: "name",
       label: "Nom de la série",
       render: (_: unknown, row: TableRowData) => {
-        // Construire le nom : Nomdefamille_mois_année
-        const familyName = (row.familyId && typeof row.familyId === 'object' && row.familyId.primaryContact)
-          ? `${row.familyId.primaryContact.firstName} ${row.familyId.primaryContact.lastName}`
-          : "Famille inconnue";
-        const createdAt = new Date(row.createdAt);
-        const month = (createdAt.getMonth() + 1).toString().padStart(2, "0");
-        const year = createdAt.getFullYear();
-        const seriesName = `${familyName}_${month}_${year}`;
+        // Utiliser l'utilitaire pour générer le nom de série
+        const seriesName = generateCouponSeriesName(row.familyId, row.createdAt);
 
         return (
           <div>
@@ -144,15 +137,24 @@ export const Admin: React.FC = () => {
     {
       key: "family",
       label: "Famille",
-      render: (_: unknown, row: TableRowData) => (
-        <div>
-          <div className="font-medium">
-            {(row.familyId && typeof row.familyId === 'object' && row.familyId.primaryContact)
-              ? `${row.familyId.primaryContact.firstName} ${row.familyId.primaryContact.lastName}`
-              : "Famille inconnue"}
+      render: (_: unknown, row: TableRowData) => {
+        const familyName = getFamilyDisplayName(row.familyId);
+        const isGenerated = !row.familyId || typeof row.familyId === 'string' || 
+                           !row.familyId.primaryContact ||
+                           !row.familyId.primaryContact.firstName?.trim() ||
+                           !row.familyId.primaryContact.lastName?.trim();
+
+        return (
+          <div>
+            <div className="font-medium">
+              {familyName}
+              {isGenerated && familyName !== "Famille inconnue" && (
+                <span className="text-xs text-gray-500 ml-1">(auto)</span>
+              )}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "student",

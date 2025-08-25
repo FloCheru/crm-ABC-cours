@@ -13,6 +13,7 @@ import {
 } from "../../../components";
 import { couponSeriesService } from "../../../services/couponSeriesService";
 import { couponService } from "../../../services/couponService";
+import { getFamilyDisplayName, generateCouponSeriesName } from "../../../utils/familyNameUtils";
 import type { CouponSeries, Coupon } from "../../../types/coupon";
 
 // Type pour les données du tableau avec l'id requis
@@ -120,21 +121,15 @@ export const SeriesDetails: React.FC = () => {
       label: "Série",
       render: (_: unknown, _row: TableRowData) => {
         if (!series) return "Chargement...";
-        const familyName = (series.familyId && typeof series.familyId === 'object' && series.familyId.primaryContact)
-          ? `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`
-          : "Famille inconnue";
-        const createdAt = new Date(series.createdAt);
-        const month = (createdAt.getMonth() + 1).toString().padStart(2, "0");
-        const year = createdAt.getFullYear();
-        return `${familyName}_${month}_${year}`;
+        return generateCouponSeriesName(series.familyId, series.createdAt);
       },
     },
     {
       key: "family",
       label: "Famille",
       render: (_: unknown, _row: TableRowData) => {
-        if (!series?.familyId || typeof series.familyId !== 'object' || !series.familyId.primaryContact) return "Famille inconnue";
-        return `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`;
+        if (!series) return "Chargement...";
+        return getFamilyDisplayName(series.familyId);
       },
     },
     {
@@ -225,13 +220,7 @@ export const SeriesDetails: React.FC = () => {
   }
 
   // Calculer le nom de la série
-  const familyName = (series.familyId && typeof series.familyId === 'object' && series.familyId.primaryContact)
-    ? `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`
-    : "Famille inconnue";
-  const createdAt = new Date(series.createdAt);
-  const month = (createdAt.getMonth() + 1).toString().padStart(2, "0");
-  const year = createdAt.getFullYear();
-  const seriesName = `${familyName}_${month}_${year}`;
+  const seriesName = generateCouponSeriesName(series.familyId, series.createdAt);
 
   // Calculer les statistiques basées sur les coupons réels
   const availableCoupons = coupons.filter(
