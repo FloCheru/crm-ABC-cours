@@ -6,7 +6,7 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const app = require('./app.test');
+const app = require('../integration/app.test');
 const Family = require('../models/Family');
 const User = require('../models/User');
 

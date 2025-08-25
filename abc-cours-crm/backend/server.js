@@ -72,10 +72,15 @@ app.use(
   })
 );
 
-// Rate limiting
+// Rate limiting - Configuration adaptée pour le développement
+const isDevelopment = process.env.NODE_ENV !== 'production';
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limite chaque IP à 100 requêtes par fenêtre
+  max: isDevelopment ? 1000 : 100, // 1000 requêtes en dev, 100 en prod
+  message: {
+    error: 'Trop de requêtes, veuillez réessayer plus tard',
+    retryAfter: '15 minutes'
+  }
 });
 app.use("/api/", limiter);
 

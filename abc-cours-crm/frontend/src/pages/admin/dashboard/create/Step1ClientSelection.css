@@ -1,0 +1,235 @@
+/* Styles pour Step 1 - Sélection Client */
+.step1-client-selection {
+  space-y: 2rem;
+}
+
+.step1__loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.step1__loading-text {
+  color: #6b7280;
+  font-size: 1.125rem;
+}
+
+.step1__error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+/* Styles pour gestion d'erreur */
+.step1__error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.step1__error-message {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  max-width: 500px;
+}
+
+.step1__retry-button {
+  min-width: 150px;
+}
+
+.step1__field-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* Sélection des familles */
+.step1__family-selection {
+  margin-bottom: 2rem;
+}
+
+.step1__families-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.step1__family-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.step1__family-card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.step1__family-card--selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.step1__family-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.step1__family-name {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: #1f2937;
+  margin: 0;
+}
+
+.step1__family-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.step1__family-details {
+  space-y: 0.5rem;
+}
+
+.step1__family-contact,
+.step1__family-address {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+/* Formulaires */
+.step1__personal-info,
+.step1__address,
+.step1__company-info,
+.step1__billing-address {
+  margin-bottom: 1.5rem;
+}
+
+.step1__form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.step1__form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.step1__form-field--full {
+  grid-column: 1 / -1;
+}
+
+.step1__form-label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.step1__form-select {
+  padding: 0.625rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.step1__form-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Checkbox pour adresse de facturation */
+.step1__checkbox-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.step1__checkbox {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  accent-color: #3b82f6;
+}
+
+.step1__checkbox-label {
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.step1__billing-fields {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Navigation */
+.step1__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .step1__families-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .step1__form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .step1__family-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .step1__navigation {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

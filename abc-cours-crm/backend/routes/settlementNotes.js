@@ -19,14 +19,23 @@ router.use(authenticateToken);
 const createSettlementValidation = [
   body("familyId").isMongoId().withMessage("ID de famille requis"),
   body("studentIds")
-    .isArray({ min: 1 })
-    .withMessage("Au moins un élève requis"),
+    .isArray()
+    .withMessage("studentIds doit être un tableau")
+    .custom((value) => {
+      // Autoriser tableau vide pour NDR famille seule
+      return true;
+    })
+    .withMessage("Format studentIds invalide"),
   body("studentIds.*").isMongoId().withMessage("ID d'élève invalide"),
   body("clientName").trim().notEmpty().withMessage("Nom du client requis"),
   body("department").trim().notEmpty().withMessage("Département requis"),
   body("paymentMethod")
-    .isIn(["card", "check", "transfer", "cash"])
+    .isIn(["card", "check", "transfer", "cash", "PRLV"])
     .withMessage("Mode de règlement invalide"),
+  body("paymentType")
+    .notEmpty()
+    .isIn(["immediate_advance", "tax_credit_n1"])
+    .withMessage("Type de paiement requis (immediate_advance ou tax_credit_n1)"),
   body("subjects")
     .isArray({ min: 1 })
     .withMessage("Au moins une matière requise"),
@@ -735,6 +744,132 @@ router.get("/:id", authorize(["admin"]), async (req, res) => {
     res.json(note);
   } catch (error) {
     console.error("Get settlement note error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/settlement-notes/:id/deletion-preview - Aperçu de suppression d'une note de règlement
+router.get("/:id/deletion-preview", authorize(["admin"]), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ error: "Invalid settlement note ID" });
+    }
+
+    // Récupérer la note de règlement
+    const note = await SettlementNote.findById(id)
+      .populate("subjects.subjectId", "name category")
+      .populate("createdBy", "firstName lastName")
+      .populate("studentIds", "firstName lastName")
+      .populate("familyId", "primaryContact")
+      .lean();
+
+    if (!note) {
+      return res.status(404).json({ error: "Settlement note not found" });
+    }
+
+    // Trouver la série de coupons liée
+    const CouponSeries = require("../models/CouponSeries");
+    const Coupon = require("../models/Coupon");
+    
+    const couponSeries = await CouponSeries.findOne({ settlementNoteId: id }).lean();
+    let couponsInfo = null;
+    
+    if (couponSeries) {
+      // Compter les coupons utilisés et non utilisés
+      const [usedCoupons, unusedCoupons] = await Promise.all([
+        Coupon.countDocuments({ 
+          couponSeriesId: couponSeries._id, 
+          status: 'used' 
+        }),
+        Coupon.countDocuments({ 
+          couponSeriesId: couponSeries._id, 
+          status: 'available' 
+        })
+      ]);
+      
+      couponsInfo = {
+        seriesId: couponSeries._id,
+        totalCoupons: couponSeries.totalCoupons,
+        usedCoupons,
+        unusedCoupons,
+        status: couponSeries.status
+      };
+    }
+
+    // Vérifier l'impact sur le statut de la famille
+    const Family = require("../models/Family");
+    let familyStatusChange = null;
+    
+    if (note.familyId) {
+      const family = await Family.findById(note.familyId).lean();
+      if (family && family.status === "client") {
+        // Compter les autres NDR de cette famille
+        const otherNotesCount = await SettlementNote.countDocuments({ 
+          familyId: note.familyId, 
+          _id: { $ne: id } 
+        });
+        
+        if (otherNotesCount === 0) {
+          familyStatusChange = {
+            from: "client",
+            to: "prospect",
+            reason: "Plus aucune note de règlement après suppression"
+          };
+        }
+      }
+    }
+
+    // Calculer le montant total (totalRevenue)
+    const totalAmount = note.subjects.reduce((sum, subject) => 
+      sum + ((subject.hourlyRate || 0) * (subject.quantity || 0)), 0);
+
+    // Préparer les données de prévisualisation dans le format attendu par le frontend
+    const couponSeriesDetails = couponsInfo ? [{
+      subject: note.subjects[0]?.subjectId?.name || "Matière inconnue",
+      totalCoupons: couponsInfo.totalCoupons,
+      usedCoupons: couponsInfo.usedCoupons,
+      remainingCoupons: couponsInfo.unusedCoupons,
+      hourlyRate: note.subjects[0]?.hourlyRate || 0,
+      status: couponsInfo.status
+    }] : [];
+
+    const deletionPreview = {
+      settlementNote: {
+        clientName: note.clientName,
+        department: note.department,
+        totalAmount: totalAmount,
+        status: note.status,
+        createdAt: note.createdAt
+      },
+      itemsToDelete: {
+        couponSeries: {
+          count: couponsInfo ? 1 : 0,
+          details: couponSeriesDetails
+        },
+        coupons: {
+          count: couponsInfo ? (couponsInfo.usedCoupons + couponsInfo.unusedCoupons) : 0,
+          availableCount: couponsInfo ? couponsInfo.unusedCoupons : 0,
+          usedCount: couponsInfo ? couponsInfo.usedCoupons : 0
+        }
+      },
+      totalItems: (couponsInfo ? 1 : 0) + (couponsInfo ? (couponsInfo.usedCoupons + couponsInfo.unusedCoupons) : 0),
+      // Garder l'ancien format pour compatibilité si nécessaire
+      impacts: {
+        coupons: couponsInfo,
+        familyStatusChange,
+        cascadeOperations: [
+          ...(couponsInfo ? ["Suppression de tous les coupons de la série", "Suppression de la série de coupons"] : []),
+          "Retrait de la NDR de la famille",
+          ...(familyStatusChange ? [`Changement statut famille: ${familyStatusChange.from} → ${familyStatusChange.to}`] : [])
+        ]
+      }
+    };
+
+    res.json(deletionPreview);
+  } catch (error) {
+    console.error("Get deletion preview error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

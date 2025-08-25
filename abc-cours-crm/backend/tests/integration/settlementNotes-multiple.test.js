@@ -1,11 +1,11 @@
 const request = require("supertest");
-const app = require("../server");
-const User = require("../models/User");
-const Family = require("../models/Family");
-const Student = require("../models/Student");
-const Subject = require("../models/Subject");
-const SettlementNote = require("../models/SettlementNote");
-const { setupTestDB, teardownTestDB, clearTestDB } = require("./setup");
+const app = require("../../server");
+const User = require("../../models/User");
+const Family = require("../../models/Family");
+const Student = require("../../models/Student");
+const Subject = require("../../models/Subject");
+const SettlementNote = require("../../models/SettlementNote");
+const { setupTestDB, teardownTestDB, clearTestDB } = require("../setup");
 
 describe("Settlement Notes API Tests - Multiple Students and Subjects", () => {
   let authToken;

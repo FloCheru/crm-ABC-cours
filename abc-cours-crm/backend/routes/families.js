@@ -388,6 +388,98 @@ router.patch(
   }
 );
 
+// @route   GET /api/families/:id/deletion-preview
+// @desc    Aperçu des éléments qui seront supprimés avec la famille
+// @access  Private (Admin)
+router.get("/:id/deletion-preview", authorize(["admin"]), async (req, res) => {
+  try {
+    const family = await Family.findById(req.params.id);
+
+    if (!family) {
+      return res.status(404).json({ message: "Famille non trouvée" });
+    }
+
+    console.log(`🔍 Aperçu de suppression pour la famille ${req.params.id}`);
+
+    // Compter les éléments liés
+    const Coupon = require("../models/Coupon");
+    const CouponSeries = require("../models/CouponSeries");
+    const SettlementNote = require("../models/SettlementNote");
+
+    const [couponsCount, seriesCount, settlementNotesCount, studentsCount] = await Promise.all([
+      Coupon.countDocuments({ familyId: req.params.id }),
+      CouponSeries.countDocuments({ familyId: req.params.id }),
+      SettlementNote.countDocuments({ familyId: req.params.id }),
+      Student.countDocuments({ family: req.params.id })
+    ]);
+
+    // Récupérer les détails des éléments liés
+    const [couponsDetails, seriesDetails, settlementNotesDetails, studentsDetails] = await Promise.all([
+      Coupon.find({ familyId: req.params.id }).select("code status").lean(),
+      CouponSeries.find({ familyId: req.params.id })
+        .populate("subject", "name")
+        .select("totalCoupons usedCoupons hourlyRate status subject")
+        .lean(),
+      SettlementNote.find({ familyId: req.params.id })
+        .select("clientName subjects.quantity subjects.hourlyRate status createdAt")
+        .lean(),
+      Student.find({ family: req.params.id })
+        .select("firstName lastName school.grade")
+        .lean()
+    ]);
+
+    const deletionPreview = {
+      family: {
+        name: `${family.primaryContact.firstName} ${family.primaryContact.lastName}`,
+        status: family.status,
+        prospectStatus: family.prospectStatus
+      },
+      itemsToDelete: {
+        students: {
+          count: studentsCount,
+          details: studentsDetails.map(s => ({
+            name: `${s.firstName} ${s.lastName}`,
+            grade: s.school?.grade || "Non précisé"
+          }))
+        },
+        couponSeries: {
+          count: seriesCount,
+          details: seriesDetails.map(s => ({
+            subject: s.subject?.name || "Matière non précisée",
+            totalCoupons: s.totalCoupons,
+            usedCoupons: s.usedCoupons,
+            remainingCoupons: s.totalCoupons - s.usedCoupons,
+            hourlyRate: s.hourlyRate,
+            status: s.status
+          }))
+        },
+        coupons: {
+          count: couponsCount,
+          availableCount: couponsDetails.filter(c => c.status === 'available').length,
+          usedCount: couponsDetails.filter(c => c.status === 'used').length
+        },
+        settlementNotes: {
+          count: settlementNotesCount,
+          details: settlementNotesDetails.map(ndr => ({
+            clientName: ndr.clientName,
+            totalHours: ndr.subjects?.reduce((sum, s) => sum + (s.quantity || 0), 0) || 0,
+            totalAmount: ndr.subjects?.reduce((sum, s) => sum + ((s.quantity || 0) * (s.hourlyRate || 0)), 0) || 0,
+            status: ndr.status,
+            date: new Date(ndr.createdAt).toLocaleDateString("fr-FR")
+          }))
+        }
+      },
+      totalItems: studentsCount + seriesCount + couponsCount + settlementNotesCount
+    };
+
+    console.log(`🔍 Aperçu calculé: ${deletionPreview.totalItems} éléments à supprimer`);
+    res.json(deletionPreview);
+  } catch (error) {
+    console.error("Erreur lors du calcul de l'aperçu de suppression:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 // @route   DELETE /api/families/:id
 // @desc    Supprimer une famille
 // @access  Private (Admin)
@@ -399,19 +491,48 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
       return res.status(404).json({ message: "Famille non trouvée" });
     }
 
-    // Supprimer tous les élèves associés à cette famille (suppression en cascade)
-    console.log(`🔍 Suppression en cascade des élèves pour la famille ${req.params.id}`);
+    console.log(`🔍 Début de la suppression en cascade pour la famille ${req.params.id}`);
+
+    // 1. Supprimer tous les coupons individuels liés à cette famille
+    const Coupon = require("../models/Coupon");
+    const deletedCoupons = await Coupon.deleteMany({
+      familyId: req.params.id,
+    });
+    console.log(`🔍 ${deletedCoupons.deletedCount} coupons individuels supprimés`);
+
+    // 2. Supprimer toutes les séries de coupons liées à cette famille
+    const CouponSeries = require("../models/CouponSeries");
+    const deletedSeries = await CouponSeries.deleteMany({
+      familyId: req.params.id,
+    });
+    console.log(`🔍 ${deletedSeries.deletedCount} séries de coupons supprimées`);
+
+    // 3. Supprimer les notes de règlement liées (NDR)
+    const SettlementNote = require("../models/SettlementNote");
+    const deletedSettlementNotes = await SettlementNote.deleteMany({
+      familyId: req.params.id,
+    });
+    console.log(`🔍 ${deletedSettlementNotes.deletedCount} notes de règlement supprimées`);
+
+    // 4. Supprimer tous les élèves associés à cette famille
+    console.log(`🔍 Suppression des élèves pour la famille ${req.params.id}`);
     const deletedStudents = await Student.deleteMany({
       family: req.params.id,
     });
     console.log(`🔍 ${deletedStudents.deletedCount} élèves supprimés`);
 
-    // Supprimer la famille
+    // 5. Supprimer la famille elle-même
     await Family.findByIdAndDelete(req.params.id);
+    console.log(`🔍 Famille ${req.params.id} supprimée avec succès`);
 
     res.json({ 
-      message: "Famille supprimée avec succès",
-      deletedStudents: deletedStudents.deletedCount
+      message: "Famille et tous les éléments liés supprimés avec succès",
+      deletedItems: {
+        students: deletedStudents.deletedCount,
+        couponSeries: deletedSeries.deletedCount,
+        coupons: deletedCoupons.deletedCount,
+        settlementNotes: deletedSettlementNotes.deletedCount
+      }
     });
   } catch (error) {
     console.error("Erreur lors de la suppression de la famille:", error);

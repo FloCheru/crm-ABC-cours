@@ -1,11 +1,11 @@
 // tests/settlementNotes.test.js - Tests unitaires pour les notes de règlement
 const request = require("supertest");
-const app = require("../server");
-const SettlementNote = require("../models/SettlementNote");
-const Subject = require("../models/Subject");
-const User = require("../models/User");
-const Family = require("../models/Family");
-const { setupTestDB, teardownTestDB, clearTestDB } = require("./setup");
+const app = require("../../server");
+const SettlementNote = require("../../models/SettlementNote");
+const Subject = require("../../models/Subject");
+const User = require("../../models/User");
+const Family = require("../../models/Family");
+const { setupTestDB, teardownTestDB, clearTestDB } = require("../setup");
 
 describe("Settlement Notes API Tests", () => {
   let authToken;

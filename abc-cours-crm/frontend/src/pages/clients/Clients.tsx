@@ -634,7 +634,7 @@ export const Clients: React.FC = () => {
               size="sm"
               variant="primary"
               onClick={() =>
-                navigate(`/admin/dashboard/create?familyId=${row._id}`)
+                navigate(`/admin/dashboard/create/wizard?familyId=${row._id}`)
               }
               title="Créer une nouvelle note de règlement"
             >

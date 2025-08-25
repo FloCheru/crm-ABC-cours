@@ -195,7 +195,7 @@ export const Dashboard: React.FC = () => {
               size="sm"
               variant="primary"
               onClick={() =>
-                navigate(`/admin/dashboard/create?familyId=${row._id}`)
+                navigate(`/admin/dashboard/create/wizard?familyId=${row._id}`)
               }
             >
               Créer une note de règlement
@@ -207,7 +207,7 @@ export const Dashboard: React.FC = () => {
                   size="sm"
                   variant="primary"
                   onClick={() =>
-                    navigate(`/admin/dashboard/create?familyId=${row._id}`)
+                    navigate(`/admin/dashboard/create/wizard?familyId=${row._id}`)
                   }
                 >
                   Créer une note de règlement
@@ -218,7 +218,7 @@ export const Dashboard: React.FC = () => {
                     size="sm"
                     variant="primary"
                     onClick={() =>
-                      navigate(`/admin/dashboard/create?familyId=${row._id}`)
+                      navigate(`/admin/dashboard/create/wizard?familyId=${row._id}`)
                     }
                   >
                     Créer une note de règlement
@@ -302,7 +302,7 @@ export const Dashboard: React.FC = () => {
               {
                 text: "Créer une NDR",
                 variant: "secondary",
-                onClick: () => navigate("/admin/dashboard/create"),
+                onClick: () => navigate("/admin/dashboard/create/wizard"),
               },
               { 
                 text: "Tableau NDR", 

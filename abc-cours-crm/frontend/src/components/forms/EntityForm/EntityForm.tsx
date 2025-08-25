@@ -741,6 +741,64 @@ export const EntityForm: React.FC<EntityFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  // Données de test pour remplissage automatique
+  const getTestData = (): Record<string, unknown> => {
+    if (entityType === "family") {
+      return {
+        "primaryContact.firstName": "Martin",
+        "primaryContact.lastName": "Dubois", 
+        "primaryContact.email": "martin.dubois@email.com",
+        "primaryContact.primaryPhone": "0123456789",
+        "primaryContact.gender": "M.",
+        "primaryContact.relationship": "père",
+        "primaryContact.secondaryPhone": "0987654321",
+        "primaryContact.dateOfBirth": "1980-05-15",
+        "address.street": "123 Rue de la Paix",
+        "address.city": "Paris",
+        "address.postalCode": "75001",
+        "secondaryContact.firstName": "Sophie",
+        "secondaryContact.lastName": "Dubois",
+        "secondaryContact.email": "sophie.dubois@email.com",
+        "secondaryContact.phone": "0145678901",
+        "secondaryContact.relationship": "mère",
+        "sameAddress": true,
+        "companyInfo.urssafNumber": "12345678901",
+        "demande.beneficiaryType": "eleves",
+        "demande.subjects": "Mathématiques, Français, Physique-Chimie",
+        "notes": "Famille de test - créée automatiquement pour les tests de développement"
+      };
+    }
+    return {};
+  };
+
+  // Fonction pour remplir automatiquement le formulaire avec des données de test
+  const fillTestData = () => {
+    const testData = getTestData();
+    
+    // Utiliser handleFieldChange pour chaque champ pour déclencher les mises à jour
+    Object.entries(testData).forEach(([key, value]) => {
+      handleFieldChange(key, value);
+    });
+    
+    // Effacer les erreurs existantes
+    setErrors({});
+    setSubmitError("");
+    
+    logger.info("🧪 Données de test appliquées au formulaire");
+    console.log("🧪 Données appliquées:", testData);
+  };
+
+  // Vérifier si on est en environnement de développement
+  const isDevelopment = import.meta.env.VITE_ENVIRONMENT === 'development';
+  
+  // Debug pour vérifier les conditions d'affichage du bouton
+  console.log('🔍 DEBUG Bouton test:', {
+    isDevelopment,
+    VITE_ENVIRONMENT: import.meta.env.VITE_ENVIRONMENT,
+    entityType,
+    shouldShowButton: isDevelopment && entityType === "family"
+  });
+
   // Gérer la soumission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -994,6 +1052,19 @@ export const EntityForm: React.FC<EntityFormProps> = ({
     <div className={`entity-form ${className}`}>
       <div className="entity-form__header">
         <h2>{displayConfig.title}</h2>
+        
+        {/* Bouton de remplissage automatique en haut */}
+        {entityType === "family" && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={fillTestData}
+            disabled={isLoading}
+            title="Remplit automatiquement le formulaire avec des données de test"
+          >
+            🧪 Remplir pour test
+          </Button>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="entity-form__form">
@@ -1028,6 +1099,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
           >
             {isLoading ? "Création..." : displayConfig.submitButtonText}
           </button>
+
 
           <Button
             type="button"

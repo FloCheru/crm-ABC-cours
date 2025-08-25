@@ -53,6 +53,11 @@ class FamilyService {
     return response.family;
   }
 
+  async getDeletionPreview(id: string): Promise<any> {
+    const response = await apiClient.get(`/api/families/${id}/deletion-preview`);
+    return response;
+  }
+
   async deleteFamily(id: string): Promise<void> {
     await apiClient.delete(`/api/families/${id}`);
   }

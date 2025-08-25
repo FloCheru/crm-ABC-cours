@@ -129,7 +129,7 @@ export const CouponsList: React.FC = () => {
       render: (_: unknown, row: TableRowData) => (
         <div>
           <div className="font-medium">
-            {row.couponSeriesId?.familyId?.primaryContact
+            {(row.couponSeriesId?.familyId && typeof row.couponSeriesId.familyId === 'object' && row.couponSeriesId.familyId.primaryContact)
               ? `${row.couponSeriesId.familyId.primaryContact.firstName} ${row.couponSeriesId.familyId.primaryContact.lastName}`
               : "Famille inconnue"}
           </div>

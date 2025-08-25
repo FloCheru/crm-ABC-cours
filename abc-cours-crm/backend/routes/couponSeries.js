@@ -144,7 +144,7 @@ router.get(
       console.log("🔍 Exécution de la requête MongoDB...");
       const [series, total] = await Promise.all([
         CouponSeries.find(filter)
-          .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email")
+          .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email primaryContact.primaryPhone")
           .populate("studentId", "firstName lastName level")
           .populate("subject", "name category")
           .populate("createdBy", "firstName lastName")
@@ -194,7 +194,7 @@ router.get("/:id", async (req, res) => {
     }
 
     const series = await CouponSeries.findById(id)
-      .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email address")
+      .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email primaryContact.primaryPhone address")
       .populate("studentId", "firstName lastName level")
       .populate("subject", "name category description")
       .populate("createdBy", "firstName lastName")
@@ -408,7 +408,7 @@ router.post(
 
       // Retourner la série créée avec tous les détails
       const createdSeries = await CouponSeries.findById(series._id)
-        .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email")
+        .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email primaryContact.primaryPhone")
         .populate("studentId", "firstName lastName level")
         .populate("subject", "name category")
         .populate("createdBy", "firstName lastName");
@@ -483,7 +483,7 @@ router.patch(
       res.json({
         message: `Series status changed to ${status}`,
         series: await CouponSeries.findById(id)
-          .populate("familyId", "primaryContact.firstName primaryContact.lastName")
+          .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email primaryContact.primaryPhone")
           .populate("studentId", "firstName lastName level")
           .populate("createdBy", "firstName lastName"),
       });
@@ -531,7 +531,7 @@ router.get("/stats/overview", authorize(["admin"]), async (req, res) => {
           $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         }, // 30 jours
       })
-        .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email")
+        .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email primaryContact.primaryPhone")
         .populate("studentId", "firstName lastName")
         .select(
           "familyId studentId subject expirationDate totalCoupons usedCoupons"

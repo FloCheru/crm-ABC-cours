@@ -11,6 +11,7 @@ import {
   Table,
   ReminderSubjectDropdown,
   DatePicker,
+  DeletionPreviewModal,
 } from "../../components";
 import { ModalWrapper } from "../../components/ui/ModalWrapper/ModalWrapper";
 import { EntityForm } from "../../components/forms/EntityForm";
@@ -53,6 +54,11 @@ export const Prospects: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateProspectModalOpen, setIsCreateProspectModalOpen] =
     useState(false);
+  const [isDeletionPreviewModalOpen, setIsDeletionPreviewModalOpen] =
+    useState(false);
+  const [deletionPreviewData, setDeletionPreviewData] = useState(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [prospectToDelete, setProspectToDelete] = useState<string | null>(null);
 
   // Log pour indiquer si les données proviennent du cache unifié
   useEffect(() => {
@@ -70,7 +76,7 @@ export const Prospects: React.FC = () => {
   };
 
   const handleCreateSettlementNote = (familyId: string) => {
-    navigate(`/admin/dashboard/create?familyId=${familyId}`);
+    navigate(`/admin/dashboard/create/wizard?familyId=${familyId}`);
   };
 
   // Gérer le changement de statut d'un prospect - avec mise à jour optimiste
@@ -179,32 +185,65 @@ export const Prospects: React.FC = () => {
     );
   };
 
-  // Gérer la suppression d'un prospect
+  // Gérer la suppression d'un prospect avec aperçu détaillé
   const handleDeleteProspect = async (prospectId: string) => {
-    const prospect = familyData.find((f) => f._id === prospectId);
-    const fullName = prospect
-      ? `${prospect.primaryContact.firstName} ${prospect.primaryContact.lastName}`
-      : "ce prospect";
+    try {
+      setProspectToDelete(prospectId);
+      setIsLoadingPreview(true);
+      setIsDeletionPreviewModalOpen(true);
 
-    if (
-      window.confirm(
-        `Êtes-vous sûr de vouloir supprimer ${fullName} ?\n\n` +
-          `Cette action supprimera également tous les élèves associés et ne peut pas être annulée.`
-      )
-    ) {
-      try {
-        await familyService.deleteFamily(prospectId);
-
-        // Invalider tous les caches liés aux familles pour rafraîchir automatiquement
-        invalidateAllFamilyRelatedCaches();
-        console.log(
-          `✅ Prospect ${fullName} supprimé avec succès - Caches invalidés`
-        );
-      } catch (error) {
-        console.error("Erreur lors de la suppression du prospect:", error);
-        alert("Erreur lors de la suppression du prospect");
-      }
+      // Récupérer l'aperçu de suppression
+      const previewData = await familyService.getDeletionPreview(prospectId);
+      setDeletionPreviewData(previewData);
+    } catch (error) {
+      console.error("Erreur lors du chargement de l'aperçu:", error);
+      setDeletionPreviewData(null);
+    } finally {
+      setIsLoadingPreview(false);
     }
+  };
+
+  // Confirmer la suppression après l'aperçu
+  const handleConfirmDeletion = async () => {
+    if (!prospectToDelete) return;
+
+    try {
+      await familyService.deleteFamily(prospectToDelete);
+
+      // Invalider tous les caches liés aux familles pour rafraîchir automatiquement
+      invalidateAllFamilyRelatedCaches();
+      
+      const prospect = familyData.find((f) => f._id === prospectToDelete);
+      const fullName = prospect
+        ? `${prospect.primaryContact.firstName} ${prospect.primaryContact.lastName}`
+        : "le prospect";
+      
+      console.log(
+        `✅ Prospect ${fullName} supprimé avec succès - Caches invalidés`
+      );
+
+      // Fermer le modal et réinitialiser
+      setIsDeletionPreviewModalOpen(false);
+      setProspectToDelete(null);
+      setDeletionPreviewData(null);
+
+      // Forcer le rechargement en changeant la clé de refresh
+      setTimeout(() => {
+        setRefreshKey(prev => prev + 1);
+        console.log("🔄 Rechargement forcé des données prospects déclenché après suppression");
+      }, 200);
+    } catch (error) {
+      console.error("Erreur lors de la suppression du prospect:", error);
+      alert("Erreur lors de la suppression du prospect");
+    }
+  };
+
+  // Annuler la suppression
+  const handleCancelDeletion = () => {
+    setIsDeletionPreviewModalOpen(false);
+    setProspectToDelete(null);
+    setDeletionPreviewData(null);
+    setIsLoadingPreview(false);
   };
 
   const handleSearch = () => {
@@ -517,6 +556,15 @@ export const Prospects: React.FC = () => {
           />
         </ModalWrapper>
       )}
+
+      {/* Modal d'aperçu de suppression */}
+      <DeletionPreviewModal
+        isOpen={isDeletionPreviewModalOpen}
+        onClose={handleCancelDeletion}
+        onConfirm={handleConfirmDeletion}
+        previewData={deletionPreviewData}
+        isLoading={isLoadingPreview}
+      />
     </div>
   );
 };

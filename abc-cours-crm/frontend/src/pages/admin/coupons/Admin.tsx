@@ -126,7 +126,7 @@ export const Admin: React.FC = () => {
       label: "Nom de la série",
       render: (_: unknown, row: TableRowData) => {
         // Construire le nom : Nomdefamille_mois_année
-        const familyName = row.familyId?.primaryContact 
+        const familyName = (row.familyId && typeof row.familyId === 'object' && row.familyId.primaryContact)
           ? `${row.familyId.primaryContact.firstName} ${row.familyId.primaryContact.lastName}`
           : "Famille inconnue";
         const createdAt = new Date(row.createdAt);
@@ -147,7 +147,7 @@ export const Admin: React.FC = () => {
       render: (_: unknown, row: TableRowData) => (
         <div>
           <div className="font-medium">
-            {row.familyId?.primaryContact 
+            {(row.familyId && typeof row.familyId === 'object' && row.familyId.primaryContact)
               ? `${row.familyId.primaryContact.firstName} ${row.familyId.primaryContact.lastName}`
               : "Famille inconnue"}
           </div>

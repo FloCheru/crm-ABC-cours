@@ -86,7 +86,7 @@ export const SeriesDetails: React.FC = () => {
   // Filtrer les coupons selon le terme de recherche
   const filteredCoupons = coupons.filter((coupon) => {
     // Utiliser les données de la série pour la famille et l'élève
-    const familyName = series?.familyId?.primaryContact
+    const familyName = (series?.familyId && typeof series.familyId === 'object' && series.familyId.primaryContact)
       ? `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`
       : "";
     const studentName = series?.studentId
@@ -120,7 +120,7 @@ export const SeriesDetails: React.FC = () => {
       label: "Série",
       render: (_: unknown, _row: TableRowData) => {
         if (!series) return "Chargement...";
-        const familyName = series.familyId?.primaryContact
+        const familyName = (series.familyId && typeof series.familyId === 'object' && series.familyId.primaryContact)
           ? `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`
           : "Famille inconnue";
         const createdAt = new Date(series.createdAt);
@@ -133,7 +133,7 @@ export const SeriesDetails: React.FC = () => {
       key: "family",
       label: "Famille",
       render: (_: unknown, _row: TableRowData) => {
-        if (!series?.familyId?.primaryContact) return "Famille inconnue";
+        if (!series?.familyId || typeof series.familyId !== 'object' || !series.familyId.primaryContact) return "Famille inconnue";
         return `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`;
       },
     },
@@ -225,7 +225,7 @@ export const SeriesDetails: React.FC = () => {
   }
 
   // Calculer le nom de la série
-  const familyName = series.familyId?.primaryContact
+  const familyName = (series.familyId && typeof series.familyId === 'object' && series.familyId.primaryContact)
     ? `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`
     : "Famille inconnue";
   const createdAt = new Date(series.createdAt);

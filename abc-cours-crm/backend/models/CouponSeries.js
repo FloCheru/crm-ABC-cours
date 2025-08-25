@@ -16,7 +16,7 @@ const couponSeriesSchema = new mongoose.Schema(
     studentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
-      required: [true, "ID de l'élève requis"],
+      required: false, // Optionnel pour permettre les NDR famille seule
     },
     // Nouveau champ pour supporter multiples élèves (optionnel pour compatibilité)
     studentIds: [

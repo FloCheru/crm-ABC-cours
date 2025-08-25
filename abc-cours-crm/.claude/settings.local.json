@@ -25,7 +25,11 @@
       "Bash(npx jest:*)",
       "Bash(npx jshint:*)",
       "Bash(move prospects.test.js prospects-broken.test.js.bak)",
-      "Bash(move prospects-fixed.test.js prospects.test.js)"
+      "Bash(move prospects-fixed.test.js prospects.test.js)",
+      "Bash(powershell:*)",
+      "Bash(cd:*)",
+      "Read(/C:\\c\\Users\\flori\\OneDrive\\Bureau\\ABC cours\\Application\\abc-cours-crm\\backend/**)",
+      "Bash(sed:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

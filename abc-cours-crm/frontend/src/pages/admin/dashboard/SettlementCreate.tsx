@@ -1276,7 +1276,7 @@ export const SettlementCreate: React.FC = () => {
         items={[
           { label: "Admin", href: "/admin" },
           { label: "Tableau de bord", href: "/admin/dashboard" },
-          { label: "Créer une NDR", href: "/admin/dashboard/create" },
+          { label: "Créer une NDR (ancienne version)", href: "/admin/dashboard/create" },
         ]}
       />
       <Container layout="flex-col">

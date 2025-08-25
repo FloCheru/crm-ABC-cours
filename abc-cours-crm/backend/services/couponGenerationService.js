@@ -116,10 +116,8 @@ class CouponGenerationService {
         studentIds = [settlementNote.studentId];
       }
 
-      // Vérifier qu'au moins un élève est spécifié
-      if (!studentIds || studentIds.length === 0) {
-        throw new Error("Au moins un élève requis pour créer la série de coupons");
-      }
+      // Pour les NDR famille seule (sans élèves), considérer 1 bénéficiaire
+      const beneficiaryCount = studentIds.length > 0 ? studentIds.length : 1;
 
       // Calculer le nombre total de coupons basé sur les matières et quantités
       let totalCoupons = 0;
@@ -127,18 +125,18 @@ class CouponGenerationService {
         // Nouveau format avec multiples matières
         totalCoupons = settlementNote.subjects.reduce((sum, subject) => {
           return sum + Math.ceil(subject.quantity);
-        }, 0) * studentIds.length; // Multiplier par le nombre d'élèves
+        }, 0) * beneficiaryCount; // Multiplier par le nombre de bénéficiaires (élèves ou famille)
       } else {
         // Ancien format avec une seule matière
-        totalCoupons = Math.ceil(settlementNote.quantity) * studentIds.length;
+        totalCoupons = Math.ceil(settlementNote.quantity) * beneficiaryCount;
       }
 
       // Créer la série de coupons (adapter pour multiples élèves/matières)
       const couponSeries = new CouponSeries({
         settlementNoteId: settlementNote._id,
         familyId: settlementNote.familyId,
-        studentId: studentIds[0], // Garder le premier pour compatibilité
-        studentIds: studentIds, // Nouveau champ pour multiples élèves
+        studentId: studentIds.length > 0 ? studentIds[0] : null, // Premier élève ou null pour famille seule
+        studentIds: studentIds, // Tableau d'élèves (peut être vide pour famille seule)
         totalCoupons,
         usedCoupons: 0,
         status: "active",

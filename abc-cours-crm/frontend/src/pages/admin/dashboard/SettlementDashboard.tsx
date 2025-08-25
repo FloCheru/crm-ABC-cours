@@ -9,6 +9,7 @@ import {
   Input,
   Button,
   Table,
+  SettlementDeletionPreviewModal,
 } from "../../../components";
 import { settlementService } from "../../../services/settlementService";
 import type { SettlementNote } from "../../../services/settlementService";
@@ -44,6 +45,12 @@ export const SettlementDashboard: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [isRetrying, setIsRetrying] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // États pour la popup de suppression
+  const [isDeletionPreviewModalOpen, setIsDeletionPreviewModalOpen] = useState(false);
+  const [deletionPreviewData, setDeletionPreviewData] = useState(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
 
   // Charger les données des notes de règlement
   useEffect(() => {
@@ -170,7 +177,7 @@ export const SettlementDashboard: React.FC = () => {
   };
 
   const handleCreateNote = () => {
-    navigate("/admin/dashboard/create");
+    navigate("/admin/dashboard/create/wizard");
   };
 
   const handleViewNote = (noteId: string) => {
@@ -182,40 +189,63 @@ export const SettlementDashboard: React.FC = () => {
   };
 
   const handleDeleteNote = async (noteId: string) => {
-    // Trouver la note pour afficher des détails dans la confirmation
-    const noteToDelete = settlementData.find(note => note._id === noteId);
-    const noteNumber = noteId.substring(noteId.length - 8).toUpperCase();
-    const clientName = noteToDelete?.clientName || "Inconnue";
-    
-    if (
-      window.confirm(
-        `Êtes-vous sûr de vouloir supprimer cette note de règlement ?\n\n` +
-        `N° NDR: ${noteNumber}\n` +
-        `Client: ${clientName}\n\n` +
-        `Cette action supprimera également tous les coupons associés et ne peut pas être annulée.`
-      )
-    ) {
-      try {
-        setIsLoading(true);
-        await settlementService.deleteSettlementNote(noteId);
-        
-        // Recharger les données après suppression
-        const response = await settlementService.getAllSettlementNotes(1, 100);
-        setSettlementData(response.notes || []);
-        
-        // Message de succès (optionnel)
-        console.log(`Note de règlement ${noteNumber} supprimée avec succès`);
-      } catch (error) {
-        console.error("Erreur lors de la suppression:", error);
-        setError(
-          error instanceof Error 
-            ? `Erreur lors de la suppression: ${error.message}`
-            : "Erreur lors de la suppression de la note"
-        );
-      } finally {
-        setIsLoading(false);
-      }
+    try {
+      setNoteToDelete(noteId);
+      setIsLoadingPreview(true);
+      setIsDeletionPreviewModalOpen(true);
+
+      // Récupérer l'aperçu de suppression
+      const previewData = await settlementService.getDeletionPreview(noteId);
+      setDeletionPreviewData(previewData);
+    } catch (error) {
+      console.error("Erreur lors du chargement de l'aperçu:", error);
+      setDeletionPreviewData(null);
+    } finally {
+      setIsLoadingPreview(false);
     }
+  };
+
+  // Confirmer la suppression après aperçu
+  const handleConfirmDeletion = async () => {
+    if (!noteToDelete) return;
+
+    try {
+      const noteDetails = settlementData.find(note => note._id === noteToDelete);
+      const noteNumber = noteToDelete.substring(noteToDelete.length - 8).toUpperCase();
+      const clientName = noteDetails?.clientName || "Inconnue";
+
+      setIsLoading(true);
+      await settlementService.deleteSettlementNote(noteToDelete);
+      
+      // Recharger les données après suppression
+      const response = await settlementService.getAllSettlementNotes(1, 100);
+      setSettlementData(response.notes || []);
+      
+      console.log(`✅ Note de règlement ${clientName} (${noteNumber}) supprimée avec succès`);
+
+      // Fermer le modal et réinitialiser
+      setIsDeletionPreviewModalOpen(false);
+      setNoteToDelete(null);
+      setDeletionPreviewData(null);
+
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      setError(
+        error instanceof Error 
+          ? `Erreur lors de la suppression: ${error.message}`
+          : "Erreur lors de la suppression de la note"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Annuler la suppression
+  const handleCancelDeletion = () => {
+    setIsDeletionPreviewModalOpen(false);
+    setNoteToDelete(null);
+    setDeletionPreviewData(null);
+    setIsLoadingPreview(false);
   };
 
   // Filtrer les données selon le terme de recherche
@@ -599,6 +629,15 @@ export const SettlementDashboard: React.FC = () => {
           )}
         </Container>
       </Container>
+
+      {/* Modal d'aperçu de suppression */}
+      <SettlementDeletionPreviewModal
+        isOpen={isDeletionPreviewModalOpen}
+        onClose={handleCancelDeletion}
+        onConfirm={handleConfirmDeletion}
+        previewData={deletionPreviewData}
+        isLoading={isLoadingPreview}
+      />
     </div>
   );
 };

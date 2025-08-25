@@ -35,7 +35,7 @@ This is a full-stack CRM application for ABC Cours, an educational institution m
 - **Authentication**: JWT-based auth with role-based access (admin/professor)
 - **Family Management**: Students grouped by families with contact information
 - **Coupon System**: Generate and track educational coupons/vouchers
-- **Settlement Notes**: Financial settlement and billing management
+- **Settlement Notes**: Financial settlement and billing management with intelligent prefill system
 - **Subject Management**: Course subjects and professor assignments
 
 ### Key Technologies
@@ -76,9 +76,12 @@ This is a full-stack CRM application for ABC Cours, an educational institution m
 frontend/tests/
 ├── setup.js                 # Configuration Jest globale
 ├── test-basic.test.js       # Tests configuration
-├── pages/                   # Tests pages complètes (39 tests)
+├── pages/                   # Tests pages complètes (41 tests)
 │   ├── prospects.test.js    # 13 tests prospects
-│   └── clients.test.js      # 26 tests clients avec NDR
+│   ├── clients.test.js      # 26 tests clients avec NDR
+│   └── step3-prefill-integration.test.js # 8 tests préremplissage NDR
+├── services/                # Tests services
+│   └── ndrPrefillService.test.js # 15 tests service préremplissage
 ├── components/              # Tests composants unitaires
 ├── hooks/                   # Tests hooks personnalisés
 └── fixtures/                # Données de test réutilisables
@@ -88,6 +91,8 @@ frontend/tests/
 - `npm run test:basic` - Test configuration Jest
 - `npm run test:page:prospects` - Tests page prospects
 - `npm run test:page:clients` - Tests page clients
+- `npm run test:service:prefill` - Tests service préremplissage NDR
+- `npm run test:page:step3-prefill` - Tests intégration préremplissage Step3
 - `npm run test:coverage` - Couverture complète
 
 ### Test Infrastructure - Backend  
@@ -123,8 +128,102 @@ backend/tests/
 - **API Proxy**: Frontend proxies API calls to backend URL via environment variables
 - **CORS**: Backend configured for localhost development and production domains
 
+## NDR (Settlement Notes) Intelligent Prefill System
+
+### Overview
+The NDR creation wizard (Step 3) features an intelligent prefill system that automatically generates optimized pricing based on selected subjects, client department, and business rules.
+
+### Architecture
+```
+src/services/ndrPrefillService.ts    # Core prefill logic and calculations
+src/pages/.../Step3RatesValidation.tsx # Integration with NDR wizard
+frontend/tests/services/             # Unit tests for prefill service
+frontend/tests/pages/               # Integration tests for Step3 prefill
+```
+
+### Key Features
+
+#### 1. Smart Rate Calculation
+- **Subject-based pricing**: Different rates for scientific subjects (Math, Physics, Chemistry) vs languages vs other subjects
+- **Weighted averages**: When multiple subjects selected, calculates optimal average rates
+- **Department-based charges**: Higher charges for Paris/IDF, standard rates for other regions
+
+#### 2. Intelligent Defaults
+```typescript
+// Example rate configuration
+SCIENTIFIC_SUBJECTS = {
+  mathematics: { hourlyRate: 28, professorSalary: 20 },
+  physics: { hourlyRate: 30, professorSalary: 22 },
+  chemistry: { hourlyRate: 30, professorSalary: 22 }
+}
+
+LANGUAGE_SUBJECTS = {
+  french: { hourlyRate: 25, professorSalary: 18 },
+  english: { hourlyRate: 26, professorSalary: 19 }
+}
+
+DEPARTMENT_CHARGES = {
+  '75': 3.0, // Paris - higher charges
+  '69': 2.4, // Lyon - medium charges  
+  'default': 2.0 // Other departments
+}
+```
+
+#### 3. Financial Preview
+- **Real-time calculations**: Revenue, costs, margin preview before applying
+- **Margin optimization**: Can suggest optimal rates for target margin percentage
+- **Payment method suggestions**: Different defaults for prospects vs existing clients
+
+#### 4. User Experience
+- **One-click prefill**: Single button to generate intelligent defaults
+- **Preview modal**: Shows all calculated values before applying to form
+- **Contextual suggestions**: Adapts to client type, location, and subject mix
+
+### Usage
+
+```typescript
+// Generate prefill data
+const prefillData = ndrPrefillService.generatePrefillData(
+  subjects,           // Array of selected subjects
+  department,         // Client department (e.g., "75 - Paris")
+  clientType         // 'prospect' | 'client'
+);
+
+// Calculate financial preview
+const preview = ndrPrefillService.calculateQuickPreview(prefillData);
+
+// Suggest optimal rates for target margin
+const optimal = ndrPrefillService.suggestOptimalRates(subjects, department, 25); // 25% margin
+```
+
+### Testing
+- **Unit tests**: `ndrPrefillService.test.js` - Core logic and calculations
+- **Integration tests**: `step3-prefill-integration.test.js` - UI interactions and data flow
+- **Coverage**: 100% test coverage on all prefill scenarios
+
+### Configuration
+Rates and charges are configurable in `ndrPrefillService.ts`:
+- `DEFAULT_RATES`: Subject-specific pricing tiers
+- `DEPARTMENT_CHARGES`: Regional charge variations  
+- `DEFAULT_QUANTITY_PER_SUBJECT`: Standard hours per subject (8h)
+
+### Business Rules
+1. **Subject Recognition**: Analyzes subject names to categorize (scientific, language, other)
+2. **Geographic Pricing**: Adjusts charges based on department codes
+3. **Client Segmentation**: Different payment methods for prospects vs clients
+4. **Margin Targets**: Can reverse-calculate rates to achieve specific margin percentages
+
 ## Working Mode
-**PLAN MODE IS ACTIVE**: Always work in plan mode and ask for confirmation before implementing any changes. Present detailed plans for approval before proceeding with implementation.
+**AGENT MODE OBLIGATOIRE**: TOUTES les modifications de code, ajouts de fonctionnalités, corrections de bugs et analyses DOIVENT passer par le système d'agents. Ne jamais modifier directement le code sans utiliser le workflow complet des agents.
+
+### Règle absolue
+Pour TOUTE demande de l'utilisateur impliquant du code :
+1. **TOUJOURS** utiliser l'outil Task avec subagent_type="general-purpose"
+2. Le Chef de Projet analyse et distribue le travail
+3. Les agents spécialisés exécutent leurs tâches
+4. Validation complète avant présentation à l'utilisateur
+
+**Exceptions** : Uniquement pour les questions théoriques ou explications sans modification de code.
 
 ## Agent-Based Development Methodology
 
@@ -441,56 +540,73 @@ STRUCTURE_VALIDÉE / CORRECTIONS_TECHNIQUES_REQUISES
 UX_VALIDÉE / AMÉLIORATIONS_UX_REQUISES
 ```
 
-### 🧪 AGENT TEST - VERSION OPTIMISÉE
+### 🧪 AGENT TEST - VERSION CORRIGÉE
+
+#### 🚨 RÈGLE FONDAMENTALE
+**L'Agent Test DOIT TOUJOURS créer/modifier des tests spécifiques pour la fonctionnalité développée AVANT de les exécuter.**
+- **INTERDIT** : Lancer `npm test` sans avoir créé de tests pour la nouvelle fonctionnalité
+- **OBLIGATOIRE** : Rédiger le test dans le fichier approprié, puis l'exécuter
+- **JAMAIS** de tests à la volée, toujours dans des fichiers de test
 
 #### Responsabilités
-- **Tests automatisés uniquement** : Exécution `npm test` backend et frontend
-- **Vérification couverture** : Minimum 80% maintenu
-- **Status serveurs** : Vérification simple avec health check
-- **Utilisation infrastructure existante** : Tests Jest structurés
+- **Créer des tests spécifiques** : Rédiger des tests Jest pour CHAQUE nouvelle fonctionnalité
+- **Placer les tests correctement** : Dans les dossiers `/backend/tests/` ou `/frontend/tests/`
+- **Exécuter les tests créés** : Lancer uniquement les tests pertinents, pas toute la suite
+- **Base de données test** : Utiliser MongoDB Memory Server (déjà configuré)
+- **Corriger immédiatement** : Si un test échoue, corriger avant de continuer
 
-#### Commandes de vérification des services
-```bash
-# Vérifier backend (tester plusieurs ports possibles)
-curl -s http://localhost:3000/health || curl -s http://localhost:5000/health
+#### Workflow de test OBLIGATOIRE
+1. **Analyser la modification** : Comprendre ce qui a été changé
+2. **Créer/modifier le fichier de test** : 
+   - Backend : `/backend/tests/integration/[feature].test.js`
+   - Frontend : `/frontend/tests/pages/[component].test.js`
+3. **Rédiger les cas de test** : Tests unitaires ou d'intégration selon le besoin
+4. **Exécuter le test spécifique** :
+   ```bash
+   # Backend - test spécifique
+   cd backend && npx jest tests/integration/[feature].test.js
+   
+   # Frontend - test spécifique  
+   npx jest tests/pages/[component].test.js
+   ```
+5. **Analyser les résultats** : Vérifier que les tests passent
+6. **Corriger si nécessaire** : Reboucler avec Agent Codeur si échec
 
-# Vérifier frontend (tester plusieurs ports possibles)  
-curl -s http://localhost:5173 || curl -s http://localhost:5177
-
-# Si services OK → Procéder aux tests
-# Si services KO → Status: SERVEURS_INACTIFS
+#### Exemple de création de test
+```javascript
+// backend/tests/integration/coupon-series-family.test.js
+describe('Coupon Series Family Display', () => {
+  it('should populate family data correctly', async () => {
+    // Arrange: Créer données test
+    // Act: Appeler l'API
+    // Assert: Vérifier que familyId.primaryContact existe
+  });
+});
 ```
 
-#### Types de tests exécutés
-- **Backend** : `npm test` → Tests Jest API + métier (MongoDB Memory Server)
-- **Frontend** : `npm test` → Tests Jest composants + pages + hooks
-- **Couverture** : Métriques automatiques Jest
-
-#### Format de sortie optimisé
+#### Format de sortie
 ```markdown
-## AGENT TEST - Validation Automatisée
+## AGENT TEST - Validation Spécifique
 
-### 🔍 Vérification services
-- Backend : ✅ Actif sur port XXXX / ❌ Inactif
-- Frontend : ✅ Actif sur port XXXX / ❌ Inactif
+### 📝 Tests créés/modifiés
+- **Fichier** : `/backend/tests/integration/[feature].test.js`
+- **Description** : [Ce que teste le fichier]
+- **Cas de test** : [Liste des it() créés]
 
-### ✅ Tests exécutés
+### ✅ Exécution des tests
 ```bash
-# Tests Backend
-$ cd backend && npm test
-[RÉSULTATS_COMPLETS_JEST_BACKEND]
-
-# Tests Frontend  
-$ npm test
-[RÉSULTATS_COMPLETS_JEST_FRONTEND]
+$ cd backend && npx jest tests/integration/[feature].test.js
+[RÉSULTATS_COMPLETS_DU_TEST_SPÉCIFIQUE]
 ```
 
-### 📊 Métriques
-- Services actifs : X/2
-- Tests backend : X/Y passés ✅/❌
-- Tests frontend : X/Y passés ✅/❌
-- Couverture backend : X% (seuil: 80%)
-- Couverture frontend : X% (seuil: 80%)
+### 📊 Résultats
+- Tests créés : X
+- Tests passés : X/X ✅
+- Temps d'exécution : Xs
+- Couverture de la fonctionnalité : Testée ✅
+
+### 🔄 Status
+TESTS_SPÉCIFIQUES_VALIDÉS / CORRECTIONS_REQUISES
 
 ### ⚠️ Tests échoués
 - [Fichier test] : [Description erreur Jest]
@@ -1015,5 +1131,7 @@ Finalement c'est avant de push quoi que soit qu'on va tester le build avec l'age
 - toujours corriger le problème directement quand il y a une erreur lors d'un test
 - un agent de documentation est responsable de doucmenter les fonctionnalités principales et de mettre à jour à chaque modification. ainsi le chef de projet gagnera dui temps et n'aura pas besoin de rechercher dans le code
 - ajouter à la fin de la procédure d'agents la documentation de l'agent qui documente
-- maintenant tu lances le fichier de tests pour tester une fonctionnalité !
-- l'agent testeur ne doit jamais faire de test à la volée, il doit tout le temps r"diger le test dans le fichier approprié et run le fichier de test
+- **IMPORTANT** : L'Agent Test doit TOUJOURS créer un test spécifique pour la fonctionnalité modifiée AVANT de l'exécuter
+- L'agent testeur ne doit JAMAIS lancer `npm test` global, mais créer et exécuter des tests spécifiques
+- Chaque modification = nouveau test créé dans le bon fichier = exécution de CE test uniquement
+- quand un test échoue, tu dois corriger ce qu'il faut, pas contourner

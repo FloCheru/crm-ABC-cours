@@ -166,6 +166,19 @@ class SettlementService {
     }
   }
 
+  async getDeletionPreview(id: string): Promise<any> {
+    try {
+      const response = await apiClient.get(`/api/settlement-notes/${id}/deletion-preview`);
+      return response;
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération de l'aperçu de suppression:",
+        error
+      );
+      throw error;
+    }
+  }
+
   async deleteSettlementNote(id: string): Promise<{ message: string }> {
     try {
       const response = await rateLimitedApiClient.delete(`/api/settlement-notes/${id}`);

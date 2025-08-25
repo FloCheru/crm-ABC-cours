@@ -1,9 +1,9 @@
 // tests/families.test.js - Tests unitaires pour les familles
 const request = require("supertest");
-const app = require("../server");
-const Family = require("../models/Family");
-const User = require("../models/User");
-const { setupTestDB, teardownTestDB, clearTestDB } = require("./setup");
+const app = require("../../server");
+const Family = require("../../models/Family");
+const User = require("../../models/User");
+const { setupTestDB, teardownTestDB, clearTestDB } = require("../setup");
 
 describe("Families API Tests", () => {
   let authToken;

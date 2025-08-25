@@ -1,10 +1,10 @@
 // tests/students.test.js - Tests unitaires pour les élèves
 const request = require("supertest");
-const app = require("../server");
-const Student = require("../models/Student");
-const Family = require("../models/Family");
-const User = require("../models/User");
-const { setupTestDB, teardownTestDB, clearTestDB } = require("./setup");
+const app = require("../../server");
+const Student = require("../../models/Student");
+const Family = require("../../models/Family");
+const User = require("../../models/User");
+const { setupTestDB, teardownTestDB, clearTestDB } = require("../setup");
 
 describe("Students API Tests", () => {
   let testFamily;

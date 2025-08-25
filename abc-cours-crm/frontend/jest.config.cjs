@@ -10,6 +10,15 @@ module.exports = {
   globals: {
     TextEncoder: TextEncoder,
     TextDecoder: TextDecoder,
+    'import.meta': {
+      env: {
+        VITE_API_URL: 'http://localhost:3000/api',
+        VITE_APP_NAME: 'ABC Cours CRM (Test)',
+        VITE_APP_VERSION: '1.0.0',
+        VITE_ENVIRONMENT: 'test',
+        VITE_DEBUG: 'false'
+      }
+    }
   },
   
   // Chemins de tests
@@ -34,6 +43,15 @@ module.exports = {
         ['@babel/preset-env', { targets: { node: 'current' } }],
         ['@babel/preset-react', { runtime: 'automatic' }],
         '@babel/preset-typescript'
+      ],
+      plugins: [
+        ['babel-plugin-transform-vite-meta-env', {
+          VITE_API_URL: 'http://localhost:3000/api',
+          VITE_APP_NAME: 'ABC Cours CRM (Test)',
+          VITE_APP_VERSION: '1.0.0',
+          VITE_ENVIRONMENT: 'test',
+          VITE_DEBUG: 'false'
+        }]
       ]
     }]
   },

@@ -1,0 +1,152 @@
+/* Styles pour l'indicateur de progression */
+.progress-stepper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.progress-stepper__step-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.progress-stepper__line {
+  width: 4rem;
+  height: 2px;
+  background: #d1d5db;
+  margin: 0 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.progress-stepper__line--completed {
+  background: #10b981;
+}
+
+.progress-stepper__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.progress-stepper__step--clickable {
+  cursor: pointer;
+}
+
+.progress-stepper__step--clickable:hover {
+  background: #f1f5f9;
+  transform: translateY(-1px);
+}
+
+.progress-stepper__circle {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.125rem;
+  transition: all 0.3s ease;
+}
+
+/* États du cercle */
+.progress-stepper__step--pending .progress-stepper__circle {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 2px solid #d1d5db;
+}
+
+.progress-stepper__step--active .progress-stepper__circle {
+  background: #3b82f6;
+  color: white;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.progress-stepper__step--completed .progress-stepper__circle {
+  background: #10b981;
+  color: white;
+  border: 2px solid #10b981;
+}
+
+.progress-stepper__step--error .progress-stepper__circle {
+  background: #ef4444;
+  color: white;
+  border: 2px solid #ef4444;
+}
+
+/* Icônes */
+.progress-stepper__check,
+.progress-stepper__error {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Texte */
+.progress-stepper__text {
+  text-align: center;
+  min-width: 80px;
+}
+
+.progress-stepper__title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.progress-stepper__description {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* États du texte */
+.progress-stepper__step--active .progress-stepper__title {
+  color: #3b82f6;
+}
+
+.progress-stepper__step--completed .progress-stepper__title {
+  color: #10b981;
+}
+
+.progress-stepper__step--error .progress-stepper__title {
+  color: #ef4444;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .progress-stepper {
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .progress-stepper__line {
+    width: 2rem;
+    margin: 0 0.5rem;
+  }
+  
+  .progress-stepper__circle {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1rem;
+  }
+  
+  .progress-stepper__title {
+    font-size: 0.75rem;
+  }
+  
+  .progress-stepper__description {
+    font-size: 0.6875rem;
+  }
+}

@@ -15,6 +15,7 @@ import {
   Prospects,
   Clients,
 } from "./pages";
+import { NDRCreationWizard } from "./pages/admin/dashboard/create/NDRCreationWizard";
 import { TemplatePreview } from "./pages/admin/TemplatePreview";
 import { SeriesDetails } from "./pages/admin/coupons/SeriesDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -102,6 +103,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SettlementCreate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard/create/wizard"
+            element={
+              <ProtectedRoute>
+                <NDRCreationWizard />
               </ProtectedRoute>
             }
           />
