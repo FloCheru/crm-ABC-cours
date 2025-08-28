@@ -24,7 +24,6 @@ interface AddStudentFormProps {
 export const AddStudentForm: React.FC<AddStudentFormProps> = ({
   onSave,
   onCancel,
-  familyId,
   isLoading = false
 }) => {
   const [formData, setFormData] = useState<StudentFormData>({

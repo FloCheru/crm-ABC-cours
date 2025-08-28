@@ -433,14 +433,14 @@ export const ClientDetails: React.FC = () => {
                           <div className="client-details__field mt-3">
                             <label>Informations médicales</label>
                             <div className="text-sm space-y-1">
-                              {student.medicalInfo.allergies?.length > 0 && (
-                                <p><strong>Allergies:</strong> {student.medicalInfo.allergies.join(", ")}</p>
+                              {student.medicalInfo.allergies?.length && student.medicalInfo.allergies.length > 0 && (
+                                <p><strong>Allergies:</strong> {student.medicalInfo.allergies?.join(", ")}</p>
                               )}
-                              {student.medicalInfo.conditions?.length > 0 && (
-                                <p><strong>Conditions:</strong> {student.medicalInfo.conditions.join(", ")}</p>
+                              {student.medicalInfo.conditions?.length && student.medicalInfo.conditions.length > 0 && (
+                                <p><strong>Conditions:</strong> {student.medicalInfo.conditions?.join(", ")}</p>
                               )}
-                              {student.medicalInfo.medications?.length > 0 && (
-                                <p><strong>Médicaments:</strong> {student.medicalInfo.medications.join(", ")}</p>
+                              {student.medicalInfo.medications?.length && student.medicalInfo.medications.length > 0 && (
+                                <p><strong>Médicaments:</strong> {student.medicalInfo.medications?.join(", ")}</p>
                               )}
                               {student.medicalInfo.emergencyContact?.name && (
                                 <p><strong>Contact d'urgence:</strong> {student.medicalInfo.emergencyContact.name} 

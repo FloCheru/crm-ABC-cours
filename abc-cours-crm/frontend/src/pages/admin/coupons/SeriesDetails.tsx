@@ -4,7 +4,6 @@ import {
   Navbar,
   Breadcrumb,
   Container,
-  SummaryCard,
   Button,
   Table,
   StatusBadge,
@@ -127,7 +126,13 @@ export const SeriesDetails: React.FC = () => {
 
     try {
       setIsSaving(true);
-      const updatedSeries = await couponSeriesService.updateCouponSeries(seriesId, editedData);
+      const updateData = {
+        ...editedData,
+        familyId: typeof editedData.familyId === 'object' ? editedData.familyId._id : editedData.familyId,
+        studentId: typeof editedData.studentId === 'object' ? editedData.studentId._id : editedData.studentId,
+        subject: typeof editedData.subject === 'object' ? editedData.subject._id : editedData.subject
+      };
+      const updatedSeries = await couponSeriesService.updateCouponSeries(seriesId, updateData);
       setSeries(updatedSeries);
       setEditedData({});
       setIsEditing(false);

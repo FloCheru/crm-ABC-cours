@@ -64,7 +64,8 @@ export const Step2StudentsSubjects: React.FC = () => {
             setStudents([]);
             // Ouvrir automatiquement la modal si on vient depuis les prospects
             if (state.returnContext === "prospects") {
-              setShowAddStudentModal(true);
+              // TODO: Implémenter la modal d'ajout d'étudiant
+              // setShowAddStudentModal(true);
             }
           }
         }

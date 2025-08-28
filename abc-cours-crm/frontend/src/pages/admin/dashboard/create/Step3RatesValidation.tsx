@@ -453,7 +453,7 @@ export const Step3RatesValidation: React.FC = () => {
       console.log("🔍 === FIN DEBUG CRÉATION NDR ===");
 
       // Créer la note de règlement
-      const createdNote = await settlementService.createSettlementNote(
+      await settlementService.createSettlementNote(
         settlementData
       );
 

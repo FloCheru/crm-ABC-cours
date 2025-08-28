@@ -36,7 +36,8 @@
       "Bash(dir:*)",
       "WebFetch(domain:docs.railway.app)",
       "WebFetch(domain:docs.railway.com)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(tasklist:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

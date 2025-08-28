@@ -50,12 +50,17 @@ describe("Settlement Notes API Tests - Multiple Students and Subjects", () => {
         lastName: "Dupont",
         email: "jean.dupont@example.com",
         primaryPhone: "0123456789",
+        gender: "M."
       },
       address: {
         street: "123 rue de la Paix",
         city: "Paris",
         postalCode: "75001",
         country: "France",
+      },
+      demande: {
+        beneficiaryType: "eleves",
+        beneficiaryLevel: "CP"
       },
       status: "prospect",
       createdBy: userId,
@@ -67,15 +72,25 @@ describe("Settlement Notes API Tests - Multiple Students and Subjects", () => {
     const student1 = new Student({
       firstName: "Pierre",
       lastName: "Dupont",
-      familyId: familyId,
-      level: "Terminale S",
+      family: familyId,
+      dateOfBirth: new Date('2005-01-15'),
+      school: {
+        name: "Lycée Victor Hugo",
+        level: "lycee",
+        grade: "Terminale S"
+      },
       createdBy: userId,
     });
     const student2 = new Student({
       firstName: "Marie",
       lastName: "Dupont",
-      familyId: familyId,
-      level: "1ère ES",
+      family: familyId,
+      dateOfBirth: new Date('2006-05-20'),
+      school: {
+        name: "Lycée Victor Hugo", 
+        level: "lycee",
+        grade: "1ère ES"
+      },
       createdBy: userId,
     });
     const savedStudent1 = await student1.save();
@@ -114,6 +129,7 @@ describe("Settlement Notes API Tests - Multiple Students and Subjects", () => {
         clientName: "Jean Dupont",
         department: "75",
         paymentMethod: "card",
+        paymentType: "immediate_advance",
         subjects: [ // Multiple subjects
           {
             subjectId: subjectIds[0],
@@ -138,7 +154,7 @@ describe("Settlement Notes API Tests - Multiple Students and Subjects", () => {
         .send(settlementData);
 
       expect(response.status).toBe(201);
-      expect(response.body.message).toBe("Note de règlement créée avec succès");
+      expect(response.body.message).toBe("Note de règlement créée avec succès avec génération automatique des coupons");
       expect(response.body.settlementNote).toBeDefined();
 
       const settlementNote = response.body.settlementNote;
@@ -283,6 +299,7 @@ describe("Settlement Notes API Tests - Multiple Students and Subjects", () => {
         clientName: "Jean Dupont",
         department: "75",
         paymentMethod: "card",
+        paymentType: "immediate_advance",
         subjects: [ // Une seule matière
           {
             subjectId: subjectIds[0],

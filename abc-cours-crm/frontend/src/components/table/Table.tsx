@@ -73,7 +73,7 @@ interface TableProps {
   /**
    * Callback lors du clic sur une ligne
    */
-  onRowClick?: (row: TableData) => void;
+  onRowClick?: (row: any) => void;
 }
 
 /**
