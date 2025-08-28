@@ -15,23 +15,25 @@ import { settlementService } from "../../../services/settlementService";
 import type { SettlementNote } from "../../../services/settlementService";
 
 // Type pour les données du tableau avec l'id requis
-type TableRowData = SettlementNote & { 
+type TableRowData = SettlementNote & {
   id: string;
   extractedDepartment?: string;
 };
 
 // Fonctions utilitaires pour extraire les valeurs des subjects
-const getSubjectValue = (note: SettlementNote, field: 'hourlyRate' | 'quantity' | 'professorSalary'): number => {
+const getSubjectValue = (
+  note: SettlementNote,
+  field: "hourlyRate" | "quantity" | "professorSalary"
+): number => {
   if (!note.subjects || note.subjects.length === 0) return 0;
   // Pour l'instant, on prend la première matière. Plus tard on pourra gérer plusieurs matières
   return note.subjects[0][field] || 0;
 };
 
-
 const getSubjectName = (note: SettlementNote): string => {
   if (!note.subjects || note.subjects.length === 0) return "N/A";
   const firstSubject = note.subjects[0];
-  if (typeof firstSubject.subjectId === 'object') {
+  if (typeof firstSubject.subjectId === "object") {
     return firstSubject.subjectId.name;
   }
   return "Matière";
@@ -45,9 +47,10 @@ export const SettlementDashboard: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [isRetrying, setIsRetrying] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // États pour la popup de suppression
-  const [isDeletionPreviewModalOpen, setIsDeletionPreviewModalOpen] = useState(false);
+  const [isDeletionPreviewModalOpen, setIsDeletionPreviewModalOpen] =
+    useState(false);
   const [deletionPreviewData, setDeletionPreviewData] = useState(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
@@ -61,7 +64,7 @@ export const SettlementDashboard: React.FC = () => {
         setIsRetrying(false);
         const response = await settlementService.getAllSettlementNotes(1, 100); // Récupérer toutes les notes
         setSettlementData(response.notes || []);
-        
+
         // 🔍 DÉBOGAGE - Vérifier la structure des données reçues
         if (response.notes && response.notes.length > 0) {
           const firstNote = response.notes[0];
@@ -70,7 +73,7 @@ export const SettlementDashboard: React.FC = () => {
             subjects: firstNote.subjects,
             hasSubjects: !!firstNote.subjects,
             subjectsLength: firstNote.subjects?.length || 0,
-            firstSubject: firstNote.subjects?.[0]
+            firstSubject: firstNote.subjects?.[0],
           });
         }
       } catch (err) {
@@ -99,7 +102,7 @@ export const SettlementDashboard: React.FC = () => {
 
   // Fonction pour extraire le département depuis le code postal
   const extractDepartmentFromPostalCode = (postalCode: string): string => {
-    if (!postalCode || typeof postalCode !== 'string') return "";
+    if (!postalCode || typeof postalCode !== "string") return "";
 
     // Nettoyer le code postal (enlever les espaces)
     const cleanPostalCode = postalCode.trim();
@@ -123,9 +126,9 @@ export const SettlementDashboard: React.FC = () => {
       check: "Chèque",
       transfer: "Virement",
       cash: "Espèces",
-      PRLV: "Prélèvement"
+      PRLV: "Prélèvement",
     };
-    
+
     return translations[paymentMethod] || paymentMethod;
   };
 
@@ -157,11 +160,41 @@ export const SettlementDashboard: React.FC = () => {
   const calculateMarge = (
     hourlyRate: number,
     quantity: number,
-    professorSalary: number
+    professorSalary: number,
+    charges: number
   ): number => {
     const ca = calculateCA(hourlyRate, quantity);
     const totalSalary = professorSalary * quantity;
-    return ca - totalSalary;
+    return ca - totalSalary - charges;
+  };
+
+  // Calculer la marge en pourcentage
+  const calculateMargePercentage = (
+    hourlyRate: number,
+    quantity: number,
+    professorSalary: number,
+    charges: number
+  ): number => {
+    const ca = calculateCA(hourlyRate, quantity);
+    if (ca === 0) return 0;
+    const marge = calculateMarge(hourlyRate, quantity, professorSalary, charges);
+    return (marge / ca) * 100;
+  };
+
+  // Calculer la TVA selon le département
+  const calculateTVA = (marge: number, department: string): number => {
+    if (!department) return 0;
+    
+    // Nettoyer le département (enlever les espaces, convertir en majuscules)
+    const cleanDept = department.trim().toUpperCase();
+    
+    // Si département d'outre-mer (commence par 97) : 2.1% de la marge
+    if (cleanDept.startsWith("97")) {
+      return marge * 0.021;
+    }
+    
+    // Autres départements : 10% de la marge
+    return marge * 0.1;
   };
 
   const handleSearch = () => {
@@ -210,28 +243,33 @@ export const SettlementDashboard: React.FC = () => {
     if (!noteToDelete) return;
 
     try {
-      const noteDetails = settlementData.find(note => note._id === noteToDelete);
-      const noteNumber = noteToDelete.substring(noteToDelete.length - 8).toUpperCase();
+      const noteDetails = settlementData.find(
+        (note) => note._id === noteToDelete
+      );
+      const noteNumber = noteToDelete
+        .substring(noteToDelete.length - 8)
+        .toUpperCase();
       const clientName = noteDetails?.clientName || "Inconnue";
 
       setIsLoading(true);
       await settlementService.deleteSettlementNote(noteToDelete);
-      
+
       // Recharger les données après suppression
       const response = await settlementService.getAllSettlementNotes(1, 100);
       setSettlementData(response.notes || []);
-      
-      console.log(`✅ Note de règlement ${clientName} (${noteNumber}) supprimée avec succès`);
+
+      console.log(
+        `✅ Note de règlement ${clientName} (${noteNumber}) supprimée avec succès`
+      );
 
       // Fermer le modal et réinitialiser
       setIsDeletionPreviewModalOpen(false);
       setNoteToDelete(null);
       setDeletionPreviewData(null);
-
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
       setError(
-        error instanceof Error 
+        error instanceof Error
           ? `Erreur lors de la suppression: ${error.message}`
           : "Erreur lors de la suppression de la note"
       );
@@ -274,21 +312,31 @@ export const SettlementDashboard: React.FC = () => {
   // Calculer les statistiques globales
   const totalNotes = settlementData.length;
   const totalCA = settlementData.reduce(
-    (sum, note) => sum + calculateCA(getSubjectValue(note, 'hourlyRate'), getSubjectValue(note, 'quantity')),
-    0
-  );
-  const totalMarge = settlementData.reduce(
     (sum, note) =>
       sum +
-      calculateMarge(
-        getSubjectValue(note, 'hourlyRate'),
-        getSubjectValue(note, 'quantity'),
-        getSubjectValue(note, 'professorSalary')
+      calculateCA(
+        getSubjectValue(note, "hourlyRate"),
+        getSubjectValue(note, "quantity")
       ),
     0
   );
+  const totalMarge = settlementData.reduce(
+    (sum, note) => {
+      return sum +
+        calculateMarge(
+          getSubjectValue(note, "hourlyRate"),
+          getSubjectValue(note, "quantity"),
+          getSubjectValue(note, "professorSalary"),
+          note.charges
+        );
+    },
+    0
+  );
   const totalSalaire = settlementData.reduce(
-    (sum, note) => sum + getSubjectValue(note, 'professorSalary') * getSubjectValue(note, 'quantity'),
+    (sum, note) =>
+      sum +
+      getSubjectValue(note, "professorSalary") *
+        getSubjectValue(note, "quantity"),
     0
   );
 
@@ -320,27 +368,31 @@ export const SettlementDashboard: React.FC = () => {
       ),
     },
     {
-      key: "student",
-      label: "Élève",
+      key: "subjects",
+      label: "Matières",
       render: (_: unknown, row: TableRowData) => {
-        // Vérifier si studentIds existe et est un array avec au moins un élément
-        if (row.studentIds && Array.isArray(row.studentIds) && row.studentIds.length > 0) {
-          const firstStudent = row.studentIds[0];
-          
-          // Si l'élève est un objet populé avec firstName et lastName
-          if (typeof firstStudent === 'object' && firstStudent.firstName && firstStudent.lastName) {
-            return (
-              <div className="text-sm">
-                {firstStudent.firstName} {firstStudent.lastName}
-                {row.studentIds.length > 1 && (
-                  <span className="text-gray-500 ml-1">+{row.studentIds.length - 1}</span>
-                )}
-              </div>
-            );
-          }
+        // Vérifier si subjects existe et est un array avec au moins un élément
+        if (
+          row.subjects &&
+          Array.isArray(row.subjects) &&
+          row.subjects.length > 0
+        ) {
+          // Extraire tous les noms de matières
+          const subjectNames = row.subjects.map((subject) => {
+            if (
+              typeof subject.subjectId === "object" &&
+              subject.subjectId.name
+            ) {
+              return subject.subjectId.name;
+            }
+            return "Matière";
+          });
+
+          // Joindre les noms avec des virgules
+          return <div>{subjectNames.join(", ")}</div>;
         }
-        
-        return <div className="text-sm text-gray-500">Non défini</div>;
+
+        return <div>Non défini</div>;
       },
     },
     {
@@ -349,12 +401,18 @@ export const SettlementDashboard: React.FC = () => {
       render: (_: unknown, row: TableRowData) => {
         // Utiliser d'abord le département extrait, puis le département existant, sinon extraire du code postal
         let displayDepartment = row.extractedDepartment || row.department;
-        
+
         // Si aucun département n'est disponible, essayer d'extraire à partir des données de famille
-        if (!displayDepartment && typeof row.familyId === 'object' && row.familyId?.address?.postalCode) {
-          displayDepartment = extractDepartmentFromPostalCode(row.familyId.address.postalCode);
+        if (
+          !displayDepartment &&
+          typeof row.familyId === "object" &&
+          row.familyId?.address?.postalCode
+        ) {
+          displayDepartment = extractDepartmentFromPostalCode(
+            row.familyId.address.postalCode
+          );
         }
-        
+
         return (
           <div className="text-sm font-medium">
             {displayDepartment || "N/A"}
@@ -378,7 +436,9 @@ export const SettlementDashboard: React.FC = () => {
       key: "quantity",
       label: "QTé",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm text-center">{getSubjectValue(row, 'quantity')}</div>
+        <div className="text-sm text-center">
+          {getSubjectValue(row, "quantity")}
+        </div>
       ),
     },
     {
@@ -387,37 +447,74 @@ export const SettlementDashboard: React.FC = () => {
       render: (_: unknown, row: TableRowData) => {
         // Utiliser d'abord le département extrait, puis le département existant, sinon extraire du code postal
         let department = row.extractedDepartment || row.department;
-        
+
         // Si aucun département n'est disponible, essayer d'extraire à partir des données de famille
-        if (!department && typeof row.familyId === 'object' && row.familyId?.address?.postalCode) {
-          department = extractDepartmentFromPostalCode(row.familyId.address.postalCode);
+        if (
+          !department &&
+          typeof row.familyId === "object" &&
+          row.familyId?.address?.postalCode
+        ) {
+          department = extractDepartmentFromPostalCode(
+            row.familyId.address.postalCode
+          );
         }
-        
-        return (
-          <div className="font-bold text-sm">{getAsCode(department)}</div>
-        );
+
+        return <div className="font-bold text-sm">{getAsCode(department)}</div>;
       },
     },
     {
       key: "pu",
       label: "PU",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{getSubjectValue(row, 'hourlyRate').toFixed(2)} €</div>
+        <div className="text-sm">
+          {getSubjectValue(row, "hourlyRate").toFixed(2)} €
+        </div>
       ),
     },
     {
       key: "tva",
       label: "TVA",
-      render: () => (
-        <div className="text-sm text-gray-500 italic">-</div>
-      ),
+      render: (_: unknown, row: TableRowData) => {
+        // Utiliser d'abord le département extrait, puis le département existant, sinon extraire du code postal
+        let department = row.extractedDepartment || row.department;
+        
+        // Si aucun département n'est disponible, essayer d'extraire à partir des données de famille
+        if (
+          !department &&
+          typeof row.familyId === "object" &&
+          row.familyId?.address?.postalCode
+        ) {
+          department = extractDepartmentFromPostalCode(
+            row.familyId.address.postalCode
+          );
+        }
+
+        const marge = calculateMarge(
+          getSubjectValue(row, "hourlyRate"),
+          getSubjectValue(row, "quantity"),
+          getSubjectValue(row, "professorSalary"),
+          row.charges
+        );
+        
+        const tva = calculateTVA(marge, department || "");
+        
+        return (
+          <div>
+            {tva.toFixed(2)} €
+          </div>
+        );
+      },
     },
     {
       key: "total",
       label: "Total",
       render: (_: unknown, row: TableRowData) => (
         <div className="font-medium text-sm">
-          {calculateCA(getSubjectValue(row, 'hourlyRate'), getSubjectValue(row, 'quantity')).toFixed(2)} €
+          {calculateCA(
+            getSubjectValue(row, "hourlyRate"),
+            getSubjectValue(row, "quantity")
+          ).toFixed(2)}{" "}
+          €
         </div>
       ),
     },
@@ -426,30 +523,38 @@ export const SettlementDashboard: React.FC = () => {
       label: "Salaire",
       render: (_: unknown, row: TableRowData) => (
         <div className="text-sm">
-          {(getSubjectValue(row, 'professorSalary') * getSubjectValue(row, 'quantity')).toFixed(2)} €
+          {(
+            getSubjectValue(row, "professorSalary") *
+            getSubjectValue(row, "quantity")
+          ).toFixed(2)}{" "}
+          €
         </div>
       ),
     },
     {
       key: "charges",
       label: "Charges",
-      render: () => (
-        <div className="text-sm text-gray-500 italic">-</div>
+      render: (_: unknown, row: TableRowData) => (
+        <div>
+          {row.charges.toFixed(2)} €
+        </div>
       ),
     },
     {
       key: "encaissement",
       label: "Frais encaissement",
-      render: () => (
-        <div className="text-sm text-gray-500 italic">-</div>
-      ),
+      render: () => <div className="text-sm text-gray-500 italic">-</div>,
     },
     {
       key: "ca",
       label: "CA",
       render: (_: unknown, row: TableRowData) => (
         <div className="font-medium text-sm text-blue-600">
-          {calculateCA(getSubjectValue(row, 'hourlyRate'), getSubjectValue(row, 'quantity')).toFixed(2)} €
+          {calculateCA(
+            getSubjectValue(row, "hourlyRate"),
+            getSubjectValue(row, "quantity")
+          ).toFixed(2)}{" "}
+          €
         </div>
       ),
     },
@@ -457,18 +562,16 @@ export const SettlementDashboard: React.FC = () => {
       key: "marge",
       label: "Marge",
       render: (_: unknown, row: TableRowData) => {
-        const marge = calculateMarge(
-          getSubjectValue(row, 'hourlyRate'),
-          getSubjectValue(row, 'quantity'),
-          getSubjectValue(row, 'professorSalary')
+        const charges = row.charges;
+        const margePercentage = calculateMargePercentage(
+          getSubjectValue(row, "hourlyRate"),
+          getSubjectValue(row, "quantity"),
+          getSubjectValue(row, "professorSalary"),
+          charges
         );
         return (
-          <div
-            className={`font-medium text-sm ${
-              marge >= 0 ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {marge.toFixed(2)} €
+          <div>
+            {margePercentage.toFixed(1)}%
           </div>
         );
       },
@@ -611,21 +714,15 @@ export const SettlementDashboard: React.FC = () => {
           <h3>Notes de règlement ({filteredData.length})</h3>
 
           {isLoading ? (
-            <div className="text-center py-8">
-              <div className="text-gray-500">
-                Chargement des notes de règlement...
-              </div>
-            </div>
+            <span>Chargement des notes de règlement...</span>
           ) : filteredData.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-gray-500">
-                {searchTerm
-                  ? "Aucune note trouvée pour cette recherche"
-                  : "Aucune note de règlement disponible"}
-              </div>
-            </div>
+            <span>
+              {searchTerm
+                ? "Aucune note trouvée pour cette recherche"
+                : "Aucune note de règlement disponible"}
+            </span>
           ) : (
-            <Table columns={settlementColumns} data={tableData} />
+            <Table columns={settlementColumns} data={tableData} onRowClick={(row) => handleViewNote(row._id)} />
           )}
         </Container>
       </Container>

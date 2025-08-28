@@ -1,6 +1,8 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs').promises;
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
 const { authenticateToken } = require('../middleware/auth');
 const pdfGenerationService = require('../services/pdfGenerationService');
 const Family = require('../models/Family');
@@ -8,11 +10,29 @@ const Subject = require('../models/Subject');
 
 const router = express.Router();
 
+// Compression gzip pour toutes les réponses PDF
+router.use(compression({
+  filter: (req, res) => {
+    // Compresser seulement les réponses PDF et JSON
+    return /pdf|json/.test(res.getHeader('Content-Type'));
+  },
+  level: 6 // Niveau de compression optimal
+}));
+
+// Rate limiting pour la génération de PDF
+const pdfGenerationLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Maximum 10 PDF par minute par IP
+  message: 'Trop de générations de PDF. Veuillez patienter avant de réessayer.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 /**
  * POST /api/settlement-notes/:id/generate-pdf
  * Génère un PDF pour une note de règlement
  */
-router.post('/settlement-notes/:id/generate-pdf', authenticateToken, async (req, res) => {
+router.post('/settlement-notes/:id/generate-pdf', authenticateToken, pdfGenerationLimiter, async (req, res) => {
   try {
     const { id } = req.params;
     const { type = 'ndr' } = req.body;
@@ -28,6 +48,13 @@ router.post('/settlement-notes/:id/generate-pdf', authenticateToken, async (req,
     console.log(`📄 Demande génération PDF - Note: ${id}, Type: ${type}, User: ${req.user.userId}`);
 
     const result = await pdfGenerationService.generatePDF(id, type, req.user.userId);
+
+    // Headers de cache pour éviter régénération
+    res.set({
+      'Cache-Control': 'private, max-age=3600', // Cache 1 heure côté client
+      'ETag': `"${result.pdfMetadata._id}"`,
+      'X-PDF-Generated-At': new Date().toISOString()
+    });
 
     res.json({
       success: true,
@@ -98,12 +125,14 @@ router.get('/pdfs/:settlementNoteId/:pdfId/download', authenticateToken, async (
       });
     }
 
-    // Configurer les headers pour le téléchargement
+    // Configurer les headers pour le téléchargement avec cache
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${pdf.fileName}"`);
     res.setHeader('Content-Length', pdf.fileSize);
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache 24h pour PDFs téléchargés
+    res.setHeader('ETag', `"${pdfId}"`);
 
-    // Envoyer le fichier
+    // Envoyer le fichier avec compression automatique
     res.sendFile(path.resolve(pdf.filePath));
 
   } catch (error) {

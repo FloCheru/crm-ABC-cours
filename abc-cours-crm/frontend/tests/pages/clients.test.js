@@ -433,7 +433,7 @@ describe('📄 PAGE CLIENTS', () => {
       
       const MockCreateNDRButton = ({ familyId }) => {
         const handleCreateNDR = () => {
-          const url = `/admin/dashboard/create?familyId=${familyId}`;
+          const url = `/admin/dashboard/create/wizard?familyId=${familyId}`;
           mockNavigate(url);
           console.log(`Navigation vers création NDR: ${url}`);
         };
@@ -457,7 +457,7 @@ describe('📄 PAGE CLIENTS', () => {
       fireEvent.click(createBtn);
       
       // Vérifier navigation avec paramètre familyId
-      expect(mockNavigate).toHaveBeenCalledWith('/admin/dashboard/create?familyId=family-456');
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/dashboard/create/wizard?familyId=family-456');
       
       console.log('✅ Créer NDR: Navigation avec familyId correcte');
     });

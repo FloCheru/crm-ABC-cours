@@ -64,7 +64,7 @@ app.use(
       "http://localhost:5174", // local Vite (port par défaut)
       "http://localhost:5178", // local Vite (port alternatif)
       "http://localhost:5177", // local Vite (port alternatif)
-      "https://crm-abc-cours.vercel.app", // production
+      process.env.CORS_ORIGIN, // Production Vercel depuis .env
       "https://flocheru.github.io", // GitHub Pages
       process.env.FRONTEND_URL, // Backup Railway
     ].filter(Boolean),

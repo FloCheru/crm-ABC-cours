@@ -154,4 +154,5 @@ export interface NDRWizardState {
     step2: boolean;
     step3: boolean;
   };
+  returnContext?: string; // Contexte de retour (ex: "prospects")
 }

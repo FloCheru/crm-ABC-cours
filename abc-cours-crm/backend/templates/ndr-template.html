@@ -1,149 +1,173 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Note de Règlement - {{noteNumber}}</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Note de règlement n° {{noteNumber}}</title>
     <link rel="stylesheet" href="./ndr-styles.css" />
-  </head>
-  <body>
-    <div class="page">
-      <!-- Logo centré en haut -->
-      <div class="header-logo">
-        <div class="company-logo">BLD</div>
-        <div class="company-name">SOLUTION COURS</div>
-        <div class="company-subtitle">SOUTIEN SCOLAIRE & COURS À DOMICILE</div>
-      </div>
-
-      <!-- Titre du document centré -->
-      <div class="document-title-section">
-        <div class="document-title">Note de règlement n° {{noteNumber}}</div>
-      </div>
-
-      <!-- Informations principales en deux colonnes -->
-      <div class="main-info">
-        <div class="company-details">
-          <strong>SARL SOLUTION COURS</strong><br>
-          7 avenue de La Gaude<br>
-          CAGNES SUR MER<br>
-          Téléphone : 06 72 68 01 06 - 06 52 78 66 49<br>
-          N° SIRET : 512 253 071 00025<br>
-          CODE APE : 8559B<br>
-          Agrément : N 06050 P 006 S 073
-        </div>
-        <div class="client-details">
-          Le {{formattedDate}}<br><br>
-          <strong>{{clientName}}</strong><br>
-          {{clientAddress}}
-        </div>
-      </div>
-
-      <!-- Informations compte -->
-      <div class="compte-section">
-        <strong>Compte client : {{clientId}}</strong><br>
-        <strong>Montant unitaire ttc : {{hourlyRate}} €</strong>
-      </div>
-
-      <!-- En-tête prestations -->
-      <div class="prestations-header">
-        Prestations pour {{studentNames}}
-      </div>
-
-      <!-- Tableau des cours -->
-      <table class="services-table">
-        <thead>
-          <tr>
-            <th class="left-align" style="width: 150px;">COURS AIDE AUX DEVOIRS CE2</th>
-            <th style="width: 120px;">Prix de l'heure de cours</th>
-            <th style="width: 120px;">Nombre d'heures de cours</th>
-            <th style="width: 80px;">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Ligne vide pour saisie manuelle -->
-          <tr style="height: 35px;">
-            <td class="left-align">&nbsp;</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-          </tr>
-          <!-- Ligne TOTAL -->
-          <tr class="total-row">
-            <td class="left-align"><strong>TOTAL DU</strong></td>
-            <td><strong>{{hourlyRate}} €</strong></td>
-            <td><strong>{{totalQuantity}} h</strong></td>
-            <td><strong>{{totalRevenue}} €</strong></td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <!-- Montant total -->
-      <div class="total-section">
-        <strong>MONTANT TOTAL &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{totalRevenue}} €</strong>
-      </div>
-
-      <!-- Layout bas : Échéancier + Montants -->
-      <div class="bottom-layout">
-        <!-- Échéancier du client -->
-        <div class="echeancier-section">
-          <div class="section-title">ÉCHÉANCIER DU CLIENT</div>
-          <table class="echeancier-table">
-            <thead>
-              <tr>
-                <th style="width: 25%;">DATE</th>
-                <th style="width: 35%;">MONTANT</th>
-                <th style="width: 40%;">MODE RÈGLEMENT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#each paymentSchedule.installments}}
-              <tr>
-                <td>{{this.formattedDate}}</td>
-                <td>{{this.amount}} €</td>
-                <td>{{../paymentSchedule.paymentMethodLabel}}</td>
-              </tr>
-              {{/each}}
-            </tbody>
-          </table>
+</head>
+<body>
+    <div class="container">
+        <!-- En-tête avec logo -->
+        <div class="header">
+            <div class="logo-section">
+                <img src="{{logoSolutionCours}}" alt="BLD Solution Cours" class="logo" />
+                <div class="company-tagline">SOUTIEN SCOLAIRE & COURS À DOMICILE</div>
+                <div class="company-name">COURS</div>
+            </div>
         </div>
 
-        <!-- Montants à régler -->
-        <div class="montants-section">
-          <div class="montant-box">
-            MONTANT À RÉGLER PAR LE CLIENT
-            <div class="montant-value">{{clientAmount}} €</div>
-          </div>
-          <div class="montant-box">
-            MONTANT À RÉGLER PAR L'URSSAF
-            <div class="montant-value">{{urssafAmount}} €</div>
-          </div>
+        <!-- Titre du document -->
+        <div class="document-title">
+            <div class="title-box">
+                Note de règlement n° {{noteNumber}}
+            </div>
         </div>
-      </div>
 
-      <!-- Attestations -->
-      <div class="attestations">
-        <div class="attestation">
-          <div class="attestation-title">ATTESTATION D'UNE HEURE DE COURS</div>
-          <div class="attestation-content">
-            <strong>{{studentNames}}</strong><br>
-            <strong>N° :</strong> {{attestationNumber1}} &nbsp;&nbsp;&nbsp; <strong>Émise le :</strong> {{formattedDate}}<br><br>
-            <strong>Date</strong><br>
-            <strong>Signature de l'employeur :</strong><br>
-            <em>À remettre à l'enseignant</em>
-          </div>
+        <!-- Informations société et client -->
+        <div class="info-section">
+            <div class="company-info">
+                <div class="company-details">
+                    <strong>SARL SOLUTION COURS</strong><br>
+                    7 avenue de La Gaude<br>
+                    CAGNES SUR MER<br>
+                    Téléphone : 09 72 68 01 60 - 06 52 78 66 49<br>
+                    N° SIRET : 512 253 071 00025<br>
+                    CODE APE : 8559B<br>
+                    Agrément : N 040509 F 006 S 073
+                </div>
+                <div class="account-info">
+                    Compte client : #{{clientId}}<br>
+                    Montant unitaire ttc : {{hourlyRate}} €
+                </div>
+            </div>
+            <div class="client-info">
+                <div class="date">Le {{formattedDate}}</div>
+                <div class="client-address">
+                    <strong>{{clientName}}</strong><br>
+                    {{clientAddress}}
+                </div>
+            </div>
         </div>
-        <div class="attestation">
-          <div class="attestation-title">ATTESTATION D'UNE HEURE DE COURS</div>
-          <div class="attestation-content">
-            <strong>{{studentNames}}</strong><br>
-            <strong>N° :</strong> {{attestationNumber2}} &nbsp;&nbsp;&nbsp; <strong>Émise le :</strong> {{formattedDate}}<br><br>
-            <strong>Date</strong><br>
-            <strong>Signature de l'employeur :</strong><br>
-            <em>À remettre à l'enseignant</em>
-          </div>
-        </div>
-      </div>
 
+        <!-- Section prestations -->
+        <div class="prestations-section">
+            <div class="prestations-header">
+                Prestations pour {{studentNames}}
+            </div>
+
+            <table class="prestations-table">
+                <thead>
+                    <tr>
+                        <th class="subject-col">{{#if subjects}}{{subjects.[0].subjectName}}{{else}}MATIÈRE{{/if}}</th>
+                        <th class="rate-col">Prix de l'heure de cours</th>
+                        <th class="hours-col">Nombre d'heures de cours</th>
+                        <th class="total-col">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each subjects}}
+                    <tr>
+                        <td class="subject-cell">{{subjectName}}</td>
+                        <td class="rate-cell">{{hourlyRate}} €</td>
+                        <td class="hours-cell">{{quantity}} h</td>
+                        <td class="total-cell">{{total}} €</td>
+                    </tr>
+                    {{/each}}
+                    <tr class="total-row">
+                        <td class="total-label"><strong>TOTAL DU</strong></td>
+                        <td class="rate-total">{{totalHourlyRate}} €</td>
+                        <td class="hours-total">{{totalQuantity}} h</td>
+                        <td class="amount-total"><strong>{{totalRevenue}} €</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="total-section">
+                <div class="montant-total-label">MONTANT TOTAL</div>
+                <div class="montant-total-value">{{totalRevenue}} €</div>
+            </div>
+        </div>
+
+        <!-- Section financière -->
+        <div class="financial-section">
+            <div class="payment-schedule">
+                <div class="schedule-title">ÉCHÉANCIER DU CLIENT</div>
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>MONTANT</th>
+                            <th>MODE RÈGLEMENT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each paymentSchedule}}
+                        <tr>
+                            <td>{{dueDate}}</td>
+                            <td>{{amount}} €</td>
+                            <td>{{paymentMethod}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="amounts-section">
+                <div class="amount-box client-amount">
+                    <div class="amount-label">MONTANT À RÉGLER PAR LE CLIENT</div>
+                    <div class="amount-value">{{clientAmount}} €</div>
+                </div>
+                
+                <div class="amount-box urssaf-amount">
+                    <div class="amount-label">MONTANT À RÉGLER PAR L'URSSAF</div>
+                    <div class="amount-value">{{urssafAmount}} €</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coupons d'attestation -->
+        <div class="coupons-section">
+            <div class="coupon">
+                <div class="coupon-header">ATTESTATION D'UNE HEURE DE COURS</div>
+                <div class="coupon-content">
+                    <div class="coupon-left">
+                        <strong>{{studentNames}}</strong><br>
+                        N° {{noteNumber}}<br>
+                        Date :<br>
+                        Signature de l'employeur :<br>
+                        <em>A remettre à l'enseignant</em>
+                    </div>
+                    <div class="coupon-right">
+                        <strong>{{studentNames}}</strong><br>
+                        Émis le : {{formattedDate}}<br>
+                        Date :<br>
+                        Signature de l'enseignant :<br>
+                        <em>A remettre à l'enseignant</em>
+                    </div>
+                </div>
+            </div>
+
+            <div class="coupon">
+                <div class="coupon-header">ATTESTATION D'UNE HEURE DE COURS</div>
+                <div class="coupon-content">
+                    <div class="coupon-left">
+                        <strong>{{studentNames}}</strong><br>
+                        N° {{noteNumber}}<br>
+                        Date :<br>
+                        Signature de l'employeur :<br>
+                        <em>A remettre à l'enseignant</em>
+                    </div>
+                    <div class="coupon-right">
+                        <strong>{{studentNames}}</strong><br>
+                        Émis le : {{formattedDate}}<br>
+                        Date :<br>
+                        Signature de l'enseignant :<br>
+                        <em>A remettre à l'enseignant</em>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </body>
+</body>
 </html>

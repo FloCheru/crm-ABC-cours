@@ -89,9 +89,9 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Famille non trouvée" });
     }
 
-    // Récupérer les élèves de cette famille
+    // Récupérer les élèves de cette famille avec toutes leurs informations
     const students = await Student.find({ family: family._id })
-      .select("firstName lastName level")
+      .select("firstName lastName dateOfBirth school contact courseLocation availability comments medicalInfo status notes")
       .lean();
 
     // Ajouter les élèves à la réponse
@@ -142,6 +142,12 @@ router.post(
       .trim()
       .notEmpty()
       .withMessage("Code postal requis"),
+    body("demande.beneficiaryLevel")
+      .trim()
+      .notEmpty()
+      .withMessage("Niveau du bénéficiaire requis")
+      .isIn(['CP', 'CE1', 'CE2', 'CM1', 'CM2', '6ème', '5ème', '4ème', '3ème', 'Seconde', 'Première', 'Terminale'])
+      .withMessage("Niveau du bénéficiaire invalide"),
     // Validation supprimée pour financialInfo.paymentMethod (champ supprimé du modèle)
   ],
   async (req, res) => {
@@ -593,6 +599,96 @@ router.patch(
       });
     } catch (error) {
       console.error("Erreur lors de la mise à jour de la date de prochaine action:", error);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
+
+// @route   POST /api/families/:id/students
+// @desc    Ajouter un élève à une famille existante
+// @access  Private (Admin)
+router.post(
+  "/:id/students",
+  [
+    authorize(["admin"]),
+    body("firstName")
+      .trim()
+      .notEmpty()
+      .withMessage("Prénom de l'élève requis"),
+    body("lastName")
+      .trim()
+      .notEmpty()
+      .withMessage("Nom de l'élève requis"),
+    body("dateOfBirth")
+      .isISO8601()
+      .withMessage("Date de naissance valide requise"),
+    body("school.name")
+      .trim()
+      .notEmpty()
+      .withMessage("Nom de l'établissement requis"),
+    body("school.level")
+      .isIn(["primaire", "college", "lycee", "superieur"])
+      .withMessage("Niveau scolaire invalide"),
+    body("school.grade")
+      .trim()
+      .notEmpty()
+      .withMessage("Classe requise"),
+    body("courseLocation.type")
+      .optional()
+      .isIn(["domicile", "professeur", "autre"])
+      .withMessage("Type de lieu de cours invalide"),
+  ],
+  async (req, res) => {
+    try {
+      // Vérifier les erreurs de validation
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Données invalides",
+          errors: errors.array(),
+        });
+      }
+
+      // Vérifier que la famille existe
+      const family = await Family.findById(req.params.id);
+      if (!family) {
+        return res.status(404).json({ message: "Famille non trouvée" });
+      }
+
+      // Créer l'élève avec référence vers la famille
+      const studentData = {
+        ...req.body,
+        family: req.params.id,
+      };
+
+      const student = new Student(studentData);
+      await student.save();
+
+      // Ajouter la référence de l'élève à la famille
+      await Family.findByIdAndUpdate(
+        req.params.id,
+        { $push: { students: student._id } },
+        { new: true }
+      );
+
+      console.log(`✅ Élève ${student.firstName} ${student.lastName} ajouté à la famille ${req.params.id}`);
+
+      res.status(201).json({
+        message: "Élève ajouté avec succès à la famille",
+        student: student.toObject(),
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de l'élève:", error);
+      
+      // Gérer les erreurs de validation Mongoose
+      if (error.name === 'ValidationError') {
+        const errors = Object.values(error.errors).map(err => err.message);
+        return res.status(400).json({ 
+          message: "Erreur de validation : " + errors.join(', '),
+          errors: errors 
+        });
+      }
+      
       res.status(500).json({ message: "Erreur serveur" });
     }
   }

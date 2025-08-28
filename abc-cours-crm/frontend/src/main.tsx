@@ -8,13 +8,15 @@ import {
   UnderDevelopment,
   CouponSeriesCreate,
   CouponsList,
-  SettlementCreate,
   SettlementDashboard,
   SettlementDetails,
   PdfPreview,
   Prospects,
+  ProspectDetails,
   Clients,
+  ClientDetails,
 } from "./pages";
+import { AddStudent } from "./pages/families";
 import { NDRCreationWizard } from "./pages/admin/dashboard/create/NDRCreationWizard";
 import { TemplatePreview } from "./pages/admin/TemplatePreview";
 import { SeriesDetails } from "./pages/admin/coupons/SeriesDetails";
@@ -83,6 +85,22 @@ function App() {
             }
           />
           <Route
+            path="/families/:familyId"
+            element={
+              <ProtectedRoute>
+                <ProspectDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/families/:familyId/add-student"
+            element={
+              <ProtectedRoute>
+                <AddStudent />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/clients"
             element={
               <ProtectedRoute>
@@ -91,18 +109,18 @@ function App() {
             }
           />
           <Route
-            path="/admin/dashboard"
+            path="/clients/:clientId"
             element={
               <ProtectedRoute>
-                <SettlementDashboard />
+                <ClientDetails />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/admin/dashboard/create"
+            path="/admin/dashboard"
             element={
               <ProtectedRoute>
-                <SettlementCreate />
+                <SettlementDashboard />
               </ProtectedRoute>
             }
           />

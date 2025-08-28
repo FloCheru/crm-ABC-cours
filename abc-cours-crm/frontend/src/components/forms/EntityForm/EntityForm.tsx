@@ -221,6 +221,27 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         ],
       },
       {
+        key: "demande.beneficiaryLevel",
+        label: "Niveau du bénéficiaire",
+        type: "select",
+        required: true,
+        group: "demande",
+        options: [
+          { value: "CP", label: "CP" },
+          { value: "CE1", label: "CE1" },
+          { value: "CE2", label: "CE2" },
+          { value: "CM1", label: "CM1" },
+          { value: "CM2", label: "CM2" },
+          { value: "6ème", label: "6ème" },
+          { value: "5ème", label: "5ème" },
+          { value: "4ème", label: "4ème" },
+          { value: "3ème", label: "3ème" },
+          { value: "Seconde", label: "Seconde" },
+          { value: "Première", label: "Première" },
+          { value: "Terminale", label: "Terminale" },
+        ],
+      },
+      {
         key: "demande.subjects",
         label: "Matières souhaitées",
         type: "text",
@@ -764,6 +785,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
         "sameAddress": true,
         "companyInfo.urssafNumber": "12345678901",
         "demande.beneficiaryType": "eleves",
+        "demande.beneficiaryLevel": "3ème",
         "demande.subjects": "Mathématiques, Français, Physique-Chimie",
         "notes": "Famille de test - créée automatiquement pour les tests de développement"
       };

@@ -3,6 +3,7 @@ const request = require("supertest");
 const app = require("../../server");
 const Family = require("../../models/Family");
 const User = require("../../models/User");
+const Student = require("../../models/Student");
 const { setupTestDB, teardownTestDB, clearTestDB } = require("../setup");
 
 describe("Families API Tests", () => {
@@ -353,6 +354,279 @@ describe("Families API Tests", () => {
         .delete(`/api/families/${fakeId}`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(404);
+    });
+  });
+
+  describe("POST /api/families/:id/students", () => {
+    let familyId;
+    let testFamily;
+
+    beforeEach(async () => {
+      // Créer une famille valide avec la nouvelle structure
+      const adminUser = await User.findOne({ email: "admin@test.fr" });
+      testFamily = new Family({
+        address: {
+          street: "123 Rue Test",
+          city: "Paris",
+          postalCode: "75001",
+        },
+        primaryContact: {
+          firstName: "Jean",
+          lastName: "Dupont",
+          primaryPhone: "0123456789",
+          email: "jean@dupont.fr",
+          gender: "M.",
+        },
+        demande: {
+          beneficiaryType: "eleves",
+          beneficiaryLevel: "6ème",
+          subjects: ["Mathématiques"],
+        },
+        status: "client",
+        createdBy: adminUser._id,
+      });
+      await testFamily.save();
+      familyId = testFamily._id;
+    });
+
+    it("should add student to existing family", async () => {
+      const studentData = {
+        firstName: "Marie",
+        lastName: "Dupont",
+        dateOfBirth: "2010-05-15T00:00:00.000Z",
+        school: {
+          name: "Collège Victor Hugo",
+          level: "college",
+          grade: "6ème",
+        },
+        contact: {
+          email: "marie@dupont.fr",
+          phone: "0123456790",
+        },
+        courseLocation: {
+          type: "domicile",
+        },
+        availability: "Mercredi après-midi",
+        notes: "Élève sérieuse",
+        status: "active",
+      };
+
+      const response = await request(app)
+        .post(`/api/families/${familyId}/students`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(studentData)
+        .expect(201);
+
+      expect(response.body).toHaveProperty("message", "Élève ajouté avec succès à la famille");
+      expect(response.body.student.firstName).toBe("Marie");
+      expect(response.body.student.lastName).toBe("Dupont");
+      expect(response.body.student.school.name).toBe("Collège Victor Hugo");
+      expect(response.body.student.school.level).toBe("college");
+      expect(response.body.student.school.grade).toBe("6ème");
+      expect(response.body.student.family).toBe(familyId.toString());
+
+      // Vérifier que l'élève est bien ajouté à la famille
+      const updatedFamily = await Family.findById(familyId).populate('students');
+      expect(updatedFamily.students).toHaveLength(1);
+      expect(updatedFamily.students[0].firstName).toBe("Marie");
+    });
+
+    it("should validate required fields", async () => {
+      const invalidStudentData = {
+        firstName: "Marie",
+        // lastName manquant
+        dateOfBirth: "2010-05-15T00:00:00.000Z",
+      };
+
+      const response = await request(app)
+        .post(`/api/families/${familyId}/students`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(invalidStudentData)
+        .expect(400);
+
+      expect(response.body).toHaveProperty("message", "Données invalides");
+      expect(response.body.errors).toBeInstanceOf(Array);
+      expect(response.body.errors.some(error => error.msg === "Nom de l'élève requis")).toBe(true);
+    });
+
+    it("should validate school level enum", async () => {
+      const invalidStudentData = {
+        firstName: "Marie",
+        lastName: "Dupont",
+        dateOfBirth: "2010-05-15T00:00:00.000Z",
+        school: {
+          name: "Collège Victor Hugo",
+          level: "invalid_level", // Niveau invalide
+          grade: "6ème",
+        },
+      };
+
+      const response = await request(app)
+        .post(`/api/families/${familyId}/students`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(invalidStudentData)
+        .expect(400);
+
+      expect(response.body).toHaveProperty("message", "Données invalides");
+      expect(response.body.errors.some(error => error.msg === "Niveau scolaire invalide")).toBe(true);
+    });
+
+    it("should validate course location type enum", async () => {
+      const invalidStudentData = {
+        firstName: "Marie",
+        lastName: "Dupont",
+        dateOfBirth: "2010-05-15T00:00:00.000Z",
+        school: {
+          name: "Collège Victor Hugo",
+          level: "college",
+          grade: "6ème",
+        },
+        courseLocation: {
+          type: "invalid_type", // Type invalide
+        },
+      };
+
+      const response = await request(app)
+        .post(`/api/families/${familyId}/students`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(invalidStudentData)
+        .expect(400);
+
+      expect(response.body).toHaveProperty("message", "Données invalides");
+      expect(response.body.errors.some(error => error.msg === "Type de lieu de cours invalide")).toBe(true);
+    });
+
+    it("should validate date format", async () => {
+      const invalidStudentData = {
+        firstName: "Marie",
+        lastName: "Dupont",
+        dateOfBirth: "invalid-date", // Format de date invalide
+        school: {
+          name: "Collège Victor Hugo",
+          level: "college",
+          grade: "6ème",
+        },
+      };
+
+      const response = await request(app)
+        .post(`/api/families/${familyId}/students`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(invalidStudentData)
+        .expect(400);
+
+      expect(response.body).toHaveProperty("message", "Données invalides");
+      expect(response.body.errors.some(error => error.msg === "Date de naissance valide requise")).toBe(true);
+    });
+
+    it("should return 404 for non-existent family", async () => {
+      const fakeId = "507f1f77bcf86cd799439011";
+      const studentData = {
+        firstName: "Marie",
+        lastName: "Dupont",
+        dateOfBirth: "2010-05-15T00:00:00.000Z",
+        school: {
+          name: "Collège Victor Hugo",
+          level: "college",
+          grade: "6ème",
+        },
+      };
+
+      const response = await request(app)
+        .post(`/api/families/${fakeId}/students`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(studentData)
+        .expect(404);
+
+      expect(response.body).toHaveProperty("message", "Famille non trouvée");
+    });
+
+    it("should handle multiple students for same family", async () => {
+      const student1Data = {
+        firstName: "Marie",
+        lastName: "Dupont",
+        dateOfBirth: "2010-05-15T00:00:00.000Z",
+        school: {
+          name: "Collège Victor Hugo",
+          level: "college",
+          grade: "6ème",
+        },
+      };
+
+      const student2Data = {
+        firstName: "Pierre",
+        lastName: "Dupont",
+        dateOfBirth: "2008-03-20T00:00:00.000Z",
+        school: {
+          name: "Lycée Voltaire",
+          level: "lycee",
+          grade: "Seconde",
+        },
+      };
+
+      // Ajouter le premier élève
+      const response1 = await request(app)
+        .post(`/api/families/${familyId}/students`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(student1Data)
+        .expect(201);
+
+      // Ajouter le deuxième élève
+      const response2 = await request(app)
+        .post(`/api/families/${familyId}/students`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(student2Data)
+        .expect(201);
+
+      expect(response1.body.student.firstName).toBe("Marie");
+      expect(response2.body.student.firstName).toBe("Pierre");
+
+      // Vérifier que les deux élèves sont bien liés à la famille
+      const updatedFamily = await Family.findById(familyId).populate('students');
+      expect(updatedFamily.students).toHaveLength(2);
+      
+      const studentNames = updatedFamily.students.map(s => s.firstName);
+      expect(studentNames).toContain("Marie");
+      expect(studentNames).toContain("Pierre");
+    });
+
+    it("should require admin authorization", async () => {
+      // Créer un utilisateur non-admin
+      const professorUser = new User({
+        email: "prof@test.fr",
+        password: "password123",
+        role: "professor",
+        firstName: "Prof",
+        lastName: "Test",
+      });
+      await professorUser.save();
+
+      // Se connecter avec le professeur
+      const loginResponse = await request(app).post("/api/auth/login").send({
+        email: "prof@test.fr",
+        password: "password123",
+      });
+
+      const professorToken = loginResponse.body.token;
+
+      const studentData = {
+        firstName: "Marie",
+        lastName: "Dupont",
+        dateOfBirth: "2010-05-15T00:00:00.000Z",
+        school: {
+          name: "Collège Victor Hugo",
+          level: "college",
+          grade: "6ème",
+        },
+      };
+
+      // Tenter d'ajouter un élève sans être admin
+      const response = await request(app)
+        .post(`/api/families/${familyId}/students`)
+        .set("Authorization", `Bearer ${professorToken}`)
+        .send(studentData)
+        .expect(403);
+
+      expect(response.body).toHaveProperty("message");
     });
   });
 });

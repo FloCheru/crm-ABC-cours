@@ -1,0 +1,129 @@
+    new ObjectId('68aca2dc29127d28f8754e40'),
+
+    new ObjectId('68aca2dc29127d28f8754e43'),
+
+    new ObjectId('68aca2dc29127d28f8754e46'),
+
+    new ObjectId('68aca2dc29127d28f8754e49'),
+
+    new ObjectId('68aca2dc29127d28f8754e4c'),
+
+    new ObjectId('68aca2dc29127d28f8754e4f'),
+
+    new ObjectId('68aca2dc29127d28f8754e52'),
+
+    new ObjectId('68aca2dc29127d28f8754e55'),
+
+    new ObjectId('68aca2dc29127d28f8754e58'),
+
+    new ObjectId('68aca2dc29127d28f8754e5b'),
+
+    new ObjectId('68aca2dc29127d28f8754e5e'),
+
+    new ObjectId('68aca2dc29127d28f8754e61'),
+
+    new ObjectId('68aca2dc29127d28f8754e64'),
+
+    new ObjectId('68aca2dc29127d28f8754e67'),
+
+    new ObjectId('68aca2dc29127d28f8754e6a'),
+
+    new ObjectId('68aca2dc29127d28f8754e6d'),
+
+    new ObjectId('68aca2dc29127d28f8754e70'),
+
+    new ObjectId('68aca2dc29127d28f8754e73'),
+
+    new ObjectId('68aca2dc29127d28f8754e76'),
+
+    new ObjectId('68aca2dc29127d28f8754e79'),
+
+    new ObjectId('68aca2dd29127d28f8754e7c'),
+
+    new ObjectId('68aca2dd29127d28f8754e7f'),
+
+    new ObjectId('68aca2dd29127d28f8754e82'),
+
+    new ObjectId('68aca2dd29127d28f8754e85'),
+
+    new ObjectId('68aca2dd29127d28f8754e88'),
+
+    new ObjectId('68aca2dd29127d28f8754e8b'),
+
+    new ObjectId('68aca2dd29127d28f8754e8e'),
+
+    new ObjectId('68aca2dd29127d28f8754e91'),
+
+    new ObjectId('68aca2dd29127d28f8754e94')
+
+  ],
+
+  subject: {
+
+    _id: new ObjectId('687663b73174b1a67afc0a1b'),
+
+    name: 'Allemand',
+
+    category: 'Langues'
+
+  },
+
+  subjects: [
+
+    {
+
+      subjectId: new ObjectId('687663b73174b1a67afc0a1b'),
+
+      hourlyRate: 26,
+
+      quantity: 16,
+
+      professorSalary: 19,
+
+      _id: new ObjectId('68aca2db29127d28f8754e2c')
+
+    },
+
+    {
+
+      subjectId: new ObjectId('687663b73174b1a67afc0a00'),
+
+      hourlyRate: 26,
+
+      quantity: 16,
+
+      professorSalary: 19,
+
+      _id: new ObjectId('68aca2db29127d28f8754e2d')
+
+    }
+
+  ],
+
+  hourlyRate: 26,
+
+  professorSalary: 19,
+
+  createdBy: {
+
+    _id: new ObjectId('68a33da6ca854041777af43e'),
+
+    firstName: 'Admin',
+
+    lastName: 'ABC Cours'
+
+  },
+
+  createdAt: 2025-08-25T17:52:27.970Z,
+
+  updatedAt: 2025-08-25T17:52:29.375Z,
+
+  __v: 1
+
+}
+
+🔍 Premier élément familyId: { _id: new ObjectId('68ac2e8b6f004f75f714be8d') }
+
+🔍 Réponse envoyée avec succès
+
+::ffff:100.64.0.2 - - [27/Aug/2025:08:53:09 +0000] "GET /api/coupon-series HTTP/1.1" 304 - "https://crm-abc-cours.vercel.app/"; "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"

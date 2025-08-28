@@ -217,6 +217,12 @@ export const Clients: React.FC = () => {
     // Les données seront automatiquement rafraîchies par le système de cache
   };
 
+  // Handler pour cliquer sur une ligne du tableau (navigation vers détails)
+  const handleRowClick = (row: TableRowData) => {
+    console.log(`🔍 Navigation vers détails client: ${row.primaryContact.firstName} ${row.primaryContact.lastName}`);
+    navigate(`/clients/${row._id}`);
+  };
+
   // Gérer la suppression d'un client
   const handleDeleteClient = async (clientId: string) => {
     const client = familyData.find((f) => f._id === clientId);
@@ -736,7 +742,7 @@ export const Clients: React.FC = () => {
               </div>
             </div>
           ) : (
-            <Table columns={clientsColumns} data={tableData} />
+            <Table columns={clientsColumns} data={tableData} onRowClick={handleRowClick} />
           )}
         </Container>
       </Container>

@@ -46,20 +46,51 @@ export interface Family {
   // Section demande de cours (obligatoire)
   demande: {
     beneficiaryType: "adulte" | "eleves";
+    beneficiaryLevel: string;
     subjects: string[];
     notes?: string;
   };
   // Professeur prévu
   plannedTeacher?: string;
   createdBy: string; // ObjectId ref
-  // Students optionnel
+  // Students avec informations complètes
   students?: Array<{
     _id: string;
     firstName: string;
     lastName: string;
+    dateOfBirth?: Date;
     school?: {
-      grade: string;
+      name?: string;
+      level?: string;
+      grade?: string;
     };
+    contact?: {
+      phone?: string;
+      email?: string;
+    };
+    courseLocation?: {
+      type?: "domicile" | "professeur" | "autre";
+      address?: {
+        street?: string;
+        city?: string;
+        postalCode?: string;
+      };
+      otherDetails?: string;
+    };
+    availability?: string;
+    comments?: string;
+    medicalInfo?: {
+      allergies?: string[];
+      conditions?: string[];
+      medications?: string[];
+      emergencyContact?: {
+        name?: string;
+        phone?: string;
+        relationship?: string;
+      };
+    };
+    status?: "active" | "inactive" | "graduated";
+    notes?: string;
   }>;
   createdAt: Date;
   updatedAt: Date;
@@ -70,16 +101,16 @@ export interface Student {
   firstName: string;
   lastName: string;
   dateOfBirth: Date;
-  level: string;
   school: {
     name: string;
-    address: string;
+    level: "primaire" | "college" | "lycee" | "superieur";
+    grade: string;
   };
-  contact: {
-    email: string;
-    phone: string;
+  contact?: {
+    email?: string;
+    phone?: string;
   };
-  courseLocation: {
+  courseLocation?: {
     type: "domicile" | "professeur" | "autre";
     address?: {
       street: string;
@@ -90,13 +121,19 @@ export interface Student {
   };
   availability?: string;
   comments?: string;
-  subjects: {
-    [key: string]: {
-      level: string;
-      notes?: string;
+  medicalInfo?: {
+    allergies?: string[];
+    conditions?: string[];
+    medications?: string[];
+    emergencyContact?: {
+      name?: string;
+      phone?: string;
+      relationship?: string;
     };
   };
-  family: {
+  status: "active" | "inactive" | "graduated";
+  notes?: string;
+  family: string | {
     _id: string;
     name: string;
   };
@@ -143,6 +180,7 @@ export interface CreateFamilyData {
   // Section demande de cours (obligatoire)
   demande: {
     beneficiaryType: "adulte" | "eleves";
+    beneficiaryLevel: string;
     subjects: string[];
     notes?: string;
   };

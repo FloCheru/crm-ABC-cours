@@ -23,6 +23,9 @@ interface NDRWizardContextType {
   // Reset
   resetWizard: () => void;
   
+  // Contexte de retour
+  setReturnContext: (context: string) => void;
+  
   // Erreurs
   errors: ValidationErrors;
   setErrors: (errors: ValidationErrors) => void;
@@ -74,6 +77,7 @@ const initialState: NDRWizardState = {
     step2: false,
     step3: false,
   },
+  returnContext: undefined,
 };
 
 const NDRWizardContext = createContext<NDRWizardContextType | undefined>(undefined);
@@ -241,6 +245,10 @@ export const NDRWizardProvider: React.FC<{ children: ReactNode }> = ({ children 
     setErrors({});
   };
 
+  const setReturnContext = (context: string) => {
+    setState(prev => ({ ...prev, returnContext: context }));
+  };
+
   const value: NDRWizardContextType = {
     state,
     goToStep,
@@ -253,6 +261,7 @@ export const NDRWizardProvider: React.FC<{ children: ReactNode }> = ({ children 
     validateStep2,
     validateStep3,
     resetWizard,
+    setReturnContext,
     errors,
     setErrors,
   };

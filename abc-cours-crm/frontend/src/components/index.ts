@@ -9,6 +9,7 @@ export { Breadcrumb } from "./breadcrum/Breadcrumb";
 export { SummaryCard } from "./summaryCard/SummaryCard";
 export { StatusBadge } from "./statusBadge/StatusBadge";
 export { StatusDot } from "./StatusDot";
+export { StatusBanner } from "./StatusBanner";
 export { Table } from "./table/Table";
 export { ReminderSubjectDropdown } from "./ReminderSubjectDropdown";
 export { DatePicker } from "./DatePicker";

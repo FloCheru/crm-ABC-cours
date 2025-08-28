@@ -177,6 +177,11 @@ const familySchema = new mongoose.Schema(
         enum: ["adulte", "eleves"],
         required: [true, "Type de bénéficiaire requis"],
       },
+      beneficiaryLevel: {
+        type: String,
+        enum: ['CP', 'CE1', 'CE2', 'CM1', 'CM2', '6ème', '5ème', '4ème', '3ème', 'Seconde', 'Première', 'Terminale'],
+        required: [true, "Niveau du bénéficiaire requis"],
+      },
       subjects: [
         {
           type: String,

@@ -1,5 +1,5 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { Navbar, Breadcrumb, Container } from '../../../../components';
 import { NDRWizardProvider, useNDRWizard } from '../../../../contexts/NDRWizardContext';
 import { ProgressStepper } from './components/ProgressStepper';
@@ -9,8 +9,28 @@ import { Step3RatesValidation } from './Step3RatesValidation';
 import './NDRCreationWizard.css';
 
 const NDRWizardContent: React.FC = () => {
-  const { state } = useNDRWizard();
+  const { state, setReturnContext, goToStep, updateStep1 } = useNDRWizard();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  // Lire les paramètres depuis l'URL et configurer le wizard
+  useEffect(() => {
+    const returnTo = searchParams.get('returnTo');
+    const familyId = searchParams.get('familyId');
+    const step = searchParams.get('step');
+    
+    if (returnTo) {
+      setReturnContext(returnTo);
+    }
+    
+    // Si on a un familyId et qu'on demande l'étape 2, configurer et naviguer
+    if (familyId && step === '2') {
+      // Initialiser l'étape 1 avec le familyId
+      updateStep1({ familyId });
+      // Aller directement à l'étape 2
+      goToStep(2);
+    }
+  }, [searchParams, setReturnContext, goToStep, updateStep1]);
 
   const renderCurrentStep = () => {
     switch (state.currentStep) {

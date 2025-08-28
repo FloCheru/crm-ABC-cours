@@ -15,6 +15,7 @@ import { couponSeriesService } from "../../../services/couponSeriesService";
 import { couponService } from "../../../services/couponService";
 import { getFamilyDisplayName, generateCouponSeriesName } from "../../../utils/familyNameUtils";
 import type { CouponSeries, Coupon } from "../../../types/coupon";
+import "./SeriesDetails.css";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Coupon & { id: string };
@@ -29,6 +30,12 @@ export const SeriesDetails: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+
+  // States pour le mode édition
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedData, setEditedData] = useState<Partial<CouponSeries>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const loadSeriesDetails = async () => {
@@ -74,6 +81,67 @@ export const SeriesDetails: React.FC = () => {
     // TODO: Implémenter l'envoi des coupons
     console.log("Renvoyer les coupons pour la série:", seriesId);
     alert("Fonction à implémenter : Renvoyer les coupons");
+  };
+
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Annuler les modifications
+      setEditedData({});
+      setValidationErrors({});
+      setIsEditing(false);
+    } else {
+      // Entrer en mode édition
+      if (series) {
+        setEditedData({
+          hourlyRate: series.hourlyRate,
+          totalCoupons: series.totalCoupons,
+          status: series.status,
+          studentId: series.studentId,
+          familyId: series.familyId,
+          subject: series.subject,
+        });
+      }
+      setIsEditing(true);
+    }
+  };
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    // Validation des champs obligatoires
+    if (!editedData.hourlyRate || editedData.hourlyRate <= 0) {
+      errors.hourlyRate = "Le tarif horaire est requis et doit être positif";
+    }
+    if (!editedData.totalCoupons || editedData.totalCoupons <= 0) {
+      errors.totalCoupons = "Le nombre de coupons est requis et doit être positif";
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validateForm() || !seriesId) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const updatedSeries = await couponSeriesService.updateCouponSeries(seriesId, editedData);
+      setSeries(updatedSeries);
+      setEditedData({});
+      setIsEditing(false);
+      setValidationErrors({});
+    } catch (err) {
+      console.error("Erreur lors de la sauvegarde:", err);
+      setError("Impossible de sauvegarder les modifications");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: any) => {
+    setEditedData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSearch = () => {
@@ -241,106 +309,223 @@ export const SeriesDetails: React.FC = () => {
         ]}
       />
       <Container layout="flex-col">
-        <div className="flex justify-between items-center">
-          <h1>Détails de la série : {seriesName}</h1>
-          <Button
-            variant="secondary"
-            onClick={() => navigate("/admin/coupons")}
-          >
-            ← Retour à la liste
-          </Button>
-        </div>
-
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
-
-        {/* Informations de la série */}
-        <Container layout="grid" padding="none">
-          <SummaryCard
-            title="STATISTIQUES"
-            metrics={[
-              {
-                value: `${totalAmount.toFixed(2)} €`,
-                label: "Montant total",
-                variant: "primary",
-              },
-              {
-                value: `${totalCouponsReal}`,
-                label: "Total coupons",
-                variant: "success",
-              },
-            ]}
-          />
-          <SummaryCard
-            title="UTILISATION"
-            metrics={[
-              {
-                value: usedCoupons,
-                label: "Utilisés",
-                variant: "primary",
-              },
-              {
-                value: availableCoupons,
-                label: "Disponibles",
-                variant: "success",
-              },
-            ]}
-          />
-        </Container>
-
-        {/* Boutons d'action */}
-        {availableCoupons > 0 && (
-          <Container layout="flex">
-            <Button variant="primary" onClick={handleResendCoupons}>
-              📧 Renvoyer les coupons
-            </Button>
-          </Container>
-        )}
-
-        {/* Recherche */}
-        <Container layout="flex">
-          <Input
-            placeholder="Rechercher par code, famille, élève..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            button={
-              <Button variant="primary" onClick={handleSearch}>
-                Appliquer
-              </Button>
-            }
-          />
-          <ButtonGroup
-            variant="double"
-            buttons={[
-              { text: "Filtrer", variant: "outline" },
-              {
-                text: "Réinitialiser",
-                variant: "outline",
-                onClick: handleReset,
-              },
-            ]}
-          />
-        </Container>
-
-        {/* Liste des coupons */}
-        <Container layout="flex-col">
-          <h3>Coupons de la série ({totalCouponsReal})</h3>
-
-          {filteredCoupons.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-gray-500">
-                {searchTerm
-                  ? "Aucun coupon trouvé pour cette recherche"
-                  : "Aucun coupon dans cette série"}
-              </div>
+        <div className={`series-details ${isEditing ? 'series-details--editing' : ''}`}>
+          <div className="series-details__header">
+            <h1>Détails de la série : {seriesName}</h1>
+            <div className="series-details__header-actions">
+              {isEditing ? (
+                <ButtonGroup
+                  variant="double"
+                  buttons={[
+                    {
+                      text: "Annuler",
+                      variant: "outline",
+                      onClick: handleEditToggle,
+                      disabled: isSaving,
+                    },
+                    {
+                      text: isSaving ? "Sauvegarde..." : "Enregistrer",
+                      variant: "primary",
+                      onClick: handleSave,
+                      disabled: isSaving,
+                    },
+                  ]}
+                />
+              ) : (
+                <ButtonGroup
+                  variant="double"
+                  buttons={[
+                    {
+                      text: "Retour",
+                      variant: "outline",
+                      onClick: () => navigate("/admin/coupons"),
+                    },
+                    {
+                      text: "Modifier",
+                      variant: "secondary",
+                      onClick: handleEditToggle,
+                    },
+                  ]}
+                />
+              )}
             </div>
-          ) : (
-            <Table columns={couponsColumns} data={tableData} />
+          </div>
+
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
           )}
-        </Container>
+
+          <div className="series-details__content">
+            {/* Informations de la série */}
+            <Container layout="flex-col" className="series-details__section series-details__section--series-info">
+              <h2>Informations de la série</h2>
+              <div className="series-details__grid">
+                <div className="series-details__field">
+                  <label>Tarif horaire</label>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editedData.hourlyRate || ""}
+                      onChange={(e) => handleInputChange("hourlyRate", parseFloat(e.target.value) || 0)}
+                      error={validationErrors.hourlyRate}
+                      placeholder="Tarif par heure"
+                    />
+                  ) : (
+                    <p>{series?.hourlyRate?.toFixed(2)} €</p>
+                  )}
+                </div>
+                <div className="series-details__field">
+                  <label>Nombre de coupons</label>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      min="1"
+                      value={editedData.totalCoupons || ""}
+                      onChange={(e) => handleInputChange("totalCoupons", parseInt(e.target.value) || 0)}
+                      error={validationErrors.totalCoupons}
+                      placeholder="Nombre de coupons"
+                    />
+                  ) : (
+                    <p>{series?.totalCoupons}</p>
+                  )}
+                </div>
+                <div className="series-details__field">
+                  <label>Statut</label>
+                  {isEditing ? (
+                    <select
+                      className="series-details__select"
+                      value={editedData.status || ""}
+                      onChange={(e) => handleInputChange("status", e.target.value)}
+                    >
+                      <option value="active">Actif</option>
+                      <option value="completed">Terminé</option>
+                      <option value="expired">Expiré</option>
+                    </select>
+                  ) : (
+                    <p className={`series-details__status series-details__status--${series?.status || 'unknown'}`}>
+                      {series?.status === "active"
+                        ? "Actif"
+                        : series?.status === "completed"
+                        ? "Terminé"
+                        : series?.status === "expired"
+                        ? "Expiré"
+                        : series?.status}
+                    </p>
+                  )}
+                </div>
+                <div className="series-details__field">
+                  <label>Montant total</label>
+                  <p>{totalAmount.toFixed(2)} €</p>
+                </div>
+              </div>
+            </Container>
+
+            {/* Informations étudiant */}
+            <Container layout="flex-col" className="series-details__section series-details__section--student">
+              <h2>Informations étudiant</h2>
+              <div className="series-details__grid">
+                <div className="series-details__field">
+                  <label>Nom complet</label>
+                  <p>{series?.studentId ? `${series.studentId.firstName} ${series.studentId.lastName}` : "Non renseigné"}</p>
+                </div>
+                <div className="series-details__field">
+                  <label>Niveau</label>
+                  <p>{series?.studentId?.level || "Non renseigné"}</p>
+                </div>
+                <div className="series-details__field">
+                  <label>Matière</label>
+                  <p>{series?.subject?.name || "Non renseignée"}</p>
+                </div>
+              </div>
+            </Container>
+
+            {/* Informations famille */}
+            <Container layout="flex-col" className="series-details__section series-details__section--family">
+              <h2>Informations famille</h2>
+              <div className="series-details__grid">
+                <div className="series-details__field">
+                  <label>Nom de famille</label>
+                  <p>{getFamilyDisplayName(series?.familyId)}</p>
+                </div>
+              </div>
+            </Container>
+
+            {/* Statistiques financières */}
+            <Container layout="flex-col" className="series-details__section series-details__section--financial">
+              <h2>Statistiques financières</h2>
+              <div className="series-details__grid">
+                <div className="series-details__field">
+                  <label>Coupons utilisés</label>
+                  <p>{usedCoupons}</p>
+                </div>
+                <div className="series-details__field">
+                  <label>Coupons disponibles</label>
+                  <p>{availableCoupons}</p>
+                </div>
+                <div className="series-details__field">
+                  <label>Total coupons réels</label>
+                  <p>{totalCouponsReal}</p>
+                </div>
+              </div>
+            </Container>
+
+
+            {/* Liste des coupons */}
+            <Container layout="flex-col" className="series-details__section series-details__section--coupons">
+              <h3>Coupons de la série ({totalCouponsReal})</h3>
+              
+              {/* Boutons d'action pour les coupons */}
+              {availableCoupons > 0 && (
+                <Container layout="flex">
+                  <Button variant="primary" onClick={handleResendCoupons}>
+                    📧 Renvoyer les coupons
+                  </Button>
+                </Container>
+              )}
+
+              {/* Recherche */}
+              <Container layout="flex">
+                <Input
+                  placeholder="Rechercher par code, famille, élève..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  button={
+                    <Button variant="primary" onClick={handleSearch}>
+                      Appliquer
+                    </Button>
+                  }
+                />
+                <ButtonGroup
+                  variant="double"
+                  buttons={[
+                    { text: "Filtrer", variant: "outline" },
+                    {
+                      text: "Réinitialiser",
+                      variant: "outline",
+                      onClick: handleReset,
+                    },
+                  ]}
+                />
+              </Container>
+
+              {filteredCoupons.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-500">
+                    {searchTerm
+                      ? "Aucun coupon trouvé pour cette recherche"
+                      : "Aucun coupon dans cette série"}
+                  </div>
+                </div>
+              ) : (
+                <Table columns={couponsColumns} data={tableData} />
+              )}
+            </Container>
+          </div>
+        </div>
       </Container>
     </div>
   );

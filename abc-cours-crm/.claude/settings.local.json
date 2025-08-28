@@ -29,7 +29,14 @@
       "Bash(powershell:*)",
       "Bash(cd:*)",
       "Read(/C:\\c\\Users\\flori\\OneDrive\\Bureau\\ABC cours\\Application\\abc-cours-crm\\backend/**)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "WebFetch(domain:crm-abc-cours-production.up.railway.app)",
+      "Bash(NODE_ENV=production npx tsc --noEmit)",
+      "Bash(NODE_ENV=production npm run build)",
+      "Bash(dir:*)",
+      "WebFetch(domain:docs.railway.app)",
+      "WebFetch(domain:docs.railway.com)",
+      "Bash(test:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

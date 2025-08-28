@@ -1,5 +1,5 @@
 import { apiClient } from "../utils";
-import type { Family } from "../types/family";
+import type { Family, Student } from "../types/family";
 import type { ProspectStatus } from "../components/StatusDot";
 
 export interface FamilyStats {
@@ -20,6 +20,48 @@ interface FamiliesResponse {
 
 interface FamilyResponse {
   family: Family;
+}
+
+interface StudentResponse {
+  student: Student;
+}
+
+export interface AddStudentData {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string; // ISO string format
+  school: {
+    name: string;
+    level: "primaire" | "college" | "lycee" | "superieur";
+    grade: string;
+  };
+  contact?: {
+    email?: string;
+    phone?: string;
+  };
+  courseLocation?: {
+    type: "domicile" | "professeur" | "autre";
+    address?: {
+      street: string;
+      city: string;
+      postalCode: string;
+    };
+    otherDetails?: string;
+  };
+  availability?: string;
+  comments?: string;
+  medicalInfo?: {
+    allergies?: string[];
+    conditions?: string[];
+    medications?: string[];
+    emergencyContact?: {
+      name?: string;
+      phone?: string;
+      relationship?: string;
+    };
+  };
+  status?: "active" | "inactive" | "graduated";
+  notes?: string;
 }
 
 class FamilyService {
@@ -104,6 +146,14 @@ class FamilyService {
       "/api/families/stats"
     )) as FamilyStats;
     return response;
+  }
+
+  async addStudent(familyId: string, studentData: AddStudentData): Promise<Student> {
+    const response = (await apiClient.post(
+      `/api/families/${familyId}/students`,
+      studentData
+    )) as StudentResponse;
+    return response.student;
   }
 }
 

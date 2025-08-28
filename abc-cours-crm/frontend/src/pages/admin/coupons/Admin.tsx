@@ -45,12 +45,8 @@ export const Admin: React.FC = () => {
     navigate("/admin/coupons/create");
   };
 
-  const handleViewCoupons = (seriesId: string) => {
-    navigate(`/admin/coupons/${seriesId}/coupons`);
-  };
-
-  const handleEditSeries = (seriesId: string) => {
-    navigate(`/admin/coupons/edit/${seriesId}`);
+  const handleRowClick = (row: TableRowData) => {
+    navigate(`/admin/coupons/${row._id}/coupons`);
   };
 
   const handleDeleteSeries = async (seriesId: string) => {
@@ -232,20 +228,6 @@ export const Admin: React.FC = () => {
         <div className="table__actions">
           <Button
             size="sm"
-            variant="secondary"
-            onClick={() => handleViewCoupons(row._id)}
-          >
-            👁️
-          </Button>
-          <Button
-            size="sm"
-            variant="primary"
-            onClick={() => handleEditSeries(row._id)}
-          >
-            ✏️
-          </Button>
-          <Button
-            size="sm"
             variant="error"
             onClick={() => handleDeleteSeries(row._id)}
           >
@@ -371,7 +353,7 @@ export const Admin: React.FC = () => {
               </div>
             </div>
           ) : (
-            <Table columns={couponsColumns} data={tableData} />
+            <Table columns={couponsColumns} data={tableData} onRowClick={handleRowClick} />
           )}
         </Container>
       </Container>

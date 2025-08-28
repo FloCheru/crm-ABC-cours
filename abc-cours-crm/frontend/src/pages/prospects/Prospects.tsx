@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Navbar,
-  Breadcrumb,
   Container,
   SummaryCard,
   ButtonGroup,
@@ -77,6 +76,10 @@ export const Prospects: React.FC = () => {
 
   const handleCreateSettlementNote = (familyId: string) => {
     navigate(`/admin/dashboard/create/wizard?familyId=${familyId}`);
+  };
+
+  const handleAddStudent = (familyId: string) => {
+    navigate(`/families/${familyId}/add-student?returnTo=prospects`);
   };
 
   // Gérer le changement de statut d'un prospect - avec mise à jour optimiste
@@ -366,8 +369,9 @@ export const Prospects: React.FC = () => {
       key: "niveau",
       label: "Niveau",
       render: (_: unknown, row: TableRowData) => {
-        const grades = row.students?.map(s => s.school?.grade).filter(Boolean) || [];
-        return <div className="text-sm">{grades.join(", ") || "-"}</div>;
+        // Utilise le niveau du bénéficiaire depuis la demande
+        const level = row.demande?.beneficiaryLevel;
+        return <div className="text-sm">{level || "-"}</div>;
       },
     },
     {
@@ -378,6 +382,25 @@ export const Prospects: React.FC = () => {
           return <div className="text-sm">Adulte</div>;
         }
         const studentNames = row.students?.map(s => `${s.firstName} ${s.lastName}`) || [];
+        
+        // Afficher le bouton "Ajouter un élève" si beneficiaryType est "eleves" et aucun élève n'existe
+        if (row.demande?.beneficiaryType === "eleves" && studentNames.length === 0) {
+          return (
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation(); // Empêcher le clic sur la ligne
+                  handleAddStudent(row._id);
+                }}
+              >
+                Ajouter un élève
+              </Button>
+            </div>
+          );
+        }
+        
         return <div className="text-sm">{studentNames.join(", ") || "Élèves à créer"}</div>;
       },
     },
@@ -450,7 +473,6 @@ export const Prospects: React.FC = () => {
   return (
     <div>
       <Navbar activePath={location.pathname} />
-      <Breadcrumb items={[{ label: "Prospects", href: "/prospects" }]} />
       <Container layout="flex-col">
         <h1>Gestion des Prospects</h1>
 
