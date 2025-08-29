@@ -37,7 +37,8 @@
       "WebFetch(domain:docs.railway.app)",
       "WebFetch(domain:docs.railway.com)",
       "Bash(test:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "WebFetch(domain:crm-abc-cours.vercel.app)"
     ]
   },
   "enableAllProjectMcpServers": true,
