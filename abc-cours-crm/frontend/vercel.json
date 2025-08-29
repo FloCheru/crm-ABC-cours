@@ -24,6 +24,5 @@
       ]
     }
   ],
-  "functions": {},
   "ignoreCommand": "[[ $(git log -1 --pretty=format:%s) =~ (backend|railway|server) ]] && exit 0 || exit 1"
 }
