@@ -157,9 +157,8 @@ Validation requise avant exécution.
 
 #### 🎯 Chef de Projet
 - Analyzes requests and coordinates workflow
-- Controls agent reports strictly 
-- Manages server status (Backend: 3000, Frontend: 5173)
-- **Never restart servers without authorization**
+- Controls agent reports strictly
+- **Assumes servers are always running locally (Backend: 3000, Frontend: 5173)**
 
 #### 💻 Agent Codeur  
 - Develops backend + frontend functionality
@@ -235,10 +234,10 @@ Validation requise avant exécution.
 - **When test fails, fix immediately - never bypass**
 
 ### Server Management
-- Servers run continuously with concurrently
-- Never restart without Chef de Projet authorization
-- Backend auto-restarts on modifications
-- Use curl for API testing, never restart unnecessarily
+- **Servers are always running locally by the user**
+- Backend auto-restarts on modifications with nodemon
+- No need to verify server status - assume they're running
+- Use curl for API testing when needed
 
 ### Push Strategy
 **Standard push**: Feature branches → develop (automatic merge)
@@ -285,4 +284,4 @@ This format ensures consistent, comprehensive documentation of all development w
 
 ---
 
-**Working Mode**: Agent system mandatory for all code changes. Servers always running. No Claude signatures in commits.
+**Working Mode**: Agent system mandatory for all code changes. Servers managed locally by user (always running). No Claude signatures in commits.
