@@ -57,18 +57,37 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 
 // Configuration CORS
+const allowedOrigins = [
+  "http://localhost:5173", // local
+  "http://localhost:5174", // local Vite (port par défaut)
+  "http://localhost:5178", // local Vite (port alternatif)
+  "http://localhost:5177", // local Vite (port alternatif)
+  "https://crm-abc-cours.vercel.app", // Production Vercel (hardcodé pour sécurité)
+  "https://flocheru.github.io", // GitHub Pages
+  process.env.CORS_ORIGIN, // Variable d'environnement
+  process.env.FRONTEND_URL, // Backup Railway
+].filter(Boolean);
+
+// Log des origines autorisées pour debug
+logger.info(`🔍 CORS Origins autorisées: ${JSON.stringify(allowedOrigins)}`);
+logger.info(`🔍 FRONTEND_URL: ${process.env.FRONTEND_URL}`);
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173", // local
-      "http://localhost:5174", // local Vite (port par défaut)
-      "http://localhost:5178", // local Vite (port alternatif)
-      "http://localhost:5177", // local Vite (port alternatif)
-      process.env.CORS_ORIGIN, // Production Vercel depuis .env
-      "https://flocheru.github.io", // GitHub Pages
-      process.env.FRONTEND_URL, // Backup Railway
-    ].filter(Boolean),
+    origin: function(origin, callback) {
+      // Permettre les requêtes sans origine (ex: Postman, curl)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        logger.warn(`⚠️ CORS bloqué pour l'origine: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true, //Auth/cookies
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
 
