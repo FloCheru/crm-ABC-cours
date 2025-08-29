@@ -600,11 +600,9 @@ p {
   .settlement-details__content {
     gap: 2.5rem;
   }
-  
- 
+}
 
 @media (max-width: 768px) {
-  
 
   .settlement-details__header {
     flex-direction: column;

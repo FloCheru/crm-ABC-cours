@@ -72,13 +72,23 @@ export interface CouponSeries {
       lastName: string;
       email: string;
     };
+    demande?: {
+      beneficiaryType?: string;
+    };
   };
-  studentId: {
+  studentId?: {
     _id: string;
     firstName: string;
     lastName: string;
     level?: string;
   };
+  studentIds?: Array<{
+    _id: string;
+    firstName: string;
+    lastName: string;
+    level?: string;
+  }>;
+  beneficiaryType?: "student" | "adult" | "mixed";
   totalCoupons: number;
   usedCoupons: number;
   status: "active" | "completed" | "expired";

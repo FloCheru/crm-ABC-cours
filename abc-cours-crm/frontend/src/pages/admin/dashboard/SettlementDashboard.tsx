@@ -217,9 +217,6 @@ export const SettlementDashboard: React.FC = () => {
     navigate(`/admin/dashboard/${noteId}`);
   };
 
-  const handleEditNote = (noteId: string) => {
-    navigate(`/admin/dashboard/edit/${noteId}`);
-  };
 
   const handleDeleteNote = async (noteId: string) => {
     try {
