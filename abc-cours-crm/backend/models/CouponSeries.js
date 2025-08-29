@@ -25,6 +25,23 @@ const couponSeriesSchema = new mongoose.Schema(
         ref: "Student",
       },
     ],
+    // Type de bénéficiaire pour gérer adulte/élève/mixte
+    beneficiaryType: {
+      type: String,
+      enum: ["student", "adult", "mixed"],
+      default: "student", // Par défaut pour compatibilité
+    },
+    // Information sur le bénéficiaire adulte
+    adultBeneficiary: {
+      isContact: {
+        type: Boolean,
+        default: true, // Par défaut, c'est le contact principal
+      },
+      customName: {
+        type: String,
+        trim: true, // Optionnel si différent du contact principal
+      },
+    },
     totalCoupons: {
       type: Number,
       required: [true, "Nombre total de coupons requis"],

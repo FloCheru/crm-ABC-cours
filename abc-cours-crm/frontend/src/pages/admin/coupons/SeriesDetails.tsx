@@ -12,7 +12,7 @@ import {
 } from "../../../components";
 import { couponSeriesService } from "../../../services/couponSeriesService";
 import { couponService } from "../../../services/couponService";
-import { getFamilyDisplayName, generateCouponSeriesName } from "../../../utils/familyNameUtils";
+import { getFamilyDisplayName, generateCouponSeriesName, getBeneficiariesDisplay } from "../../../utils/familyNameUtils";
 import type { CouponSeries, Coupon } from "../../../types/coupon";
 import "./SeriesDetails.css";
 
@@ -159,18 +159,16 @@ export const SeriesDetails: React.FC = () => {
 
   // Filtrer les coupons selon le terme de recherche
   const filteredCoupons = coupons.filter((coupon) => {
-    // Utiliser les données de la série pour la famille et l'élève
+    // Utiliser les données de la série pour la famille et les bénéficiaires
     const familyName = (series?.familyId && typeof series.familyId === 'object' && series.familyId.primaryContact)
       ? `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`
       : "";
-    const studentName = series?.studentId
-      ? `${series.studentId.firstName} ${series.studentId.lastName}`
-      : "";
+    const beneficiariesName = getBeneficiariesDisplay(series);
 
     return (
       coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       familyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      studentName.toLowerCase().includes(searchTerm.toLowerCase())
+      beneficiariesName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
@@ -206,11 +204,10 @@ export const SeriesDetails: React.FC = () => {
       },
     },
     {
-      key: "student",
-      label: "Élève",
+      key: "beneficiaries",
+      label: "Bénéficiaires",
       render: (_: unknown, _row: TableRowData) => {
-        if (!series?.studentId) return "Élève inconnu";
-        return `${series.studentId.firstName} ${series.studentId.lastName}`;
+        return getBeneficiariesDisplay(series);
       },
     },
     {
@@ -429,17 +426,37 @@ export const SeriesDetails: React.FC = () => {
               </div>
             </Container>
 
-            {/* Informations étudiant */}
-            <Container layout="flex-col" className="series-details__section series-details__section--student">
-              <h2>Informations étudiant</h2>
+            {/* Informations bénéficiaires */}
+            <Container layout="flex-col" className="series-details__section series-details__section--beneficiaries">
+              <h2>Informations bénéficiaires</h2>
               <div className="series-details__grid">
                 <div className="series-details__field">
-                  <label>Nom complet</label>
-                  <p>{series?.studentId ? `${series.studentId.firstName} ${series.studentId.lastName}` : "Non renseigné"}</p>
+                  <label>Bénéficiaires</label>
+                  <p>{getBeneficiariesDisplay(series)}</p>
                 </div>
                 <div className="series-details__field">
-                  <label>Niveau</label>
-                  <p>{series?.studentId?.level || "Non renseigné"}</p>
+                  <label>Type</label>
+                  <p>{(() => {
+                    const { beneficiaryType, studentId, studentIds, familyId } = series;
+                    
+                    // Cas explicite
+                    if (beneficiaryType === "adult") return "Adulte";
+                    if (beneficiaryType === "mixed") return "Adulte + Élève";
+                    if (beneficiaryType === "student") return "Élève";
+                    
+                    // Détection automatique pour données existantes
+                    const hasStudents = (studentIds && studentIds.length > 0) || (studentId && typeof studentId === 'object');
+                    
+                    if (!hasStudents && familyId?.demande?.beneficiaryType === "adulte") {
+                      return "Adulte";
+                    }
+                    
+                    if (!hasStudents) {
+                      return "Adulte"; // Par défaut si pas d'élèves
+                    }
+                    
+                    return "Élève"; // Par défaut si élèves présents
+                  })()}</p>
                 </div>
                 <div className="series-details__field">
                   <label>Matière</label>
@@ -495,7 +512,7 @@ export const SeriesDetails: React.FC = () => {
               {/* Recherche */}
               <Container layout="flex">
                 <Input
-                  placeholder="Rechercher par code, famille, élève..."
+                  placeholder="Rechercher par code, famille, bénéficiaire..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   button={

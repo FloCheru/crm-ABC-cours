@@ -12,7 +12,6 @@ import type { Family } from "../../types/family";
 import type { ProspectStatus } from "../../components/StatusDot";
 import "./ProspectDetails.css";
 
-
 const statusOptions = [
   { value: "en_reflexion", label: "En réflexion" },
   { value: "interesse_prof_a_trouver", label: "Intéressé - Prof à trouver" },
@@ -27,6 +26,7 @@ export const ProspectDetails: React.FC = () => {
   const { familyId } = useParams<{ familyId: string }>();
   const navigate = useNavigate();
   const [prospect, setProspect] = useState<Family | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
   // States pour le mode édition
@@ -41,15 +41,19 @@ export const ProspectDetails: React.FC = () => {
     const loadProspectDetails = async () => {
       if (!familyId) {
         setError("ID du prospect manquant");
+        setLoading(false);
         return;
       }
 
       try {
+        setLoading(true);
         const data = await familyService.getFamily(familyId);
         setProspect(data);
       } catch (err) {
         console.error("Erreur lors du chargement du prospect:", err);
         setError("Impossible de charger les détails du prospect");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -147,9 +151,14 @@ export const ProspectDetails: React.FC = () => {
   const handleInputChange = (field: string, value: any) => {
     // Gestion spéciale pour les matières - conversion chaîne vers tableau
     if (field === "demande.subjects") {
-      value = value ? value.split(",").map((s: string) => s.trim()).filter((s: string) => s.length > 0) : [];
+      value = value
+        ? value
+            .split(",")
+            .map((s: string) => s.trim())
+            .filter((s: string) => s.length > 0)
+        : [];
     }
-    
+
     const fieldParts = field.split(".");
     if (fieldParts.length === 1) {
       setEditedData((prev) => ({ ...prev, [field]: value }));
@@ -165,9 +174,20 @@ export const ProspectDetails: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div>
+        <Navbar activePath="/prospects" />
+        <div className="text-center py-8">
+          <div className="text-gray-500">Chargement des détails...</div>
+        </div>
+      </div>
+    );
+  }
+
   if (error || !prospect) {
     return (
-      <div className="prospect-details">
+      <div>
         <Navbar activePath="/prospects" />
         <div className="prospect-details__error">
           <h2>Erreur</h2>
@@ -185,76 +205,171 @@ export const ProspectDetails: React.FC = () => {
   // Configuration des champs pour le mapping
   const fieldConfig = {
     personal: [
-      { key: "firstName", label: "Prénom", field: "primaryContact.firstName", type: "text", placeholder: "Prénom", required: true },
-      { key: "lastName", label: "Nom", field: "primaryContact.lastName", type: "text", placeholder: "Nom", required: true },
-      { key: "primaryPhone", label: "Téléphone principal", field: "primaryContact.primaryPhone", type: "tel", placeholder: "06 12 34 56 78", required: true },
-      { key: "secondaryPhone", label: "Téléphone secondaire", field: "primaryContact.secondaryPhone", type: "tel", placeholder: "06 12 34 56 78", required: false },
-      { key: "email", label: "Email", field: "primaryContact.email", type: "email", placeholder: "email@exemple.com", required: true }
-    ],
-    address: [
-      { key: "street", label: "Rue", field: "address.street", type: "text", placeholder: "Adresse", required: true },
-      { key: "city", label: "Ville", field: "address.city", type: "text", placeholder: "Ville", required: true },
-      { key: "postalCode", label: "Code postal", field: "address.postalCode", type: "text", placeholder: "Code postal", required: true }
+      {
+        key: "firstName",
+        label: "Prénom",
+        field: "primaryContact.firstName",
+        type: "text",
+        placeholder: "Prénom",
+        required: true,
+      },
+      {
+        key: "lastName",
+        label: "Nom",
+        field: "primaryContact.lastName",
+        type: "text",
+        placeholder: "Nom",
+        required: true,
+      },
+      {
+        key: "primaryPhone",
+        label: "Téléphone principal",
+        field: "primaryContact.primaryPhone",
+        type: "tel",
+        placeholder: "06 12 34 56 78",
+        required: true,
+      },
+      {
+        key: "secondaryPhone",
+        label: "Téléphone secondaire",
+        field: "primaryContact.secondaryPhone",
+        type: "tel",
+        placeholder: "06 12 34 56 78",
+        required: false,
+      },
+      {
+        key: "email",
+        label: "Email",
+        field: "primaryContact.email",
+        type: "email",
+        placeholder: "email@exemple.com",
+        required: true,
+      },
+      {
+        key: "street",
+        label: "Rue",
+        field: "address.street",
+        type: "text",
+        placeholder: "Adresse",
+        required: true,
+      },
+      {
+        key: "city",
+        label: "Ville",
+        field: "address.city",
+        type: "text",
+        placeholder: "Ville",
+        required: true,
+      },
+      {
+        key: "postalCode",
+        label: "Code postal",
+        field: "address.postalCode",
+        type: "text",
+        placeholder: "Code postal",
+        required: true,
+      },
     ],
     course: [
-      { key: "plannedTeacher", label: "Professeur prévu", field: "plannedTeacher", type: "text", placeholder: "Nom du professeur", required: false },
-      { key: "beneficiaryType", label: "Type de bénéficiaire", field: "demande.beneficiaryType", type: "text", placeholder: "Type de bénéficiaire", required: false },
-      { key: "subjects", label: "Matières demandées", field: "demande.subjects", type: "textarea", placeholder: "Matières séparées par des virgules", required: false }
+      {
+        key: "plannedTeacher",
+        label: "Professeur prévu",
+        field: "plannedTeacher",
+        type: "text",
+        placeholder: "Nom du professeur",
+        required: false,
+      },
+      {
+        key: "beneficiaryType",
+        label: "Type de bénéficiaire",
+        field: "demande.beneficiaryType",
+        type: "text",
+        placeholder: "Type de bénéficiaire",
+        required: false,
+      },
+      {
+        key: "subjects",
+        label: "Matières demandées",
+        field: "demande.subjects",
+        type: "textarea",
+        placeholder: "Matières séparées par des virgules",
+        required: false,
+      },
     ],
     tracking: [
-      { key: "nextActionReminderSubject", label: "Objet de rappel", field: "nextActionReminderSubject", type: "text", placeholder: "Objet de rappel", required: false },
-      { key: "nextActionDate", label: "Date de rappel", field: "nextActionDate", type: "date", placeholder: "", required: false }
-    ]
+      {
+        key: "nextActionReminderSubject",
+        label: "Objet de rappel",
+        field: "nextActionReminderSubject",
+        type: "text",
+        placeholder: "Objet de rappel",
+        required: false,
+      },
+      {
+        key: "nextActionDate",
+        label: "Date de rappel",
+        field: "nextActionDate",
+        type: "date",
+        placeholder: "",
+        required: false,
+      },
+    ],
   };
 
   const getFieldValue = (field: any, path: string) => {
-    const keys = path.split('.');
+    const keys = path.split(".");
     let value = keys.length === 1 ? field : field?.[keys[0]]?.[keys[1]];
-    
+
     // Gestion spéciale pour les tableaux (comme subjects)
     if (path === "demande.subjects" && Array.isArray(value)) {
       return value.join(", ");
     }
-    
+
     return value || "";
   };
 
   const getDisplayValue = (prospect: Family, path: string) => {
-    const keys = path.split('.');
-    let value: any = keys.length === 1 ? prospect[path as keyof Family] : (prospect as any)[keys[0]]?.[keys[1]];
-    
+    const keys = path.split(".");
+    let value: any =
+      keys.length === 1
+        ? prospect[path as keyof Family]
+        : (prospect as any)[keys[0]]?.[keys[1]];
+
     if (path === "nextActionDate" && value) {
       return new Date(value).toLocaleDateString("fr-FR");
     }
-    
+
     // Gestion spéciale pour les tableaux (comme subjects)
     if (path === "demande.subjects" && Array.isArray(value)) {
       return value.length > 0 ? value.join(", ") : "Non renseignées";
     }
-    
+
     // Gestion spéciale pour plannedTeacher - peut être string ou objet
     if (path === "plannedTeacher") {
       if (!value) return "Non assigné";
-      if (typeof value === 'string') return value;
-      if (typeof value === 'object' && 'firstName' in value && 'lastName' in value) {
+      if (typeof value === "string") return value;
+      if (
+        typeof value === "object" &&
+        "firstName" in value &&
+        "lastName" in value
+      ) {
         return `${(value as any).firstName} ${(value as any).lastName}`;
       }
       return "Non assigné";
     }
-    
+
     // Gestion spéciale pour nextActionReminderSubject - doit être string
     if (path === "nextActionReminderSubject") {
       if (!value) return "Actions à définir";
-      if (typeof value === 'string') return value;
+      if (typeof value === "string") return value;
       return "Actions à définir";
     }
-    
+
     return value || "Non renseigné";
   };
 
-
   return (
-    <div className="prospect-details">
+    <div>
       <Navbar activePath="/prospects" />
 
       <div className="prospect-details__header">
@@ -307,7 +422,6 @@ export const ProspectDetails: React.FC = () => {
       <StatusBanner status={prospect.prospectStatus as ProspectStatus} />
 
       <div className="prospect-details__content">
-
         {/* Informations personnelles */}
         <div className="prospect-details__section prospect-details__section--primary-contact">
           <h2>Informations personnelles</h2>
@@ -319,7 +433,9 @@ export const ProspectDetails: React.FC = () => {
                   <Input
                     type={field.type}
                     value={getFieldValue(editedData, field.field)}
-                    onChange={(e) => handleInputChange(field.field, e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(field.field, e.target.value)
+                    }
                     error={validationErrors[field.key]}
                     placeholder={field.placeholder}
                   />
@@ -331,28 +447,6 @@ export const ProspectDetails: React.FC = () => {
           </div>
         </div>
 
-        {/* Adresse */}
-        <div className="prospect-details__section prospect-details__section--address">
-          <h2>Adresse</h2>
-          <div className="prospect-details__grid">
-            {fieldConfig.address.map((field) => (
-              <div key={field.key} className="prospect-details__field">
-                <label>{field.label}</label>
-                {isEditing ? (
-                  <Input
-                    type={field.type}
-                    value={getFieldValue(editedData, field.field)}
-                    onChange={(e) => handleInputChange(field.field, e.target.value)}
-                    error={validationErrors[field.key]}
-                    placeholder={field.placeholder}
-                  />
-                ) : (
-                  <p>{getDisplayValue(prospect, field.field)}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Demande */}
         <div className="prospect-details__section prospect-details__section--course-request">
@@ -364,12 +458,17 @@ export const ProspectDetails: React.FC = () => {
                 {isEditing ? (
                   field.type === "textarea" ? (
                     <textarea
-                      value={Array.isArray(getFieldValue(editedData, field.field)) 
-                        ? getFieldValue(editedData, field.field).join(", ")
-                        : getFieldValue(editedData, field.field)}
+                      value={
+                        Array.isArray(getFieldValue(editedData, field.field))
+                          ? getFieldValue(editedData, field.field).join(", ")
+                          : getFieldValue(editedData, field.field)
+                      }
                       onChange={(e) => {
                         const value = e.target.value;
-                        const arrayValue = value.split(",").map(s => s.trim()).filter(Boolean);
+                        const arrayValue = value
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean);
                         handleInputChange(field.field, arrayValue);
                       }}
                       placeholder={field.placeholder}
@@ -380,7 +479,9 @@ export const ProspectDetails: React.FC = () => {
                     <Input
                       type={field.type}
                       value={getFieldValue(editedData, field.field)}
-                      onChange={(e) => handleInputChange(field.field, e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange(field.field, e.target.value)
+                      }
                       placeholder={field.placeholder}
                     />
                   )
@@ -435,7 +536,11 @@ export const ProspectDetails: React.FC = () => {
             {isEditing && (
               <Button
                 variant="secondary"
-                onClick={() => navigate(`/families/${prospect._id}/add-student?returnTo=prospectDetails&familyId=${prospect._id}`)}
+                onClick={() =>
+                  navigate(
+                    `/families/${prospect._id}/add-student?returnTo=prospectDetails&familyId=${prospect._id}`
+                  )
+                }
               >
                 Ajouter un élève
               </Button>
@@ -453,10 +558,26 @@ export const ProspectDetails: React.FC = () => {
                 {isEditing ? (
                   <Input
                     type={field.type}
-                    value={field.type === "date" && editedData[field.field as keyof typeof editedData] 
-                      ? new Date(editedData[field.field as keyof typeof editedData] as string).toISOString().split("T")[0]
-                      : getFieldValue(editedData, field.field)}
-                    onChange={(e) => handleInputChange(field.field, field.type === "date" && e.target.value ? new Date(e.target.value) : e.target.value)}
+                    value={
+                      field.type === "date" &&
+                      editedData[field.field as keyof typeof editedData]
+                        ? new Date(
+                            editedData[
+                              field.field as keyof typeof editedData
+                            ] as string
+                          )
+                            .toISOString()
+                            .split("T")[0]
+                        : getFieldValue(editedData, field.field)
+                    }
+                    onChange={(e) =>
+                      handleInputChange(
+                        field.field,
+                        field.type === "date" && e.target.value
+                          ? new Date(e.target.value)
+                          : e.target.value
+                      )
+                    }
                     placeholder={field.placeholder}
                   />
                 ) : (

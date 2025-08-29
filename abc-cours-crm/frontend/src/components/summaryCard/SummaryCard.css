@@ -9,6 +9,7 @@
   box-shadow: var(--shadow-card);
   padding: var(--spacing-xl);
   transition: all var(--transition-fast);
+  /* max-width: 50%; */
 }
 
 .summary-card:hover {

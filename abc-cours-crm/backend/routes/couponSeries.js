@@ -144,8 +144,9 @@ router.get(
       console.log("🔍 Exécution de la requête MongoDB...");
       const [series, total] = await Promise.all([
         CouponSeries.find(filter)
-          .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email primaryContact.primaryPhone")
+          .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email primaryContact.primaryPhone demande.beneficiaryType demande.beneficiaryLevel")
           .populate("studentId", "firstName lastName level")
+          .populate("studentIds", "firstName lastName level")
           .populate("subject", "name category")
           .populate("createdBy", "firstName lastName")
           .sort(sort)
@@ -194,8 +195,9 @@ router.get("/:id", async (req, res) => {
     }
 
     const series = await CouponSeries.findById(id)
-      .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email primaryContact.primaryPhone address")
+      .populate("familyId", "primaryContact.firstName primaryContact.lastName primaryContact.email primaryContact.primaryPhone address demande.beneficiaryType demande.beneficiaryLevel")
       .populate("studentId", "firstName lastName level")
+      .populate("studentIds", "firstName lastName level")
       .populate("subject", "name category description")
       .populate("createdBy", "firstName lastName")
       .lean();

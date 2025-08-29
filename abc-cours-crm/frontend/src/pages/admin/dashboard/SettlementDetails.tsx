@@ -7,14 +7,16 @@ import {
   Button,
   ButtonGroup,
   SummaryCard,
-  FormCard,
 } from "../../../components";
 import { PDFGenerator } from "../../../components/pdf/PDFGenerator";
 import { settlementService } from "../../../services/settlementService";
 import type { SettlementNote } from "../../../services/settlementService";
 
 // Fonctions utilitaires pour extraire les valeurs des subjects
-const getSubjectValue = (note: SettlementNote, field: 'hourlyRate' | 'quantity' | 'professorSalary'): number => {
+const getSubjectValue = (
+  note: SettlementNote,
+  field: "hourlyRate" | "quantity" | "professorSalary"
+): number => {
   if (!note.subjects || note.subjects.length === 0) return 0;
   // Pour l'instant, on prend la première matière. Plus tard on pourra gérer plusieurs matières
   return note.subjects[0][field] || 0;
@@ -23,7 +25,7 @@ const getSubjectValue = (note: SettlementNote, field: 'hourlyRate' | 'quantity' 
 const getSubjectName = (note: SettlementNote): string => {
   if (!note.subjects || note.subjects.length === 0) return "N/A";
   const firstSubject = note.subjects[0];
-  if (typeof firstSubject.subjectId === 'object') {
+  if (typeof firstSubject.subjectId === "object") {
     return firstSubject.subjectId.name;
   }
   return "Matière";
@@ -32,7 +34,7 @@ const getSubjectName = (note: SettlementNote): string => {
 const getSubjectCategory = (note: SettlementNote): string => {
   if (!note.subjects || note.subjects.length === 0) return "N/A";
   const firstSubject = note.subjects[0];
-  if (typeof firstSubject.subjectId === 'object') {
+  if (typeof firstSubject.subjectId === "object") {
     return firstSubject.subjectId.category;
   }
   return "N/A";
@@ -42,7 +44,9 @@ export const SettlementDetails: React.FC = () => {
   const { noteId } = useParams<{ noteId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const [settlementNote, setSettlementNote] = useState<SettlementNote | null>(null);
+  const [settlementNote, setSettlementNote] = useState<SettlementNote | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
 
@@ -150,12 +154,17 @@ export const SettlementDetails: React.FC = () => {
     );
   }
 
-  const ca = calculateCA(getSubjectValue(settlementNote, 'hourlyRate'), getSubjectValue(settlementNote, 'quantity'));
-  const totalSalary = getSubjectValue(settlementNote, 'professorSalary') * getSubjectValue(settlementNote, 'quantity');
+  const ca = calculateCA(
+    getSubjectValue(settlementNote, "hourlyRate"),
+    getSubjectValue(settlementNote, "quantity")
+  );
+  const totalSalary =
+    getSubjectValue(settlementNote, "professorSalary") *
+    getSubjectValue(settlementNote, "quantity");
   const marge = calculateMarge(
-    getSubjectValue(settlementNote, 'hourlyRate'),
-    getSubjectValue(settlementNote, 'quantity'),
-    getSubjectValue(settlementNote, 'professorSalary')
+    getSubjectValue(settlementNote, "hourlyRate"),
+    getSubjectValue(settlementNote, "quantity"),
+    getSubjectValue(settlementNote, "professorSalary")
   );
 
   return (
@@ -165,19 +174,31 @@ export const SettlementDetails: React.FC = () => {
         items={[
           { label: "Admin", href: "/admin" },
           { label: "Tableau de bord", href: "/admin/dashboard" },
-          { label: `NDR ${settlementNote._id.substring(settlementNote._id.length - 8).toUpperCase()}`, href: "" },
+          {
+            label: `NDR ${settlementNote._id
+              .substring(settlementNote._id.length - 8)
+              .toUpperCase()}`,
+            href: "",
+          },
         ]}
       />
       <Container layout="flex-col">
-        <div className="flex justify-between items-center mb-6">
-          <h1>Note de règlement NDR {settlementNote._id.substring(settlementNote._id.length - 8).toUpperCase()}</h1>
-          <ButtonGroup
-            variant="double"
-            buttons={[
-              { text: "Retour", variant: "secondary", onClick: handleBack },
-              { text: "Modifier", variant: "primary", onClick: handleEdit }
-            ]}
-          />
+        <div className="settlement-details__header">
+          <h1>
+            Note de règlement NDR{" "}
+            {settlementNote._id
+              .substring(settlementNote._id.length - 8)
+              .toUpperCase()}
+          </h1>
+          <div className="settlement-details__header-actions">
+            <ButtonGroup
+              variant="double"
+              buttons={[
+                { text: "Retour", variant: "secondary", onClick: handleBack },
+                { text: "Modifier", variant: "primary", onClick: handleEdit },
+              ]}
+            />
+          </div>
         </div>
 
         {/* Métriques principales */}
@@ -206,12 +227,9 @@ export const SettlementDetails: React.FC = () => {
             title="DÉTAILS NDR"
             metrics={[
               {
-                value: settlementNote._id.substring(settlementNote._id.length - 8).toUpperCase(),
-                label: "N° NDR",
-                variant: "primary",
-              },
-              {
-                value: new Date(settlementNote.createdAt).toLocaleDateString("fr-FR"),
+                value: new Date(settlementNote.createdAt).toLocaleDateString(
+                  "fr-FR"
+                ),
                 label: "Date de création",
                 variant: "secondary",
               },
@@ -224,226 +242,232 @@ export const SettlementDetails: React.FC = () => {
           />
         </Container>
 
-        {/* Informations générales */}
-        <FormCard title="Informations générales">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Client (Famille)
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {settlementNote.clientName}
-              </p>
+        <div className="settlement-details__content">
+          {/* Informations générales */}
+          <section className="settlement-details__section settlement-details__section--general-info">
+            <h2>Informations générales</h2>
+            <div className="settlement-details__grid settlement-details__grid--3-cols">
+              <div className="settlement-details__field">
+                <label>Client (Famille)</label>
+                <p>{settlementNote.clientName}</p>
+              </div>
+              <div className="settlement-details__field">
+                <label>Département</label>
+                <p>{settlementNote.department || "N/A"}</p>
+              </div>
+              <div className="settlement-details__field">
+                <label>Statut</label>
+                <p>
+                  <span
+                    className={`settlement-details__status-badge settlement-details__status-badge--${
+                      settlementNote.status === "paid"
+                        ? "paid"
+                        : settlementNote.status === "overdue"
+                        ? "overdue"
+                        : "pending"
+                    }`}
+                  >
+                    {settlementNote.status === "paid"
+                      ? "Payé"
+                      : settlementNote.status === "overdue"
+                      ? "En retard"
+                      : "En attente"}
+                  </span>
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Département
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {settlementNote.department || "N/A"}
-              </p>
+          </section>
+
+          {/* Détails du cours */}
+          <section className="settlement-details__section settlement-details__section--course-details">
+            <h2>Détails du cours</h2>
+            <div className="settlement-details__grid settlement-details__grid--3-cols">
+              <div className="settlement-details__field">
+                <label>Matière</label>
+                <p>{getSubjectName(settlementNote)}</p>
+              </div>
+              <div className="settlement-details__field">
+                <label>Catégorie</label>
+                <p>{getSubjectCategory(settlementNote)}</p>
+              </div>
+              <div className="settlement-details__field">
+                <label>Quantité (QTé)</label>
+                <p>{getSubjectValue(settlementNote, "quantity")}</p>
+              </div>
+              <div className="settlement-details__field">
+                <label>Prix unitaire (PU)</label>
+                <p>
+                  {getSubjectValue(settlementNote, "hourlyRate").toFixed(2)} €
+                </p>
+              </div>
+              <div className="settlement-details__field">
+                <label>Mode de paiement</label>
+                <p>{settlementNote.paymentMethod}</p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Statut
-              </label>
+          </section>
+
+          {/* Détails financiers */}
+          <section className="settlement-details__section settlement-details__section--financial-details">
+            <h2>Détails financiers</h2>
+            <div className="settlement-details__grid settlement-details__grid--2-cols">
+              <div className="settlement-details__field">
+                <label>Salaire professeur (unitaire)</label>
+                <p>
+                  {getSubjectValue(settlementNote, "professorSalary").toFixed(
+                    2
+                  )}{" "}
+                  € / unité
+                </p>
+              </div>
+              <div className="settlement-details__field">
+                <label>Total salaire professeur</label>
+                <p className="text-orange-600">{totalSalary.toFixed(2)} €</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Échéancier */}
+          {settlementNote.paymentSchedule && (
+            <section className="settlement-details__section settlement-details__section--payment-schedule">
+              <h2>Échéancier de paiement</h2>
               <div
-                className={`px-2 py-1 rounded border text-xs ${
-                  settlementNote.status === "paid"
-                    ? "bg-green-100 text-green-800 border-green-200"
-                    : settlementNote.status === "overdue"
-                    ? "bg-red-100 text-red-800 border-red-200"
-                    : "bg-yellow-100 text-yellow-800 border-yellow-200"
-                }`}
+                className="settlement-details__grid settlement-details__grid--3-cols"
+                style={{ marginBottom: "1.5rem" }}
               >
-                {settlementNote.status === "paid"
-                  ? "Payé"
-                  : settlementNote.status === "overdue"
-                  ? "En retard"
-                  : "En attente"}
-              </div>
-            </div>
-          </div>
-        </FormCard>
-
-        {/* Détails du cours */}
-        <FormCard title="Détails du cours">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Matière
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {getSubjectName(settlementNote)}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Catégorie
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {getSubjectCategory(settlementNote)}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Quantité (QTé)
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {getSubjectValue(settlementNote, 'quantity')}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Prix unitaire (PU)
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {getSubjectValue(settlementNote, 'hourlyRate').toFixed(2)} €
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mode de paiement
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {settlementNote.paymentMethod}
-              </p>
-            </div>
-          </div>
-        </FormCard>
-
-        {/* Détails financiers */}
-        <FormCard title="Détails financiers">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Salaire professeur (unitaire)
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {getSubjectValue(settlementNote, 'professorSalary').toFixed(2)} € / unité
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Total salaire professeur
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {totalSalary.toFixed(2)} €
-              </p>
-            </div>
-          </div>
-        </FormCard>
-
-        {/* Échéancier */}
-        {settlementNote.paymentSchedule && (
-          <FormCard title="Échéancier de paiement">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mode de règlement
-                </label>
-                <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                  {settlementNote.paymentSchedule.paymentMethod === "PRLV" ? "Prélèvement" : "Chèque"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre d'échéances
-                </label>
-                <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                  {settlementNote.paymentSchedule.numberOfInstallments}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Jour de {settlementNote.paymentSchedule.paymentMethod === "PRLV" ? "prélèvement" : "remise"}
-                </label>
-                <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                  Le {settlementNote.paymentSchedule.dayOfMonth} de chaque mois
-                </p>
-              </div>
-            </div>
-            
-            {settlementNote.paymentSchedule.installments && (
-              <div>
-                <h3 className="text-md font-medium mb-2">Détail des échéances</h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full bg-gray-50 rounded">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="px-4 py-2 text-left text-sm font-medium">Échéance</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium">Montant</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium">Date d'échéance</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium">Statut</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {settlementNote.paymentSchedule.installments.map((installment, index) => (
-                        <tr key={index} className="border-b last:border-b-0">
-                          <td className="px-4 py-2 text-sm">{index + 1}</td>
-                          <td className="px-4 py-2 text-sm">{installment.amount.toFixed(2)} €</td>
-                          <td className="px-4 py-2 text-sm">
-                            {new Date(installment.dueDate).toLocaleDateString("fr-FR")}
-                          </td>
-                          <td className="px-4 py-2 text-sm">
-                            <span className={`px-2 py-1 rounded text-xs ${
-                              installment.status === "paid" 
-                                ? "bg-green-100 text-green-800"
-                                : installment.status === "failed"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}>
-                              {installment.status === "paid" ? "Payé" : 
-                               installment.status === "failed" ? "Échec" : "En attente"}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="settlement-details__field">
+                  <label>Mode de règlement</label>
+                  <p>
+                    {settlementNote.paymentSchedule.paymentMethod === "PRLV"
+                      ? "Prélèvement"
+                      : "Chèque"}
+                  </p>
+                </div>
+                <div className="settlement-details__field">
+                  <label>Nombre d'échéances</label>
+                  <p>{settlementNote.paymentSchedule.numberOfInstallments}</p>
+                </div>
+                <div className="settlement-details__field">
+                  <label>
+                    Jour de{" "}
+                    {settlementNote.paymentSchedule.paymentMethod === "PRLV"
+                      ? "prélèvement"
+                      : "remise"}
+                  </label>
+                  <p>
+                    Le {settlementNote.paymentSchedule.dayOfMonth} de chaque
+                    mois
+                  </p>
                 </div>
               </div>
-            )}
-          </FormCard>
-        )}
 
-        {/* Notes supplémentaires */}
-        {settlementNote.notes && (
-          <FormCard title="Notes">
-            <p className="text-sm bg-gray-50 px-3 py-2 rounded whitespace-pre-wrap">
-              {settlementNote.notes}
-            </p>
-          </FormCard>
-        )}
+              {settlementNote.paymentSchedule.installments && (
+                <div>
+                  <h3
+                    style={{
+                      margin: "0 0 1rem 0",
+                      color: "#374151",
+                      fontSize: "1rem",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Détail des échéances
+                  </h3>
+                  <div style={{ overflowX: "auto" }}>
+                    <table className="settlement-details__payment-table">
+                      <thead>
+                        <tr>
+                          <th>Échéance</th>
+                          <th>Montant</th>
+                          <th>Date d'échéance</th>
+                          <th>Statut</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {settlementNote.paymentSchedule.installments.map(
+                          (installment, index) => (
+                            <tr key={index}>
+                              <td>{index + 1}</td>
+                              <td>{installment.amount.toFixed(2)} €</td>
+                              <td>
+                                {new Date(
+                                  installment.dueDate
+                                ).toLocaleDateString("fr-FR")}
+                              </td>
+                              <td>
+                                <span
+                                  className={`settlement-details__status-badge settlement-details__status-badge--${
+                                    installment.status === "paid"
+                                      ? "paid"
+                                      : installment.status === "failed"
+                                      ? "failed"
+                                      : "pending"
+                                  }`}
+                                >
+                                  {installment.status === "paid"
+                                    ? "Payé"
+                                    : installment.status === "failed"
+                                    ? "Échec"
+                                    : "En attente"}
+                                </span>
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
 
-        {/* Génération PDF */}
-        <PDFGenerator settlementNote={settlementNote} />
+          {/* Notes supplémentaires */}
+          {settlementNote.notes && (
+            <section className="settlement-details__section settlement-details__section--notes">
+              <h2>Notes</h2>
+              <div className="settlement-details__notes-content">
+                {settlementNote.notes}
+              </div>
+            </section>
+          )}
 
-        {/* Informations de création */}
-        <FormCard title="Informations de création">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Créé par
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {settlementNote.createdBy?.firstName} {settlementNote.createdBy?.lastName}
-              </p>
+          {/* Génération PDF */}
+          <section className="settlement-details__section settlement-details__section--pdf">
+            <h2>Génération PDF</h2>
+            <PDFGenerator settlementNote={settlementNote} />
+          </section>
+
+          {/* Informations de création */}
+          <section className="settlement-details__section settlement-details__section--creation-info">
+            <h2>Informations de création</h2>
+            <div className="settlement-details__grid settlement-details__grid--2-cols">
+              <div className="settlement-details__field">
+                <label>Créé par</label>
+                <p>
+                  {settlementNote.createdBy?.firstName}{" "}
+                  {settlementNote.createdBy?.lastName}
+                </p>
+              </div>
+              <div className="settlement-details__field">
+                <label>Dernière modification</label>
+                <p>
+                  {new Date(settlementNote.updatedAt).toLocaleDateString(
+                    "fr-FR"
+                  )}{" "}
+                  à{" "}
+                  {new Date(settlementNote.updatedAt).toLocaleTimeString(
+                    "fr-FR",
+                    {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  )}
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dernière modification
-              </label>
-              <p className="text-sm bg-gray-50 px-3 py-2 rounded">
-                {new Date(settlementNote.updatedAt).toLocaleDateString("fr-FR")} à{" "}
-                {new Date(settlementNote.updatedAt).toLocaleTimeString("fr-FR", {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </p>
-            </div>
-          </div>
-        </FormCard>
+          </section>
+        </div>
       </Container>
     </div>
   );

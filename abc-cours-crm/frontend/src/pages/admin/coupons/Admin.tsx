@@ -13,7 +13,7 @@ import {
 } from "../../../components";
 import { couponSeriesService } from "../../../services/couponSeriesService";
 import { useCouponSeriesCache } from "../../../hooks/useCouponSeriesCache";
-import { getFamilyDisplayName, generateCouponSeriesName } from "../../../utils/familyNameUtils";
+import { getFamilyDisplayName, generateCouponSeriesName, getBeneficiariesDisplay } from "../../../utils/familyNameUtils";
 import type { CouponSeries } from "../../../types/coupon";
 
 // Type pour les données du tableau avec l'id requis
@@ -153,14 +153,13 @@ export const Admin: React.FC = () => {
       },
     },
     {
-      key: "student",
-      label: "Élève",
+      key: "beneficiaries",
+      label: "Bénéficiaires",
       render: (_: unknown, row: TableRowData) => (
         <div>
           <div className="font-medium">
-            {row.studentId?.firstName} {row.studentId?.lastName}
+            {getBeneficiariesDisplay(row)}
           </div>
-          <div className="text-sm text-gray-500">{row.studentId?.level}</div>
         </div>
       ),
     },

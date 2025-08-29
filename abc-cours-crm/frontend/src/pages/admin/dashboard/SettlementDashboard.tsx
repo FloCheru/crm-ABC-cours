@@ -583,20 +583,6 @@ export const SettlementDashboard: React.FC = () => {
         <div className="table__actions">
           <Button
             size="sm"
-            variant="secondary"
-            onClick={() => handleViewNote(row._id)}
-          >
-            👁️
-          </Button>
-          <Button
-            size="sm"
-            variant="primary"
-            onClick={() => handleEditNote(row._id)}
-          >
-            ✏️
-          </Button>
-          <Button
-            size="sm"
             variant="error"
             onClick={() => handleDeleteNote(row._id)}
           >

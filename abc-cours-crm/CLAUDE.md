@@ -225,6 +225,11 @@ Validation requise avant exécution.
 9. 📚 Agent Documentation → Update documentation
 
 ### Critical Rules
+- **RÈGLE ABSOLUE : NE MODIFIER QUE CE QUI EST EXPLICITEMENT DEMANDÉ**
+  - Ne jamais ajouter de classes CSS non demandées
+  - Ne jamais modifier des structures existantes sans permission
+  - Ne jamais faire d'améliorations ou optimisations non demandées
+  - Respecter strictement la demande utilisateur - rien de plus, rien de moins
 - **No final validation without Jest tests passing 100%**
 - **No push without double build validation**  
 - **No push main without explicit deployment request**
