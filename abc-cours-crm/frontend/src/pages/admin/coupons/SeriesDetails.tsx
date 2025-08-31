@@ -12,9 +12,9 @@ import {
   DataCard,
 } from "../../../components";
 import { couponSeriesService } from "../../../services/couponSeriesService";
-import { couponService } from "../../../services/couponService";
 import { getFamilyDisplayName, generateCouponSeriesName, getBeneficiariesDisplay } from "../../../utils/familyNameUtils";
 import type { CouponSeries, Coupon } from "../../../types/coupon";
+import { useCouponSeriesGlobal } from "../../../hooks/useCouponSeriesGlobal";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Coupon & { id: string };
@@ -23,6 +23,12 @@ export const SeriesDetails: React.FC = () => {
   const { seriesId } = useParams<{ seriesId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Utilisation du nouveau store global pour les séries
+  const {
+    loadSeriesDetails,
+    getSeriesDetails,
+  } = useCouponSeriesGlobal();
 
   const [series, setSeries] = useState<CouponSeries | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -37,32 +43,28 @@ export const SeriesDetails: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const loadSeriesDetails = async () => {
+    const loadDetails = async () => {
       if (!seriesId) return;
 
       try {
         setIsLoading(true);
         setError("");
 
-        // Charger les détails de la série
-        const seriesData = await couponSeriesService.getCouponSeriesById(
-          seriesId
-        );
-        console.log("🔍 SeriesDetails - Données série:", seriesData);
-        console.log("🔍 SeriesDetails - familyId:", seriesData?.familyId);
-        console.log("🔍 SeriesDetails - studentId:", seriesData?.studentId);
-        console.log(
-          "🔍 SeriesDetails - totalCoupons:",
-          seriesData?.totalCoupons
-        );
-        setSeries(seriesData);
+        // Vérifier d'abord le cache
+        const cachedDetails = getSeriesDetails(seriesId);
+        if (cachedDetails) {
+          console.log('🚀 [SERIES-DETAILS] Using cached data');
+          setSeries(cachedDetails.series);
+          setCoupons(cachedDetails.coupons);
+          setIsLoading(false);
+          return;
+        }
 
-        // Charger les coupons de cette série
-        const couponsData = await couponService.getCoupons({
-          series: seriesId,
-        });
-        console.log("🔍 SeriesDetails - Coupons:", couponsData);
-        setCoupons(couponsData);
+        // Charger depuis l'API via le store
+        console.log('🚀 [SERIES-DETAILS] Loading from API...');
+        const details = await loadSeriesDetails(seriesId);
+        setSeries(details.series);
+        setCoupons(details.coupons);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Erreur lors du chargement"
@@ -73,8 +75,8 @@ export const SeriesDetails: React.FC = () => {
       }
     };
 
-    loadSeriesDetails();
-  }, [seriesId]);
+    loadDetails();
+  }, [seriesId, loadSeriesDetails, getSeriesDetails]);
 
   const handleResendCoupons = () => {
     // TODO: Implémenter l'envoi des coupons

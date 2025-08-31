@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Navbar,
@@ -13,6 +13,7 @@ import {
 } from "../../../components";
 import { settlementService } from "../../../services/settlementService";
 import type { SettlementNote } from "../../../services/settlementService";
+import { useSettlementGlobal } from "../../../hooks/useSettlementGlobal";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = SettlementNote & {
@@ -42,11 +43,18 @@ const getSubjectName = (note: SettlementNote): string => {
 export const SettlementDashboard: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [settlementData, setSettlementData] = useState<SettlementNote[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string>("");
-  const [isRetrying, setIsRetrying] = useState(false);
+  
+  // Utilisation du nouveau store global pour les NDR
+  const {
+    settlements,
+    isLoading,
+    error,
+    clearCache,
+    loadSettlements,
+  } = useSettlementGlobal();
+  
   const [searchTerm, setSearchTerm] = useState("");
+  const [localError, setLocalError] = useState<string>("");
 
   // États pour la popup de suppression
   const [isDeletionPreviewModalOpen, setIsDeletionPreviewModalOpen] =
@@ -55,50 +63,7 @@ export const SettlementDashboard: React.FC = () => {
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
 
-  // Charger les données des notes de règlement
-  useEffect(() => {
-    const loadSettlementNotes = async () => {
-      try {
-        setIsLoading(true);
-        setError("");
-        setIsRetrying(false);
-        const response = await settlementService.getAllSettlementNotes(1, 100); // Récupérer toutes les notes
-        setSettlementData(response.notes || []);
-
-        // 🔍 DÉBOGAGE - Vérifier la structure des données reçues
-        if (response.notes && response.notes.length > 0) {
-          const firstNote = response.notes[0];
-          console.log("🔍 Structure de la première note:", {
-            id: firstNote._id.substring(firstNote._id.length - 8),
-            subjects: firstNote.subjects,
-            hasSubjects: !!firstNote.subjects,
-            subjectsLength: firstNote.subjects?.length || 0,
-            firstSubject: firstNote.subjects?.[0],
-          });
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Erreur lors du chargement";
-
-        // Handle rate limiting specifically
-        if (errorMessage.includes("Rate limit exceeded")) {
-          setError(
-            "Trop de requêtes simultanées. Les données se chargent automatiquement..."
-          );
-          setIsRetrying(true);
-        } else {
-          setError(errorMessage);
-        }
-
-        console.error("Erreur lors du chargement des notes de règlement:", err);
-        setSettlementData([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadSettlementNotes();
-  }, []);
+  // Les données sont maintenant gérées par le store global
 
   // Fonction pour extraire le département depuis le code postal
   const extractDepartmentFromPostalCode = (postalCode: string): string => {
@@ -240,7 +205,7 @@ export const SettlementDashboard: React.FC = () => {
     if (!noteToDelete) return;
 
     try {
-      const noteDetails = settlementData.find(
+      const noteDetails = settlements.find(
         (note) => note._id === noteToDelete
       );
       const noteNumber = noteToDelete
@@ -248,12 +213,11 @@ export const SettlementDashboard: React.FC = () => {
         .toUpperCase();
       const clientName = noteDetails?.clientName || "Inconnue";
 
-      setIsLoading(true);
       await settlementService.deleteSettlementNote(noteToDelete);
 
       // Recharger les données après suppression
-      const response = await settlementService.getAllSettlementNotes(1, 100);
-      setSettlementData(response.notes || []);
+      clearCache();
+      await loadSettlements();
 
       console.log(
         `✅ Note de règlement ${clientName} (${noteNumber}) supprimée avec succès`
@@ -265,13 +229,11 @@ export const SettlementDashboard: React.FC = () => {
       setDeletionPreviewData(null);
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
-      setError(
+      setLocalError(
         error instanceof Error
           ? `Erreur lors de la suppression: ${error.message}`
           : "Erreur lors de la suppression de la note"
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -284,7 +246,7 @@ export const SettlementDashboard: React.FC = () => {
   };
 
   // Filtrer les données selon le terme de recherche
-  const filteredData = settlementData.filter((note) => {
+  const filteredData = settlements.filter((note) => {
     const searchLower = searchTerm.toLowerCase();
     const clientName = note.clientName?.toLowerCase() || "";
     const department = note.department?.toLowerCase() || "";
@@ -307,8 +269,8 @@ export const SettlementDashboard: React.FC = () => {
   }));
 
   // Calculer les statistiques globales
-  const totalNotes = settlementData.length;
-  const totalCA = settlementData.reduce(
+  const totalNotes = settlements.length;
+  const totalCA = settlements.reduce(
     (sum, note) =>
       sum +
       calculateCA(
@@ -317,7 +279,7 @@ export const SettlementDashboard: React.FC = () => {
       ),
     0
   );
-  const totalMarge = settlementData.reduce(
+  const totalMarge = settlements.reduce(
     (sum, note) => {
       return sum +
         calculateMarge(
@@ -329,7 +291,7 @@ export const SettlementDashboard: React.FC = () => {
     },
     0
   );
-  const totalSalaire = settlementData.reduce(
+  const totalSalaire = settlements.reduce(
     (sum, note) =>
       sum +
       getSubjectValue(note, "professorSalary") *
@@ -602,19 +564,10 @@ export const SettlementDashboard: React.FC = () => {
       <Container layout="flex-col">
         <h1>Tableau de bord</h1>
 
-        {error && (
-          <div
-            className={`border px-4 py-3 rounded mb-4 ${
-              isRetrying
-                ? "bg-yellow-100 border-yellow-400 text-yellow-700"
-                : "bg-red-100 border-red-400 text-red-700"
-            }`}
-          >
+        {(error || localError) && (
+          <div className="border px-4 py-3 rounded mb-4 bg-red-100 border-red-400 text-red-700">
             <div className="flex items-center">
-              {isRetrying && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-700 mr-2"></div>
-              )}
-              {error}
+              {error || localError}
             </div>
           </div>
         )}

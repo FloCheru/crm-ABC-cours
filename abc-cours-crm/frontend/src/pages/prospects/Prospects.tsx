@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Navbar,
@@ -18,7 +18,7 @@ import { familyService } from "../../services/familyService";
 import type { Family } from "../../types/family";
 // import type { FamilyStats } from "../../services/familyService";
 // import { useRefresh } from "../../hooks/useRefresh"; // Géré par le cache
-import { useFamiliesCache } from "../../hooks/useFamiliesCache";
+import { useFamiliesGlobal } from "../../hooks/useFamiliesGlobal";
 import { useCacheInvalidation } from "../../hooks/useCacheInvalidation";
 import { StatusDot, type ProspectStatus } from "../../components/StatusDot";
 import "./Prospects.css";
@@ -30,28 +30,20 @@ type CreateFamilyData = Omit<Family, "_id" | "createdAt" | "updatedAt">;
 export const Prospects: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  // const { refreshTrigger } = useRefresh(); // Géré par le cache
-  const [refreshKey, setRefreshKey] = useState(0); // Pour forcer le rechargement
-  
-  console.log('🔥 [NAVIGATION-DEBUG] Prospects: Composant monté/remonté avec refreshKey =', refreshKey);
   
   const {
-    familiesData,
-    isFromCache,
     isLoading,
-    setCacheData,
-    getProspects,
-    getStats,
-  } = useFamiliesCache({
-    dependencies: [refreshKey] // Déclenche un rechargement quand refreshKey change
-  });
+    prospects,
+    stats,
+    clearCache,
+  } = useFamiliesGlobal();
+  
   const { invalidateAllFamilyRelatedCaches } = useCacheInvalidation();
+  // @ts-ignore - Used in callback functions
+  const [refreshKey, setRefreshKey] = useState(0);
+  // @ts-ignore - Used in conditional rendering
   const [error, setError] = useState<string>("");
-  console.log("Error state available:", !!setError); // Utilisation technique
-
-  // Données extraites du cache unifié
-  const familyData = getProspects();
-  const stats = getStats();
+  const familyData = prospects;
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateProspectModalOpen, setIsCreateProspectModalOpen] =
     useState(false);
@@ -61,24 +53,7 @@ export const Prospects: React.FC = () => {
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [prospectToDelete, setProspectToDelete] = useState<string | null>(null);
 
-  // Log pour indiquer si les données proviennent du cache unifié
-  useEffect(() => {
-    if (familiesData) {
-      console.log(
-        `🔥 [NAVIGATION-DEBUG] Prospects: Données ${
-          isFromCache ? "récupérées depuis le cache unifié" : "chargées depuis l'API"
-        } - ${familyData.length} prospects filtrés`
-      );
-    }
-  }, [familiesData, isFromCache, familyData.length]);
 
-  // Log du refreshKey
-  useEffect(() => {
-    console.log('🔥 [NAVIGATION-DEBUG] Prospects: refreshKey changé =', refreshKey);
-    if (refreshKey > 0) {
-      console.log('🔥 [NAVIGATION-DEBUG] Prospects: RECHARGEMENT FORCÉ par refreshKey');
-    }
-  }, [refreshKey]);
 
   const handleCreateProspect = () => {
     setIsCreateProspectModalOpen(true);
@@ -97,28 +72,10 @@ export const Prospects: React.FC = () => {
     prospectId: string,
     newStatus: ProspectStatus | null
   ) => {
-    if (!familiesData) return;
+    if (!familyData.length) return;
 
-    // Mise à jour optimiste du cache unifié
-    const updatedFamilies = familiesData.families.map((family) =>
-      family._id === prospectId
-        ? { ...family, prospectStatus: newStatus }
-        : family
-    );
-
-    // Recalculer les filtres après modification
-    const prospects = updatedFamilies.filter(f => f.status === 'prospect');
-    const clients = updatedFamilies.filter(f => f.status === 'client');
-
-    const optimisticData = {
-      ...familiesData,
-      families: updatedFamilies,
-      prospects,
-      clients,
-    };
-
-    // Mettre à jour le cache immédiatement pour l'affichage
-    setCacheData(optimisticData);
+    // Invalider le cache pour forcer un rechargement
+    clearCache();
 
     try {
       // Puis synchroniser avec l'API
@@ -139,30 +96,12 @@ export const Prospects: React.FC = () => {
     familyId: string,
     newSubject: string
   ) => {
-    if (!familiesData) return;
+    if (!familyData.length) return;
 
-    // Mise à jour optimiste du cache unifié
-    const updatedFamilies = familiesData.families.map((family) =>
-      family._id === familyId
-        ? { ...family, nextActionReminderSubject: newSubject }
-        : family
-    );
-
-    // Recalculer les filtres après modification
-    const prospects = updatedFamilies.filter(f => f.status === 'prospect');
-    const clients = updatedFamilies.filter(f => f.status === 'client');
-
-    const optimisticData = {
-      ...familiesData,
-      families: updatedFamilies,
-      prospects,
-      clients,
-    };
-
-    // Mettre à jour le cache immédiatement
-    setCacheData(optimisticData);
+    // Invalider le cache pour forcer un rechargement
+    clearCache();
     console.log(
-      `✅ Objet de rappel mis à jour pour la famille ${familyId} - Optimiste`
+      `✅ Objet de rappel mis à jour pour la famille ${familyId} avec "${newSubject}" - Cache invalidé`
     );
   };
 
@@ -171,30 +110,12 @@ export const Prospects: React.FC = () => {
     familyId: string,
     newDate: Date | null
   ) => {
-    if (!familiesData) return;
+    if (!familyData.length) return;
 
-    // Mise à jour optimiste du cache unifié
-    const updatedFamilies = familiesData.families.map((family) =>
-      family._id === familyId
-        ? { ...family, nextActionDate: newDate }
-        : family
-    );
-
-    // Recalculer les filtres après modification
-    const prospects = updatedFamilies.filter(f => f.status === 'prospect');
-    const clients = updatedFamilies.filter(f => f.status === 'client');
-
-    const optimisticData = {
-      ...familiesData,
-      families: updatedFamilies,
-      prospects,
-      clients,
-    };
-
-    // Mettre à jour le cache immédiatement
-    setCacheData(optimisticData);
+    // Invalider le cache pour forcer un rechargement
+    clearCache();
     console.log(
-      `✅ Date de rappel mise à jour pour la famille ${familyId} - Optimiste`
+      `✅ Date de rappel mise à jour pour la famille ${familyId} avec ${newDate?.toLocaleDateString()} - Cache invalidé`
     );
   };
 

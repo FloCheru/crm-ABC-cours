@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Navbar,
@@ -40,7 +40,7 @@ interface StudentData {
   lastName: string;
 }
 // import { useRefresh } from "../../hooks/useRefresh"; // Géré par le cache
-import { useFamiliesCache } from "../../hooks/useFamiliesCache";
+import { useFamiliesGlobal } from "../../hooks/useFamiliesGlobal";
 // useNDRCache supprimé - NDR data maintenant dans cache unifié
 import { useCacheInvalidation } from "../../hooks/useCacheInvalidation";
 import "./Clients.css";
@@ -87,17 +87,6 @@ const getStudentName = (
   familyStudents?: Array<{ _id: string; firstName: string; lastName: string }>
 ): string => {
   // 🔍 DÉBOGAGE - Analyser les données d'entrée
-  console.log("🔍 getStudentName - Analyse:", {
-    noteId: note._id?.substring(note._id.length - 8),
-    studentIds: note.studentIds,
-    studentIdsLength: note.studentIds?.length || 0,
-    familyStudents:
-      familyStudents?.map((s) => ({
-        id: s._id?.substring(s._id.length - 8),
-        name: `${s.firstName} ${s.lastName}`,
-      })) || null,
-    familyStudentsLength: familyStudents?.length || 0,
-  });
 
   // Les NDR stockent les IDs des étudiants, pas les noms
   if (!note.studentIds || !note.studentIds.length) return "Non spécifié";
@@ -122,37 +111,24 @@ const getStudentName = (
 
   const result =
     studentNames.length > 0 ? studentNames.join(", ") : "Non spécifié";
-  console.log("🔍 getStudentName - Résultat final:", result);
   return result;
 };
 
 export const Clients: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  // const { refreshTrigger } = useRefresh(); // Géré par le cache
   
-  console.log('🔥 [NAVIGATION-DEBUG] Clients: Composant monté/remonté');
-  console.log('🔥 [DEBUG] Clients: Pathname =', location.pathname);
-  console.log('🔥 [DEBUG] Clients: Location key =', location.key);
   const {
-    familiesData,
-    isFromCache: isFamiliesFromCache,
-    isLoading: isFamiliesLoading,
-    getClientsWithNDR, // Nouveau getter optimisé
-    getStats,
-    getFirstNDRDate, // NDR dates incluses dans le cache unifié
-  } = useFamiliesCache();
+    isLoading,
+    clientsWithNDR,
+    stats,
+    getFirstNDRDate,
+  } = useFamiliesGlobal();
 
-  // useNDRCache supprimé - données NDR maintenant dans cache unifié familiesCache
   const { invalidateAllFamilyRelatedCaches } = useCacheInvalidation();
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
-  // État modal client supprimé - plus nécessaire
-
-  // Données extraites du cache unifié
-  const familyData = getClientsWithNDR(); // Clients avec leurs dates NDR optimisées
-  const stats = getStats();
-  const isLoading = isFamiliesLoading; // Plus besoin de isNDRLoading avec cache unifié
+  const familyData = clientsWithNDR;
   const [isNDRModalOpen, setIsNDRModalOpen] = useState(false);
   const [selectedFamilyId, setSelectedFamilyId] = useState<string>("");
   const [selectedFamilyNDRs, setSelectedFamilyNDRs] = useState<
@@ -164,17 +140,6 @@ export const Clients: React.FC = () => {
   // Plus besoin de charger les NDR séparément - inclus dans cache unifié familiesCache
   // Les comptes NDR sont maintenant obtenus directement via family.settlementNotes.length
 
-  // Log pour indiquer si les données proviennent du cache
-  useEffect(() => {
-    if (familiesData) {
-      console.log(
-        `🔥 [NAVIGATION-DEBUG] Clients: Familles ${
-          isFamiliesFromCache ? "depuis cache" : "depuis API"
-        }, ` +
-          `NDR incluses dans cache unifié - ${familyData.length} clients avec NDR`
-      );
-    }
-  }, [familiesData, isFamiliesFromCache, familyData.length]);
 
   // Plus besoin de handleCreateClient - les clients sont créés via NDR depuis prospects
 
