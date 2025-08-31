@@ -103,7 +103,7 @@ export interface Step3Data {
   charges: number;
   
   // Paiement
-  paymentMethod: 'card' | 'check' | 'transfer' | 'cash' | 'PRLV' | '';
+  paymentMethod: 'card' | 'CESU' | 'check' | 'transfer' | 'cash' | 'PRLV' | '';
   paymentType?: 'immediate_advance' | 'tax_credit_n1' | '';
   
   // Échéancier

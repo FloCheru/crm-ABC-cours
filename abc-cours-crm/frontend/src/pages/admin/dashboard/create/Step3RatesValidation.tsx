@@ -645,6 +645,7 @@ export const Step3RatesValidation: React.FC = () => {
               <div className="payment-options">
                 {[
                   { value: "card", label: "Carte bancaire" },
+                  { value: "CESU", label: "CESU" },
                   { value: "check", label: "Chèque" },
                   { value: "transfer", label: "Virement" },
                   { value: "cash", label: "Espèces" },

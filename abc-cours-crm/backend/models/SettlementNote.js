@@ -24,7 +24,7 @@ const settlementNoteSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["card", "check", "transfer", "cash"],
+      enum: ["card", "CESU", "check", "transfer", "cash"],
       required: [true, "Mode de règlement requis"],
     },
     paymentType: {

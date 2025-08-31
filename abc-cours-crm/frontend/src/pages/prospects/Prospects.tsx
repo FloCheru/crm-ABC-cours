@@ -33,6 +33,8 @@ export const Prospects: React.FC = () => {
   // const { refreshTrigger } = useRefresh(); // Géré par le cache
   const [refreshKey, setRefreshKey] = useState(0); // Pour forcer le rechargement
   
+  console.log('🔥 [NAVIGATION-DEBUG] Prospects: Composant monté/remonté avec refreshKey =', refreshKey);
+  
   const {
     familiesData,
     isFromCache,
@@ -63,12 +65,20 @@ export const Prospects: React.FC = () => {
   useEffect(() => {
     if (familiesData) {
       console.log(
-        `📊 Prospects: Données ${
+        `🔥 [NAVIGATION-DEBUG] Prospects: Données ${
           isFromCache ? "récupérées depuis le cache unifié" : "chargées depuis l'API"
         } - ${familyData.length} prospects filtrés`
       );
     }
   }, [familiesData, isFromCache, familyData.length]);
+
+  // Log du refreshKey
+  useEffect(() => {
+    console.log('🔥 [NAVIGATION-DEBUG] Prospects: refreshKey changé =', refreshKey);
+    if (refreshKey > 0) {
+      console.log('🔥 [NAVIGATION-DEBUG] Prospects: RECHARGEMENT FORCÉ par refreshKey');
+    }
+  }, [refreshKey]);
 
   const handleCreateProspect = () => {
     setIsCreateProspectModalOpen(true);

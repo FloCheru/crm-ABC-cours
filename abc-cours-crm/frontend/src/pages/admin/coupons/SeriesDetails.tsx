@@ -9,12 +9,12 @@ import {
   StatusBadge,
   Input,
   ButtonGroup,
+  DataCard,
 } from "../../../components";
 import { couponSeriesService } from "../../../services/couponSeriesService";
 import { couponService } from "../../../services/couponService";
 import { getFamilyDisplayName, generateCouponSeriesName, getBeneficiariesDisplay } from "../../../utils/familyNameUtils";
 import type { CouponSeries, Coupon } from "../../../types/coupon";
-import "./SeriesDetails.css";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Coupon & { id: string };
@@ -311,7 +311,7 @@ export const SeriesDetails: React.FC = () => {
         ]}
       />
       <Container layout="flex-col">
-        <div className={`series-details ${isEditing ? 'series-details--editing' : ''}`}>
+        <div>
           <div className="series-details__header">
             <h1>Détails de la série : {seriesName}</h1>
             <div className="series-details__header-actions">
@@ -359,84 +359,62 @@ export const SeriesDetails: React.FC = () => {
             </div>
           )}
 
-          <div className="series-details__content">
+          <div>
             {/* Informations de la série */}
-            <Container layout="flex-col" className="series-details__section series-details__section--series-info">
-              <h2>Informations de la série</h2>
-              <div className="series-details__grid">
-                <div className="series-details__field">
-                  <label>Tarif horaire</label>
-                  {isEditing ? (
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={editedData.hourlyRate || ""}
-                      onChange={(e) => handleInputChange("hourlyRate", parseFloat(e.target.value) || 0)}
-                      error={validationErrors.hourlyRate}
-                      placeholder="Tarif par heure"
-                    />
-                  ) : (
-                    <p>{series?.hourlyRate?.toFixed(2)} €</p>
-                  )}
-                </div>
-                <div className="series-details__field">
-                  <label>Nombre de coupons</label>
-                  {isEditing ? (
-                    <Input
-                      type="number"
-                      min="1"
-                      value={editedData.totalCoupons || ""}
-                      onChange={(e) => handleInputChange("totalCoupons", parseInt(e.target.value) || 0)}
-                      error={validationErrors.totalCoupons}
-                      placeholder="Nombre de coupons"
-                    />
-                  ) : (
-                    <p>{series?.totalCoupons}</p>
-                  )}
-                </div>
-                <div className="series-details__field">
-                  <label>Statut</label>
-                  {isEditing ? (
-                    <select
-                      className="series-details__select"
-                      value={editedData.status || ""}
-                      onChange={(e) => handleInputChange("status", e.target.value)}
-                    >
-                      <option value="active">Actif</option>
-                      <option value="completed">Terminé</option>
-                      <option value="expired">Expiré</option>
-                    </select>
-                  ) : (
-                    <p className={`series-details__status series-details__status--${series?.status || 'unknown'}`}>
-                      {series?.status === "active"
-                        ? "Actif"
-                        : series?.status === "completed"
-                        ? "Terminé"
-                        : series?.status === "expired"
-                        ? "Expiré"
-                        : series?.status}
-                    </p>
-                  )}
-                </div>
-                <div className="series-details__field">
-                  <label>Montant total</label>
-                  <p>{totalAmount.toFixed(2)} €</p>
-                </div>
-              </div>
-            </Container>
+            <DataCard
+              title="Informations de la série"
+              fields={[
+                {
+                  key: "hourlyRate",
+                  label: "Tarif horaire",
+                  value: isEditing ? editedData.hourlyRate : series?.hourlyRate?.toFixed(2) + " €",
+                  type: "number",
+                  placeholder: "Tarif par heure"
+                },
+                {
+                  key: "totalCoupons",
+                  label: "Nombre de coupons", 
+                  value: isEditing ? editedData.totalCoupons : series?.totalCoupons,
+                  type: "number",
+                  placeholder: "Nombre de coupons"
+                },
+                {
+                  key: "status",
+                  label: "Statut",
+                  value: isEditing ? editedData.status : series?.status === "active" ? "Actif" : series?.status === "completed" ? "Terminé" : series?.status === "expired" ? "Expiré" : series?.status,
+                  type: "select",
+                  options: [
+                    { value: "active", label: "Actif" },
+                    { value: "completed", label: "Terminé" },
+                    { value: "expired", label: "Expiré" }
+                  ]
+                },
+                {
+                  key: "totalAmount",
+                  label: "Montant total",
+                  value: totalAmount.toFixed(2) + " €",
+                  type: "text"
+                }
+              ]}
+              isEditing={isEditing}
+              onChange={handleInputChange}
+              errors={validationErrors}
+            />
 
             {/* Informations bénéficiaires */}
-            <Container layout="flex-col" className="series-details__section series-details__section--beneficiaries">
-              <h2>Informations bénéficiaires</h2>
-              <div className="series-details__grid">
-                <div className="series-details__field">
-                  <label>Bénéficiaires</label>
-                  <p>{getBeneficiariesDisplay(series)}</p>
-                </div>
-                <div className="series-details__field">
-                  <label>Type</label>
-                  <p>{(() => {
+            <DataCard
+              title="Informations bénéficiaires"
+              fields={[
+                {
+                  key: "beneficiaries",
+                  label: "Bénéficiaires",
+                  value: getBeneficiariesDisplay(series),
+                  type: "text"
+                },
+                {
+                  key: "type",
+                  label: "Type",
+                  value: (() => {
                     const { beneficiaryType, studentId, studentIds, familyId } = series;
                     
                     // Cas explicite
@@ -456,48 +434,62 @@ export const SeriesDetails: React.FC = () => {
                     }
                     
                     return "Élève"; // Par défaut si élèves présents
-                  })()}</p>
-                </div>
-                <div className="series-details__field">
-                  <label>Matière</label>
-                  <p>{series?.subject?.name || "Non renseignée"}</p>
-                </div>
-              </div>
-            </Container>
+                  })(),
+                  type: "text"
+                },
+                {
+                  key: "subject",
+                  label: "Matière",
+                  value: series?.subject?.name || "Non renseignée",
+                  type: "text"
+                }
+              ]}
+              isEditing={false}
+            />
 
             {/* Informations famille */}
-            <Container layout="flex-col" className="series-details__section series-details__section--family">
-              <h2>Informations famille</h2>
-              <div className="series-details__grid">
-                <div className="series-details__field">
-                  <label>Nom de famille</label>
-                  <p>{getFamilyDisplayName(series?.familyId)}</p>
-                </div>
-              </div>
-            </Container>
+            <DataCard
+              title="Informations famille"
+              fields={[
+                {
+                  key: "familyName",
+                  label: "Nom de famille",
+                  value: getFamilyDisplayName(series?.familyId),
+                  type: "text"
+                }
+              ]}
+              isEditing={false}
+            />
 
             {/* Statistiques financières */}
-            <Container layout="flex-col" className="series-details__section series-details__section--financial">
-              <h2>Statistiques financières</h2>
-              <div className="series-details__grid">
-                <div className="series-details__field">
-                  <label>Coupons utilisés</label>
-                  <p>{usedCoupons}</p>
-                </div>
-                <div className="series-details__field">
-                  <label>Coupons disponibles</label>
-                  <p>{availableCoupons}</p>
-                </div>
-                <div className="series-details__field">
-                  <label>Total coupons réels</label>
-                  <p>{totalCouponsReal}</p>
-                </div>
-              </div>
-            </Container>
+            <DataCard
+              title="Statistiques financières"
+              fields={[
+                {
+                  key: "usedCoupons",
+                  label: "Coupons utilisés",
+                  value: usedCoupons,
+                  type: "text"
+                },
+                {
+                  key: "availableCoupons",
+                  label: "Coupons disponibles",
+                  value: availableCoupons,
+                  type: "text"
+                },
+                {
+                  key: "totalRealCoupons",
+                  label: "Total coupons réels",
+                  value: totalCouponsReal,
+                  type: "text"
+                }
+              ]}
+              isEditing={false}
+            />
 
 
             {/* Liste des coupons */}
-            <Container layout="flex-col" className="series-details__section series-details__section--coupons">
+            <Container layout="flex-col">
               <h3>Coupons de la série ({totalCouponsReal})</h3>
               
               {/* Boutons d'action pour les coupons */}

@@ -356,45 +356,6 @@ p {
   padding-bottom: 0.5rem;
 }
 
-/* Grilles de champs */
-.settlement-details__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-}
-
-.settlement-details__grid--2-cols {
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-}
-
-.settlement-details__grid--3-cols {
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-}
-
-/* Champs individuels */
-.settlement-details__field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.settlement-details__field label {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.settlement-details__field p {
-  margin: 0;
-  padding: 0.75rem;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  min-height: 1.25rem;
-}
 
 /* Badges de statut */
 .settlement-details__status-badge {
@@ -619,12 +580,6 @@ p {
     gap: 0.5rem;
   }
 
-  .settlement-details__grid,
-  .settlement-details__grid--2-cols,
-  .settlement-details__grid--3-cols {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
 
   .settlement-details__section {
     padding: 1rem;
