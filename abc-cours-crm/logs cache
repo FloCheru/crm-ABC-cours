@@ -1,0 +1,486 @@
+react-dom_client.js?v=e61615b4:17995 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+Prospects.tsx:36 🔥 [NAVIGATION-DEBUG] Prospects: Composant monté/remonté avec refreshKey = 0
+Prospects.tsx:37 🔥 [PROSPECTS-DEBUG] === DÉBUT INITIALISATION PROSPECTS ===
+useFamiliesGlobal.ts:21 🔥 [FAMILIES-GLOBAL-DEBUG] Hook appelé avec options: {autoLoad: true}
+useFamiliesGlobal.ts:29 🔥 [FAMILIES-GLOBAL-DEBUG] État du store: {hasData: false, isLoading: false, hasError: false, isExpired: true, familiesCount: 0, …}
+useFamiliesStore.ts:182 🔥 [FAMILIES-STORE-SELECTOR] GetProspects: 0 prospects
+useFamiliesStore.ts:189 🔥 [FAMILIES-STORE-SELECTOR] GetClients: 0 clients
+useFamiliesStore.ts:196 🔥 [FAMILIES-STORE-SELECTOR] GetClientsWithNDR: 0 clients avec NDR
+useFamiliesStore.ts:203 🔥 [FAMILIES-STORE-SELECTOR] GetStats: null
+Prospects.tsx:49 🔥 [PROSPECTS-DEBUG] Hook useFamiliesGlobal résultat: {hasFamiliesData: false, isFromCache: false, isLoading: false, prospectsCount: 0, statsAvailable: false}
+Prospects.tsx:58 Error state available: true
+Prospects.tsx:63 🔥 [PROSPECTS-DEBUG] Données finales pour affichage: {familyDataCount: 0, isLoading: false, source: 'API'}
+Prospects.tsx:36 🔥 [NAVIGATION-DEBUG] Prospects: Composant monté/remonté avec refreshKey = 0
+Prospects.tsx:37 🔥 [PROSPECTS-DEBUG] === DÉBUT INITIALISATION PROSPECTS ===
+Prospects.tsx:38 Timer '⏱️ [PROSPECTS-TIMING] Temps total initialisation' already exists
+Prospects @ Prospects.tsx:38
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=e61615b4:11623
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<Prospects>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+App @ main.tsx:83
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=e61615b4:11623
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+(anonymous) @ main.tsx:174Understand this warning
+useFamiliesGlobal.ts:21 🔥 [FAMILIES-GLOBAL-DEBUG] Hook appelé avec options: {autoLoad: true}
+useFamiliesGlobal.ts:29 🔥 [FAMILIES-GLOBAL-DEBUG] État du store: {hasData: false, isLoading: false, hasError: false, isExpired: true, familiesCount: 0, …}
+useFamiliesStore.ts:182 🔥 [FAMILIES-STORE-SELECTOR] GetProspects: 0 prospects
+useFamiliesStore.ts:189 🔥 [FAMILIES-STORE-SELECTOR] GetClients: 0 clients
+useFamiliesStore.ts:196 🔥 [FAMILIES-STORE-SELECTOR] GetClientsWithNDR: 0 clients avec NDR
+useFamiliesStore.ts:203 🔥 [FAMILIES-STORE-SELECTOR] GetStats: null
+Prospects.tsx:49 🔥 [PROSPECTS-DEBUG] Hook useFamiliesGlobal résultat: {hasFamiliesData: false, isFromCache: false, isLoading: false, prospectsCount: 0, statsAvailable: false}
+Prospects.tsx:58 Error state available: true
+Prospects.tsx:63 🔥 [PROSPECTS-DEBUG] Données finales pour affichage: {familyDataCount: 0, isLoading: false, source: 'API'}
+useFamiliesGlobal.ts:52 🔥 [FAMILIES-GLOBAL-DEBUG] Effect auto-load déclenché: {autoLoad: true, hasData: false, isExpired: true, shouldLoad: true}
+useFamiliesGlobal.ts:60 🚀 [FAMILIES-GLOBAL] ⚡ DÉCLENCHEMENT AUTO-LOAD - Chargement des données
+useFamiliesStore.ts:56 🔥 [FAMILIES-STORE-DEBUG] LoadFamilies appelé - {hasData: false, isLoading: false, isExpired: true, lastFetchAge: '1756660842337ms', TTL: '3600000ms'}
+useFamiliesStore.ts:82 🚀 [FAMILIES-STORE] 🔄 DÉBUT FETCH API - Chargement des données familles
+useFamiliesStore.ts:83 🔥 [FAMILIES-STORE-DEBUG] Raison du fetch: {noData: true, expired: null, forceReload: false}
+logger.ts:36 [2025-08-31T17:20:42.338Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-08-31T17:20:42.339Z] [DEBUG] URL: http://localhost:3000/api/families
+logger.ts:36 [2025-08-31T17:20:42.339Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-08-31T17:20:42.340Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+logger.ts:36 [2025-08-31T17:20:42.342Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-08-31T17:20:42.342Z] [DEBUG] URL: http://localhost:3000/api/families/stats
+logger.ts:36 [2025-08-31T17:20:42.342Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-08-31T17:20:42.343Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+Prospects.tsx:98 🔥 [NAVIGATION-DEBUG] Prospects: refreshKey changé = 0
+useFamiliesGlobal.ts:52 🔥 [FAMILIES-GLOBAL-DEBUG] Effect auto-load déclenché: {autoLoad: true, hasData: false, isExpired: true, shouldLoad: true}
+useFamiliesGlobal.ts:60 🚀 [FAMILIES-GLOBAL] ⚡ DÉCLENCHEMENT AUTO-LOAD - Chargement des données
+useFamiliesStore.ts:56 🔥 [FAMILIES-STORE-DEBUG] LoadFamilies appelé - {hasData: false, isLoading: true, isExpired: true, lastFetchAge: '1756660842350ms', TTL: '3600000ms'}
+useFamiliesStore.ts:78 🚀 [FAMILIES-STORE] ⏳ CHARGEMENT DÉJÀ EN COURS - Attente
+Prospects.tsx:98 🔥 [NAVIGATION-DEBUG] Prospects: refreshKey changé = 0
+Prospects.tsx:36 🔥 [NAVIGATION-DEBUG] Prospects: Composant monté/remonté avec refreshKey = 0
+Prospects.tsx:37 🔥 [PROSPECTS-DEBUG] === DÉBUT INITIALISATION PROSPECTS ===
+Prospects.tsx:38 Timer '⏱️ [PROSPECTS-TIMING] Temps total initialisation' already exists
+Prospects @ Prospects.tsx:38
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooks @ react-dom_client.js?v=e61615b4:4206
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performSyncWorkOnRoot @ react-dom_client.js?v=e61615b4:11635
+flushSyncWorkAcrossRoots_impl @ react-dom_client.js?v=e61615b4:11536
+flushPassiveEffects @ react-dom_client.js?v=e61615b4:11311
+(anonymous) @ react-dom_client.js?v=e61615b4:11060
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<Prospects>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+App @ main.tsx:83
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=e61615b4:11623
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+(anonymous) @ main.tsx:174Understand this warning
+useFamiliesGlobal.ts:21 🔥 [FAMILIES-GLOBAL-DEBUG] Hook appelé avec options: {autoLoad: true}
+useFamiliesGlobal.ts:29 🔥 [FAMILIES-GLOBAL-DEBUG] État du store: {hasData: false, isLoading: true, hasError: false, isExpired: true, familiesCount: 0, …}
+useFamiliesStore.ts:182 🔥 [FAMILIES-STORE-SELECTOR] GetProspects: 0 prospects
+useFamiliesStore.ts:189 🔥 [FAMILIES-STORE-SELECTOR] GetClients: 0 clients
+useFamiliesStore.ts:196 🔥 [FAMILIES-STORE-SELECTOR] GetClientsWithNDR: 0 clients avec NDR
+useFamiliesStore.ts:203 🔥 [FAMILIES-STORE-SELECTOR] GetStats: null
+Prospects.tsx:49 🔥 [PROSPECTS-DEBUG] Hook useFamiliesGlobal résultat: {hasFamiliesData: false, isFromCache: false, isLoading: true, prospectsCount: 0, statsAvailable: false}
+Prospects.tsx:58 Error state available: true
+Prospects.tsx:63 🔥 [PROSPECTS-DEBUG] Données finales pour affichage: {familyDataCount: 0, isLoading: true, source: 'API'}
+Prospects.tsx:36 🔥 [NAVIGATION-DEBUG] Prospects: Composant monté/remonté avec refreshKey = 0
+Prospects.tsx:37 🔥 [PROSPECTS-DEBUG] === DÉBUT INITIALISATION PROSPECTS ===
+Prospects.tsx:38 Timer '⏱️ [PROSPECTS-TIMING] Temps total initialisation' already exists
+Prospects @ Prospects.tsx:38
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performSyncWorkOnRoot @ react-dom_client.js?v=e61615b4:11635
+flushSyncWorkAcrossRoots_impl @ react-dom_client.js?v=e61615b4:11536
+flushPassiveEffects @ react-dom_client.js?v=e61615b4:11311
+(anonymous) @ react-dom_client.js?v=e61615b4:11060
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<Prospects>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+App @ main.tsx:83
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=e61615b4:11623
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+(anonymous) @ main.tsx:174Understand this warning
+useFamiliesGlobal.ts:21 🔥 [FAMILIES-GLOBAL-DEBUG] Hook appelé avec options: {autoLoad: true}
+useFamiliesGlobal.ts:29 🔥 [FAMILIES-GLOBAL-DEBUG] État du store: {hasData: false, isLoading: true, hasError: false, isExpired: true, familiesCount: 0, …}
+useFamiliesStore.ts:182 🔥 [FAMILIES-STORE-SELECTOR] GetProspects: 0 prospects
+useFamiliesStore.ts:189 🔥 [FAMILIES-STORE-SELECTOR] GetClients: 0 clients
+useFamiliesStore.ts:196 🔥 [FAMILIES-STORE-SELECTOR] GetClientsWithNDR: 0 clients avec NDR
+useFamiliesStore.ts:203 🔥 [FAMILIES-STORE-SELECTOR] GetStats: null
+Prospects.tsx:49 🔥 [PROSPECTS-DEBUG] Hook useFamiliesGlobal résultat: {hasFamiliesData: false, isFromCache: false, isLoading: true, prospectsCount: 0, statsAvailable: false}
+Prospects.tsx:58 Error state available: true
+Prospects.tsx:63 🔥 [PROSPECTS-DEBUG] Données finales pour affichage: {familyDataCount: 0, isLoading: true, source: 'API'}
+logger.ts:36 [2025-08-31T17:20:43.260Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-08-31T17:20:43.261Z] [DEBUG] Status: 200
+logger.ts:36 [2025-08-31T17:20:43.261Z] [DEBUG] Status Text: OK
+logger.ts:36 [2025-08-31T17:20:43.261Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
+logger.ts:36 [2025-08-31T17:20:43.262Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-08-31T17:20:43.263Z] [DEBUG] Réponse parsée: {families: Array(2), pagination: {…}}
+
+
+
+Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+Clients.tsx:134 🔥 [NAVIGATION-DEBUG] Clients: Composant monté/remonté
+Clients.tsx:135 🔥 [DEBUG] Clients: Pathname = /clients
+Clients.tsx:136 🔥 [DEBUG] Clients: Location key = default
+Clients.tsx:137 🔥 [CLIENTS-DEBUG] === DÉBUT INITIALISATION CLIENTS ===
+useFamiliesGlobal.ts:21 🔥 [FAMILIES-GLOBAL-DEBUG] Hook appelé avec options: {autoLoad: true}
+useFamiliesGlobal.ts:29 🔥 [FAMILIES-GLOBAL-DEBUG] État du store: {hasData: false, isLoading: false, hasError: false, isExpired: true, familiesCount: 0, …}
+useFamiliesStore.ts:182 🔥 [FAMILIES-STORE-SELECTOR] GetProspects: 0 prospects
+useFamiliesStore.ts:189 🔥 [FAMILIES-STORE-SELECTOR] GetClients: 0 clients
+useFamiliesStore.ts:196 🔥 [FAMILIES-STORE-SELECTOR] GetClientsWithNDR: 0 clients avec NDR
+useFamiliesStore.ts:203 🔥 [FAMILIES-STORE-SELECTOR] GetStats: null
+Clients.tsx:149 🔥 [CLIENTS-DEBUG] Hook useFamiliesGlobal résultat: {hasFamiliesData: false, isFromCache: false, isLoading: false, clientsWithNDRCount: 0, statsAvailable: false}
+Clients.tsx:167 🔥 [CLIENTS-DEBUG] Données finales pour affichage: {familyDataCount: 0, isLoading: false, source: 'API'}
+Clients.tsx:134 🔥 [NAVIGATION-DEBUG] Clients: Composant monté/remonté
+Clients.tsx:135 🔥 [DEBUG] Clients: Pathname = /clients
+Clients.tsx:136 🔥 [DEBUG] Clients: Location key = default
+Clients.tsx:137 🔥 [CLIENTS-DEBUG] === DÉBUT INITIALISATION CLIENTS ===
+Clients.tsx:138 Timer '⏱️ [CLIENTS-TIMING] Temps total initialisation' already exists
+Clients @ Clients.tsx:138
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=e61615b4:11623
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<Clients>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+App @ main.tsx:107
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=e61615b4:11623
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+(anonymous) @ main.tsx:174Understand this warning
+useFamiliesGlobal.ts:21 🔥 [FAMILIES-GLOBAL-DEBUG] Hook appelé avec options: {autoLoad: true}
+useFamiliesGlobal.ts:29 🔥 [FAMILIES-GLOBAL-DEBUG] État du store: {hasData: false, isLoading: false, hasError: false, isExpired: true, familiesCount: 0, …}
+useFamiliesStore.ts:182 🔥 [FAMILIES-STORE-SELECTOR] GetProspects: 0 prospects
+useFamiliesStore.ts:189 🔥 [FAMILIES-STORE-SELECTOR] GetClients: 0 clients
+useFamiliesStore.ts:196 🔥 [FAMILIES-STORE-SELECTOR] GetClientsWithNDR: 0 clients avec NDR
+useFamiliesStore.ts:203 🔥 [FAMILIES-STORE-SELECTOR] GetStats: null
+Clients.tsx:149 🔥 [CLIENTS-DEBUG] Hook useFamiliesGlobal résultat: {hasFamiliesData: false, isFromCache: false, isLoading: false, clientsWithNDRCount: 0, statsAvailable: false}
+Clients.tsx:167 🔥 [CLIENTS-DEBUG] Données finales pour affichage: {familyDataCount: 0, isLoading: false, source: 'API'}
+useFamiliesGlobal.ts:52 🔥 [FAMILIES-GLOBAL-DEBUG] Effect auto-load déclenché: {autoLoad: true, hasData: false, isExpired: true, shouldLoad: true}
+useFamiliesGlobal.ts:60 🚀 [FAMILIES-GLOBAL] ⚡ DÉCLENCHEMENT AUTO-LOAD - Chargement des données
+useFamiliesStore.ts:56 🔥 [FAMILIES-STORE-DEBUG] LoadFamilies appelé - {hasData: false, isLoading: false, isExpired: true, lastFetchAge: '1756660869245ms', TTL: '3600000ms'}
+useFamiliesStore.ts:82 🚀 [FAMILIES-STORE] 🔄 DÉBUT FETCH API - Chargement des données familles
+useFamiliesStore.ts:83 🔥 [FAMILIES-STORE-DEBUG] Raison du fetch: {noData: true, expired: null, forceReload: false}
+logger.ts:36 [2025-08-31T17:21:09.246Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-08-31T17:21:09.246Z] [DEBUG] URL: http://localhost:3000/api/families
+logger.ts:36 [2025-08-31T17:21:09.246Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-08-31T17:21:09.246Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+logger.ts:36 [2025-08-31T17:21:09.248Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-08-31T17:21:09.248Z] [DEBUG] URL: http://localhost:3000/api/families/stats
+logger.ts:36 [2025-08-31T17:21:09.249Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-08-31T17:21:09.249Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+Clients.tsx:203 ⏱️ [CLIENTS-TIMING] Temps total initialisation: 36.31201171875 ms
+Clients.tsx:204 🚀 [CLIENTS] ✅ PAGE CLIENTS PRÊTE POUR AFFICHAGE
+useFamiliesGlobal.ts:52 🔥 [FAMILIES-GLOBAL-DEBUG] Effect auto-load déclenché: {autoLoad: true, hasData: false, isExpired: true, shouldLoad: true}
+useFamiliesGlobal.ts:60 🚀 [FAMILIES-GLOBAL] ⚡ DÉCLENCHEMENT AUTO-LOAD - Chargement des données
+useFamiliesStore.ts:56 🔥 [FAMILIES-STORE-DEBUG] LoadFamilies appelé - {hasData: false, isLoading: true, isExpired: true, lastFetchAge: '1756660869252ms', TTL: '3600000ms'}
+useFamiliesStore.ts:78 🚀 [FAMILIES-STORE] ⏳ CHARGEMENT DÉJÀ EN COURS - Attente
+Clients.tsx:203 Timer '⏱️ [CLIENTS-TIMING] Temps total initialisation' does not exist
+(anonymous) @ Clients.tsx:203
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17486
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+commitHookEffectListMount @ react-dom_client.js?v=e61615b4:8460
+commitHookPassiveMountEffects @ react-dom_client.js?v=e61615b4:8518
+reconnectPassiveEffects @ react-dom_client.js?v=e61615b4:10016
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=e61615b4:9995
+reconnectPassiveEffects @ react-dom_client.js?v=e61615b4:10009
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=e61615b4:9995
+reconnectPassiveEffects @ react-dom_client.js?v=e61615b4:10054
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=e61615b4:9995
+reconnectPassiveEffects @ react-dom_client.js?v=e61615b4:10009
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=e61615b4:9995
+reconnectPassiveEffects @ react-dom_client.js?v=e61615b4:10009
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=e61615b4:9995
+reconnectPassiveEffects @ react-dom_client.js?v=e61615b4:10054
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=e61615b4:9995
+reconnectPassiveEffects @ react-dom_client.js?v=e61615b4:10054
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=e61615b4:9995
+reconnectPassiveEffects @ react-dom_client.js?v=e61615b4:10009
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=e61615b4:9995
+reconnectPassiveEffects @ react-dom_client.js?v=e61615b4:10009
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=e61615b4:9995
+reconnectPassiveEffects @ react-dom_client.js?v=e61615b4:10009
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=e61615b4:9995
+reconnectPassiveEffects @ react-dom_client.js?v=e61615b4:10054
+doubleInvokeEffectsOnFiber @ react-dom_client.js?v=e61615b4:11461
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=e61615b4:11432
+commitDoubleInvokeEffectsInDEV @ react-dom_client.js?v=e61615b4:11469
+flushPassiveEffects @ react-dom_client.js?v=e61615b4:11309
+(anonymous) @ react-dom_client.js?v=e61615b4:11060
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<Clients>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+App @ main.tsx:107
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=e61615b4:11623
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+(anonymous) @ main.tsx:174Understand this warning
+Clients.tsx:204 🚀 [CLIENTS] ✅ PAGE CLIENTS PRÊTE POUR AFFICHAGE
+Clients.tsx:134 🔥 [NAVIGATION-DEBUG] Clients: Composant monté/remonté
+Clients.tsx:135 🔥 [DEBUG] Clients: Pathname = /clients
+Clients.tsx:136 🔥 [DEBUG] Clients: Location key = default
+Clients.tsx:137 🔥 [CLIENTS-DEBUG] === DÉBUT INITIALISATION CLIENTS ===
+useFamiliesGlobal.ts:21 🔥 [FAMILIES-GLOBAL-DEBUG] Hook appelé avec options: {autoLoad: true}
+useFamiliesGlobal.ts:29 🔥 [FAMILIES-GLOBAL-DEBUG] État du store: {hasData: false, isLoading: true, hasError: false, isExpired: true, familiesCount: 0, …}
+useFamiliesStore.ts:182 🔥 [FAMILIES-STORE-SELECTOR] GetProspects: 0 prospects
+useFamiliesStore.ts:189 🔥 [FAMILIES-STORE-SELECTOR] GetClients: 0 clients
+useFamiliesStore.ts:196 🔥 [FAMILIES-STORE-SELECTOR] GetClientsWithNDR: 0 clients avec NDR
+useFamiliesStore.ts:203 🔥 [FAMILIES-STORE-SELECTOR] GetStats: null
+Clients.tsx:149 🔥 [CLIENTS-DEBUG] Hook useFamiliesGlobal résultat: {hasFamiliesData: false, isFromCache: false, isLoading: true, clientsWithNDRCount: 0, statsAvailable: false}
+Clients.tsx:167 🔥 [CLIENTS-DEBUG] Données finales pour affichage: {familyDataCount: 0, isLoading: true, source: 'API'}
+Clients.tsx:134 🔥 [NAVIGATION-DEBUG] Clients: Composant monté/remonté
+Clients.tsx:135 🔥 [DEBUG] Clients: Pathname = /clients
+Clients.tsx:136 🔥 [DEBUG] Clients: Location key = default
+Clients.tsx:137 🔥 [CLIENTS-DEBUG] === DÉBUT INITIALISATION CLIENTS ===
+Clients.tsx:138 Timer '⏱️ [CLIENTS-TIMING] Temps total initialisation' already exists
+Clients @ Clients.tsx:138
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performSyncWorkOnRoot @ react-dom_client.js?v=e61615b4:11635
+flushSyncWorkAcrossRoots_impl @ react-dom_client.js?v=e61615b4:11536
+flushPassiveEffects @ react-dom_client.js?v=e61615b4:11311
+(anonymous) @ react-dom_client.js?v=e61615b4:11060
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<Clients>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+App @ main.tsx:107
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=e61615b4:11623
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+(anonymous) @ main.tsx:174Understand this warning
+useFamiliesGlobal.ts:21 🔥 [FAMILIES-GLOBAL-DEBUG] Hook appelé avec options: {autoLoad: true}
+useFamiliesGlobal.ts:29 🔥 [FAMILIES-GLOBAL-DEBUG] État du store: {hasData: false, isLoading: true, hasError: false, isExpired: true, familiesCount: 0, …}
+useFamiliesStore.ts:182 🔥 [FAMILIES-STORE-SELECTOR] GetProspects: 0 prospects
+useFamiliesStore.ts:189 🔥 [FAMILIES-STORE-SELECTOR] GetClients: 0 clients
+useFamiliesStore.ts:196 🔥 [FAMILIES-STORE-SELECTOR] GetClientsWithNDR: 0 clients avec NDR
+useFamiliesStore.ts:203 🔥 [FAMILIES-STORE-SELECTOR] GetStats: null
+Clients.tsx:149 🔥 [CLIENTS-DEBUG] Hook useFamiliesGlobal résultat: {hasFamiliesData: false, isFromCache: false, isLoading: true, clientsWithNDRCount: 0, statsAvailable: false}
+Clients.tsx:167 🔥 [CLIENTS-DEBUG] Données finales pour affichage: {familyDataCount: 0, isLoading: true, source: 'API'}
+logger.ts:36 [2025-08-31T17:21:09.524Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-08-31T17:21:09.525Z] [DEBUG] Status: 200
+logger.ts:36 [2025-08-31T17:21:09.525Z] [DEBUG] Status Text: OK
+logger.ts:36 [2025-08-31T17:21:09.525Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
+logger.ts:36 [2025-08-31T17:21:09.525Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-08-31T17:21:09.537Z] [DEBUG] Réponse parsée: {families: Array(2), pagination: {…}}
+logger.ts:36 [2025-08-31T17:21:10.338Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-08-31T17:21:10.338Z] [DEBUG] Status: 200
+logger.ts:36 [2025-08-31T17:21:10.338Z] [DEBUG] Status Text: OK
+logger.ts:36 [2025-08-31T17:21:10.339Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
+logger.ts:36 [2025-08-31T17:21:10.339Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-08-31T17:21:10.340Z] [DEBUG] Réponse parsée: {total: 2, prospects: 1, clients: 1}
+logger.ts:36 [2025-08-31T17:21:10.341Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-08-31T17:21:10.341Z] [DEBUG] URL: http://localhost:3000/api/settlement-notes?familyId=68b17dfe1d13268197c80347
+logger.ts:36 [2025-08-31T17:21:10.341Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-08-31T17:21:10.341Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+logger.ts:36 [2025-08-31T17:21:11.275Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-08-31T17:21:11.276Z] [DEBUG] Status: 200
+logger.ts:36 [2025-08-31T17:21:11.276Z] [DEBUG] Status Text: OK
+logger.ts:36 [2025-08-31T17:21:11.276Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
+logger.ts:36 [2025-08-31T17:21:11.276Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-08-31T17:21:11.278Z] [DEBUG] Réponse parsée: {notes: Array(1), pagination: {…}}
+useFamiliesStore.ts:143 🚀 [FAMILIES-STORE] ✅ FIN FETCH API - 2 familles, 1 prospects, 1 clients avec NDR
+useFamiliesStore.ts:144 🔥 [FAMILIES-STORE-DEBUG] Données chargées: {totalFamilies: 2, prospects: 1, clients: 1, clientsWithNDR: 1, NDRDatesCount: 1, …}
+useFamiliesStore.ts:160 🚀 [FAMILIES-STORE] 💾 DONNÉES SAUVÉES DANS LE STORE - Cache valide pour 1h
+Clients.tsx:134 🔥 [NAVIGATION-DEBUG] Clients: Composant monté/remonté
+Clients.tsx:135 🔥 [DEBUG] Clients: Pathname = /clients
+Clients.tsx:136 🔥 [DEBUG] Clients: Location key = default
+Clients.tsx:137 🔥 [CLIENTS-DEBUG] === DÉBUT INITIALISATION CLIENTS ===
+Clients.tsx:138 Timer '⏱️ [CLIENTS-TIMING] Temps total initialisation' already exists
+Clients @ Clients.tsx:138
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooks @ react-dom_client.js?v=e61615b4:4206
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performSyncWorkOnRoot @ react-dom_client.js?v=e61615b4:11635
+flushSyncWorkAcrossRoots_impl @ react-dom_client.js?v=e61615b4:11536
+processRootScheduleInMicrotask @ react-dom_client.js?v=e61615b4:11558
+(anonymous) @ react-dom_client.js?v=e61615b4:11649
+<Clients>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+App @ main.tsx:107
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=e61615b4:11623
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+(anonymous) @ main.tsx:174Understand this warning
+useFamiliesGlobal.ts:21 🔥 [FAMILIES-GLOBAL-DEBUG] Hook appelé avec options: {autoLoad: true}
+useFamiliesGlobal.ts:29 🔥 [FAMILIES-GLOBAL-DEBUG] État du store: {hasData: true, isLoading: false, hasError: false, isExpired: false, familiesCount: 2, …}
+useFamiliesStore.ts:182 🔥 [FAMILIES-STORE-SELECTOR] GetProspects: 1 prospects
+useFamiliesStore.ts:189 🔥 [FAMILIES-STORE-SELECTOR] GetClients: 1 clients
+useFamiliesStore.ts:196 🔥 [FAMILIES-STORE-SELECTOR] GetClientsWithNDR: 1 clients avec NDR
+useFamiliesStore.ts:203 🔥 [FAMILIES-STORE-SELECTOR] GetStats: {total: 2, prospects: 1, clients: 1}
+Clients.tsx:149 🔥 [CLIENTS-DEBUG] Hook useFamiliesGlobal résultat: {hasFamiliesData: true, isFromCache: true, isLoading: false, clientsWithNDRCount: 1, statsAvailable: true}
+Clients.tsx:167 🔥 [CLIENTS-DEBUG] Données finales pour affichage: {familyDataCount: 1, isLoading: false, source: 'CACHE'}
+Clients.tsx:134 🔥 [NAVIGATION-DEBUG] Clients: Composant monté/remonté
+Clients.tsx:135 🔥 [DEBUG] Clients: Pathname = /clients
+Clients.tsx:136 🔥 [DEBUG] Clients: Location key = default
+Clients.tsx:137 🔥 [CLIENTS-DEBUG] === DÉBUT INITIALISATION CLIENTS ===
+Clients.tsx:138 Timer '⏱️ [CLIENTS-TIMING] Temps total initialisation' already exists
+Clients @ Clients.tsx:138
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performSyncWorkOnRoot @ react-dom_client.js?v=e61615b4:11635
+flushSyncWorkAcrossRoots_impl @ react-dom_client.js?v=e61615b4:11536
+processRootScheduleInMicrotask @ react-dom_client.js?v=e61615b4:11558
+(anonymous) @ react-dom_client.js?v=e61615b4:11649
+<Clients>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+App @ main.tsx:107
+react_stack_bottom_frame @ react-dom_client.js?v=e61615b4:17424
+renderWithHooksAgain @ react-dom_client.js?v=e61615b4:4281
+renderWithHooks @ react-dom_client.js?v=e61615b4:4217
+updateFunctionComponent @ react-dom_client.js?v=e61615b4:6619
+beginWork @ react-dom_client.js?v=e61615b4:7654
+runWithFiberInDEV @ react-dom_client.js?v=e61615b4:1485
+performUnitOfWork @ react-dom_client.js?v=e61615b4:10868
+workLoopSync @ react-dom_client.js?v=e61615b4:10728
+renderRootSync @ react-dom_client.js?v=e61615b4:10711
+performWorkOnRoot @ react-dom_client.js?v=e61615b4:10330
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=e61615b4:11623
+performWorkUntilDeadline @ react-dom_client.js?v=e61615b4:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=e61615b4:250
+(anonymous) @ main.tsx:174Understand this warning
+useFamiliesGlobal.ts:21 🔥 [FAMILIES-GLOBAL-DEBUG] Hook appelé avec options: {autoLoad: true}
+useFamiliesGlobal.ts:29 🔥 [FAMILIES-GLOBAL-DEBUG] État du store: {hasData: true, isLoading: false, hasError: false, isExpired: false, familiesCount: 2, …}
+useFamiliesStore.ts:182 🔥 [FAMILIES-STORE-SELECTOR] GetProspects: 1 prospects
+useFamiliesStore.ts:189 🔥 [FAMILIES-STORE-SELECTOR] GetClients: 1 clients
+useFamiliesStore.ts:196 🔥 [FAMILIES-STORE-SELECTOR] GetClientsWithNDR: 1 clients avec NDR
+useFamiliesStore.ts:203 🔥 [FAMILIES-STORE-SELECTOR] GetStats: {total: 2, prospects: 1, clients: 1}
+Clients.tsx:149 🔥 [CLIENTS-DEBUG] Hook useFamiliesGlobal résultat: {hasFamiliesData: true, isFromCache: true, isLoading: false, clientsWithNDRCount: 1, statsAvailable: true}
+Clients.tsx:167 🔥 [CLIENTS-DEBUG] Données finales pour affichage: {familyDataCount: 1, isLoading: false, source: 'CACHE'}
+useFamiliesStore.ts:210 🔥 [FAMILIES-STORE-SELECTOR] GetFirstNDRDate(68b17dfe1d13268197c80347): 29/08/2025
+useFamiliesStore.ts:210 🔥 [FAMILIES-STORE-SELECTOR] GetFirstNDRDate(68b17dfe1d13268197c80347): 29/08/2025
+useFamiliesGlobal.ts:52 🔥 [FAMILIES-GLOBAL-DEBUG] Effect auto-load déclenché: {autoLoad: true, hasData: true, isExpired: false, shouldLoad: false}
+useFamiliesGlobal.ts:63 🚀 [FAMILIES-GLOBAL] ✅ PAS DE RECHARGEMENT NÉCESSAIRE - Données disponibles
+Clients.tsx:186 🚀 [CLIENTS] 📊 DONNÉES PRÊTES - 📦 DEPUIS CACHE - 1 clients avec NDR
+Clients.tsx:191 🔥 [CLIENTS-DEBUG] Détails des données: {totalFamilies: 2, clientsWithNDRCount: 1, isFromCache: true, renderTime: '2025-08-31T17:21:11.300Z'}
+Clients.tsx:203 ⏱️ [CLIENTS-TIMING] Temps total initialisation: 2046.505126953125 ms
+Clients.tsx:204 🚀 [CLIENTS] ✅ PAGE CLIENTS PRÊTE POUR AFFICHAGE

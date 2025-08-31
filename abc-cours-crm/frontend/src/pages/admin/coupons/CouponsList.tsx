@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Navbar,
@@ -10,7 +10,7 @@ import {
   Table,
   StatusBadge,
 } from "../../../components";
-import { couponService } from "../../../services/couponService";
+import { useCouponsGlobal } from "../../../hooks/useCouponsGlobal";
 import type { Coupon } from "../../../types/coupon";
 
 // Type pour les données du tableau avec l'id requis
@@ -18,36 +18,9 @@ type TableRowData = Coupon & { id: string };
 
 export const CouponsList: React.FC = () => {
   const location = useLocation();
-  const [couponsData, setCouponsData] = useState<Coupon[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string>("");
+  const { coupons, stats, isLoading, error } = useCouponsGlobal();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-
-  // Charger les données des coupons
-  useEffect(() => {
-    const loadCoupons = async () => {
-      try {
-        setIsLoading(true);
-        setError("");
-        const data = await couponService.getCoupons({
-          limit: 100, // Charger plus de coupons par défaut
-        });
-        console.log("🔍 Données coupons reçues du service:", data);
-        setCouponsData(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Erreur lors du chargement"
-        );
-        console.error("Erreur lors du chargement des coupons:", err);
-        setCouponsData([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadCoupons();
-  }, []);
 
   const handleSearch = () => {
     // La recherche sera implémentée via les filtres
@@ -63,7 +36,7 @@ export const CouponsList: React.FC = () => {
   };
 
   // Filtrer les données selon le terme de recherche et le statut
-  const filteredData = couponsData.filter((coupon) => {
+  const filteredData = coupons.filter((coupon) => {
     const familyName = coupon.couponSeriesId?.familyId?.primaryContact
       ? `${coupon.couponSeriesId.familyId.primaryContact.firstName} ${coupon.couponSeriesId.familyId.primaryContact.lastName}`
       : "";
@@ -88,11 +61,11 @@ export const CouponsList: React.FC = () => {
     id: coupon._id, // Ajouter l'id requis par le composant Table
   }));
 
-  // Calculer les statistiques
-  const totalCoupons = couponsData.length;
-  const availableCoupons = couponsData.filter(c => c.status === "available").length;
-  const usedCoupons = couponsData.filter(c => c.status === "used").length;
-  const expiredCoupons = couponsData.filter(c => c.status === "expired").length;
+  // Utiliser les statistiques du store
+  const totalCoupons = stats.available + stats.used + stats.expired + stats.cancelled;
+  const availableCoupons = stats.available;
+  const usedCoupons = stats.used;
+  const expiredCoupons = stats.expired;
 
   const couponsColumns = [
     {
