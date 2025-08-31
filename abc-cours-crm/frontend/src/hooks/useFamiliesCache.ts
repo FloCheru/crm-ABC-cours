@@ -19,7 +19,9 @@ interface UseFamiliesCacheOptions {
 
 export function useFamiliesCache(options: UseFamiliesCacheOptions = {}) {
   const fetchUnifiedFamiliesData = useCallback(async (): Promise<UnifiedFamiliesData> => {
-    console.log('🏗️ FamiliesCache: Chargement unifié optimisé des données familles');
+    console.log('🔥 [CACHE-DEBUG] FamiliesCache: DÉBUT FETCH API - Chargement unifié des données familles');
+    console.log('🔥 [CACHE-DEBUG] FamiliesCache: Options reçues:', options);
+    console.log('🔥 [CACHE-DEBUG] FamiliesCache: Dependencies:', options.dependencies);
     
     const [familiesData, statsData] = await Promise.all([
       familyService.getFamilies(),
@@ -64,7 +66,7 @@ export function useFamiliesCache(options: UseFamiliesCacheOptions = {}) {
       }
     }
     
-    console.log(`✅ FamiliesCache: ${families.length} familles, ${prospects.length} prospects, ${clientsWithNDR.length} clients avec NDR`);
+    console.log(`🔥 [CACHE-DEBUG] FamiliesCache: FIN FETCH API - ${families.length} familles, ${prospects.length} prospects, ${clientsWithNDR.length} clients avec NDR`);
     
     return {
       families,
@@ -74,7 +76,9 @@ export function useFamiliesCache(options: UseFamiliesCacheOptions = {}) {
       clientsWithNDR,
       firstNDRDates: ndrDates,
     };
-  }, []);
+  }, []); // Stable - pas de dépendances externes
+  
+  console.log('🔥 [CACHE-DEBUG] useFamiliesCache: Hook appelé avec dependencies:', options.dependencies);
   
   const {
     data,
@@ -85,6 +89,14 @@ export function useFamiliesCache(options: UseFamiliesCacheOptions = {}) {
     isExpired,
   } = useCache('families', fetchUnifiedFamiliesData, {
     dependencies: options.dependencies || []
+  });
+
+  console.log('🔥 [CACHE-DEBUG] useFamiliesCache: État du cache -', {
+    hasData: !!data,
+    isFromCache,
+    isLoading,
+    isExpired,
+    dependenciesLength: (options.dependencies || []).length
   });
   
   return {

@@ -1,0 +1,201 @@
+/* ==========================================================================
+   DATA CARD COMPONENT
+   ========================================================================== */
+
+.data-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.data-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Header */
+.data-card__header {
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  border-bottom: 2px solid #3b82f6;
+  margin-bottom: 1.5rem;
+}
+
+.data-card__title {
+  margin: 0;
+  padding-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Content */
+.data-card__content {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.data-card__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+/* Responsive grid */
+@media (min-width: 768px) {
+  .data-card__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .data-card__grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+/* Fields */
+.data-card__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.data-card__field--textarea {
+  grid-column: 1 / -1; /* Étend sur toute la largeur */
+}
+
+.data-card__label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.data-card__required {
+  color: #ef4444;
+  margin-left: 0.25rem;
+}
+
+/* Mode lecture */
+.data-card__value {
+  margin: 0;
+  padding: 0.75rem 0;
+  color: #1f2937;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-bottom: 1px solid #e5e7eb;
+  min-height: 1.5em;
+}
+
+/* Mode édition - Inputs */
+.data-card__input {
+  /* Les styles sont déjà définis dans Input.css */
+}
+
+.data-card__select {
+  /* Les styles sont déjà définis dans Select.css */
+}
+
+/* Textarea personnalisé */
+.data-card__textarea {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #1f2937;
+  background-color: white;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.data-card__textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.data-card__textarea--error {
+  border-color: #ef4444;
+}
+
+.data-card__textarea--error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.data-card__textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Messages d'erreur */
+.data-card__error {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+/* États et animations */
+.data-card__field:hover .data-card__value {
+  color: #059669;
+  transition: color 0.2s ease-in-out;
+}
+
+/* Responsiveness pour petits écrans */
+@media (max-width: 768px) {
+  .data-card {
+    margin: 0 -1rem;
+    border-radius: 0;
+  }
+  
+  .data-card__header,
+  .data-card__content {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .data-card__grid {
+    gap: 1rem;
+  }
+}
+
+/* Focus et accessibilité */
+.data-card__textarea:focus,
+.data-card .input:focus,
+.data-card .select:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Mode sombre (optionnel) */
+@media (prefers-color-scheme: dark) {
+  .data-card {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+  
+  .data-card__title {
+    color: #f9fafb;
+  }
+  
+  .data-card__header {
+    border-bottom-color: #60a5fa;
+  }
+  
+  .data-card__label {
+    color: #d1d5db;
+  }
+  
+  .data-card__value {
+    color: #f3f4f6;
+    border-bottom-color: #374151;
+  }
+  
+  .data-card__textarea {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+}

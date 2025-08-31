@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "../button/Button";
 
 interface ModalProps {
@@ -20,7 +20,18 @@ export const Modal: React.FC<ModalProps> = ({
   submitText = "Valider",
   submitDisabled = false,
 }) => {
-  if (!isOpen) return null;
+  // Debug: tracer les changements de isOpen
+  useEffect(() => {
+    console.log("🟢 [DEBUG] Modal - isOpen a changé:", isOpen);
+    console.log("🟢 [DEBUG] Modal - title:", title);
+  }, [isOpen, title]);
+
+  console.log("🟢 [DEBUG] Modal render - isOpen:", isOpen);
+  
+  if (!isOpen) {
+    console.log("🟢 [DEBUG] Modal - return null car isOpen =", isOpen);
+    return null;
+  }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {

@@ -56,7 +56,7 @@ export const useDataCacheStore = create<DataCacheState>()(
           [`${key}Cache`]: cacheState,
         }));
         
-        console.log(`🗄️ Cache: Données sauvegardées pour ${key} (TTL: ${optimizedTTL}ms)`);
+        console.log(`🔥 [CACHE-DEBUG] Store: Données SAUVEGARDÉES pour ${key} (TTL: ${optimizedTTL}ms)`);
       },
       
       getCache: <T>(key: string): T | null => {
@@ -64,14 +64,15 @@ export const useDataCacheStore = create<DataCacheState>()(
         const cacheState = (state as any)[`${key}Cache`] as CacheState | null;
         
         if (!cacheState) {
-          console.log(`🗄️ Cache: Aucune donnée trouvée pour ${key}`);
+          console.log(`🔥 [CACHE-DEBUG] Store: AUCUNE donnée trouvée pour ${key}`);
           return null;
         }
         
         const isExpired = Date.now() - cacheState.timestamp > cacheState.ttl;
+        const age = Date.now() - cacheState.timestamp;
         
         if (isExpired) {
-          console.log(`🗄️ Cache: Données expirées pour ${key}`);
+          console.log(`🔥 [CACHE-DEBUG] Store: Données EXPIRÉES pour ${key} (âge: ${age}ms, TTL: ${cacheState.ttl}ms)`);
           // Auto-nettoyage des données expirées
           set((state) => ({
             ...state,
@@ -80,7 +81,7 @@ export const useDataCacheStore = create<DataCacheState>()(
           return null;
         }
         
-        console.log(`🗄️ Cache: Données valides trouvées pour ${key}`);
+        console.log(`🔥 [CACHE-DEBUG] Store: Données VALIDES trouvées pour ${key} (âge: ${age}ms, TTL: ${cacheState.ttl}ms)`);
         return cacheState.data;
       },
       
@@ -89,7 +90,7 @@ export const useDataCacheStore = create<DataCacheState>()(
           ...state,
           [`${key}Cache`]: null,
         }));
-        console.log(`🗄️ Cache: Invalidation de ${key}`);
+        console.log(`🔥 [CACHE-DEBUG] Store: INVALIDATION de ${key}`);
       },
       
       invalidateAllCache: () => {
@@ -99,7 +100,7 @@ export const useDataCacheStore = create<DataCacheState>()(
           couponSeriesCache: null,
           couponsCache: null,
         });
-        console.log('🗄️ Cache: Invalidation complète');
+        console.log('🔥 [CACHE-DEBUG] Store: INVALIDATION COMPLÈTE de tous les caches');
       },
       
       isExpired: (key: string): boolean => {

@@ -45,6 +45,7 @@ const couponRoutes = require("./routes/coupons");
 const couponSeriesRoutes = require("./routes/couponSeries");
 const settlementNotesRoutes = require("./routes/settlementNotes");
 const pdfRoutes = require("./routes/pdf");
+const rdvRoutes = require("./routes/rdv");
 const debugRoutes = require("./routes/debug");
 
 // Import de la configuration de la base de données
@@ -160,6 +161,7 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/coupon-series", couponSeriesRoutes);
 app.use("/api/settlement-notes", settlementNotesRoutes);
 app.use("/api", pdfRoutes);
+app.use("/api/rdv", rdvRoutes);
 app.use("/debug", debugRoutes);
 
 // Middleware de gestion d'erreurs

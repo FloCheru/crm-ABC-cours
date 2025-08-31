@@ -130,6 +130,10 @@ export const Clients: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   // const { refreshTrigger } = useRefresh(); // Géré par le cache
+  
+  console.log('🔥 [NAVIGATION-DEBUG] Clients: Composant monté/remonté');
+  console.log('🔥 [DEBUG] Clients: Pathname =', location.pathname);
+  console.log('🔥 [DEBUG] Clients: Location key =', location.key);
   const {
     familiesData,
     isFromCache: isFamiliesFromCache,
@@ -164,7 +168,7 @@ export const Clients: React.FC = () => {
   useEffect(() => {
     if (familiesData) {
       console.log(
-        `📊 Clients: Familles ${
+        `🔥 [NAVIGATION-DEBUG] Clients: Familles ${
           isFamiliesFromCache ? "depuis cache" : "depuis API"
         }, ` +
           `NDR incluses dans cache unifié - ${familyData.length} clients avec NDR`

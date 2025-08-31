@@ -4,13 +4,15 @@ import {
   Navbar,
   Button,
   ButtonGroup,
-  Input,
   StatusBanner,
+  DataCard,
+  RdvModal,
 } from "../../components";
 import { familyService } from "../../services/familyService";
+import rdvService from "../../services/rdvService";
 import type { Family } from "../../types/family";
 import type { ProspectStatus } from "../../components/StatusDot";
-import "./ProspectDetails.css";
+import type { RendezVous } from "../../types/rdv";
 
 const statusOptions = [
   { value: "en_reflexion", label: "En réflexion" },
@@ -37,6 +39,19 @@ export const ProspectDetails: React.FC = () => {
     Record<string, string>
   >({});
 
+  // States pour la gestion des RDV
+  const [rdvs, setRdvs] = useState<RendezVous[]>([]);
+  const [isLoadingRdvs, setIsLoadingRdvs] = useState(false);
+  const [showRdvModal, setShowRdvModal] = useState(false);
+  const [editingRdv, setEditingRdv] = useState<RendezVous | null>(null);
+  const [rdvFormData, setRdvFormData] = useState({
+    assignedAdminId: "",
+    date: "",
+    time: "",
+    type: "physique" as "physique" | "virtuel",
+    notes: ""
+  });
+
   useEffect(() => {
     const loadProspectDetails = async () => {
       if (!familyId) {
@@ -49,6 +64,7 @@ export const ProspectDetails: React.FC = () => {
         setLoading(true);
         const data = await familyService.getFamily(familyId);
         setProspect(data);
+        await loadRdvs();
       } catch (err) {
         console.error("Erreur lors du chargement du prospect:", err);
         setError("Impossible de charger les détails du prospect");
@@ -59,6 +75,84 @@ export const ProspectDetails: React.FC = () => {
 
     loadProspectDetails();
   }, [familyId]);
+
+  // Debug: tracer les changements de showRdvModal
+  useEffect(() => {
+    console.log("🔴 [DEBUG] ProspectDetails - showRdvModal a changé:", showRdvModal);
+  }, [showRdvModal]);
+
+  // Fonctions pour la gestion des RDV
+  const loadRdvs = async () => {
+    if (!familyId) return;
+    
+    try {
+      setIsLoadingRdvs(true);
+      const rdvData = await rdvService.getRdvsByFamily(familyId);
+      setRdvs(rdvData);
+    } catch (err) {
+      console.error("Erreur lors du chargement des RDV:", err);
+    } finally {
+      setIsLoadingRdvs(false);
+    }
+  };
+
+  const handleCreateRdv = async () => {
+    if (!familyId || !rdvFormData.date || !rdvFormData.time) return;
+    
+    try {
+      const newRdv = await rdvService.createRdv({
+        familyId,
+        assignedAdminId: rdvFormData.assignedAdminId,
+        date: rdvFormData.date,
+        time: rdvFormData.time,
+        type: rdvFormData.type,
+        notes: rdvFormData.notes
+      });
+      
+      setRdvs(prev => [...prev, newRdv]);
+      setShowRdvModal(false);
+      setRdvFormData({
+        assignedAdminId: "",
+        date: "",
+        time: "",
+        type: "physique",
+        notes: ""
+      });
+    } catch (err) {
+      console.error("Erreur lors de la création du RDV:", err);
+    }
+  };
+
+  const handleUpdateRdv = async (rdvId: string, updates: {
+    assignedAdminId?: string;
+    date?: string;
+    time?: string;
+    type?: "physique" | "virtuel";
+    notes?: string;
+  }) => {
+    try {
+      const updatedRdv = await rdvService.updateRdv(rdvId, updates);
+      setRdvs(prev => prev.map(rdv => rdv._id === rdvId ? updatedRdv : rdv));
+      setEditingRdv(null);
+    } catch (err) {
+      console.error("Erreur lors de la mise à jour du RDV:", err);
+    }
+  };
+
+  const handleDeleteRdv = async (rdvId: string) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce RDV ?")) return;
+    
+    try {
+      await rdvService.deleteRdv(rdvId);
+      setRdvs(prev => prev.filter(rdv => rdv._id !== rdvId));
+    } catch (err) {
+      console.error("Erreur lors de la suppression du RDV:", err);
+    }
+  };
+
+  const handleRdvFormChange = (key: string, value: any) => {
+    setRdvFormData(prev => ({ ...prev, [key]: value }));
+  };
 
   const handleBack = () => {
     navigate("/prospects");
@@ -189,9 +283,9 @@ export const ProspectDetails: React.FC = () => {
     return (
       <div>
         <Navbar activePath="/prospects" />
-        <div className="prospect-details__error">
-          <h2>Erreur</h2>
-          <p>{error || "Prospect non trouvé"}</p>
+        <div className="text-center py-8">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Erreur</h2>
+          <p className="text-gray-600 mb-6">{error || "Prospect non trouvé"}</p>
           <Button variant="primary" onClick={handleBack}>
             Retour aux prospects
           </Button>
@@ -270,30 +364,55 @@ export const ProspectDetails: React.FC = () => {
         required: true,
       },
     ],
-    course: [
-      {
-        key: "plannedTeacher",
-        label: "Professeur prévu",
-        field: "plannedTeacher",
-        type: "text",
-        placeholder: "Nom du professeur",
-        required: false,
-      },
-      {
-        key: "beneficiaryType",
-        label: "Type de bénéficiaire",
-        field: "demande.beneficiaryType",
-        type: "text",
-        placeholder: "Type de bénéficiaire",
-        required: false,
-      },
+    courseData: [
       {
         key: "subjects",
         label: "Matières demandées",
         field: "demande.subjects",
-        type: "textarea",
-        placeholder: "Matières séparées par des virgules",
-        required: false,
+        type: "text",
+        readOnly: true,
+      },
+      {
+        key: "level",
+        label: "Niveau",
+        field: "demande.level",
+        type: "text",
+        placeholder: "Niveau d'étude",
+      },
+      {
+        key: "frequency",
+        label: "Fréquence",
+        field: "demande.frequency",
+        type: "text",
+        placeholder: "Fréquence des cours",
+      },
+      {
+        key: "department",
+        label: "Département",
+        field: "address.department",
+        type: "text",
+        placeholder: "Département",
+      },
+      {
+        key: "phone",
+        label: "Téléphone",
+        field: "primaryContact.primaryPhone",
+        type: "tel",
+        placeholder: "06 12 34 56 78",
+      },
+      {
+        key: "email",
+        label: "Email",
+        field: "primaryContact.email",
+        type: "email",
+        placeholder: "email@exemple.com",
+      },
+      {
+        key: "availability",
+        label: "Disponibilités",
+        field: "demande.availability",
+        type: "text",
+        placeholder: "Horaires et jours disponibles",
       },
     ],
     tracking: [
@@ -312,6 +431,13 @@ export const ProspectDetails: React.FC = () => {
         type: "date",
         placeholder: "",
         required: false,
+      },
+      {
+        key: "createdAt",
+        label: "Date de création",
+        field: "createdAt",
+        type: "text",
+        readOnly: true,
       },
     ],
   };
@@ -372,9 +498,9 @@ export const ProspectDetails: React.FC = () => {
     <div>
       <Navbar activePath="/prospects" />
 
-      <div className="prospect-details__header">
-        <h1>Détails du Prospect</h1>
-        <div className="prospect-details__header-actions">
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Détails du Prospect</h1>
+        <div>
           {isEditing ? (
             <ButtonGroup
               variant="double"
@@ -416,84 +542,66 @@ export const ProspectDetails: React.FC = () => {
             />
           )}
         </div>
-      </div>
+      </header>
 
       {/* Bandeau de statut avec couleurs cohérentes */}
       <StatusBanner status={prospect.prospectStatus as ProspectStatus} />
 
-      <div className="prospect-details__content">
+      <main className="space-y-8">
         {/* Informations personnelles */}
-        <div className="prospect-details__section prospect-details__section--primary-contact">
-          <h2>Informations personnelles</h2>
-          <div className="prospect-details__grid">
-            {fieldConfig.personal.map((field) => (
-              <div key={field.key} className="prospect-details__field">
-                <label>{field.label}</label>
-                {isEditing ? (
-                  <Input
-                    type={field.type}
-                    value={getFieldValue(editedData, field.field)}
-                    onChange={(e) =>
-                      handleInputChange(field.field, e.target.value)
-                    }
-                    error={validationErrors[field.key]}
-                    placeholder={field.placeholder}
-                  />
-                ) : (
-                  <p>{getDisplayValue(prospect, field.field)}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        <DataCard
+          title="Informations personnelles"
+          fields={fieldConfig.personal.map(field => ({
+            key: field.key,
+            label: field.label,
+            value: isEditing 
+              ? getFieldValue(editedData, field.field)
+              : getDisplayValue(prospect, field.field),
+            type: field.type as "text" | "email" | "tel" | "number" | "date" | "textarea" | "select",
+            required: (field as any).required || false,
+            placeholder: field.placeholder
+          }))}
+          isEditing={isEditing}
+          onChange={(key, value) => {
+            const field = fieldConfig.personal.find(f => f.key === key);
+            if (field) handleInputChange(field.field, value);
+          }}
+          errors={validationErrors}
+          className="mb-8"
+        />
 
 
-        {/* Demande */}
-        <div className="prospect-details__section prospect-details__section--course-request">
-          <h2>Demande de cours</h2>
-          <div className="prospect-details__grid">
-            {fieldConfig.course.map((field) => (
-              <div key={field.key} className="prospect-details__field">
-                <label>{field.label}</label>
-                {isEditing ? (
-                  field.type === "textarea" ? (
-                    <textarea
-                      value={
-                        Array.isArray(getFieldValue(editedData, field.field))
-                          ? getFieldValue(editedData, field.field).join(", ")
-                          : getFieldValue(editedData, field.field)
-                      }
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const arrayValue = value
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean);
-                        handleInputChange(field.field, arrayValue);
-                      }}
-                      placeholder={field.placeholder}
-                      rows={3}
-                      style={{ resize: "vertical", minHeight: "80px" }}
-                    />
-                  ) : (
-                    <Input
-                      type={field.type}
-                      value={getFieldValue(editedData, field.field)}
-                      onChange={(e) =>
-                        handleInputChange(field.field, e.target.value)
-                      }
-                      placeholder={field.placeholder}
-                    />
-                  )
-                ) : (
-                  <p>{getDisplayValue(prospect, field.field)}</p>
-                )}
-              </div>
-            ))}
-            <div className="prospect-details__field">
-              <label>Statut prospect</label>
+        {/* Demande de cours */}
+        <DataCard
+          title="Demande de cours"
+          fields={fieldConfig.courseData.map(field => ({
+            key: field.key,
+            label: field.label,
+            value: isEditing 
+              ? getFieldValue(editedData, field.field)
+              : getDisplayValue(prospect, field.field),
+            type: field.type as "text" | "email" | "tel" | "number" | "date" | "textarea" | "select",
+            required: (field as any).required || false,
+            placeholder: field.placeholder
+          }))}
+          isEditing={isEditing}
+          onChange={(key, value) => {
+            const field = fieldConfig.courseData.find(f => f.key === key);
+            if (field) handleInputChange(field.field, value);
+          }}
+          errors={validationErrors}
+          className="mb-8"
+        />
+        
+        {/* Statut prospect - section séparée */}
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Statut</h2>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Statut prospect</label>
               {isEditing ? (
                 <select
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={editedData.prospectStatus || ""}
                   onChange={(e) =>
                     handleInputChange("prospectStatus", e.target.value || null)
@@ -507,31 +615,31 @@ export const ProspectDetails: React.FC = () => {
                   ))}
                 </select>
               ) : (
-                <p>{prospect.prospectStatus || "Non défini"}</p>
+                <p className="text-gray-900">{prospect.prospectStatus || "Non défini"}</p>
               )}
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Élèves */}
-        <div className="prospect-details__section prospect-details__section--students">
-          <h2>Élèves ({students.length})</h2>
-          <div className="prospect-details__students">
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Élèves ({students.length})</h2>
+          <div className="space-y-4">
             {students.length > 0 ? (
               students.map((student, index) => (
-                <div key={index} className="prospect-details__student">
-                  <h3>
+                <div key={index} className="p-4 border border-gray-200 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">
                     {student.firstName} {student.lastName}
                   </h3>
-                  <div className="prospect-details__student-info">
+                  <div>
                     {student.school?.grade && (
-                      <p>Niveau: {student.school.grade}</p>
+                      <p className="text-gray-600">Niveau: {student.school.grade}</p>
                     )}
                   </div>
                 </div>
               ))
             ) : (
-              <p>Aucun élève enregistré</p>
+              <p className="text-gray-500 text-center py-4">Aucun élève enregistré</p>
             )}
             {isEditing && (
               <Button
@@ -546,55 +654,147 @@ export const ProspectDetails: React.FC = () => {
               </Button>
             )}
           </div>
-        </div>
+        </section>
 
         {/* Actions de suivi */}
-        <div className="prospect-details__section prospect-details__section--lead-source">
-          <h2>Suivi</h2>
-          <div className="prospect-details__grid">
-            {fieldConfig.tracking.map((field) => (
-              <div key={field.key} className="prospect-details__field">
-                <label>{field.label}</label>
-                {isEditing ? (
-                  <Input
-                    type={field.type}
-                    value={
-                      field.type === "date" &&
-                      editedData[field.field as keyof typeof editedData]
-                        ? new Date(
-                            editedData[
-                              field.field as keyof typeof editedData
-                            ] as string
-                          )
-                            .toISOString()
-                            .split("T")[0]
-                        : getFieldValue(editedData, field.field)
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        field.field,
-                        field.type === "date" && e.target.value
-                          ? new Date(e.target.value)
-                          : e.target.value
-                      )
-                    }
-                    placeholder={field.placeholder}
-                  />
-                ) : (
-                  <p>{getDisplayValue(prospect, field.field)}</p>
-                )}
+        <DataCard
+          title="Suivi"
+          fields={fieldConfig.tracking.map(field => {
+            let value;
+            if (field.key === "createdAt") {
+              value = new Date(prospect.createdAt).toLocaleDateString("fr-FR");
+            } else if (isEditing) {
+              if (field.type === "date" && editedData[field.field as keyof typeof editedData]) {
+                value = new Date(
+                  editedData[field.field as keyof typeof editedData] as string
+                ).toISOString().split("T")[0];
+              } else {
+                value = getFieldValue(editedData, field.field);
+              }
+            } else {
+              value = getDisplayValue(prospect, field.field);
+            }
+            
+            return {
+              key: field.key,
+              label: field.label,
+              value,
+              type: field.type as "text" | "email" | "tel" | "number" | "date" | "textarea" | "select",
+              required: field.required,
+              placeholder: field.placeholder
+            };
+          })}
+          isEditing={isEditing && fieldConfig.tracking.some(f => !f.readOnly)} 
+          onChange={(key, value) => {
+            const field = fieldConfig.tracking.find(f => f.key === key);
+            if (field && !field.readOnly) {
+              const processedValue = field.type === "date" && value 
+                ? new Date(value) 
+                : value;
+              handleInputChange(field.field, processedValue);
+            }
+          }}
+          errors={validationErrors}
+          className="mb-8"
+        />
+
+        {/* Section Suivi des RDV */}
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Suivi des RDV ({rdvs.length})</h2>
+          
+
+          <div className="space-y-4">
+            {isLoadingRdvs ? (
+              <div className="text-center py-4">
+                <div className="text-gray-500">Chargement des RDV...</div>
               </div>
-            ))}
-            <div className="prospect-details__field">
-              <label>Date de création</label>
-              <p>{new Date(prospect.createdAt).toLocaleDateString("fr-FR")}</p>
+            ) : rdvs.length > 0 ? (
+              <div className="space-y-4">
+                {rdvs.map((rdv) => (
+                  <div key={rdv._id} className="p-4 border border-gray-200 rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex gap-2 mb-3">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            rdv.status === 'planifie' ? 'bg-blue-100 text-blue-800' :
+                            rdv.status === 'realise' ? 'bg-green-100 text-green-800' :
+                            rdv.status === 'annule' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {rdv.status === 'planifie' ? 'Planifié' :
+                             rdv.status === 'realise' ? 'Réalisé' :
+                             rdv.status === 'annule' ? 'Annulé' : rdv.status}
+                          </span>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            rdv.type === 'physique' ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800'
+                          }`}>
+                            {rdv.type === 'physique' ? 'Physique' : 'Virtuel'}
+                          </span>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-gray-900">
+                            {new Date(rdv.date).toLocaleDateString('fr-FR')} à {rdv.time}
+                          </p>
+                          {rdv.notes && (
+                            <p className="text-sm text-gray-600 mt-1">{rdv.notes}</p>
+                          )}
+                          {rdv.assignedAdminId && (
+                            <p className="text-sm text-gray-500 mt-1">Admin: {rdv.assignedAdminId}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setEditingRdv(rdv);
+                            setRdvFormData({
+                              assignedAdminId: rdv.assignedAdminId || "",
+                              date: new Date(rdv.date).toISOString().split('T')[0],
+                              time: rdv.time,
+                              type: rdv.type,
+                              notes: rdv.notes || ""
+                            });
+                            setShowRdvModal(true);
+                          }}
+                        >
+                          Modifier
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleDeleteRdv(rdv._id!)}
+                        >
+                          Supprimer
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Aucun RDV planifié</p>
+              </div>
+            )}
+            
+            <div className="mt-6 flex gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  console.log("🔵 [DEBUG] Bouton 'Ajouter un RDV' cliqué");
+                  console.log("🔵 [DEBUG] showRdvModal avant:", showRdvModal);
+                  setShowRdvModal(true);
+                  console.log("🔵 [DEBUG] setShowRdvModal(true) appelé");
+                }}
+              >
+                Ajouter un RDV
+              </Button>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
 
       {/* Actions */}
-      <div className="prospect-details__actions">
+      <div className="mt-8">
         <ButtonGroup
           variant="double"
           buttons={[
@@ -611,6 +811,33 @@ export const ProspectDetails: React.FC = () => {
           ]}
         />
       </div>
+
+      {/* Modal RDV */}
+      <RdvModal
+        isOpen={showRdvModal}
+        onClose={() => {
+          console.log("🔴 [DEBUG] RdvModal onClose appelé");
+          setShowRdvModal(false);
+          setEditingRdv(null);
+          setRdvFormData({
+            assignedAdminId: "",
+            date: "",
+            time: "",
+            type: "physique",
+            notes: ""
+          });
+        }}
+        formData={rdvFormData}
+        onFormChange={handleRdvFormChange}
+        onSubmit={() => {
+          if (editingRdv) {
+            handleUpdateRdv(editingRdv._id!, rdvFormData);
+          } else {
+            handleCreateRdv();
+          }
+        }}
+        isEditing={editingRdv !== null}
+      />
     </div>
   );
 };

@@ -92,26 +92,33 @@ export function useCache<T>(
       cachedData === null || 
       isCacheExpired;
     
+    console.log(`🔥 [CACHE-DEBUG-FIXED] useCache(${cacheKey}): Effect déclenché -`, {
+      forceRefresh,
+      hasCachedData: cachedData !== null,
+      isCacheExpired,
+      shouldLoadData,
+      refreshTrigger,
+      dependencies,
+      dependenciesValues: dependencies.map(dep => dep)
+    });
+    
     if (shouldLoadData) {
+      console.log(`🔥 [CACHE-DEBUG] useCache(${cacheKey}): DÉCLENCHEMENT RECHARGEMENT`);
       // Chargement immédiat sans attente
       loadData();
+    } else {
+      console.log(`🔥 [CACHE-DEBUG] useCache(${cacheKey}): UTILISATION DU CACHE EXISTANT`);
     }
-  }, [loadData, forceRefresh, refreshTrigger, ...dependencies]);
+  }, [loadData, forceRefresh, refreshTrigger, JSON.stringify(dependencies)]);
   
-  // Chargement initial immédiat si pas de données en cache
-  useEffect(() => {
-    if (cachedData === null && !isLoading && enabled) {
-      console.log(`🚀 Cache: Chargement initial immédiat pour ${cacheKey}`);
-      loadData();
-    }
-  }, []); // Effect qui ne se déclenche qu'au montage
   
   // Effect pour invalider le cache quand les dépendances changent
   useEffect(() => {
     if (dependencies.length > 0) {
+      console.log(`🔥 [CACHE-DEBUG] useCache(${cacheKey}): INVALIDATION CACHE par dépendances`, dependencies);
       invalidateCacheData();
     }
-  }, dependencies);
+  }, [JSON.stringify(dependencies)]);
   
   // Déterminer quelles données retourner
   const dataToReturn = cachedData !== null ? cachedData : lastValidData;

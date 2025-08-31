@@ -1,3 +1,5 @@
+import type { RendezVous } from './rdv';
+
 export interface Family {
   _id: string;
   address: {
@@ -53,6 +55,7 @@ export interface Family {
   // Professeur prévu
   plannedTeacher?: string;
   createdBy: string; // ObjectId ref
+  rdvs?: RendezVous[];
   // Students avec informations complètes
   students?: Array<{
     _id: string;

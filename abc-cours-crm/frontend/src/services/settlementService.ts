@@ -9,7 +9,7 @@ interface SettlementNote {
   clientName: string;
   department: string;
   extractedDepartment?: string; // Département extrait automatiquement du code postal
-  paymentMethod: "card" | "check" | "transfer" | "cash" | "PRLV";
+  paymentMethod: "card" | "CESU" | "check" | "transfer" | "cash" | "PRLV";
   subjects: Array<{
     subjectId: string | { _id: string; name: string; category: string };
     hourlyRate: number;
@@ -160,6 +160,41 @@ class SettlementService {
     } catch (error) {
       console.error(
         "Erreur lors de la récupération de la note de règlement:",
+        error
+      );
+      throw error;
+    }
+  }
+
+  async updateSettlementNote(
+    id: string,
+    updates: Partial<SettlementNote>
+  ): Promise<SettlementNote> {
+    try {
+      console.log("🔄 Mise à jour de la note de règlement:", id, updates);
+      // Utilisation d'une requête manuelle car patch n'est pas disponible dans rateLimitedApiClient
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/settlement-notes/${id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiClient.getToken()}`,
+          },
+          body: JSON.stringify(updates),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ Note de règlement mise à jour:", result);
+      return result as SettlementNote;
+    } catch (error) {
+      console.error(
+        "Erreur lors de la mise à jour de la note de règlement:",
         error
       );
       throw error;

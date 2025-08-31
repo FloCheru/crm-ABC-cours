@@ -30,7 +30,7 @@ const createSettlementValidation = [
   body("clientName").trim().notEmpty().withMessage("Nom du client requis"),
   body("department").trim().notEmpty().withMessage("Département requis"),
   body("paymentMethod")
-    .isIn(["card", "check", "transfer", "cash", "PRLV"])
+    .isIn(["card", "CESU", "check", "transfer", "cash", "PRLV"])
     .withMessage("Mode de règlement invalide"),
   body("paymentType")
     .notEmpty()
@@ -81,7 +81,7 @@ router.get(
     query("status").optional().isIn(["pending", "paid", "overdue"]),
     query("paymentMethod")
       .optional()
-      .isIn(["card", "check", "transfer", "cash"]),
+      .isIn(["card", "CESU", "check", "transfer", "cash"]),
     query("sortBy")
       .optional()
       .isIn(["clientName", "createdAt", "marginAmount", "status"]),
@@ -567,6 +567,56 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
     });
   } catch (error) {
     console.error("Delete settlement note error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// PATCH /api/settlement-notes/:id - Mise à jour partielle d'une note de règlement
+router.patch("/:id", authorize(["admin"]), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ error: "Invalid settlement note ID" });
+    }
+
+    const note = await SettlementNote.findById(id);
+    if (!note) {
+      return res.status(404).json({ error: "Settlement note not found" });
+    }
+
+    console.log("🔄 PATCH settlement note - Données reçues:", req.body);
+
+    // Extraire seulement les champs autorisés pour la mise à jour partielle
+    const allowedUpdates = {};
+    const { clientName, department, status, paymentMethod, notes, subjects } = req.body;
+
+    if (clientName !== undefined) allowedUpdates.clientName = clientName;
+    if (department !== undefined) allowedUpdates.department = department;
+    if (status !== undefined) allowedUpdates.status = status;
+    if (paymentMethod !== undefined) allowedUpdates.paymentMethod = paymentMethod;
+    if (notes !== undefined) allowedUpdates.notes = notes;
+    if (subjects !== undefined) allowedUpdates.subjects = subjects;
+
+    // Mettre à jour la date de modification
+    allowedUpdates.updatedAt = new Date();
+
+    console.log("🔄 Champs à mettre à jour:", allowedUpdates);
+
+    const updatedNote = await SettlementNote.findByIdAndUpdate(
+      id,
+      { $set: allowedUpdates },
+      { new: true, runValidators: true }
+    )
+      .populate("subjects.subjectId", "name category")
+      .populate("createdBy", "firstName lastName")
+      .populate("studentIds", "firstName lastName")
+      .lean();
+
+    console.log("✅ Note mise à jour avec succès");
+    res.json(updatedNote);
+  } catch (error) {
+    console.error("Update settlement note error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
