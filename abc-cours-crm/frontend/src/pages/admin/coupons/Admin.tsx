@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Navbar,
@@ -12,7 +12,7 @@ import {
   StatusBadge,
 } from "../../../components";
 import { couponSeriesService } from "../../../services/couponSeriesService";
-import { useCouponSeriesCache } from "../../../hooks/useCouponSeriesCache";
+import { useCouponSeriesGlobal } from "../../../hooks/useCouponSeriesGlobal";
 import { getFamilyDisplayName, generateCouponSeriesName, getBeneficiariesDisplay } from "../../../utils/familyNameUtils";
 import type { CouponSeries } from "../../../types/coupon";
 
@@ -22,24 +22,18 @@ type TableRowData = CouponSeries & { id: string };
 export const Admin: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { couponSeriesData, isFromCache, isLoading } = useCouponSeriesCache();
-  const [error, setError] = useState<string>("");
   
-  // Données extraites du cache
-  const couponsData = couponSeriesData?.couponSeries || [];
+  // Utilisation du nouveau store global pour les séries
+  const {
+    series,
+    isLoading,
+  } = useCouponSeriesGlobal();
+  
+  const [error, setError] = useState<string>("");
+  const couponsData = series;
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Log pour indiquer si les données proviennent du cache
-  useEffect(() => {
-    if (couponSeriesData) {
-      console.log(`📊 Séries de coupons: Données ${isFromCache ? 'récupérées depuis le cache' : 'chargées depuis l\'API'}`);
-      console.log("🔍 Données reçues:", couponSeriesData);
-      if (couponSeriesData.couponSeries.length > 0) {
-        console.log("🔍 Premier élément:", couponSeriesData.couponSeries[0]);
-        console.log("🔍 familyId du premier élément:", couponSeriesData.couponSeries[0].familyId);
-      }
-    }
-  }, [couponSeriesData, isFromCache]);
+  // Les données sont maintenant gérées par le store global
 
   const handleCreateSeries = () => {
     navigate("/admin/coupons/create");
