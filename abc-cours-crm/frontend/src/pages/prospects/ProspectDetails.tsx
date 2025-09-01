@@ -143,6 +143,14 @@ export const ProspectDetails: React.FC = () => {
       const updatedRdv = await rdvService.updateRdv(rdvId, updates);
       setRdvs(prev => prev.map(rdv => rdv._id === rdvId ? updatedRdv : rdv));
       setEditingRdv(null);
+      setShowRdvModal(false);
+      setRdvFormData({
+        assignedAdminId: "",
+        date: "",
+        time: "",
+        type: "physique",
+        notes: ""
+      });
     } catch (err) {
       console.error("Erreur lors de la mise à jour du RDV:", err);
     }

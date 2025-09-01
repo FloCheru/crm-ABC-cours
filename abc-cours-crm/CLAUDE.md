@@ -116,6 +116,12 @@ const prefillData = ndrPrefillService.generatePrefillData(subjects, department, 
 const preview = ndrPrefillService.calculateQuickPreview(prefillData);
 ```
 
+## ActionCache System
+
+Le système ActionCache est documenté séparément dans : **`docs/ActionCache-System.md`**
+
+Système avancé de gestion du cache basé sur les actions métier (CREATE_PROSPECT, CREATE_NDR, DELETE_NDR, DELETE_CLIENT, DELETE_PROSPECT) avec invalidation conditionnelle, updates optimistes et rollback automatique.
+
 ## Agent Development Methodology
 
 **AGENT MODE OBLIGATOIRE**: ALL code modifications MUST use the agent workflow system.
