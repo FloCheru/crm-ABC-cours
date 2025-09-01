@@ -114,6 +114,11 @@ class AuthService {
       });
 
       if (!response.ok) {
+        // En dev, les 401 extend-session sont normaux après redémarrage serveur
+        if (response.status === 401 && import.meta.env.DEV) {
+          console.warn("⚠️ Session expirée (normal après redémarrage serveur en dev)");
+          return;
+        }
         console.warn("Impossible d'étendre la session:", response.status);
         return;
       }

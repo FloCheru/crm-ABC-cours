@@ -491,10 +491,36 @@ router.get("/:id/deletion-preview", authorize(["admin"]), async (req, res) => {
 // @access  Private (Admin)
 router.delete("/:id", authorize(["admin"]), async (req, res) => {
   try {
-    const family = await Family.findById(req.params.id);
+    const familyId = req.params.id;
+    
+    // Validation de l'ID
+    if (!familyId || typeof familyId !== 'string') {
+      console.log(`❌ ID de famille invalide: ${familyId}`);
+      return res.status(400).json({ 
+        message: "ID de famille invalide",
+        id: familyId 
+      });
+    }
+
+    // Validation format ObjectId
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(familyId)) {
+      console.log(`❌ Format ObjectId invalide: ${familyId}`);
+      return res.status(400).json({ 
+        message: "Format d'ID invalide (doit être un ObjectId MongoDB valide)",
+        id: familyId 
+      });
+    }
+
+    console.log(`🔍 Recherche famille pour suppression: ${familyId}`);
+    const family = await Family.findById(familyId);
 
     if (!family) {
-      return res.status(404).json({ message: "Famille non trouvée" });
+      console.log(`❌ Famille non trouvée: ${familyId}`);
+      return res.status(404).json({ 
+        message: "Famille non trouvée ou déjà supprimée",
+        id: familyId 
+      });
     }
 
     console.log(`🔍 Début de la suppression en cascade pour la famille ${req.params.id}`);

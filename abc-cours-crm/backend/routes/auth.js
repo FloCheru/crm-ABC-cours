@@ -11,18 +11,30 @@ const refreshTokens = new Set();
 
 // Générer un access token JWT
 const generateAccessToken = (userId) => {
+  if (!process.env.JWT_SECRET) {
+    console.error('❌ ERREUR CRITIQUE: JWT_SECRET manquant dans les variables d\'environnement');
+    throw new Error('Configuration JWT_SECRET manquante - impossible de générer les tokens d\'authentification');
+  }
+  
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE, // 10 minutes
+    expiresIn: process.env.JWT_EXPIRE || '24h', // Défaut 24h si pas défini
   });
 };
 
 // Générer un refresh token JWT
 const generateRefreshToken = (userId) => {
+  const refreshSecret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET;
+  
+  if (!refreshSecret) {
+    console.error('❌ ERREUR CRITIQUE: Aucun secret disponible pour les refresh tokens');
+    throw new Error('Configuration secrets JWT manquante - impossible de générer les refresh tokens');
+  }
+  
   return jwt.sign(
     { userId, type: 'refresh' }, 
-    process.env.REFRESH_TOKEN_SECRET, 
+    refreshSecret, 
     {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRE, // 1 heure
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRE || '1h', // Défaut 1h si pas défini
     }
   );
 };

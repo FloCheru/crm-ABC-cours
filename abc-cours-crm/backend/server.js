@@ -93,6 +93,13 @@ app.use(
   })
 );
 
+// Configuration Trust Proxy pour Railway/Heroku
+// CRITIQUE: Nécessaire pour le bon fonctionnement du rate limiting en production
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1); // Trust premier proxy (Railway/Heroku)
+  logger.info('🔧 Trust proxy activé pour la production');
+}
+
 // Rate limiting - Configuration adaptée pour le développement
 const isDevelopment = process.env.NODE_ENV !== 'production';
 const limiter = rateLimit({

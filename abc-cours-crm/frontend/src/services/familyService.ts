@@ -101,7 +101,34 @@ class FamilyService {
   }
 
   async deleteFamily(id: string): Promise<void> {
-    await apiClient.delete(`/api/families/${id}`);
+    // Validation de l'ID avant suppression
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      throw new Error('ID de famille invalide pour la suppression');
+    }
+
+    // Validation format ObjectId MongoDB (24 caractères hexadécimaux)
+    const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+    if (!objectIdRegex.test(id)) {
+      throw new Error('Format d\'ID de famille invalide (doit être un ObjectId MongoDB valide)');
+    }
+
+    try {
+      console.log(`🗑️ Suppression famille ID: ${id}`);
+      await apiClient.delete(`/api/families/${id}`);
+      console.log(`✅ Famille ${id} supprimée avec succès`);
+    } catch (error: any) {
+      console.error(`❌ Erreur lors de la suppression de la famille ${id}:`, error);
+      
+      if (error.response?.status === 404) {
+        throw new Error(`Cette famille n'existe plus ou a déjà été supprimée. Veuillez rafraîchir la page.`);
+      } else if (error.response?.status === 403) {
+        throw new Error('Vous n\'avez pas les permissions pour supprimer cette famille.');
+      } else if (error.response?.status >= 500) {
+        throw new Error('Erreur serveur lors de la suppression. Veuillez réessayer plus tard.');
+      } else {
+        throw new Error(`Erreur lors de la suppression: ${error.message || 'Erreur inconnue'}`);
+      }
+    }
   }
 
   async updateStatus(
