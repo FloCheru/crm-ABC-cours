@@ -1,6 +1,7 @@
 import { apiClient } from "../utils";
 import type { Family, Student } from "../types/family";
 import type { ProspectStatus } from "../components/StatusDot";
+import ActionCacheService from "./actionCacheService";
 
 export interface FamilyStats {
   total: number;
@@ -80,11 +81,21 @@ class FamilyService {
   async createFamily(
     familyData: Omit<Family, "_id" | "createdAt" | "updatedAt">
   ): Promise<Family> {
-    const response = (await apiClient.post(
-      "/api/families",
-      familyData
-    )) as FamilyResponse;
-    return response.family;
+    // ✨ NOUVEAU: Utilisation du ActionCacheService pour CREATE_PROSPECT
+    return ActionCacheService.executeAction(
+      'CREATE_PROSPECT',
+      async () => {
+        const response = (await apiClient.post(
+          "/api/families",
+          familyData
+        )) as FamilyResponse;
+        return response.family;
+      },
+      {
+        tempId: `temp-${Date.now()}`, // ID temporaire pour optimistic update
+        familyData: familyData
+      }
+    );
   }
 
   async updateFamily(id: string, familyData: Partial<Family>): Promise<Family> {
@@ -112,23 +123,44 @@ class FamilyService {
       throw new Error('Format d\'ID de famille invalide (doit être un ObjectId MongoDB valide)');
     }
 
+    // Déterminer l'action en fonction du statut de la famille (pour cache intelligent)
+    let action: 'DELETE_PROSPECT' | 'DELETE_CLIENT' = 'DELETE_PROSPECT';
+    
     try {
-      console.log(`🗑️ Suppression famille ID: ${id}`);
-      await apiClient.delete(`/api/families/${id}`);
-      console.log(`✅ Famille ${id} supprimée avec succès`);
-    } catch (error: any) {
-      console.error(`❌ Erreur lors de la suppression de la famille ${id}:`, error);
-      
-      if (error.response?.status === 404) {
-        throw new Error(`Cette famille n'existe plus ou a déjà été supprimée. Veuillez rafraîchir la page.`);
-      } else if (error.response?.status === 403) {
-        throw new Error('Vous n\'avez pas les permissions pour supprimer cette famille.');
-      } else if (error.response?.status >= 500) {
-        throw new Error('Erreur serveur lors de la suppression. Veuillez réessayer plus tard.');
-      } else {
-        throw new Error(`Erreur lors de la suppression: ${error.message || 'Erreur inconnue'}`);
-      }
+      // Récupérer la famille pour déterminer son statut
+      const family = await this.getFamily(id);
+      action = family.status === 'client' ? 'DELETE_CLIENT' : 'DELETE_PROSPECT';
+    } catch (error) {
+      // Si on ne peut pas récupérer la famille, on suppose que c'est un prospect
+      console.warn('Impossible de déterminer le statut de la famille, supposé prospect');
     }
+
+    // ✨ NOUVEAU: Utilisation du ActionCacheService pour DELETE_PROSPECT ou DELETE_CLIENT
+    return ActionCacheService.executeAction(
+      action,
+      async () => {
+        try {
+          console.log(`🗑️ Suppression famille ID: ${id} (${action})`);
+          await apiClient.delete(`/api/families/${id}`);
+          console.log(`✅ Famille ${id} supprimée avec succès`);
+        } catch (error: any) {
+          console.error(`❌ Erreur lors de la suppression de la famille ${id}:`, error);
+          
+          if (error.response?.status === 404) {
+            throw new Error(`Cette famille n'existe plus ou a déjà été supprimée. Veuillez rafraîchir la page.`);
+          } else if (error.response?.status === 403) {
+            throw new Error('Vous n\'avez pas les permissions pour supprimer cette famille.');
+          } else if (error.response?.status >= 500) {
+            throw new Error('Erreur serveur lors de la suppression. Veuillez réessayer plus tard.');
+          } else {
+            throw new Error(`Erreur lors de la suppression: ${error.message || 'Erreur inconnue'}`);
+          }
+        }
+      },
+      action === 'DELETE_CLIENT' 
+        ? { clientId: id }
+        : { prospectId: id }
+    );
   }
 
   async updateStatus(

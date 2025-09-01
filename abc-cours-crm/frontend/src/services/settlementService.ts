@@ -1,6 +1,7 @@
 import { rateLimitedApiClient } from "../utils";
 import { apiClient } from "../utils/apiClient";
 import type { CreateSettlementNoteData } from "../types/settlement";
+import ActionCacheService from "./actionCacheService";
 
 interface SettlementNote {
   _id: string;
@@ -86,24 +87,27 @@ class SettlementService {
   async createSettlementNote(
     data: CreateSettlementNoteData
   ): Promise<SettlementNote> {
-    try {
-      // 🔍 LOGS DE DÉBOGAGE - Service
-      console.log("🔍 === DÉBOGAGE SERVICE ===");
-      console.log("🔍 URL appelée:", "/api/settlement-notes");
-      console.log("🔍 Données envoyées:", data);
-      console.log("🔍 Type des données:", typeof data);
-      console.log("🔍 Clés des données:", Object.keys(data));
-      console.log("🔍 === FIN DÉBOGAGE SERVICE ===");
+    // 🔍 LOGS DE DÉBOGAGE - Service
+    console.log("🔍 === DÉBOGAGE SERVICE ===");
+    console.log("🔍 URL appelée:", "/api/settlement-notes");
+    console.log("🔍 Données envoyées:", data);
+    console.log("🔍 Type des données:", typeof data);
+    console.log("🔍 Clés des données:", Object.keys(data));
+    console.log("🔍 === FIN DÉBOGAGE SERVICE ===");
 
-      const response = await rateLimitedApiClient.post("/api/settlement-notes", data);
-      return (response as SettlementNoteResponse).settlementNote;
-    } catch (error) {
-      console.error(
-        "Erreur lors de la création de la note de règlement:",
-        error
-      );
-      throw error;
-    }
+    // ✨ NOUVEAU: Utilisation du ActionCacheService pour gestion intelligente du cache
+    return ActionCacheService.executeAction(
+      'CREATE_NDR',
+      async () => {
+        const response = await rateLimitedApiClient.post("/api/settlement-notes", data);
+        return (response as SettlementNoteResponse).settlementNote;
+      },
+      {
+        familyId: data.familyId,
+        newStatus: 'client',
+        ndrData: data
+      }
+    );
   }
 
   async getSettlementNotesByFamily(
@@ -215,16 +219,18 @@ class SettlementService {
   }
 
   async deleteSettlementNote(id: string): Promise<{ message: string }> {
-    try {
-      const response = await rateLimitedApiClient.delete(`/api/settlement-notes/${id}`);
-      return response as { message: string };
-    } catch (error) {
-      console.error(
-        "Erreur lors de la suppression de la note de règlement:",
-        error
-      );
-      throw error;
-    }
+    // ✨ NOUVEAU: Utilisation du ActionCacheService pour DELETE_NDR
+    return ActionCacheService.executeAction(
+      'DELETE_NDR',
+      async () => {
+        const response = await rateLimitedApiClient.delete(`/api/settlement-notes/${id}`);
+        return response as { message: string };
+      },
+      {
+        ndrId: id,
+        familyId: '', // Sera récupéré par le backend si besoin
+      }
+    );
   }
 
   // Méthodes pour la gestion des PDFs

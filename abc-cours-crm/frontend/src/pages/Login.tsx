@@ -43,7 +43,7 @@ export const Login: React.FC = () => {
     setError("");
 
     try {
-      await login("admin@abc-cours.com", "admin123");
+      await login("admin@abc-cours.fr", "123456");
       // Rediriger vers la page d'origine ou la page par défaut
       navigate(from, { replace: true });
     } catch (error) {
@@ -100,7 +100,7 @@ export const Login: React.FC = () => {
             value={credentials.email}
             onChange={(e) => handleChange("email", e.target.value)}
             required
-            placeholder="admin@abc-cours.com"
+            placeholder="admin@abc-cours.fr"
           />
 
           <Input
@@ -149,7 +149,7 @@ export const Login: React.FC = () => {
           <p>
             <strong>Comptes de test :</strong>
           </p>
-          <p>Admin: admin@abc-cours.com / admin123</p>
+          <p>Admin: admin@abc-cours.fr / 123456</p>
           {/* <p>Professeur: prof@abc-cours.com / prof123</p>
           <p>Famille: famille@abc-cours.com / famille123</p> */}
         </div>

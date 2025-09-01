@@ -372,7 +372,14 @@ router.post(
       // Changer automatiquement le statut de "prospect" à "client" si c'est la première note de règlement
       const family = await Family.findById(familyId);
       if (family && family.status === "prospect") {
-        await Family.findByIdAndUpdate(familyId, { status: "client" });
+        await Family.findByIdAndUpdate(
+          familyId, 
+          { status: "client" },
+          { 
+            new: true,
+            runValidators: false // Éviter la validation qui peut échouer sur le champ gender
+          }
+        );
         console.log(
           "Statut de la famille changé automatiquement de 'prospect' à 'client'"
         );

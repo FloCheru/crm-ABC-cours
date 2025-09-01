@@ -255,11 +255,10 @@ export const ClientDetails: React.FC = () => {
         field: "primaryContact.gender",
         type: "select",
         options: [
-          { value: "M", label: "Monsieur" },
+          { value: "M.", label: "Monsieur" },
           { value: "Mme", label: "Madame" },
-          { value: "Mlle", label: "Mademoiselle" },
         ],
-        required: false,
+        required: true,
       },
       {
         key: "dateOfBirth",

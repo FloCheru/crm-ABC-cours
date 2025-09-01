@@ -26,6 +26,10 @@ interface FamiliesState {
   loadFamilies: () => Promise<void>;
   clearCache: () => void;
   isExpired: () => boolean;
+  addProspectOptimistic: (newProspect: Family) => void;
+  removeProspectOptimistic: (prospectId: string) => void;
+  updateProspectOptimistic: (prospectId: string, updates: Partial<Family>) => void;
+  replaceProspectId: (tempId: string, realId: string) => void;
   
   // Sélecteurs mémorisés
   getProspects: () => Family[];
@@ -146,6 +150,124 @@ export const useFamiliesStore = create<FamiliesState>()(
   // Vider le cache
   clearCache: () => {
     set({ data: null, lastFetch: 0, error: null });
+  },
+
+  // Ajouter un prospect de manière optimiste (UX instantanée)
+  addProspectOptimistic: (newProspect: Family) => {
+    const { data } = get();
+    if (!data) return;
+
+    const updatedFamilies = [...data.families, newProspect];
+    const updatedProspects = [...data.prospects, newProspect];
+    
+    // Recalculer les stats optimistes
+    const updatedStats = {
+      ...data.stats,
+      totalFamilies: updatedFamilies.length,
+      totalProspects: updatedProspects.length,
+    };
+
+    const optimisticData: UnifiedFamiliesData = {
+      ...data,
+      families: updatedFamilies,
+      prospects: updatedProspects,
+      stats: updatedStats,
+    };
+
+    set({ 
+      data: optimisticData,
+      lastFetch: Date.now() // Marquer comme fraîchement mis à jour
+    });
+    
+    console.log('🚀 [FAMILIES-STORE] Prospect ajouté de manière optimiste');
+  },
+
+  // Supprimer un prospect de manière optimiste (UX instantanée)
+  removeProspectOptimistic: (prospectId: string) => {
+    const { data } = get();
+    if (!data) return;
+
+    const updatedFamilies = data.families.filter(f => f._id !== prospectId);
+    const updatedProspects = data.prospects.filter(f => f._id !== prospectId);
+    
+    // Recalculer les stats optimistes
+    const updatedStats = {
+      ...data.stats,
+      totalFamilies: updatedFamilies.length,
+      totalProspects: updatedProspects.length,
+    };
+
+    const optimisticData: UnifiedFamiliesData = {
+      ...data,
+      families: updatedFamilies,
+      prospects: updatedProspects,
+      stats: updatedStats,
+    };
+
+    set({ 
+      data: optimisticData,
+      lastFetch: Date.now() // Marquer comme fraîchement mis à jour
+    });
+    
+    console.log('🗑️ [FAMILIES-STORE] Prospect supprimé de manière optimiste');
+  },
+
+  // Mettre à jour un prospect de manière optimiste (UX instantanée)
+  updateProspectOptimistic: (prospectId: string, updates: Partial<Family>) => {
+    const { data } = get();
+    if (!data) return;
+
+    // Mettre à jour dans families
+    const updatedFamilies = data.families.map(f => 
+      f._id === prospectId ? { ...f, ...updates } : f
+    );
+    
+    // Mettre à jour dans prospects
+    const updatedProspects = data.prospects.map(f => 
+      f._id === prospectId ? { ...f, ...updates } : f
+    );
+
+    const optimisticData: UnifiedFamiliesData = {
+      ...data,
+      families: updatedFamilies,
+      prospects: updatedProspects,
+    };
+
+    set({ 
+      data: optimisticData,
+      lastFetch: Date.now() // Marquer comme fraîchement mis à jour
+    });
+    
+    console.log('✏️ [FAMILIES-STORE] Prospect mis à jour de manière optimiste');
+  },
+
+  // Remplacer l'ID temporaire par le vrai ID après création
+  replaceProspectId: (tempId: string, realId: string) => {
+    const { data } = get();
+    if (!data) return;
+
+    // Remplacer l'ID dans families
+    const updatedFamilies = data.families.map(f => 
+      f._id === tempId ? { ...f, _id: realId } : f
+    );
+    
+    // Remplacer l'ID dans prospects
+    const updatedProspects = data.prospects.map(f => 
+      f._id === tempId ? { ...f, _id: realId } : f
+    );
+
+    const optimisticData: UnifiedFamiliesData = {
+      ...data,
+      families: updatedFamilies,
+      prospects: updatedProspects,
+    };
+
+    set({ 
+      data: optimisticData,
+      // Ne pas toucher au lastFetch pour éviter de déclencher un rechargement
+    });
+    
+    console.log(`🔄 [FAMILIES-STORE] ID temporaire ${tempId} remplacé par ${realId}`);
   },
 
   // Sélecteurs optimisés (pas de recalcul si data n'a pas changé)

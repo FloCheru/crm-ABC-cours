@@ -27,6 +27,10 @@ export function useFamiliesGlobal(options: UseFamiliesGlobalOptions = {}) {
   // Actions
   const loadFamilies = useFamiliesStore((state) => state.loadFamilies);
   const clearCache = useFamiliesStore((state) => state.clearCache);
+  const addProspectOptimistic = useFamiliesStore((state) => state.addProspectOptimistic);
+  const removeProspectOptimistic = useFamiliesStore((state) => state.removeProspectOptimistic);
+  const updateProspectOptimistic = useFamiliesStore((state) => state.updateProspectOptimistic);
+  const replaceProspectId = useFamiliesStore((state) => state.replaceProspectId);
   
   // Sélecteurs optimisés
   const getProspects = useFamiliesStore((state) => state.getProspects);
@@ -56,6 +60,10 @@ export function useFamiliesGlobal(options: UseFamiliesGlobalOptions = {}) {
     // Actions
     loadFamilies,
     clearCache,
+    addProspectOptimistic,
+    removeProspectOptimistic,
+    updateProspectOptimistic,
+    replaceProspectId,
     
     // Sélecteurs (OPTIMISÉS - pas de recalcul)
     getProspects,

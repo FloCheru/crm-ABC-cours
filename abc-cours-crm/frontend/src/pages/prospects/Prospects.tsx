@@ -36,6 +36,10 @@ export const Prospects: React.FC = () => {
     prospects,
     stats,
     clearCache,
+    addProspectOptimistic,
+    removeProspectOptimistic,
+    updateProspectOptimistic,
+    replaceProspectId,
   } = useFamiliesGlobal();
   
   const { invalidateAllFamilyRelatedCaches } = useCacheInvalidation();
@@ -74,49 +78,73 @@ export const Prospects: React.FC = () => {
   ) => {
     if (!familyData.length) return;
 
-    // Invalider le cache pour forcer un rechargement
-    clearCache();
-
     try {
-      // Puis synchroniser avec l'API
+      // 1. MISE À JOUR OPTIMISTE - UX instantanée (0ms)
+      updateProspectOptimistic(prospectId, { prospectStatus: newStatus });
+      console.log(`✏️ Statut prospect ${prospectId} mis à jour de manière optimiste`);
+
+      // 2. SYNCHRONISATION API - en arrière-plan
       await familyService.updateProspectStatus(prospectId, newStatus);
-      console.log(
-        `✅ Statut mis à jour pour le prospect ${prospectId} - Optimiste + API`
-      );
+      console.log(`✅ Statut prospect ${prospectId} synchronisé avec l'API`);
+
+      // 3. INVALIDER CACHE - pour autres composants
+      invalidateAllFamilyRelatedCaches();
     } catch (error) {
       console.error("Erreur lors de la mise à jour du statut:", error);
-      // En cas d'erreur, invalider tous les caches pour recharger les vraies données
-      invalidateAllFamilyRelatedCaches();
+      // En cas d'erreur, forcer un rechargement avec les vraies données
+      clearCache();
       throw error;
     }
   };
 
   // Gérer le changement d'objet de rappel - avec mise à jour optimiste
-  const handleReminderSubjectUpdate = (
+  const handleReminderSubjectUpdate = async (
     familyId: string,
     newSubject: string
   ) => {
     if (!familyData.length) return;
 
-    // Invalider le cache pour forcer un rechargement
-    clearCache();
-    console.log(
-      `✅ Objet de rappel mis à jour pour la famille ${familyId} avec "${newSubject}" - Cache invalidé`
-    );
+    try {
+      // 1. MISE À JOUR OPTIMISTE - UX instantanée (0ms)
+      updateProspectOptimistic(familyId, { nextActionReminderSubject: newSubject });
+      console.log(`✏️ Objet rappel famille ${familyId} mis à jour de manière optimiste`);
+
+      // 2. SYNCHRONISATION API - en arrière-plan
+      await familyService.updateFamily(familyId, { nextActionReminderSubject: newSubject });
+      console.log(`✅ Objet rappel famille ${familyId} synchronisé avec l'API`);
+
+      // 3. INVALIDER CACHE - pour autres composants
+      invalidateAllFamilyRelatedCaches();
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'objet de rappel:", error);
+      // En cas d'erreur, forcer un rechargement avec les vraies données
+      clearCache();
+    }
   };
 
   // Gérer le changement de date de rappel - avec mise à jour optimiste
-  const handleNextActionDateUpdate = (
+  const handleNextActionDateUpdate = async (
     familyId: string,
     newDate: Date | null
   ) => {
     if (!familyData.length) return;
 
-    // Invalider le cache pour forcer un rechargement
-    clearCache();
-    console.log(
-      `✅ Date de rappel mise à jour pour la famille ${familyId} avec ${newDate?.toLocaleDateString()} - Cache invalidé`
-    );
+    try {
+      // 1. MISE À JOUR OPTIMISTE - UX instantanée (0ms)
+      updateProspectOptimistic(familyId, { nextActionDate: newDate });
+      console.log(`✏️ Date rappel famille ${familyId} mise à jour de manière optimiste`);
+
+      // 2. SYNCHRONISATION API - en arrière-plan
+      await familyService.updateFamily(familyId, { nextActionDate: newDate });
+      console.log(`✅ Date rappel famille ${familyId} synchronisée avec l'API`);
+
+      // 3. INVALIDER CACHE - pour autres composants
+      invalidateAllFamilyRelatedCaches();
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la date de rappel:", error);
+      // En cas d'erreur, forcer un rechargement avec les vraies données
+      clearCache();
+    }
   };
 
   // Gérer la suppression d'un prospect avec aperçu détaillé
@@ -141,31 +169,31 @@ export const Prospects: React.FC = () => {
   const handleConfirmDeletion = async () => {
     if (!prospectToDelete) return;
 
+    const prospect = familyData.find((f) => f._id === prospectToDelete);
+    const fullName = prospect
+      ? `${prospect.primaryContact.firstName} ${prospect.primaryContact.lastName}`
+      : "le prospect";
+
     try {
-      await familyService.deleteFamily(prospectToDelete);
-
-      // Invalider tous les caches liés aux familles pour rafraîchir automatiquement
-      invalidateAllFamilyRelatedCaches();
+      // 1. SUPPRESSION OPTIMISTE - UX instantanée (0ms)
+      removeProspectOptimistic(prospectToDelete);
       
-      const prospect = familyData.find((f) => f._id === prospectToDelete);
-      const fullName = prospect
-        ? `${prospect.primaryContact.firstName} ${prospect.primaryContact.lastName}`
-        : "le prospect";
-      
-      console.log(
-        `✅ Prospect ${fullName} supprimé avec succès - Caches invalidés`
-      );
-
-      // Fermer le modal et réinitialiser
+      // Fermer le modal immédiatement
       setIsDeletionPreviewModalOpen(false);
       setProspectToDelete(null);
       setDeletionPreviewData(null);
+      
+      console.log(`🗑️ Prospect ${fullName} supprimé de manière optimiste - UX instantanée`);
 
-      // Forcer le rechargement en changeant la clé de refresh
-      setTimeout(() => {
-        setRefreshKey(prev => prev + 1);
-        console.log("🔄 Rechargement forcé des données prospects déclenché après suppression");
-      }, 200);
+      // 2. SYNCHRONISATION API - en arrière-plan
+      await familyService.deleteFamily(prospectToDelete);
+      console.log(`✅ Prospect ${fullName} synchronisé avec l'API - suppression confirmée`);
+
+      // 3. INVALIDER CACHE - pour autres composants
+      invalidateAllFamilyRelatedCaches();
+      console.log("✅ Caches families et NDR invalidés après suppression");
+      
+      // Pas besoin de recharger - la suppression optimiste est définitive !
     } catch (error) {
       console.error("Erreur lors de la suppression du prospect:", error);
       alert("Erreur lors de la suppression du prospect");
@@ -383,18 +411,30 @@ export const Prospects: React.FC = () => {
         status: "prospect" as const,
       };
 
-      await familyService.createFamily(prospectData);
-      setIsCreateProspectModalOpen(false);
+      // 1. MISE À JOUR OPTIMISTE - UX instantanée (0ms)
+      const tempId = `temp_${Date.now()}`; // Garder l'ID temporaire pour le remplacer après
+      const optimisticProspect: Family = {
+        ...prospectData,
+        _id: tempId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as Family;
 
-      // Invalider tous les caches liés aux familles pour rafraîchir automatiquement
+      addProspectOptimistic(optimisticProspect);
+      setIsCreateProspectModalOpen(false);
+      console.log("🚀 Prospect ajouté de manière optimiste - UX instantanée");
+
+      // 2. SYNCHRONISATION API - en arrière-plan
+      const createdProspect = await familyService.createFamily(prospectData);
+      console.log("✅ Prospect synchronisé avec l'API:", createdProspect._id);
+
+      // 3. REMPLACER L'ID TEMPORAIRE PAR LE VRAI ID
+      replaceProspectId(tempId, createdProspect._id);
+      console.log(`🔄 ID temporaire ${tempId} remplacé par ${createdProspect._id}`);
+
+      // 4. INVALIDER CACHE - pour autres composants
       invalidateAllFamilyRelatedCaches();
-      console.log("✅ Caches families et NDR invalidés après création de prospect");
-      
-      // Forcer le rechargement en changeant la clé de refresh
-      setTimeout(() => {
-        setRefreshKey(prev => prev + 1);
-        console.log("🔄 Rechargement forcé des données prospects déclenché");
-      }, 200);
+      console.log("✅ Caches families et NDR invalidés après création");
     } catch (err) {
       console.error("Erreur lors de la création du prospect:", err);
       throw err;

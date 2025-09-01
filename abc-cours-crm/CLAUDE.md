@@ -290,3 +290,19 @@ This format ensures consistent, comprehensive documentation of all development w
 ---
 
 **Working Mode**: Agent system mandatory for all code changes. Servers managed locally by user (always running). No Claude signatures in commits.
+
+## RÈGLES CRITIQUES - BASE DE DONNÉES
+
+### ⚠️ INTERDICTIONS ABSOLUES
+- **JAMAIS** lancer de scripts de seed sans autorisation explicite de l'utilisateur
+- **JAMAIS** exécuter `npm run seed`, `npm run seed:users`, `npm run seed:subjects` sans demande claire
+- **JAMAIS** modifier/supprimer des utilisateurs existants sans permission
+- **JAMAIS** toucher à la base de données sans accord préalable
+
+### Protocole obligatoire avant manipulation DB
+1. **TOUJOURS DEMANDER** avant tout script qui modifie la base
+2. **EXPLIQUER** clairement ce que le script va faire
+3. **ATTENDRE** la validation explicite de l'utilisateur
+4. En cas de doute : **NE PAS EXÉCUTER**
+
+**Rationale**: Les scripts de seed écrasent les données existantes et peuvent détruire des utilisateurs/données importantes du projet.
