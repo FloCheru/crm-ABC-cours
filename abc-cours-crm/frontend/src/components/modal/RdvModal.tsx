@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ModalWrapper } from '../ui/ModalWrapper/ModalWrapper';
 import { Button } from '../button/Button';
+import { adminService, type Admin } from '../../services/adminService';
 
 const RDV_TYPES = [
   { value: "physique", label: "Physique" },
@@ -38,6 +39,26 @@ export const RdvModal: React.FC<RdvModalProps> = ({
   isEditing,
   loading = false
 }) => {
+  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [loadingAdmins, setLoadingAdmins] = useState(false);
+
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      if (!isOpen) return;
+      
+      try {
+        setLoadingAdmins(true);
+        const adminList = await adminService.getAdmins();
+        setAdmins(adminList);
+      } catch (error) {
+        console.error('Erreur lors du chargement des administrateurs:', error);
+      } finally {
+        setLoadingAdmins(false);
+      }
+    };
+
+    fetchAdmins();
+  }, [isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,13 +136,21 @@ export const RdvModal: React.FC<RdvModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Admin assigné
             </label>
-            <input
-              type="text"
+            <select
               value={formData.assignedAdminId}
               onChange={(e) => onFormChange('assignedAdminId', e.target.value)}
-              placeholder="ID de l'admin"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+              disabled={loadingAdmins}
+            >
+              <option value="">
+                {loadingAdmins ? "Chargement des admins..." : "Sélectionner un admin"}
+              </option>
+              {admins.map(admin => (
+                <option key={admin.id} value={admin.id}>
+                  {admin.fullName}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

@@ -6,7 +6,9 @@ import {
   ButtonGroup,
   StatusBanner,
   DataCard,
+  Table,
   RdvModal,
+  AddStudentModal,
 } from "../../components";
 import { familyService } from "../../services/familyService";
 import rdvService from "../../services/rdvService";
@@ -31,13 +33,16 @@ export const ProspectDetails: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
-  // States pour le mode édition
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState<Partial<Family>>({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({});
+  // Fonction de rafraîchissement après mise à jour
+  const refetchProspect = async () => {
+    if (!familyId) return;
+    try {
+      const data = await familyService.getFamily(familyId);
+      setProspect(data);
+    } catch (err) {
+      console.error("Erreur lors du rafraîchissement:", err);
+    }
+  };
 
   // States pour la gestion des RDV
   const [rdvs, setRdvs] = useState<RendezVous[]>([]);
@@ -52,27 +57,31 @@ export const ProspectDetails: React.FC = () => {
     notes: ""
   });
 
+  // État pour la modal d'ajout d'élève
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+
+  // Fonction pour charger les détails du prospect
+  const loadProspectDetails = async () => {
+    if (!familyId) {
+      setError("ID du prospect manquant");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const data = await familyService.getFamily(familyId);
+      setProspect(data);
+      await loadRdvs();
+    } catch (err) {
+      console.error("Erreur lors du chargement du prospect:", err);
+      setError("Impossible de charger les détails du prospect");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadProspectDetails = async () => {
-      if (!familyId) {
-        setError("ID du prospect manquant");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const data = await familyService.getFamily(familyId);
-        setProspect(data);
-        await loadRdvs();
-      } catch (err) {
-        console.error("Erreur lors du chargement du prospect:", err);
-        setError("Impossible de charger les détails du prospect");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadProspectDetails();
   }, [familyId]);
 
@@ -164,109 +173,9 @@ export const ProspectDetails: React.FC = () => {
     }
   };
 
-  const handleEditToggle = () => {
-    if (isEditing) {
-      // Annuler les modifications
-      setEditedData({});
-      setValidationErrors({});
-      setIsEditing(false);
-    } else {
-      // Entrer en mode édition
-      setEditedData({
-        primaryContact: { ...prospect!.primaryContact },
-        address: { ...prospect!.address },
-        demande: { ...prospect!.demande },
-        plannedTeacher: prospect?.plannedTeacher || "",
-        prospectStatus: prospect?.prospectStatus || null,
-        nextActionReminderSubject: prospect?.nextActionReminderSubject || "",
-        nextActionDate: prospect?.nextActionDate || null,
-      });
-      setIsEditing(true);
-    }
-  };
 
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
 
-    // Validation des champs obligatoires
-    if (!editedData.primaryContact?.firstName?.trim()) {
-      errors.firstName = "Le prénom est requis";
-    }
-    if (!editedData.primaryContact?.lastName?.trim()) {
-      errors.lastName = "Le nom est requis";
-    }
-    if (!editedData.primaryContact?.email?.trim()) {
-      errors.email = "L'email est requis";
-    } else if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editedData.primaryContact.email)
-    ) {
-      errors.email = "Format d'email invalide";
-    }
-    if (!editedData.primaryContact?.primaryPhone?.trim()) {
-      errors.primaryPhone = "Le téléphone principal est requis";
-    }
-    if (!editedData.address?.street?.trim()) {
-      errors.street = "La rue est requise";
-    }
-    if (!editedData.address?.city?.trim()) {
-      errors.city = "La ville est requise";
-    }
-    if (!editedData.address?.postalCode?.trim()) {
-      errors.postalCode = "Le code postal est requis";
-    }
 
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      const updatedProspect = await familyService.updateFamily(
-        familyId!,
-        editedData
-      );
-      setProspect(updatedProspect);
-      setEditedData({});
-      setIsEditing(false);
-      setValidationErrors({});
-    } catch (err) {
-      console.error("Erreur lors de la sauvegarde:", err);
-      setError("Impossible de sauvegarder les modifications");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleInputChange = (field: string, value: any) => {
-    // Gestion spéciale pour les matières - conversion chaîne vers tableau
-    if (field === "demande.subjects") {
-      value = value
-        ? value
-            .split(",")
-            .map((s: string) => s.trim())
-            .filter((s: string) => s.length > 0)
-        : [];
-    }
-
-    const fieldParts = field.split(".");
-    if (fieldParts.length === 1) {
-      setEditedData((prev) => ({ ...prev, [field]: value }));
-    } else if (fieldParts.length === 2) {
-      const [parent, child] = fieldParts;
-      setEditedData((prev) => ({
-        ...prev,
-        [parent]: {
-          ...((prev[parent as keyof Family] as Record<string, any>) || {}),
-          [child]: value,
-        },
-      }));
-    }
-  };
 
   if (loading) {
     return (
@@ -442,17 +351,6 @@ export const ProspectDetails: React.FC = () => {
     ],
   };
 
-  const getFieldValue = (field: any, path: string) => {
-    const keys = path.split(".");
-    let value = keys.length === 1 ? field : field?.[keys[0]]?.[keys[1]];
-
-    // Gestion spéciale pour les tableaux (comme subjects)
-    if (path === "demande.subjects" && Array.isArray(value)) {
-      return value.join(", ");
-    }
-
-    return value || "";
-  };
 
   const getDisplayValue = (prospect: Family, path: string) => {
     const keys = path.split(".");
@@ -500,47 +398,13 @@ export const ProspectDetails: React.FC = () => {
 
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Détails du Prospect</h1>
-        <div>
-          {isEditing ? (
-            <ButtonGroup
-              variant="double"
-              buttons={[
-                {
-                  text: "Annuler",
-                  variant: "outline",
-                  onClick: handleEditToggle,
-                  disabled: isSaving,
-                },
-                {
-                  text: isSaving ? "Sauvegarde..." : "Enregistrer",
-                  variant: "primary",
-                  onClick: handleSave,
-                  disabled: isSaving,
-                },
-              ]}
-            />
-          ) : (
-            <ButtonGroup
-              variant="triple"
-              buttons={[
-                {
-                  text: "Retour",
-                  variant: "outline",
-                  onClick: handleBack,
-                },
-                {
-                  text: "Modifier",
-                  variant: "secondary",
-                  onClick: handleEditToggle,
-                },
-                {
-                  text: "Créer NDR",
-                  variant: "primary",
-                  onClick: handleCreateNDR,
-                },
-              ]}
-            />
-          )}
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={handleBack}>
+            Retour
+          </Button>
+          <Button variant="primary" onClick={handleCreateNDR}>
+            Créer NDR
+          </Button>
         </div>
       </header>
 
@@ -554,19 +418,34 @@ export const ProspectDetails: React.FC = () => {
           fields={fieldConfig.personal.map(field => ({
             key: field.key,
             label: field.label,
-            value: isEditing 
-              ? getFieldValue(editedData, field.field)
-              : getDisplayValue(prospect, field.field),
+            value: getDisplayValue(prospect, field.field),
             type: field.type as "text" | "email" | "tel" | "number" | "date" | "textarea" | "select",
             required: (field as any).required || false,
             placeholder: field.placeholder
           }))}
-          isEditing={isEditing}
-          onChange={(key, value) => {
-            const field = fieldConfig.personal.find(f => f.key === key);
-            if (field) handleInputChange(field.field, value);
+          onSave={async (data) => {
+            // Construire l'objet de données pour l'API
+            const updateData: any = {
+              primaryContact: {},
+              address: {}
+            };
+            
+            // Mapper les données du formulaire vers les champs de l'API
+            Object.entries(data).forEach(([key, value]) => {
+              const field = fieldConfig.personal.find(f => f.key === key);
+              if (field) {
+                const fieldParts = field.field.split('.');
+                if (fieldParts.length === 2) {
+                  const [parent, child] = fieldParts;
+                  updateData[parent][child] = value;
+                }
+              }
+            });
+            
+            // Mettre à jour via l'API
+            await familyService.updateFamily(familyId!, updateData);
+            await refetchProspect();
           }}
-          errors={validationErrors}
           className="mb-8"
         />
 
@@ -577,84 +456,186 @@ export const ProspectDetails: React.FC = () => {
           fields={fieldConfig.courseData.map(field => ({
             key: field.key,
             label: field.label,
-            value: isEditing 
-              ? getFieldValue(editedData, field.field)
-              : getDisplayValue(prospect, field.field),
+            value: getDisplayValue(prospect, field.field),
             type: field.type as "text" | "email" | "tel" | "number" | "date" | "textarea" | "select",
             required: (field as any).required || false,
             placeholder: field.placeholder
           }))}
-          isEditing={isEditing}
-          onChange={(key, value) => {
-            const field = fieldConfig.courseData.find(f => f.key === key);
-            if (field) handleInputChange(field.field, value);
+          onSave={async (data) => {
+            // Construire l'objet de données pour l'API
+            const updateData: any = {
+              demande: {},
+              address: {}
+            };
+            
+            // Mapper les données du formulaire vers les champs de l'API
+            Object.entries(data).forEach(([key, value]) => {
+              const field = fieldConfig.courseData.find(f => f.key === key);
+              if (field && !field.readOnly) {
+                const fieldParts = field.field.split('.');
+                if (fieldParts.length === 2) {
+                  const [parent, child] = fieldParts;
+                  updateData[parent][child] = value;
+                }
+              }
+            });
+            
+            // Mettre à jour via l'API
+            await familyService.updateFamily(familyId!, updateData);
+            await refetchProspect();
           }}
-          errors={validationErrors}
           className="mb-8"
         />
         
-        {/* Statut prospect - section séparée */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Statut</h2>
-          <div className="grid grid-cols-1 gap-4">
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Statut prospect</label>
-              {isEditing ? (
-                <select
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={editedData.prospectStatus || ""}
-                  onChange={(e) =>
-                    handleInputChange("prospectStatus", e.target.value || null)
-                  }
-                >
-                  <option value="">Sélectionner un statut</option>
-                  {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <p className="text-gray-900">{prospect.prospectStatus || "Non défini"}</p>
-              )}
-            </div>
-          </div>
-        </section>
+        {/* Statut prospect */}
+        <DataCard
+          title="Statut"
+          fields={[
+            {
+              key: "prospectStatus",
+              label: "Statut prospect",
+              value: prospect.prospectStatus || "",
+              type: "select" as const,
+              options: [
+                { value: "", label: "Sélectionner un statut" },
+                ...statusOptions.map(option => ({
+                  value: option.value,
+                  label: option.label
+                }))
+              ]
+            }
+          ]}
+          onSave={async (data) => {
+            await familyService.updateFamily(familyId!, {
+              prospectStatus: data.prospectStatus || null
+            });
+            await refetchProspect();
+          }}
+          className="mb-8"
+        />
 
         {/* Élèves */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Élèves ({students.length})</h2>
-          <div className="space-y-4">
+        <DataCard
+          title={`Élèves (${students.length})`}
+          fields={[]}
+        >
+          <div>
             {students.length > 0 ? (
-              students.map((student, index) => (
-                <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                  <h3 className="text-lg font-medium text-gray-800 mb-2">
-                    {student.firstName} {student.lastName}
-                  </h3>
-                  <div>
-                    {student.school?.grade && (
-                      <p className="text-gray-600">Niveau: {student.school.grade}</p>
-                    )}
-                  </div>
-                </div>
-              ))
+              <Table
+                columns={[
+                  {
+                    key: "firstName",
+                    label: "Prénom",
+                    render: (value) => value
+                  },
+                  {
+                    key: "lastName",
+                    label: "Nom",
+                    render: (value) => value
+                  },
+                  {
+                    key: "dateOfBirth",
+                    label: "Né(e) le",
+                    render: (value) => value ? new Date(value).toLocaleDateString("fr-FR") : "-"
+                  },
+                  {
+                    key: "courseLocation",
+                    label: "Lieu des cours",
+                    render: (_, row: any) => {
+                      if (!row.courseLocation?.type) return "-";
+                      return row.courseLocation.type === "domicile" ? "À domicile" : 
+                             row.courseLocation.type === "professeur" ? "Chez le professeur" : "Autre";
+                    }
+                  },
+                  {
+                    key: "postalCode",
+                    label: "Code postal",
+                    render: (_, row: any) => row.courseLocation?.address?.postalCode || "-"
+                  },
+                  {
+                    key: "city",
+                    label: "Ville",
+                    render: (_, row: any) => row.courseLocation?.address?.city || "-"
+                  },
+                  {
+                    key: "phone",
+                    label: "Tél",
+                    render: (_, row: any) => row.contact?.phone || "-"
+                  },
+                  {
+                    key: "availability",
+                    label: "Disponibilités",
+                    render: (value) => value || "-"
+                  },
+                  {
+                    key: "comments",
+                    label: "Com.",
+                    render: (value, row: any) => {
+                      const comment = value || row.notes || "";
+                      return comment.length > 30 ? `${comment.substring(0, 30)}...` : comment || "-";
+                    }
+                  },
+                  {
+                    key: "settlementNoteIds",
+                    label: "NDR",
+                    render: (_, row: any) => (
+                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full">
+                        {row.settlementNoteIds?.length || 0}
+                      </span>
+                    )
+                  },
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    render: (_, row: any) => (
+                      <div className="table__actions">
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => {
+                            // TODO: Implémenter modification élève
+                            console.log("Modification élève:", row);
+                          }}
+                          title="Modifier l'élève"
+                        >
+                          ✏️
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="error"
+                          onClick={() => {
+                            if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'élève ${row.firstName} ${row.lastName} ?`)) {
+                              // TODO: Implémenter suppression élève
+                              console.log("Suppression élève:", row);
+                            }
+                          }}
+                          title="Supprimer l'élève"
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    )
+                  }
+                ]}
+                data={students.map(student => ({ ...student, id: student._id || `student-${students.indexOf(student)}` }))}
+                itemsPerPage={10}
+              />
             ) : (
-              <p className="text-gray-500 text-center py-4">Aucun élève enregistré</p>
+              <div>
+                <p>Aucun élève enregistré</p>
+              </div>
             )}
-            {isEditing && (
+            
+            <div>
               <Button
-                variant="secondary"
-                onClick={() =>
-                  navigate(
-                    `/families/${prospect._id}/add-student?returnTo=prospectDetails&familyId=${prospect._id}`
-                  )
-                }
+                variant="primary"
+                onClick={() => setShowAddStudentModal(true)}
               >
                 Ajouter un élève
               </Button>
-            )}
+            </div>
           </div>
-        </section>
+        </DataCard>
 
         {/* Actions de suivi */}
         <DataCard
@@ -663,14 +644,6 @@ export const ProspectDetails: React.FC = () => {
             let value;
             if (field.key === "createdAt") {
               value = new Date(prospect.createdAt).toLocaleDateString("fr-FR");
-            } else if (isEditing) {
-              if (field.type === "date" && editedData[field.field as keyof typeof editedData]) {
-                value = new Date(
-                  editedData[field.field as keyof typeof editedData] as string
-                ).toISOString().split("T")[0];
-              } else {
-                value = getFieldValue(editedData, field.field);
-              }
             } else {
               value = getDisplayValue(prospect, field.field);
             }
@@ -684,113 +657,143 @@ export const ProspectDetails: React.FC = () => {
               placeholder: field.placeholder
             };
           })}
-          isEditing={isEditing && fieldConfig.tracking.some(f => !f.readOnly)} 
-          onChange={(key, value) => {
-            const field = fieldConfig.tracking.find(f => f.key === key);
-            if (field && !field.readOnly) {
-              const processedValue = field.type === "date" && value 
-                ? new Date(value) 
-                : value;
-              handleInputChange(field.field, processedValue);
-            }
+          onSave={async (data) => {
+            const updateData: any = {};
+            
+            // Mapper les données du formulaire vers les champs de l'API  
+            Object.entries(data).forEach(([key, value]) => {
+              const field = fieldConfig.tracking.find(f => f.key === key);
+              if (field && !field.readOnly) {
+                const processedValue = field.type === "date" && value 
+                  ? new Date(value as string) 
+                  : value;
+                updateData[field.field] = processedValue;
+              }
+            });
+            
+            // Mettre à jour via l'API
+            await familyService.updateFamily(familyId!, updateData);
+            await refetchProspect();
           }}
-          errors={validationErrors}
           className="mb-8"
         />
 
         {/* Section Suivi des RDV */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Suivi des RDV ({rdvs.length})</h2>
-          
-
-          <div className="space-y-4">
+        <DataCard
+          title={`Suivi des RDV (${rdvs.length})`}
+          fields={[]}
+          className="mb-8"
+        >
+          <div>
             {isLoadingRdvs ? (
-              <div className="text-center py-4">
-                <div className="text-gray-500">Chargement des RDV...</div>
+              <div>
+                <div>Chargement des RDV...</div>
               </div>
             ) : rdvs.length > 0 ? (
-              <div className="space-y-4">
-                {rdvs.map((rdv) => (
-                  <div key={rdv._id} className="p-4 border border-gray-200 rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex gap-2 mb-3">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            rdv.status === 'planifie' ? 'bg-blue-100 text-blue-800' :
-                            rdv.status === 'realise' ? 'bg-green-100 text-green-800' :
-                            rdv.status === 'annule' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {rdv.status === 'planifie' ? 'Planifié' :
-                             rdv.status === 'realise' ? 'Réalisé' :
-                             rdv.status === 'annule' ? 'Annulé' : rdv.status}
-                          </span>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            rdv.type === 'physique' ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800'
-                          }`}>
-                            {rdv.type === 'physique' ? 'Physique' : 'Virtuel'}
-                          </span>
-                        </div>
-                        <div className="mt-2">
-                          <p className="text-sm font-medium text-gray-900">
-                            {new Date(rdv.date).toLocaleDateString('fr-FR')} à {rdv.time}
-                          </p>
-                          {rdv.notes && (
-                            <p className="text-sm text-gray-600 mt-1">{rdv.notes}</p>
-                          )}
-                          {rdv.assignedAdminId && (
-                            <p className="text-sm text-gray-500 mt-1">Admin: {rdv.assignedAdminId}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
+              <Table
+                columns={[
+                  {
+                    key: "date",
+                    label: "Date",
+                    render: (_, row: any) => new Date(row.date).toLocaleDateString('fr-FR')
+                  },
+                  {
+                    key: "time",
+                    label: "Heure",
+                    render: (value) => value
+                  },
+                  {
+                    key: "status",
+                    label: "Statut",
+                    render: (value) => 
+                      value === 'planifie' ? 'Planifié' :
+                      value === 'realise' ? 'Réalisé' :
+                      value === 'annule' ? 'Annulé' : value
+                  },
+                  {
+                    key: "type",
+                    label: "Type",
+                    render: (value) => value === 'physique' ? 'Physique' : 'Virtuel'
+                  },
+                  {
+                    key: "assignedAdminId",
+                    label: "Admin assigné",
+                    render: (value) => {
+                      if (!value) return "Non assigné";
+                      return typeof value === 'object' 
+                        ? `${value.firstName} ${value.lastName}` 
+                        : value;
+                    }
+                  },
+                  {
+                    key: "notes",
+                    label: "Notes",
+                    render: (value) => value || "-"
+                  },
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    render: (_, row: any) => (
+                      <div className="table__actions">
                         <Button
-                          variant="outline"
+                          size="sm"
+                          variant="primary"
                           onClick={() => {
-                            setEditingRdv(rdv);
+                            setEditingRdv(row);
                             setRdvFormData({
-                              assignedAdminId: rdv.assignedAdminId || "",
-                              date: new Date(rdv.date).toISOString().split('T')[0],
-                              time: rdv.time,
-                              type: rdv.type,
-                              notes: rdv.notes || ""
+                              assignedAdminId: row.assignedAdminId || "",
+                              date: new Date(row.date).toISOString().split('T')[0],
+                              time: row.time,
+                              type: row.type,
+                              notes: row.notes || ""
                             });
                             setShowRdvModal(true);
                           }}
+                          title="Modifier le RDV"
                         >
-                          Modifier
+                          ✏️
                         </Button>
                         <Button
-                          variant="outline"
-                          onClick={() => handleDeleteRdv(rdv._id!)}
+                          size="sm"
+                          variant="error"
+                          onClick={() => handleDeleteRdv(row._id!)}
+                          title="Supprimer le RDV"
                         >
-                          Supprimer
+                          ✕
                         </Button>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    )
+                  }
+                ]}
+                data={rdvs.map(rdv => ({ ...rdv, id: rdv._id }))}
+                itemsPerPage={5}
+              />
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div>
                 <p>Aucun RDV planifié</p>
               </div>
             )}
             
-            <div className="mt-6 flex gap-3">
+            <div>
               <Button
-                variant="secondary"
+                variant="primary"
                 onClick={() => {
-                  console.log("🔵 [DEBUG] Bouton 'Ajouter un RDV' cliqué");
-                  console.log("🔵 [DEBUG] showRdvModal avant:", showRdvModal);
+                  setEditingRdv(null);
+                  setRdvFormData({
+                    assignedAdminId: "",
+                    date: "",
+                    time: "",
+                    type: "physique",
+                    notes: ""
+                  });
                   setShowRdvModal(true);
-                  console.log("🔵 [DEBUG] setShowRdvModal(true) appelé");
                 }}
               >
-                Ajouter un RDV
+                Nouveau RDV
               </Button>
             </div>
           </div>
-        </section>
+        </DataCard>
       </main>
 
       {/* Actions */}
@@ -837,6 +840,19 @@ export const ProspectDetails: React.FC = () => {
           }
         }}
         isEditing={editingRdv !== null}
+      />
+
+      {/* Modal ajout d'élève */}
+      <AddStudentModal
+        isOpen={showAddStudentModal}
+        onClose={() => setShowAddStudentModal(false)}
+        familyId={prospect?._id || ""}
+        onSuccess={() => {
+          // Recharger les données du prospect pour afficher le nouvel élève
+          if (familyId) {
+            loadProspectDetails();
+          }
+        }}
       />
     </div>
   );

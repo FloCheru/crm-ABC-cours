@@ -38,6 +38,21 @@ export const Login: React.FC = () => {
     setCredentials((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleQuickAdminLogin = async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      await login("admin@abc-cours.com", "admin123");
+      // Rediriger vers la page d'origine ou la page par défaut
+      navigate(from, { replace: true });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Erreur de connexion");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -106,6 +121,22 @@ export const Login: React.FC = () => {
             {isLoading ? "Connexion..." : "Se connecter"}
           </Button>
         </form>
+
+        {/* Bouton connexion rapide admin */}
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isLoading}
+          onClick={handleQuickAdminLogin}
+          style={{ 
+            width: "100%", 
+            marginTop: "0.5rem",
+            fontSize: "0.875rem",
+            opacity: 0.8
+          }}
+        >
+          🚀 Connexion rapide Admin
+        </Button>
 
         <div
           style={{

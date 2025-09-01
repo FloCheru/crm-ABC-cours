@@ -23,25 +23,19 @@ import { SeriesDetails } from "./pages/admin/coupons/SeriesDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuthStore } from "./stores";
 import { useAuthInitialization } from "./hooks/useAuthInitialization";
+import { useActivityReset } from "./hooks/useActivityReset";
 import { useEffect } from "react";
 
 // Basename vide pour Vercel (domaine dédié)
 const basename = "";
 
-// Composant pour initialiser l'auth au démarrage
-function App() {
-  const initializeAuth = useAuthStore((state) => state.initializeAuth);
-  
-  // Initialiser l'authentification et la gestion automatique de déconnexion
-  useAuthInitialization();
-  
-  useEffect(() => {
-    initializeAuth();
-  }, [initializeAuth]);
+// Composant interne qui utilise useLocation (dans le Router)
+function AppRoutes() {
+  // Étendre automatiquement la session à chaque navigation
+  useActivityReset();
   
   return (
-    <BrowserRouter basename={basename}>
-        <Routes>
+    <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route
@@ -165,6 +159,23 @@ function App() {
             }
           />
         </Routes>
+  );
+}
+
+// Composant principal App
+function App() {
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  
+  // Initialiser l'authentification et la gestion automatique de déconnexion
+  useAuthInitialization();
+  
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+  
+  return (
+    <BrowserRouter basename={basename}>
+      <AppRoutes />
     </BrowserRouter>
   );
 }

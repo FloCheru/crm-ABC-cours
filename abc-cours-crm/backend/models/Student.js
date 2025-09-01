@@ -76,9 +76,6 @@ const studentSchema = new mongoose.Schema(
       trim: true,
     },
     medicalInfo: {
-      allergies: [String],
-      conditions: [String],
-      medications: [String],
       emergencyContact: {
         name: String,
         phone: String,
@@ -94,6 +91,11 @@ const studentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    settlementNoteIds: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SettlementNote",
+      index: true,
+    }],
   },
   {
     timestamps: true,

@@ -5,6 +5,7 @@ export { Input } from "./forms/input/Input";
 export { Select } from "./forms/select/Select";
 export { Modal } from "./modal/Modal";
 export { RdvModal } from "./modal/RdvModal";
+export { AddStudentModal } from "./modal/AddStudentModal";
 export { Navbar } from "./navbar/Navbar";
 export { Breadcrumb } from "./breadcrum/Breadcrumb";
 export { SummaryCard } from "./summaryCard/SummaryCard";

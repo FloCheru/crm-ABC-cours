@@ -136,6 +136,7 @@ export interface Student {
   };
   status: "active" | "inactive" | "graduated";
   notes?: string;
+  settlementNoteIds?: string[];
   family: string | {
     _id: string;
     name: string;

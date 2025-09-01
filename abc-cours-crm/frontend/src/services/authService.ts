@@ -9,7 +9,7 @@ export interface LoginCredentials {
 }
 
 export interface AuthResponse {
-  token: string;
+  accessToken: string;
   user: {
     _id: string;
     email: string;
@@ -24,6 +24,7 @@ class AuthService {
     console.log(credentials);
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: "POST",
+      credentials: "include", // Envoie/reçoit les cookies
       headers: {
         "Content-Type": "application/json",
       },
@@ -36,14 +37,30 @@ class AuthService {
 
     const data = await response.json();
 
-    // Stocker le token dans localStorage
-    localStorage.setItem("token", data.token);
+    // Stocker seulement l'access token dans localStorage
+    // Le refresh token est automatiquement stocké en cookie httpOnly
+    localStorage.setItem("token", data.accessToken);
     localStorage.setItem("user", JSON.stringify(data.user));
 
     return data;
   }
 
   async logout(): Promise<void> {
+    // Appeler l'endpoint de logout pour supprimer le refresh token côté serveur
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include", // Envoie les cookies pour suppression
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.getToken()}`,
+        },
+      });
+    } catch (error) {
+      console.warn("Erreur lors du logout côté serveur:", error);
+    }
+
+    // Nettoyer le localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   }
@@ -62,15 +79,10 @@ class AuthService {
   }
 
   async refreshToken(): Promise<void> {
-    const token = this.getToken();
-    if (!token) {
-      throw new Error("Aucun token disponible");
-    }
-
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: "POST",
+      credentials: "include", // Utilise le refresh token en cookie
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
@@ -80,7 +92,37 @@ class AuthService {
     }
 
     const data = await response.json();
-    localStorage.setItem("token", data.token);
+    // Stocker le nouveau access token
+    localStorage.setItem("token", data.accessToken);
+  }
+
+  async extendSession(): Promise<void> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        console.warn("Pas de token pour étendre la session");
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/extend-session`, {
+        method: "POST",
+        credentials: "include", // Utilise le refresh token en cookie
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.warn("Impossible d'étendre la session:", response.status);
+        return;
+      }
+
+      const data = await response.json();
+      console.log("Session étendue jusqu'à:", data.expiresAt);
+    } catch (error) {
+      console.warn("Erreur lors de l'extension de session:", error);
+    }
   }
 }
 

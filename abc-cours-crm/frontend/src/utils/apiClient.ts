@@ -23,6 +23,11 @@ class ApiClient {
   private baseURL: string;
   private logoutCallback: LogoutFunction | null = null;
   private retryConfig: RetryConfig;
+  private isRefreshing: boolean = false;
+  private failedQueue: Array<{
+    resolve: (value: string) => void;
+    reject: (error: any) => void;
+  }> = [];
 
   constructor(
     baseURL: string = import.meta.env.VITE_API_URL || "http://localhost:3000",
@@ -59,6 +64,40 @@ class ApiClient {
     return localStorage.getItem("token");
   }
 
+  // Méthode pour tenter un refresh du token
+  private async refreshToken(): Promise<string> {
+    const response = await fetch(`${this.baseURL}/api/auth/refresh`, {
+      method: "POST",
+      credentials: "include", // Envoie les cookies httpOnly
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Refresh token failed");
+    }
+
+    const data = await response.json();
+    
+    // Stocker le nouveau access token
+    localStorage.setItem("token", data.accessToken);
+    
+    return data.accessToken;
+  }
+
+  // Traiter la queue des requêtes en attente
+  private processQueue(error: any, token?: string) {
+    this.failedQueue.forEach(({ resolve, reject }) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(token!);
+      }
+    });
+    this.failedQueue = [];
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
@@ -79,6 +118,7 @@ class ApiClient {
     );
 
     const config: RequestInit = {
+      credentials: "include", // Envoie les cookies httpOnly
       headers: {
         "Content-Type": "application/json",
         ...(token && { Authorization: `Bearer ${token}` }),
@@ -103,20 +143,86 @@ class ApiClient {
         logger.error("Status:", response.status);
         logger.error("Status Text:", response.statusText);
 
-        // Gestion spécifique de l'expiration du token
-        if (response.status === 401 || response.status === 403) {
-          logger.warn("Token expiré ou invalide, déconnexion automatique");
+        // Gestion spécifique de l'expiration du token (401)
+        if (response.status === 401) {
+          logger.warn("Token expiré, tentative de refresh...");
 
-          // Appeler le callback de logout s'il est défini
+          // Si refresh déjà en cours, mettre la requête en queue
+          if (this.isRefreshing) {
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({
+                resolve: (newToken: string) => {
+                  // Retry la requête originale avec le nouveau token
+                  const newOptions = {
+                    ...options,
+                    headers: {
+                      ...options.headers,
+                      Authorization: `Bearer ${newToken}`
+                    }
+                  };
+                  this.request<T>(endpoint, newOptions, attempt).then(resolve).catch(reject);
+                },
+                reject
+              });
+            });
+          }
+
+          // Marquer comme en cours de refresh
+          this.isRefreshing = true;
+
+          try {
+            // Tenter le refresh
+            const newToken = await this.refreshToken();
+            logger.info("Token refreshed successfully");
+
+            // Traiter toutes les requêtes en queue
+            this.processQueue(null, newToken);
+
+            // Retry la requête originale avec le nouveau token
+            const newOptions = {
+              ...options,
+              headers: {
+                ...options.headers,
+                Authorization: `Bearer ${newToken}`
+              }
+            };
+
+            return this.request<T>(endpoint, newOptions, attempt);
+
+          } catch (refreshError) {
+            logger.error("Token refresh failed:", refreshError);
+
+            // Traiter les requêtes en queue avec erreur
+            this.processQueue(refreshError, undefined);
+
+            // Déconnexion forcée
+            if (this.logoutCallback) {
+              this.logoutCallback();
+            }
+
+            // Redirection vers login
+            setTimeout(() => {
+              if (typeof window !== "undefined") {
+                window.location.href = "/login?reason=session_expired";
+              }
+            }, 100);
+
+            throw new Error("Session expired");
+
+          } finally {
+            this.isRefreshing = false;
+          }
+        }
+
+        // Gestion des erreurs 403 (forbidden) - pas de refresh possible
+        if (response.status === 403) {
+          logger.warn("Accès interdit (403)");
           if (this.logoutCallback) {
             this.logoutCallback();
           }
-
-          // Rediriger vers la page de connexion après un court délai
           setTimeout(() => {
-            // Utiliser l'API History pour éviter les problèmes de contexte React
             if (typeof window !== "undefined") {
-              window.location.href = "/login";
+              window.location.href = "/login?reason=access_denied";
             }
           }, 100);
         }

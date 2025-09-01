@@ -16,18 +16,49 @@ describe('Système PDF', () => {
 
     token = loginResponse.body.accessToken;
 
+    // Créer une famille de test
+    const familyResponse = await request(app)
+      .post('/api/families')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        address: '123 Test Street',
+        zipCode: '75001',
+        city: 'Paris',
+        students: [{
+          firstName: 'Test',
+          lastName: 'Student',
+          schoolLevel: 'Terminale',
+          subjects: []
+        }]
+      });
+
+    const familyId = familyResponse.body._id;
+    const studentId = familyResponse.body.students[0]._id;
+
+    // Créer une matière de test
+    const subjectResponse = await request(app)
+      .post('/api/subjects')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Mathématiques',
+        category: 'Scientifique',
+        professors: []
+      });
+
+    const subjectId = subjectResponse.body._id;
+
     // Créer une note de règlement de test
     const noteResponse = await request(app)
       .post('/api/settlement-notes')
       .set('Authorization', `Bearer ${token}`)
       .send({
-        familyId: '689daf68bc7e70c938842ed0',
-        studentIds: ['689db3ebbc7e70c938842f33'],
+        familyId: familyId,
+        studentIds: [studentId],
         clientName: 'Test Client',
         department: '75',
         paymentMethod: 'card',
         subjects: [{
-          subjectId: '687663b73174b1a67afc0a09',
+          subjectId: subjectId,
           hourlyRate: 25,
           quantity: 2,
           professorSalary: 20
@@ -35,7 +66,9 @@ describe('Système PDF', () => {
         charges: 5
       });
 
-    settlementNoteId = noteResponse.body.settlementNote._id;
+    if (noteResponse.body && noteResponse.body.settlementNote) {
+      settlementNoteId = noteResponse.body.settlementNote._id;
+    }
   });
 
   test('Devrait vérifier la santé du service PDF', async () => {

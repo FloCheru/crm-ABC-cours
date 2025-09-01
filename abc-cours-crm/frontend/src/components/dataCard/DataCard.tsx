@@ -1,5 +1,5 @@
-import React from "react";
-import { Input, Select } from "../";
+import React, { useState } from "react";
+import { Input, Select, Button } from "../";
 import "./DataCard.css";
 
 export interface FieldConfig {
@@ -15,10 +15,13 @@ export interface FieldConfig {
 export interface DataCardProps {
   title: string;
   fields: FieldConfig[];
+  onSave?: (data: Record<string, any>) => Promise<void>;
+  className?: string;
+  children?: React.ReactNode;
+  // Props optionnels pour compatibilité avec les composants existants
   isEditing?: boolean;
   onChange?: (key: string, value: any) => void;
   errors?: Record<string, string>;
-  className?: string;
 }
 
 /**
@@ -74,41 +77,105 @@ export interface DataCardProps {
 export const DataCard: React.FC<DataCardProps> = ({
   title,
   fields,
-  isEditing = false,
-  onChange,
-  errors = {},
-  className = ""
+  onSave,
+  className = "",
+  children
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [localData, setLocalData] = useState<Record<string, any>>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
   const cardClasses = ["data-card", className].filter(Boolean).join(" ");
 
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Annuler : réinitialiser les données locales
+      setLocalData({});
+      setValidationErrors({});
+      setIsEditing(false);
+    } else {
+      // Démarrer l'édition : initialiser avec les valeurs actuelles
+      const initialData: Record<string, any> = {};
+      fields.forEach(field => {
+        initialData[field.key] = field.value;
+      });
+      setLocalData(initialData);
+      setValidationErrors({});
+      setIsEditing(true);
+    }
+  };
+
   const handleFieldChange = (key: string, value: any) => {
-    if (onChange) {
-      onChange(key, value);
+    setLocalData(prev => ({
+      ...prev,
+      [key]: value
+    }));
+    // Effacer l'erreur de validation pour ce champ
+    if (validationErrors[key]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[key];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    
+    fields.forEach(field => {
+      if (field.required) {
+        const value = localData[field.key];
+        if (!value || (typeof value === 'string' && !value.trim())) {
+          errors[field.key] = `${field.label} est requis`;
+        }
+      }
+    });
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validateForm() || !onSave) return;
+    
+    setIsSaving(true);
+    try {
+      await onSave(localData);
+      setIsEditing(false);
+      setLocalData({});
+      setValidationErrors({});
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      // On pourrait ajouter une notification d'erreur ici
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const renderField = (field: FieldConfig) => {
     const { key, label, value, type, required, placeholder, options } = field;
-    const error = errors[key];
+    const displayValue = isEditing ? (localData[key] ?? value) : value;
+    const error = validationErrors[key];
 
     if (!isEditing) {
       // Mode lecture
-      let displayValue = value;
+      let readDisplayValue = displayValue;
       
       // Formatage spécial pour certains types
-      if (type === "date" && value) {
-        displayValue = new Date(value).toLocaleDateString("fr-FR");
-      } else if (type === "select" && value && options) {
-        const option = options.find(opt => opt.value === value);
-        displayValue = option ? option.label : value;
-      } else if (!value) {
-        displayValue = "Non renseigné";
+      if (type === "date" && displayValue) {
+        readDisplayValue = new Date(displayValue).toLocaleDateString("fr-FR");
+      } else if (type === "select" && displayValue && options) {
+        const option = options.find(opt => opt.value === displayValue);
+        readDisplayValue = option ? option.label : displayValue;
+      } else if (!displayValue) {
+        readDisplayValue = "Non renseigné";
       }
 
       return (
         <div key={key} className="data-card__field">
           <label className="data-card__label">{label}</label>
-          <p className="data-card__value">{displayValue}</p>
+          <p className="data-card__value">{readDisplayValue}</p>
         </div>
       );
     }
@@ -122,11 +189,12 @@ export const DataCard: React.FC<DataCardProps> = ({
             {required && <span className="data-card__required">*</span>}
           </label>
           <textarea
-            value={value || ""}
+            value={displayValue || ""}
             onChange={(e) => handleFieldChange(key, e.target.value)}
             placeholder={placeholder}
             className={`data-card__textarea ${error ? "data-card__textarea--error" : ""}`}
             rows={4}
+            disabled={isSaving}
           />
           {error && <div className="data-card__error" role="alert">{error}</div>}
         </div>
@@ -138,12 +206,13 @@ export const DataCard: React.FC<DataCardProps> = ({
         <div key={key} className="data-card__field">
           <Select
             label={label}
-            value={value || ""}
+            value={displayValue || ""}
             onChange={(e) => handleFieldChange(key, e.target.value)}
             options={options}
             required={required}
             error={error}
             className="data-card__select"
+            disabled={isSaving}
           />
         </div>
       );
@@ -154,27 +223,68 @@ export const DataCard: React.FC<DataCardProps> = ({
         <Input
           type={type}
           label={label}
-          value={value || ""}
+          value={displayValue || ""}
           onChange={(e) => handleFieldChange(key, e.target.value)}
           placeholder={placeholder}
           required={required}
           error={error}
           className="data-card__input"
+          disabled={isSaving}
         />
       </div>
     );
   };
 
   return (
-    <div className={cardClasses}>
+    <section className={cardClasses}>
       <div className="data-card__header">
         <h2 className="data-card__title">{title}</h2>
+        {onSave && (
+          <div className="data-card__actions">
+            {isEditing ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleEditToggle}
+                  disabled={isSaving}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Sauvegarde..." : "Sauvegarder"}
+                </Button>
+              </>
+            ) : (
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={handleEditToggle}
+                title="Modifier"
+              >
+                ✏️
+              </Button>
+            )}
+          </div>
+        )}
       </div>
       <div className="data-card__content">
-        <div className="data-card__grid">
-          {fields.map(renderField)}
-        </div>
+        {fields.length > 0 && (
+          <div className="data-card__grid">
+            {fields.map(renderField)}
+          </div>
+        )}
+        {children && (
+          <div className="data-card__children">
+            {children}
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   );
 };

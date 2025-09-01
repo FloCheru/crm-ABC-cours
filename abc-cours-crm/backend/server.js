@@ -3,6 +3,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
+const cookieParser = require("cookie-parser");
 const path = require("path");
 const dotenv = require("dotenv");
 
@@ -87,7 +88,7 @@ app.use(
       }
     },
     credentials: true, //Auth/cookies
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
@@ -120,6 +121,7 @@ app.use(morgan("combined", { stream: customMorganStream })); // Fichier via Auto
 // Middleware pour parser le JSON avec UTF-8
 app.use(express.json({ limit: "10mb", charset: "utf-8" }));
 app.use(express.urlencoded({ extended: true, charset: "utf-8" }));
+app.use(cookieParser());
 
 // Middleware de logging automatique des requêtes
 app.use((req, res, next) => {

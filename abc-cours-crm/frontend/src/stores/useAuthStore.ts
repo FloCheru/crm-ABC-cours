@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>()(
             const response = await authService.login({ email, password });
             set({
               user: response.user,
-              token: response.token,
+              token: response.accessToken,
               isAuthenticated: true,
             });
           } catch (error) {

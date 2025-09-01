@@ -6,11 +6,25 @@ const { authenticate } = require("../middleware/auth");
 
 const router = express.Router();
 
-// Générer un token JWT
-const generateToken = (userId) => {
+// Stockage des refresh tokens en mémoire (en prod: Redis ou DB)
+const refreshTokens = new Set();
+
+// Générer un access token JWT
+const generateAccessToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
+    expiresIn: process.env.JWT_EXPIRE, // 10 minutes
   });
+};
+
+// Générer un refresh token JWT
+const generateRefreshToken = (userId) => {
+  return jwt.sign(
+    { userId, type: 'refresh' }, 
+    process.env.REFRESH_TOKEN_SECRET, 
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRE, // 1 heure
+    }
+  );
 };
 
 // @route   POST /api/auth/register
@@ -56,12 +70,24 @@ router.post(
 
       await user.save();
 
-      // Générer le token
-      const token = generateToken(user._id);
+      // Générer les tokens
+      const accessToken = generateAccessToken(user._id);
+      const refreshToken = generateRefreshToken(user._id);
+      
+      // Stocker le refresh token
+      refreshTokens.add(refreshToken);
+
+      // Cookie httpOnly pour refresh token
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 1000 // 1 heure
+      });
 
       res.status(201).json({
         message: "Utilisateur créé avec succès",
-        token,
+        accessToken,
         user: {
           id: user._id,
           email: user.email,
@@ -122,12 +148,24 @@ router.post(
       user.lastLogin = new Date();
       await user.save();
 
-      // Générer le token
-      const token = generateToken(user._id);
+      // Générer les tokens
+      const accessToken = generateAccessToken(user._id);
+      const refreshToken = generateRefreshToken(user._id);
+      
+      // Stocker le refresh token
+      refreshTokens.add(refreshToken);
+
+      // Cookie httpOnly pour refresh token
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 1000 // 1 heure
+      });
 
       res.json({
         message: "Connexion réussie",
-        token,
+        accessToken,
         user: {
           id: user._id,
           email: user.email,
@@ -218,42 +256,147 @@ router.put(
 );
 
 // @route   POST /api/auth/refresh
-// @desc    Renouvellement du token JWT
-// @access  Private
-router.post("/refresh", authenticate, async (req, res) => {
+// @desc    Renouvellement du access token avec refresh token
+// @access  Public (utilise refresh token en cookie)
+router.post("/refresh", async (req, res) => {
   try {
-    // L'utilisateur est déjà authentifié grâce au middleware authenticate
-    // Générer un nouveau token
-    const newToken = generateToken(req.user._id);
+    const { refreshToken } = req.cookies;
+    
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh token manquant" });
+    }
+    
+    if (!refreshTokens.has(refreshToken)) {
+      return res.status(401).json({ message: "Refresh token invalide" });
+    }
+    
+    // Vérifier et décoder le refresh token
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    
+    if (decoded.type !== 'refresh') {
+      return res.status(401).json({ message: "Type de token invalide" });
+    }
+    
+    // Récupérer l'utilisateur
+    const user = await User.findById(decoded.userId).select("-password");
+    if (!user || !user.isActive) {
+      refreshTokens.delete(refreshToken);
+      return res.status(401).json({ message: "Utilisateur invalide" });
+    }
+    
+    // Générer nouveau access token
+    const newAccessToken = generateAccessToken(user._id);
     
     // Mettre à jour la dernière activité
-    req.user.lastLogin = new Date();
-    await req.user.save();
+    user.lastLogin = new Date();
+    await user.save();
     
     res.json({
-      message: "Token renouvelé avec succès",
-      token: newToken,
+      message: "Access token renouvelé avec succès",
+      accessToken: newAccessToken,
       user: {
-        id: req.user._id,
-        email: req.user.email,
-        firstName: req.user.firstName,
-        lastName: req.user.lastName,
-        role: req.user.role,
-        isActive: req.user.isActive,
-        lastLogin: req.user.lastLogin,
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
       },
     });
   } catch (error) {
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Refresh token invalide ou expiré" });
+    }
     console.error("Erreur lors du renouvellement du token:", error);
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
+// @route   POST /api/auth/extend-session
+// @desc    Étendre la session utilisateur (renouveler refresh token)
+// @access  Private
+router.post("/extend-session", authenticate, async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+    
+    if (!refreshToken || !refreshTokens.has(refreshToken)) {
+      return res.status(401).json({ message: "Session invalide" });
+    }
+    
+    // Supprimer l'ancien refresh token
+    refreshTokens.delete(refreshToken);
+    
+    // Générer un nouveau refresh token avec nouvelle expiration
+    const newRefreshToken = generateRefreshToken(req.user._id);
+    refreshTokens.add(newRefreshToken);
+    
+    // Mettre à jour le cookie avec le nouveau refresh token
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 1000 // Nouvelle heure complète
+    });
+    
+    // Mettre à jour la dernière activité
+    req.user.lastLogin = new Date();
+    await req.user.save();
+    
+    res.json({ 
+      message: "Session étendue avec succès",
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
+    });
+  } catch (error) {
+    console.error("Erreur lors de l'extension de session:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 // @route   POST /api/auth/logout
-// @desc    Déconnexion (côté client)
+// @desc    Déconnexion avec suppression refresh token
 // @access  Private
 router.post("/logout", authenticate, (req, res) => {
+  const { refreshToken } = req.cookies;
+  
+  // Supprimer le refresh token du stockage
+  if (refreshToken) {
+    refreshTokens.delete(refreshToken);
+  }
+  
+  // Supprimer le cookie
+  res.clearCookie('refreshToken');
+  
   res.json({ message: "Déconnexion réussie" });
+});
+
+// @route   GET /api/auth/admins
+// @desc    Obtenir la liste des administrateurs actifs
+// @access  Private
+router.get("/admins", authenticate, async (req, res) => {
+  try {
+    // Récupérer tous les administrateurs actifs
+    const admins = await User.find({ 
+      role: "admin", 
+      isActive: true 
+    })
+    .select("firstName lastName email")
+    .sort({ firstName: 1, lastName: 1 });
+
+    res.json({
+      message: "Administrateurs récupérés avec succès",
+      admins: admins.map(admin => ({
+        id: admin._id,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        email: admin.email,
+        fullName: `${admin.firstName} ${admin.lastName}`
+      }))
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des administrateurs:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
 });
 
 module.exports = router;

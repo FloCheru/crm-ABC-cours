@@ -359,6 +359,16 @@ router.post(
         $push: { settlementNotes: settlementNote._id },
       });
 
+      // RELATION BIDIRECTIONNELLE : Mettre à jour chaque élève avec l'ID de la note de règlement
+      const Student = require("../models/Student");
+      if (studentIds && studentIds.length > 0) {
+        await Student.updateMany(
+          { _id: { $in: studentIds } },
+          { $push: { settlementNoteIds: settlementNote._id } }
+        );
+        console.log(`✅ Relation bidirectionnelle établie pour ${studentIds.length} élèves`);
+      }
+
       // Changer automatiquement le statut de "prospect" à "client" si c'est la première note de règlement
       const family = await Family.findById(familyId);
       if (family && family.status === "prospect") {
@@ -533,6 +543,16 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
       // Supprimer la série de coupons
       await CouponSeries.findByIdAndDelete(couponSeries._id);
       console.log(`Suppression de la série de coupons ${couponSeries._id}`);
+    }
+
+    // RELATION BIDIRECTIONNELLE : Retirer l'ID de la note de règlement des élèves AVANT suppression
+    const Student = require("../models/Student");
+    if (note.studentIds && note.studentIds.length > 0) {
+      await Student.updateMany(
+        { _id: { $in: note.studentIds } },
+        { $pull: { settlementNoteIds: id } }
+      );
+      console.log(`✅ Relation bidirectionnelle nettoyée pour ${note.studentIds.length} élèves`);
     }
 
     // Supprimer la note de règlement
