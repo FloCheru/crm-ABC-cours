@@ -59,7 +59,8 @@ export const ReminderSubjectDropdown: React.FC<ReminderSubjectDropdownProps> = (
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/families/${familyId}/reminder-subject`, {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/api/families/${familyId}/reminder-subject`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
