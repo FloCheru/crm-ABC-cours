@@ -107,25 +107,6 @@ class ActionCacheService {
     });
   }
 
-  // Invalider les caches chargés
-  private static invalidateLoadedCaches(affectedStores: StoreName[]) {
-    console.log(`🗑️ [ACTION-CACHE-SERVICE] Checking stores for cache invalidation...`);
-    
-    let invalidatedCount = 0;
-    
-    affectedStores.forEach(storeName => {
-      const store = this.getStoreState(storeName);
-      if (store.data) {
-        console.log(`🗑️ [ACTION-CACHE-SERVICE] Invalidating ${storeName} cache (was loaded)`);
-        store.clearCache();
-        invalidatedCount++;
-      } else {
-        console.log(`⏭️ [ACTION-CACHE-SERVICE] Skipping ${storeName} cache (not loaded)`);
-      }
-    });
-    
-    console.log(`✅ [ACTION-CACHE-SERVICE] Cache invalidation complete: ${invalidatedCount}/${affectedStores.length} stores invalidated`);
-  }
 
   // Fonction principale d'exécution d'action
   static async executeAction<T = any>(
