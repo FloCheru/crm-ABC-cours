@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { familyService } from '../../services/familyService';
 import './ReminderSubjectDropdown.css';
 
 export const REMINDER_SUBJECTS = [
@@ -58,20 +59,8 @@ export const ReminderSubjectDropdown: React.FC<ReminderSubjectDropdownProps> = (
     setIsLoading(true);
     
     try {
-      const token = localStorage.getItem('token');
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${apiUrl}/api/families/${familyId}/reminder-subject`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ nextActionReminderSubject: newSubject })
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la mise à jour');
-      }
+      // Utiliser familyService qui gère ActionCache automatiquement
+      await familyService.updateReminderSubject(familyId, newSubject);
 
       // Mise à jour locale immédiate
       setCurrentValue(newSubject);

@@ -15,7 +15,12 @@ const ACTION_CACHE_MAP: ActionStoreMapping = {
   CREATE_NDR: ['settlements', 'families', 'coupons', 'couponSeries'],
   DELETE_NDR: ['settlements', 'families', 'coupons', 'couponSeries'], 
   DELETE_CLIENT: ['settlements', 'families', 'coupons', 'couponSeries'],
-  DELETE_PROSPECT: ['families']
+  DELETE_PROSPECT: ['families'],
+  // Nouvelles actions pour éliminer les autres systèmes de cache
+  ADD_STUDENT: ['families'],           // Impact seulement families
+  UPDATE_PROSPECT_STATUS: ['families'], // Impact seulement families
+  UPDATE_FAMILY: ['families'],          // Impact seulement families
+  UPDATE_REMINDER: ['families']         // Impact seulement families
 } as const;
 
 /**
@@ -148,8 +153,8 @@ class ActionCacheService {
       const result = await persistFn();
       console.log(`✅ [ACTION-CACHE-SERVICE] Database persistence successful for ${action}`);
 
-      // 3. Invalidation conditionnelle (seulement stores chargés)
-      this.invalidateLoadedCaches(affectedStores);
+      // 3. Pas d'invalidation - les updates optimistes sont déjà corrects
+      console.log(`🎯 [ACTION-CACHE-SERVICE] Keeping optimistic updates (no cache invalidation needed)`);
 
       const duration = Math.round(performance.now() - startTime);
       console.log(`🎉 [ACTION-CACHE-SERVICE] ${action} completed successfully in ${duration}ms`);

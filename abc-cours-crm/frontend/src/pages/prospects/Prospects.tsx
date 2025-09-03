@@ -19,7 +19,6 @@ import type { Family } from "../../types/family";
 // import type { FamilyStats } from "../../services/familyService";
 // import { useRefresh } from "../../hooks/useRefresh"; // Géré par le cache
 import { useFamiliesGlobal } from "../../hooks/useFamiliesGlobal";
-import { useCacheInvalidation } from "../../hooks/useCacheInvalidation";
 import { StatusDot, type ProspectStatus } from "../../components/StatusDot";
 import "./Prospects.css";
 
@@ -41,8 +40,6 @@ export const Prospects: React.FC = () => {
     updateProspectOptimistic,
     replaceProspectId,
   } = useFamiliesGlobal();
-  
-  const { invalidateAllFamilyRelatedCaches } = useCacheInvalidation();
   // @ts-ignore - Used in callback functions
   const [refreshKey, setRefreshKey] = useState(0);
   // @ts-ignore - Used in conditional rendering
@@ -83,12 +80,9 @@ export const Prospects: React.FC = () => {
       updateProspectOptimistic(prospectId, { prospectStatus: newStatus });
       console.log(`✏️ Statut prospect ${prospectId} mis à jour de manière optimiste`);
 
-      // 2. SYNCHRONISATION API - en arrière-plan
+      // 2. SYNCHRONISATION API avec ActionCache (gère automatiquement le cache)
       await familyService.updateProspectStatus(prospectId, newStatus);
-      console.log(`✅ Statut prospect ${prospectId} synchronisé avec l'API`);
-
-      // 3. INVALIDER CACHE - pour autres composants
-      invalidateAllFamilyRelatedCaches();
+      console.log(`✅ Statut prospect ${prospectId} synchronisé avec l'API et cache mis à jour automatiquement`);
     } catch (error) {
       console.error("Erreur lors de la mise à jour du statut:", error);
       // En cas d'erreur, forcer un rechargement avec les vraies données
@@ -114,7 +108,7 @@ export const Prospects: React.FC = () => {
       console.log(`✅ Objet rappel famille ${familyId} synchronisé avec l'API`);
 
       // 3. INVALIDER CACHE - pour autres composants
-      invalidateAllFamilyRelatedCaches();
+      // Cache déjà mis à jour automatiquement par ActionCache
     } catch (error) {
       console.error("Erreur lors de la mise à jour de l'objet de rappel:", error);
       // En cas d'erreur, forcer un rechargement avec les vraies données
@@ -139,7 +133,7 @@ export const Prospects: React.FC = () => {
       console.log(`✅ Date rappel famille ${familyId} synchronisée avec l'API`);
 
       // 3. INVALIDER CACHE - pour autres composants
-      invalidateAllFamilyRelatedCaches();
+      // Cache déjà mis à jour automatiquement par ActionCache
     } catch (error) {
       console.error("Erreur lors de la mise à jour de la date de rappel:", error);
       // En cas d'erreur, forcer un rechargement avec les vraies données
@@ -190,7 +184,7 @@ export const Prospects: React.FC = () => {
       console.log(`✅ Prospect ${fullName} synchronisé avec l'API - suppression confirmée`);
 
       // 3. INVALIDER CACHE - pour autres composants
-      invalidateAllFamilyRelatedCaches();
+      // Cache déjà mis à jour automatiquement par ActionCache
       console.log("✅ Caches families et NDR invalidés après suppression");
       
       // Pas besoin de recharger - la suppression optimiste est définitive !
@@ -433,7 +427,7 @@ export const Prospects: React.FC = () => {
       console.log(`🔄 ID temporaire ${tempId} remplacé par ${createdProspect._id}`);
 
       // 4. INVALIDER CACHE - pour autres composants
-      invalidateAllFamilyRelatedCaches();
+      // Cache déjà mis à jour automatiquement par ActionCache
       console.log("✅ Caches families et NDR invalidés après création");
     } catch (err) {
       console.error("Erreur lors de la création du prospect:", err);

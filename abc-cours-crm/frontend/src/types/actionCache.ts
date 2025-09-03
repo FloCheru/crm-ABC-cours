@@ -8,7 +8,12 @@ export type BusinessAction =
   | 'CREATE_NDR' 
   | 'DELETE_NDR'
   | 'DELETE_CLIENT'
-  | 'DELETE_PROSPECT';
+  | 'DELETE_PROSPECT'
+  // Nouvelles actions pour remplacer les systèmes de cache obsolètes
+  | 'ADD_STUDENT'           // Ajout d'un élève à une famille
+  | 'UPDATE_PROSPECT_STATUS' // Mise à jour du statut d'un prospect
+  | 'UPDATE_FAMILY'          // Mise à jour générale d'une famille
+  | 'UPDATE_REMINDER';       // Mise à jour des rappels (date, objet)
 
 // Noms des stores disponibles
 export type StoreName = 'families' | 'settlements' | 'coupons' | 'couponSeries';
@@ -51,6 +56,30 @@ export interface OptimisticData {
   };
   DELETE_PROSPECT: {
     prospectId: string;
+  };
+  // Nouvelles actions
+  ADD_STUDENT: {
+    familyId: string;
+    studentData: any;
+    tempStudentId?: string;
+  };
+  UPDATE_PROSPECT_STATUS: {
+    prospectId: string;
+    newStatus: string | null;
+    oldStatus?: string | null;
+  };
+  UPDATE_FAMILY: {
+    familyId: string;
+    updates: any;
+    previousData?: any;
+  };
+  UPDATE_REMINDER: {
+    familyId: string;
+    reminderData: {
+      nextActionDate?: string;
+      nextActionReminderSubject?: string;
+    };
+    previousData?: any;
   };
 }
 

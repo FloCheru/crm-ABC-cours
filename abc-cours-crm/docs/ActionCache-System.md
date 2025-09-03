@@ -16,22 +16,36 @@ Le système ActionCache est une architecture avancée de gestion du cache basée
 
 ```typescript
 export type BusinessAction = 
-  | 'CREATE_PROSPECT'    // Création nouveau prospect
-  | 'CREATE_NDR'         // Création note de règlement (prospect → client)
-  | 'DELETE_NDR'         // Suppression note de règlement  
-  | 'DELETE_CLIENT'      // Suppression client complet
-  | 'DELETE_PROSPECT';   // Suppression prospect simple
+  // Actions de création/suppression
+  | 'CREATE_PROSPECT'        // Création nouveau prospect
+  | 'CREATE_NDR'             // Création note de règlement (prospect → client)
+  | 'DELETE_NDR'             // Suppression note de règlement  
+  | 'DELETE_CLIENT'          // Suppression client complet
+  | 'DELETE_PROSPECT'        // Suppression prospect simple
+  
+  // Nouvelles actions (refactoring 03/09/2025)
+  | 'ADD_STUDENT'            // Ajout d'un élève à une famille
+  | 'UPDATE_PROSPECT_STATUS' // Mise à jour du statut d'un prospect
+  | 'UPDATE_FAMILY'          // Mise à jour générale d'une famille
+  | 'UPDATE_REMINDER';       // Mise à jour des rappels (date, objet)
 ```
 
 ### 2. Mapping Actions → Stores
 
 ```typescript
 const ACTION_CACHE_MAP: ActionStoreMapping = {
-  CREATE_PROSPECT: ['families'],                                    // Impact minimal
+  // Actions à impact étendu (multi-stores)
   CREATE_NDR: ['settlements', 'families', 'coupons', 'couponSeries'], // Impact total
   DELETE_NDR: ['settlements', 'families', 'coupons', 'couponSeries'], // Impact total  
   DELETE_CLIENT: ['settlements', 'families', 'coupons', 'couponSeries'], // Impact total
-  DELETE_PROSPECT: ['families']                                     // Impact minimal
+  
+  // Actions à impact local (families uniquement)
+  CREATE_PROSPECT: ['families'],        // Impact minimal
+  DELETE_PROSPECT: ['families'],        // Impact minimal
+  ADD_STUDENT: ['families'],            // Impact minimal
+  UPDATE_PROSPECT_STATUS: ['families'], // Impact minimal
+  UPDATE_FAMILY: ['families'],          // Impact minimal
+  UPDATE_REMINDER: ['families']         // Impact minimal
 };
 ```
 
@@ -130,6 +144,78 @@ class SettlementService {
 }
 ```
 
+### 3. Exemples Nouvelles Actions (2025)
+
+```typescript
+// ADD_STUDENT - Ajout d'élève avec update optimiste
+async addStudent(familyId: string, studentData: AddStudentData) {
+  return ActionCacheService.executeAction(
+    'ADD_STUDENT',
+    async () => {
+      const response = await apiClient.post(`/api/families/${familyId}/students`, studentData);
+      return response.student;
+    },
+    {
+      familyId,
+      studentData,
+      tempStudentId: `temp-student-${Date.now()}`
+    }
+  );
+}
+
+// UPDATE_PROSPECT_STATUS - Changement statut commercial
+async updateProspectStatus(id: string, newStatus: ProspectStatus | null) {
+  return ActionCacheService.executeAction(
+    'UPDATE_PROSPECT_STATUS',
+    async () => {
+      const response = await apiClient.patch(`/api/families/${id}/prospect-status`, {
+        prospectStatus: newStatus
+      });
+      return response.family;
+    },
+    {
+      prospectId: id,
+      newStatus,
+      oldStatus: undefined // Sera récupéré du store si nécessaire
+    }
+  );
+}
+
+// UPDATE_REMINDER - Mise à jour des rappels
+async updateReminderSubject(id: string, subject: string) {
+  return ActionCacheService.executeAction(
+    'UPDATE_REMINDER',
+    async () => {
+      const response = await apiClient.patch(`/api/families/${id}/reminder-subject`, {
+        nextActionReminderSubject: subject
+      });
+      return response.family;
+    },
+    {
+      familyId: id,
+      reminderData: { nextActionReminderSubject: subject },
+      previousData: undefined
+    }
+  );
+}
+
+// UPDATE_FAMILY - Modifications générales
+async updateFamily(id: string, updates: Partial<Family>) {
+  return ActionCacheService.executeAction(
+    'UPDATE_FAMILY',
+    async () => {
+      const response = await apiClient.put(`/api/families/${id}`, updates);
+      return response.family;
+    },
+    {
+      familyId: id,
+      updates,
+      previousData: undefined
+    }
+  );
+}
+```
+
 ## Logique Métier des Actions
 
 ### CREATE_PROSPECT
@@ -164,6 +250,34 @@ if (family && family.status === "prospect") {
 ### DELETE_CLIENT/DELETE_PROSPECT  
 - **Impact :** Variable selon le type
 - **Optimistic :** Retire immédiatement de toutes les listes concernées
+
+### ADD_STUDENT (Nouveau)
+- **Impact :** `families` store uniquement
+- **Logique métier :** Ajoute un élève à une famille existante
+- **Optimistic :** Ajoute l'élève immédiatement avec un ID temporaire
+- **Cas d'usage :** Depuis le tableau prospects ou la création NDR
+- **Données :** `{ familyId, studentData, tempStudentId }`
+
+### UPDATE_PROSPECT_STATUS (Nouveau)
+- **Impact :** `families` store uniquement
+- **Logique métier :** Change le statut commercial d'un prospect
+- **Optimistic :** Met à jour le prospectStatus immédiatement
+- **Valeurs possibles :** `en_reflexion`, `interesse_prof_a_trouver`, `injoignable`, etc.
+- **Données :** `{ prospectId, newStatus, oldStatus }`
+
+### UPDATE_FAMILY (Nouveau)
+- **Impact :** `families` store uniquement
+- **Logique métier :** Modifications générales d'une famille (adresse, téléphone, etc.)
+- **Optimistic :** Applique les changements immédiatement
+- **Cas d'usage :** Édition des informations de contact
+- **Données :** `{ familyId, updates, previousData }`
+
+### UPDATE_REMINDER (Nouveau)
+- **Impact :** `families` store uniquement
+- **Logique métier :** Gère le système de rappel commercial
+- **Optimistic :** Met à jour date et/ou objet du rappel
+- **Champs gérés :** `nextActionDate` et `nextActionReminderSubject`
+- **Données :** `{ familyId, reminderData: { nextActionDate?, nextActionReminderSubject? } }`
 
 ## Gestion des Erreurs et Rollback
 
@@ -352,7 +466,7 @@ console.log('Cache Status:', getCacheStatus());
 
 ## Intégrations Existantes
 
-Le système ActionCache est déjà intégré dans les services suivants :
+Le système ActionCache est maintenant intégré dans **TOUS** les services de modification de données :
 
 **Service Settlement (lignes 99-110 dans `frontend/src/services/settlementService.ts`) :**
 ```typescript
@@ -398,6 +512,13 @@ return ActionCacheService.executeAction(
 );
 ```
 
+**Service Family - NOUVELLES ACTIONS (ajoutées le 03/09/2025) :**
+- `addStudent()` → `ADD_STUDENT`
+- `updateProspectStatus()` → `UPDATE_PROSPECT_STATUS`
+- `updateFamily()` → `UPDATE_FAMILY`
+- `updateNextActionDate()` → `UPDATE_REMINDER`
+- `updateReminderSubject()` → `UPDATE_REMINDER`
+
 ## Fichiers Sources
 
 **Core System :**
@@ -424,6 +545,12 @@ Pour ajouter de nouvelles actions métier :
 4. **Implémenter dans les stores** (méthodes `optimisticUpdate` et `rollback`)
 5. **Créer des tests spécifiques** pour la nouvelle action
 
+## Historique des Modifications
+
+- **01/09/2025** : Création initiale du système ActionCache avec 5 actions de base
+- **03/09/2025** : Refactoring complet - Ajout de 4 nouvelles actions (ADD_STUDENT, UPDATE_PROSPECT_STATUS, UPDATE_FAMILY, UPDATE_REMINDER) et suppression de tous les systèmes de cache obsolètes (useDataCacheStore, useCache, useCacheInvalidation, useFamiliesCache, useProspectsCache)
+
 ---
 
-*Système ActionCache - Version complète documentée le 01/09/2025*
+*Système ActionCache - Version 2.0 documentée le 03/09/2025*
+*Maintenant le SEUL système de cache de l'application*

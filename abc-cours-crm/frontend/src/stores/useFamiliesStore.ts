@@ -270,6 +270,87 @@ export const useFamiliesStore = create<FamiliesState>()(
     console.log(`🔄 [FAMILIES-STORE] ID temporaire ${tempId} remplacé par ${realId}`);
   },
 
+  // Méthode générique optimisticUpdate pour ActionCache
+  optimisticUpdate: (action: any, actionData: any) => {
+    const { data } = get();
+    if (!data) return;
+
+    switch (action) {
+      case 'ADD_STUDENT': {
+        const { familyId, studentData } = actionData;
+        // Ajouter l'élève à la famille correspondante
+        const updatedFamilies = data.families.map(f => 
+          f._id === familyId 
+            ? { ...f, students: [...(f.students || []), studentData] }
+            : f
+        );
+        const updatedProspects = data.prospects.map(f => 
+          f._id === familyId 
+            ? { ...f, students: [...(f.students || []), studentData] }
+            : f
+        );
+        const updatedClients = data.clients.map(f => 
+          f._id === familyId 
+            ? { ...f, students: [...(f.students || []), studentData] }
+            : f
+        );
+        
+        set({ 
+          data: {
+            ...data,
+            families: updatedFamilies,
+            prospects: updatedProspects,
+            clients: updatedClients
+          },
+          lastFetch: Date.now()
+        });
+        break;
+      }
+      
+      case 'UPDATE_PROSPECT_STATUS': {
+        const { prospectId, newStatus } = actionData;
+        get().updateProspectOptimistic(prospectId, { prospectStatus: newStatus });
+        break;
+      }
+      
+      case 'UPDATE_FAMILY': {
+        const { familyId, updates } = actionData;
+        get().updateProspectOptimistic(familyId, updates);
+        break;
+      }
+      
+      case 'UPDATE_REMINDER': {
+        const { familyId, reminderData } = actionData;
+        get().updateProspectOptimistic(familyId, reminderData);
+        break;
+      }
+      
+      case 'CREATE_PROSPECT': {
+        const { familyData } = actionData;
+        get().addProspectOptimistic(familyData);
+        break;
+      }
+      
+      case 'DELETE_PROSPECT':
+      case 'DELETE_CLIENT': {
+        const id = actionData.prospectId || actionData.clientId;
+        get().removeProspectOptimistic(id);
+        break;
+      }
+      
+      default:
+        console.log(`[FAMILIES-STORE] Action optimiste non gérée: ${action}`);
+    }
+  },
+
+  // Méthode générique rollback pour ActionCache
+  rollback: (action: any, _actionData: any) => {
+    // Pour le rollback, on vide simplement le cache pour forcer un rechargement
+    // C'est plus sûr que d'essayer de restaurer l'état précédent
+    console.log(`[FAMILIES-STORE] Rollback de l'action ${action} - rechargement forcé`);
+    get().clearCache();
+  },
+
   // Sélecteurs optimisés (pas de recalcul si data n'a pas changé)
   getProspects: () => {
     const { data } = get();

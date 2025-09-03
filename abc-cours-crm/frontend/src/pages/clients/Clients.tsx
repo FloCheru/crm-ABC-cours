@@ -42,7 +42,6 @@ interface StudentData {
 // import { useRefresh } from "../../hooks/useRefresh"; // Géré par le cache
 import { useFamiliesGlobal } from "../../hooks/useFamiliesGlobal";
 // useNDRCache supprimé - NDR data maintenant dans cache unifié
-import { useCacheInvalidation } from "../../hooks/useCacheInvalidation";
 import "./Clients.css";
 
 // Type pour les données du tableau avec l'id requis
@@ -125,7 +124,7 @@ export const Clients: React.FC = () => {
     getFirstNDRDate,
   } = useFamiliesGlobal();
 
-  const { invalidateAllFamilyRelatedCaches } = useCacheInvalidation();
+  // Cache géré automatiquement par ActionCache
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const familyData = clientsWithNDR;
@@ -264,7 +263,7 @@ export const Clients: React.FC = () => {
               selectedFamilyId,
               "prospect"
             );
-            invalidateAllFamilyRelatedCaches(); // Invalider caches clients ET prospects
+            // Cache déjà mis à jour automatiquement par ActionCache
             console.log(
               `✅ Client reclassifié en prospect (0 NDR restantes) - Cache invalidé`
             );

@@ -18,7 +18,12 @@ const ACTION_CACHE_MAP: ActionStoreMapping = {
   CREATE_NDR: ['settlements', 'families', 'coupons', 'couponSeries'],
   DELETE_NDR: ['settlements', 'families', 'coupons', 'couponSeries'], 
   DELETE_CLIENT: ['settlements', 'families', 'coupons', 'couponSeries'],
-  DELETE_PROSPECT: ['families']
+  DELETE_PROSPECT: ['families'],
+  // Nouvelles actions pour éliminer les autres systèmes de cache
+  ADD_STUDENT: ['families'],           // Impact seulement families
+  UPDATE_PROSPECT_STATUS: ['families'], // Impact seulement families
+  UPDATE_FAMILY: ['families'],          // Impact seulement families
+  UPDATE_REMINDER: ['families']         // Impact seulement families
 } as const;
 
 /**

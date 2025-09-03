@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { AddStudentForm, type StudentFormData } from '../../components/forms/AddStudentForm';
 import { familyService, type AddStudentData } from '../../services/familyService';
-import { useCacheInvalidation } from '../../hooks/useCacheInvalidation';
 import './AddStudent.css';
 
 const AddStudent: React.FC = () => {
@@ -12,7 +11,6 @@ const AddStudent: React.FC = () => {
   const returnTo = searchParams.get('returnTo');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { invalidateAllFamilyRelatedCaches } = useCacheInvalidation();
 
   const handleSave = async (studentData: StudentFormData) => {
     if (!familyId) {
@@ -48,10 +46,8 @@ const AddStudent: React.FC = () => {
       // Utiliser la nouvelle API dédiée
       await familyService.addStudent(familyId, addStudentData);
 
-      // CRITICAL FIX: Invalider le cache des familles pour rafraîchir automatiquement
-      // tous les tableaux (prospects, clients, etc.)
-      invalidateAllFamilyRelatedCaches();
-      console.log('✅ Cache invalidé après ajout d\'élève - rafraîchissement automatique activé');
+      // Cache mis à jour automatiquement par ActionCache
+      console.log('✅ Élève ajouté avec succès - cache mis à jour automatiquement par ActionCache');
 
       // Redirection selon le contexte de retour
       handleSuccessfulSave();

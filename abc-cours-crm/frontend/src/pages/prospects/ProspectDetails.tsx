@@ -33,17 +33,6 @@ export const ProspectDetails: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
-  // Fonction de rafraîchissement après mise à jour
-  const refetchProspect = async () => {
-    if (!familyId) return;
-    try {
-      const data = await familyService.getFamily(familyId);
-      setProspect(data);
-    } catch (err) {
-      console.error("Erreur lors du rafraîchissement:", err);
-    }
-  };
-
   // States pour la gestion des RDV
   const [rdvs, setRdvs] = useState<RendezVous[]>([]);
   const [isLoadingRdvs, setIsLoadingRdvs] = useState(false);
@@ -54,7 +43,7 @@ export const ProspectDetails: React.FC = () => {
     date: "",
     time: "",
     type: "physique" as "physique" | "virtuel",
-    notes: ""
+    notes: "",
   });
 
   // État pour la modal d'ajout d'élève
@@ -87,13 +76,16 @@ export const ProspectDetails: React.FC = () => {
 
   // Debug: tracer les changements de showRdvModal
   useEffect(() => {
-    console.log("🔴 [DEBUG] ProspectDetails - showRdvModal a changé:", showRdvModal);
+    console.log(
+      "🔴 [DEBUG] ProspectDetails - showRdvModal a changé:",
+      showRdvModal
+    );
   }, [showRdvModal]);
 
   // Fonctions pour la gestion des RDV
   const loadRdvs = async () => {
     if (!familyId) return;
-    
+
     try {
       setIsLoadingRdvs(true);
       const rdvData = await rdvService.getRdvsByFamily(familyId);
@@ -107,7 +99,7 @@ export const ProspectDetails: React.FC = () => {
 
   const handleCreateRdv = async () => {
     if (!familyId || !rdvFormData.date || !rdvFormData.time) return;
-    
+
     try {
       const newRdv = await rdvService.createRdv({
         familyId,
@@ -115,33 +107,38 @@ export const ProspectDetails: React.FC = () => {
         date: rdvFormData.date,
         time: rdvFormData.time,
         type: rdvFormData.type,
-        notes: rdvFormData.notes
+        notes: rdvFormData.notes,
       });
-      
-      setRdvs(prev => [...prev, newRdv]);
+
+      setRdvs((prev) => [...prev, newRdv]);
       setShowRdvModal(false);
       setRdvFormData({
         assignedAdminId: "",
         date: "",
         time: "",
         type: "physique",
-        notes: ""
+        notes: "",
       });
     } catch (err) {
       console.error("Erreur lors de la création du RDV:", err);
     }
   };
 
-  const handleUpdateRdv = async (rdvId: string, updates: {
-    assignedAdminId?: string;
-    date?: string;
-    time?: string;
-    type?: "physique" | "virtuel";
-    notes?: string;
-  }) => {
+  const handleUpdateRdv = async (
+    rdvId: string,
+    updates: {
+      assignedAdminId?: string;
+      date?: string;
+      time?: string;
+      type?: "physique" | "virtuel";
+      notes?: string;
+    }
+  ) => {
     try {
       const updatedRdv = await rdvService.updateRdv(rdvId, updates);
-      setRdvs(prev => prev.map(rdv => rdv._id === rdvId ? updatedRdv : rdv));
+      setRdvs((prev) =>
+        prev.map((rdv) => (rdv._id === rdvId ? updatedRdv : rdv))
+      );
       setEditingRdv(null);
       setShowRdvModal(false);
       setRdvFormData({
@@ -149,7 +146,7 @@ export const ProspectDetails: React.FC = () => {
         date: "",
         time: "",
         type: "physique",
-        notes: ""
+        notes: "",
       });
     } catch (err) {
       console.error("Erreur lors de la mise à jour du RDV:", err);
@@ -158,17 +155,17 @@ export const ProspectDetails: React.FC = () => {
 
   const handleDeleteRdv = async (rdvId: string) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce RDV ?")) return;
-    
+
     try {
       await rdvService.deleteRdv(rdvId);
-      setRdvs(prev => prev.filter(rdv => rdv._id !== rdvId));
+      setRdvs((prev) => prev.filter((rdv) => rdv._id !== rdvId));
     } catch (err) {
       console.error("Erreur lors de la suppression du RDV:", err);
     }
   };
 
   const handleRdvFormChange = (key: string, value: any) => {
-    setRdvFormData(prev => ({ ...prev, [key]: value }));
+    setRdvFormData((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleBack = () => {
@@ -180,10 +177,6 @@ export const ProspectDetails: React.FC = () => {
       navigate(`/admin/dashboard/create/wizard?familyId=${prospect._id}`);
     }
   };
-
-
-
-
 
   if (loading) {
     return (
@@ -311,20 +304,6 @@ export const ProspectDetails: React.FC = () => {
         placeholder: "Département",
       },
       {
-        key: "phone",
-        label: "Téléphone",
-        field: "primaryContact.primaryPhone",
-        type: "tel",
-        placeholder: "06 12 34 56 78",
-      },
-      {
-        key: "email",
-        label: "Email",
-        field: "primaryContact.email",
-        type: "email",
-        placeholder: "email@exemple.com",
-      },
-      {
         key: "availability",
         label: "Disponibilités",
         field: "demande.availability",
@@ -333,6 +312,20 @@ export const ProspectDetails: React.FC = () => {
       },
     ],
     tracking: [
+      {
+        key: "prospectStatus",
+        label: "Statut prospect",
+        field: "prospectStatus",
+        type: "select",
+        options: [
+          { value: "", label: "Sélectionner un statut" },
+          ...statusOptions.map((option) => ({
+            value: option.value,
+            label: option.label,
+          })),
+        ],
+        required: false,
+      },
       {
         key: "nextActionReminderSubject",
         label: "Objet de rappel",
@@ -358,7 +351,6 @@ export const ProspectDetails: React.FC = () => {
       },
     ],
   };
-
 
   const getDisplayValue = (prospect: Family, path: string) => {
     const keys = path.split(".");
@@ -403,9 +395,10 @@ export const ProspectDetails: React.FC = () => {
   return (
     <div>
       <Navbar activePath="/prospects" />
-
       <header className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Détails du Prospect</h1>
+        <h1 className="text-2xl font-bold text-gray-800">
+          Détails du Prospect
+        </h1>
         <div className="flex gap-3">
           <Button variant="outline" onClick={handleBack}>
             Retour
@@ -423,110 +416,91 @@ export const ProspectDetails: React.FC = () => {
         {/* Informations personnelles */}
         <DataCard
           title="Informations personnelles"
-          fields={fieldConfig.personal.map(field => ({
+          fields={fieldConfig.personal.map((field) => ({
             key: field.key,
             label: field.label,
             value: getDisplayValue(prospect, field.field),
-            type: field.type as "text" | "email" | "tel" | "number" | "date" | "textarea" | "select",
+            type: field.type as
+              | "text"
+              | "email"
+              | "tel"
+              | "number"
+              | "date"
+              | "textarea"
+              | "select",
             required: (field as any).required || false,
-            placeholder: field.placeholder
+            placeholder: field.placeholder,
           }))}
           onSave={async (data) => {
             // Construire l'objet de données pour l'API
             const updateData: any = {
               primaryContact: {},
-              address: {}
+              address: {},
             };
-            
+
             // Mapper les données du formulaire vers les champs de l'API
             Object.entries(data).forEach(([key, value]) => {
-              const field = fieldConfig.personal.find(f => f.key === key);
+              const field = fieldConfig.personal.find((f) => f.key === key);
               if (field) {
-                const fieldParts = field.field.split('.');
+                const fieldParts = field.field.split(".");
                 if (fieldParts.length === 2) {
                   const [parent, child] = fieldParts;
                   updateData[parent][child] = value;
                 }
               }
             });
-            
+
             // Mettre à jour via l'API
             await familyService.updateFamily(familyId!, updateData);
-            await refetchProspect();
           }}
           className="mb-8"
         />
 
-
         {/* Demande de cours */}
         <DataCard
           title="Demande de cours"
-          fields={fieldConfig.courseData.map(field => ({
+          fields={fieldConfig.courseData.map((field) => ({
             key: field.key,
             label: field.label,
             value: getDisplayValue(prospect, field.field),
-            type: field.type as "text" | "email" | "tel" | "number" | "date" | "textarea" | "select",
+            type: field.type as
+              | "text"
+              | "email"
+              | "tel"
+              | "number"
+              | "date"
+              | "textarea"
+              | "select",
             required: (field as any).required || false,
-            placeholder: field.placeholder
+            placeholder: field.placeholder,
           }))}
           onSave={async (data) => {
             // Construire l'objet de données pour l'API
             const updateData: any = {
               demande: {},
-              address: {}
+              address: {},
             };
-            
+
             // Mapper les données du formulaire vers les champs de l'API
             Object.entries(data).forEach(([key, value]) => {
-              const field = fieldConfig.courseData.find(f => f.key === key);
+              const field = fieldConfig.courseData.find((f) => f.key === key);
               if (field && !field.readOnly) {
-                const fieldParts = field.field.split('.');
+                const fieldParts = field.field.split(".");
                 if (fieldParts.length === 2) {
                   const [parent, child] = fieldParts;
                   updateData[parent][child] = value;
                 }
               }
             });
-            
+
             // Mettre à jour via l'API
             await familyService.updateFamily(familyId!, updateData);
-            await refetchProspect();
-          }}
-          className="mb-8"
-        />
-        
-        {/* Statut prospect */}
-        <DataCard
-          title="Statut"
-          fields={[
-            {
-              key: "prospectStatus",
-              label: "Statut prospect",
-              value: prospect.prospectStatus || "",
-              type: "select" as const,
-              options: [
-                { value: "", label: "Sélectionner un statut" },
-                ...statusOptions.map(option => ({
-                  value: option.value,
-                  label: option.label
-                }))
-              ]
-            }
-          ]}
-          onSave={async (data) => {
-            await familyService.updateFamily(familyId!, {
-              prospectStatus: data.prospectStatus || null
-            });
-            await refetchProspect();
           }}
           className="mb-8"
         />
 
         {/* Élèves */}
-        <DataCard
-          title={`Élèves (${students.length})`}
-          fields={[]}
-        >
+        <DataCard title={`Élèves (${students.length})`} fields={[]}>
           <div>
             {students.length > 0 ? (
               <Table
@@ -534,54 +508,62 @@ export const ProspectDetails: React.FC = () => {
                   {
                     key: "firstName",
                     label: "Prénom",
-                    render: (value) => value
+                    render: (value) => value,
                   },
                   {
                     key: "lastName",
                     label: "Nom",
-                    render: (value) => value
+                    render: (value) => value,
                   },
                   {
                     key: "dateOfBirth",
                     label: "Né(e) le",
-                    render: (value) => value ? new Date(value).toLocaleDateString("fr-FR") : "-"
+                    render: (value) =>
+                      value ? new Date(value).toLocaleDateString("fr-FR") : "-",
                   },
                   {
                     key: "courseLocation",
                     label: "Lieu des cours",
                     render: (_, row: any) => {
                       if (!row.courseLocation?.type) return "-";
-                      return row.courseLocation.type === "domicile" ? "À domicile" : 
-                             row.courseLocation.type === "professeur" ? "Chez le professeur" : "Autre";
-                    }
+                      return row.courseLocation.type === "domicile"
+                        ? "À domicile"
+                        : row.courseLocation.type === "professeur"
+                        ? "Chez le professeur"
+                        : "Autre";
+                    },
                   },
                   {
                     key: "postalCode",
                     label: "Code postal",
-                    render: (_, row: any) => row.courseLocation?.address?.postalCode || "-"
+                    render: (_, row: any) =>
+                      row.courseLocation?.address?.postalCode || "-",
                   },
                   {
                     key: "city",
                     label: "Ville",
-                    render: (_, row: any) => row.courseLocation?.address?.city || "-"
+                    render: (_, row: any) =>
+                      row.courseLocation?.address?.city || "-",
                   },
                   {
                     key: "phone",
                     label: "Tél",
-                    render: (_, row: any) => row.contact?.phone || "-"
+                    render: (_, row: any) => row.contact?.phone || "-",
                   },
                   {
                     key: "availability",
                     label: "Disponibilités",
-                    render: (value) => value || "-"
+                    render: (value) => value || "-",
                   },
                   {
                     key: "comments",
                     label: "Com.",
                     render: (value, row: any) => {
                       const comment = value || row.notes || "";
-                      return comment.length > 30 ? `${comment.substring(0, 30)}...` : comment || "-";
-                    }
+                      return comment.length > 30
+                        ? `${comment.substring(0, 30)}...`
+                        : comment || "-";
+                    },
                   },
                   {
                     key: "settlementNoteIds",
@@ -590,7 +572,7 @@ export const ProspectDetails: React.FC = () => {
                       <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full">
                         {row.settlementNoteIds?.length || 0}
                       </span>
-                    )
+                    ),
                   },
                   {
                     key: "actions",
@@ -612,7 +594,11 @@ export const ProspectDetails: React.FC = () => {
                           size="sm"
                           variant="error"
                           onClick={() => {
-                            if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'élève ${row.firstName} ${row.lastName} ?`)) {
+                            if (
+                              window.confirm(
+                                `Êtes-vous sûr de vouloir supprimer l'élève ${row.firstName} ${row.lastName} ?`
+                              )
+                            ) {
                               // TODO: Implémenter suppression élève
                               console.log("Suppression élève:", row);
                             }
@@ -622,10 +608,13 @@ export const ProspectDetails: React.FC = () => {
                           ✕
                         </Button>
                       </div>
-                    )
-                  }
+                    ),
+                  },
                 ]}
-                data={students.map(student => ({ ...student, id: student._id || `student-${students.indexOf(student)}` }))}
+                data={students.map((student) => ({
+                  ...student,
+                  id: student._id || `student-${students.indexOf(student)}`,
+                }))}
                 itemsPerPage={10}
               />
             ) : (
@@ -633,7 +622,7 @@ export const ProspectDetails: React.FC = () => {
                 <p>Aucun élève enregistré</p>
               </div>
             )}
-            
+
             <div>
               <Button
                 variant="primary"
@@ -648,40 +637,86 @@ export const ProspectDetails: React.FC = () => {
         {/* Actions de suivi */}
         <DataCard
           title="Suivi"
-          fields={fieldConfig.tracking.map(field => {
+          fields={fieldConfig.tracking.map((field) => {
             let value;
             if (field.key === "createdAt") {
               value = new Date(prospect.createdAt).toLocaleDateString("fr-FR");
             } else {
               value = getDisplayValue(prospect, field.field);
             }
-            
+
             return {
               key: field.key,
               label: field.label,
               value,
-              type: field.type as "text" | "email" | "tel" | "number" | "date" | "textarea" | "select",
+              type: field.type as
+                | "text"
+                | "email"
+                | "tel"
+                | "number"
+                | "date"
+                | "textarea"
+                | "select",
               required: field.required,
-              placeholder: field.placeholder
+              placeholder: field.placeholder,
             };
           })}
           onSave={async (data) => {
-            const updateData: any = {};
-            
-            // Mapper les données du formulaire vers les champs de l'API  
-            Object.entries(data).forEach(([key, value]) => {
-              const field = fieldConfig.tracking.find(f => f.key === key);
-              if (field && !field.readOnly) {
-                const processedValue = field.type === "date" && value 
-                  ? new Date(value as string) 
-                  : value;
-                updateData[field.field] = processedValue;
+            // Séparer les champs par type d'action
+            const {
+              prospectStatus,
+              nextActionReminderSubject,
+              nextActionDate,
+              ...otherFields
+            } = data;
+
+            // Traiter le statut prospect avec UPDATE_PROSPECT_STATUS
+            if (prospectStatus !== undefined) {
+              await familyService.updateProspectStatus(
+                familyId!,
+                prospectStatus || null
+              );
+            }
+
+            // Traiter les champs de rappel avec UPDATE_REMINDER
+            if (nextActionReminderSubject !== undefined) {
+              await familyService.updateReminderSubject(
+                familyId!,
+                nextActionReminderSubject as string
+              );
+            }
+
+            if (nextActionDate !== undefined) {
+              const dateValue = nextActionDate
+                ? new Date(nextActionDate as string)
+                : null;
+              await familyService.updateNextActionDate(familyId!, dateValue);
+            }
+
+            // Traiter les autres champs avec UPDATE_FAMILY si nécessaire
+            if (Object.keys(otherFields).length > 0) {
+              const updateData: any = {};
+              Object.entries(otherFields).forEach(([key, value]) => {
+                const field = fieldConfig.tracking.find((f) => f.key === key);
+                if (
+                  field &&
+                  !field.readOnly &&
+                  key !== "prospectStatus" &&
+                  key !== "nextActionReminderSubject" &&
+                  key !== "nextActionDate"
+                ) {
+                  const processedValue =
+                    field.type === "date" && value
+                      ? new Date(value as string)
+                      : value;
+                  updateData[field.field] = processedValue;
+                }
+              });
+
+              if (Object.keys(updateData).length > 0) {
+                await familyService.updateFamily(familyId!, updateData);
               }
-            });
-            
-            // Mettre à jour via l'API
-            await familyService.updateFamily(familyId!, updateData);
-            await refetchProspect();
+            }
           }}
           className="mb-8"
         />
@@ -703,40 +738,46 @@ export const ProspectDetails: React.FC = () => {
                   {
                     key: "date",
                     label: "Date",
-                    render: (_, row: any) => new Date(row.date).toLocaleDateString('fr-FR')
+                    render: (_, row: any) =>
+                      new Date(row.date).toLocaleDateString("fr-FR"),
                   },
                   {
                     key: "time",
                     label: "Heure",
-                    render: (value) => value
+                    render: (value) => value,
                   },
                   {
                     key: "status",
                     label: "Statut",
-                    render: (value) => 
-                      value === 'planifie' ? 'Planifié' :
-                      value === 'realise' ? 'Réalisé' :
-                      value === 'annule' ? 'Annulé' : value
+                    render: (value) =>
+                      value === "planifie"
+                        ? "Planifié"
+                        : value === "realise"
+                        ? "Réalisé"
+                        : value === "annule"
+                        ? "Annulé"
+                        : value,
                   },
                   {
                     key: "type",
                     label: "Type",
-                    render: (value) => value === 'physique' ? 'Physique' : 'Virtuel'
+                    render: (value) =>
+                      value === "physique" ? "Physique" : "Virtuel",
                   },
                   {
                     key: "assignedAdminId",
                     label: "Admin assigné",
                     render: (value) => {
                       if (!value) return "Non assigné";
-                      return typeof value === 'object' 
-                        ? `${value.firstName} ${value.lastName}` 
+                      return typeof value === "object"
+                        ? `${value.firstName} ${value.lastName}`
                         : value;
-                    }
+                    },
                   },
                   {
                     key: "notes",
                     label: "Notes",
-                    render: (value) => value || "-"
+                    render: (value) => value || "-",
                   },
                   {
                     key: "actions",
@@ -750,10 +791,12 @@ export const ProspectDetails: React.FC = () => {
                             setEditingRdv(row);
                             setRdvFormData({
                               assignedAdminId: row.assignedAdminId || "",
-                              date: new Date(row.date).toISOString().split('T')[0],
+                              date: new Date(row.date)
+                                .toISOString()
+                                .split("T")[0],
                               time: row.time,
                               type: row.type,
-                              notes: row.notes || ""
+                              notes: row.notes || "",
                             });
                             setShowRdvModal(true);
                           }}
@@ -770,10 +813,10 @@ export const ProspectDetails: React.FC = () => {
                           ✕
                         </Button>
                       </div>
-                    )
-                  }
+                    ),
+                  },
                 ]}
-                data={rdvs.map(rdv => ({ ...rdv, id: rdv._id }))}
+                data={rdvs.map((rdv) => ({ ...rdv, id: rdv._id }))}
                 itemsPerPage={5}
               />
             ) : (
@@ -781,7 +824,7 @@ export const ProspectDetails: React.FC = () => {
                 <p>Aucun RDV planifié</p>
               </div>
             )}
-            
+
             <div>
               <Button
                 variant="primary"
@@ -792,7 +835,7 @@ export const ProspectDetails: React.FC = () => {
                     date: "",
                     time: "",
                     type: "physique",
-                    notes: ""
+                    notes: "",
                   });
                   setShowRdvModal(true);
                 }}
@@ -835,7 +878,7 @@ export const ProspectDetails: React.FC = () => {
             date: "",
             time: "",
             type: "physique",
-            notes: ""
+            notes: "",
           });
         }}
         formData={rdvFormData}

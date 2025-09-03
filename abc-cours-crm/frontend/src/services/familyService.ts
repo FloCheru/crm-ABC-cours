@@ -99,11 +99,22 @@ class FamilyService {
   }
 
   async updateFamily(id: string, familyData: Partial<Family>): Promise<Family> {
-    const response = (await apiClient.put(
-      `/api/families/${id}`,
-      familyData
-    )) as FamilyResponse;
-    return response.family;
+    // ✨ NOUVEAU: Utilisation du ActionCacheService pour UPDATE_FAMILY
+    return ActionCacheService.executeAction(
+      'UPDATE_FAMILY',
+      async () => {
+        const response = (await apiClient.put(
+          `/api/families/${id}`,
+          familyData
+        )) as FamilyResponse;
+        return response.family;
+      },
+      {
+        familyId: id,
+        updates: familyData,
+        previousData: undefined // Sera rempli par le store si nécessaire
+      }
+    );
   }
 
   async getDeletionPreview(id: string): Promise<any> {
@@ -177,20 +188,44 @@ class FamilyService {
     id: string,
     prospectStatus: ProspectStatus | null
   ): Promise<Family> {
-    const response = (await apiClient.patch(`/api/families/${id}/prospect-status`, {
-      prospectStatus,
-    })) as FamilyResponse;
-    return response.family;
+    // ✨ NOUVEAU: Utilisation du ActionCacheService pour UPDATE_PROSPECT_STATUS
+    return ActionCacheService.executeAction(
+      'UPDATE_PROSPECT_STATUS',
+      async () => {
+        const response = (await apiClient.patch(`/api/families/${id}/prospect-status`, {
+          prospectStatus,
+        })) as FamilyResponse;
+        return response.family;
+      },
+      {
+        prospectId: id,
+        newStatus: prospectStatus,
+        oldStatus: undefined // Sera rempli par le store si nécessaire
+      }
+    );
   }
 
   async updateNextActionDate(
     id: string,
     nextActionDate: Date | null
   ): Promise<Family> {
-    const response = (await apiClient.patch(`/api/families/${id}/next-action-date`, {
-      nextActionDate: nextActionDate ? nextActionDate.toISOString() : null,
-    })) as FamilyResponse;
-    return response.family;
+    // ✨ NOUVEAU: Utilisation du ActionCacheService pour UPDATE_REMINDER
+    return ActionCacheService.executeAction(
+      'UPDATE_REMINDER',
+      async () => {
+        const response = (await apiClient.patch(`/api/families/${id}/next-action-date`, {
+          nextActionDate: nextActionDate ? nextActionDate.toISOString() : null,
+        })) as FamilyResponse;
+        return response.family;
+      },
+      {
+        familyId: id,
+        reminderData: {
+          nextActionDate: nextActionDate ? nextActionDate.toISOString() : undefined
+        },
+        previousData: undefined
+      }
+    );
   }
 
   async updateFamilyStatus(id: string, status: 'client' | 'prospect'): Promise<Family> {
@@ -198,6 +233,26 @@ class FamilyService {
       status,
     })) as FamilyResponse;
     return response.family;
+  }
+
+  async updateReminderSubject(id: string, nextActionReminderSubject: string): Promise<Family> {
+    // ✨ NOUVEAU: Utilisation du ActionCacheService pour UPDATE_REMINDER
+    return ActionCacheService.executeAction(
+      'UPDATE_REMINDER',
+      async () => {
+        const response = (await apiClient.patch(`/api/families/${id}/reminder-subject`, {
+          nextActionReminderSubject,
+        })) as FamilyResponse;
+        return response.family;
+      },
+      {
+        familyId: id,
+        reminderData: {
+          nextActionReminderSubject
+        },
+        previousData: undefined
+      }
+    );
   }
 
   async getFamilyStats(): Promise<FamilyStats> {
@@ -208,11 +263,22 @@ class FamilyService {
   }
 
   async addStudent(familyId: string, studentData: AddStudentData): Promise<Student> {
-    const response = (await apiClient.post(
-      `/api/families/${familyId}/students`,
-      studentData
-    )) as StudentResponse;
-    return response.student;
+    // ✨ NOUVEAU: Utilisation du ActionCacheService pour ADD_STUDENT
+    return ActionCacheService.executeAction(
+      'ADD_STUDENT',
+      async () => {
+        const response = (await apiClient.post(
+          `/api/families/${familyId}/students`,
+          studentData
+        )) as StudentResponse;
+        return response.student;
+      },
+      {
+        familyId,
+        studentData,
+        tempStudentId: `temp-student-${Date.now()}`
+      }
+    );
   }
 }
 

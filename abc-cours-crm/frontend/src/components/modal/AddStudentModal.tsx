@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Input } from '../../components';
 import { familyService, type AddStudentData } from '../../services/familyService';
-import { useCacheInvalidation } from '../../hooks/useCacheInvalidation';
 import '../../pages/admin/dashboard/create/Step2StudentsSubjects.css';
 
 interface AddStudentModalProps {
@@ -19,7 +18,6 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { invalidateAllFamilyRelatedCaches } = useCacheInvalidation();
   
   // États du formulaire
   const [formData, setFormData] = useState({
@@ -88,9 +86,8 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
       // Utiliser la nouvelle API dédiée
       await familyService.addStudent(familyId, addStudentData);
 
-      // Invalider le cache des familles pour rafraîchir automatiquement
-      invalidateAllFamilyRelatedCaches();
-      console.log('✅ Cache invalidé après ajout d\'élève - rafraîchissement automatique activé');
+      // Cache mis à jour automatiquement par ActionCache
+      console.log('✅ Élève ajouté avec succès - cache mis à jour automatiquement par ActionCache');
 
       // Fermer la modal et appeler le callback de succès
       handleCancel();
