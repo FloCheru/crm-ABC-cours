@@ -1,0 +1,121 @@
+.reminder-subject-dropdown {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.reminder-subject-dropdown__trigger {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #374151;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.reminder-subject-dropdown__trigger:hover {
+  border-color: #9ca3af;
+  background-color: #f9fafb;
+}
+
+.reminder-subject-dropdown__trigger:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.reminder-subject-dropdown__trigger.open {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.reminder-subject-dropdown__trigger.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.reminder-subject-dropdown__value {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reminder-subject-dropdown__arrow {
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+}
+
+.reminder-subject-dropdown__trigger.open .reminder-subject-dropdown__arrow {
+  transform: rotate(180deg);
+}
+
+.reminder-subject-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 280px;
+  width: max-content;
+  max-width: 400px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.reminder-subject-dropdown__option {
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.reminder-subject-dropdown__option:hover {
+  background-color: #f3f4f6;
+}
+
+.reminder-subject-dropdown__option:focus {
+  outline: none;
+  background-color: #e5e7eb;
+}
+
+.reminder-subject-dropdown__option.selected {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+.reminder-subject-dropdown__option.selected:hover {
+  background-color: #bfdbfe;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reminder-subject-dropdown__trigger,
+  .reminder-subject-dropdown__option {
+    padding: 12px;
+    font-size: 16px;
+  }
+  
+  .reminder-subject-dropdown__menu {
+    max-height: 180px;
+  }
+}
