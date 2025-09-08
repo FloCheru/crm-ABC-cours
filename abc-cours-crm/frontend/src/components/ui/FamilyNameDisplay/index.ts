@@ -1,1 +1,0 @@
-export { FamilyNameDisplay } from './FamilyNameDisplay';
