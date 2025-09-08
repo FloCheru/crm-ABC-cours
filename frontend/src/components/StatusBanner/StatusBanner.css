@@ -1,0 +1,115 @@
+/* Composant StatusBanner - Bandeau coloré avec le statut du prospect */
+.status-banner {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid transparent;
+}
+
+.status-banner__content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.status-banner__label {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.status-banner__text {
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Couleurs des statuts - Reprend les couleurs du StatusDot */
+.status-banner--en-reflexion {
+  background-color: #a855f7;
+  color: white;
+  border-color: #9333ea;
+}
+
+.status-banner--interesse-prof-a-trouver {
+  background-color: #dc2626;
+  color: white;
+  border-color: #b91c1c;
+}
+
+.status-banner--injoignable {
+  background-color: #2563eb;
+  color: white;
+  border-color: #1d4ed8;
+}
+
+.status-banner--ndr-editee {
+  background-color: #fbbf24;
+  color: #92400e;
+  border-color: #f59e0b;
+}
+
+.status-banner--premier-cours-effectue {
+  background-color: #16a34a;
+  color: white;
+  border-color: #15803d;
+}
+
+.status-banner--rdv-prospect {
+  background-color: #ec4899;
+  color: white;
+  border-color: #db2777;
+}
+
+.status-banner--ne-va-pas-convertir {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #000000;
+  border-width: 2px;
+}
+
+.status-banner--default {
+  background-color: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .status-banner {
+    padding: 0.875rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .status-banner__content {
+    gap: 0.5rem;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .status-banner__label {
+    font-size: 0.875rem;
+  }
+
+  .status-banner__text {
+    font-size: 1rem;
+  }
+}
+
+/* Animation au chargement */
+.status-banner {
+  animation: fadeInScale 0.3s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

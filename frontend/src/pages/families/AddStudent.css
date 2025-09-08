@@ -1,0 +1,152 @@
+/* Page d'ajout d'élève */
+.add-student-page {
+  min-height: 100vh;
+  background: #f9fafb;
+  padding: 2rem 0;
+}
+
+.add-student-page__container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* En-tête de la page */
+.add-student-page__header {
+  margin-bottom: 2rem;
+}
+
+.add-student-page__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.add-student-page__breadcrumb-item {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.add-student-page__breadcrumb-item:hover {
+  color: #1d4ed8;
+}
+
+.add-student-page__breadcrumb-separator {
+  color: #9ca3af;
+  font-weight: 300;
+}
+
+.add-student-page__breadcrumb-current {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+/* Bannière d'erreur */
+.add-student-page__error-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+/* Container du formulaire */
+.add-student-page__form-container {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* Page d'erreur */
+.add-student-page__error {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.add-student-page__error h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
+.add-student-page__error p {
+  color: #6b7280;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.add-student-page__button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-student-page__button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.add-student-page__button:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .add-student-page {
+    padding: 1rem 0;
+  }
+  
+  .add-student-page__container {
+    padding: 0 0.5rem;
+  }
+  
+  .add-student-page__breadcrumb {
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+  }
+  
+  .add-student-page__error {
+    padding: 2rem 1rem;
+  }
+  
+  .add-student-page__error h2 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Animation d'entrée */
+.add-student-page__form-container {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

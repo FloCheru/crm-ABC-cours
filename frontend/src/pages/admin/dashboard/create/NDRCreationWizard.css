@@ -1,0 +1,97 @@
+/* Styles pour le wizard de création NDR */
+.ndr-wizard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.ndr-wizard__header {
+  margin-bottom: 2rem;
+}
+
+.ndr-wizard__title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.ndr-wizard__content {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  min-height: 600px;
+}
+
+.ndr-wizard__step-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* Navigation entre les étapes */
+.ndr-wizard__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.ndr-wizard__nav-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.ndr-wizard__summary {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ndr-wizard__summary-title {
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.ndr-wizard__summary-content {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* États de chargement */
+.ndr-wizard__loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #6b7280;
+}
+
+.ndr-wizard__error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ndr-wizard__error-title {
+  font-weight: 600;
+  color: #dc2626;
+  margin-bottom: 0.5rem;
+}
+
+.ndr-wizard__error-content {
+  font-size: 0.875rem;
+  color: #991b1b;
+}

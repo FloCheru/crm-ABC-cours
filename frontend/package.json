@@ -1,0 +1,63 @@
+{
+  "name": "abc-cours-crm",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:pages": "jest tests/pages",
+    "test:components": "jest tests/components",
+    "test:hooks": "jest tests/hooks",
+    "test:page:prospects": "jest tests/pages/prospects.test.js",
+    "test:page:clients": "jest tests/pages/clients.test.js",
+    "test:page:dashboard": "jest tests/pages/dashboard.test.js",
+    "test:page:step3-prefill": "jest tests/pages/step3-prefill-integration.test.js",
+    "test:service:prefill": "jest tests/services/ndrPrefillService.test.js",
+    "test:basic": "jest tests/test-basic.test.js",
+    "test:e2e": "jest ../e2e --testTimeout=30000"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.83.0",
+    "lucide-react": "^0.525.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-hook-form": "^7.60.0",
+    "react-router-dom": "^7.6.2",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.28.3",
+    "@babel/preset-react": "^7.27.1",
+    "@babel/preset-typescript": "^7.27.1",
+    "@eslint/js": "^9.29.0",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.5.2",
+    "babel-jest": "^30.0.5",
+    "babel-plugin-transform-vite-meta-env": "^1.0.3",
+    "eslint": "^9.29.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.2.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.34.1",
+    "vite": "^7.0.0"
+  },
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "^0.25.5",
+    "@rollup/rollup-linux-x64-gnu": "^4.44.1"
+  }
+}

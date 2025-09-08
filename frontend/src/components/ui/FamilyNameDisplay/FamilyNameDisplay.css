@@ -1,0 +1,37 @@
+/* Composant FamilyNameDisplay */
+.family-name-display {
+  display: inline-block;
+}
+
+.family-name-display__name {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.family-name-display__note {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin-left: 0.25rem;
+}
+
+.family-name-display__email,
+.family-name-display__phone {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.125rem;
+}
+
+/* États du composant */
+.family-name-display--unknown {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.family-name-display--generated {
+  color: var(--color-text-primary);
+}
+
+.family-name-display--valid {
+  color: var(--color-text-primary);
+}

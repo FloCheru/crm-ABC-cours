@@ -1,0 +1,1135 @@
+[{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2322",
+	"severity": 8,
+	"message": "Type '({ isOpen, onClose, type, data, onSuccess, mode, }: ModalProps) => void' is not assignable to type 'FC<ModalProps>'.\n  Type 'void' is not assignable to type 'ReactNode | Promise<ReactNode>'.",
+	"source": "ts",
+	"startLineNumber": 135,
+	"startColumn": 14,
+	"endLineNumber": 135,
+	"endColumn": 19,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "1005",
+	"severity": 8,
+	"message": "';' expected.",
+	"source": "ts",
+	"startLineNumber": 370,
+	"startColumn": 13,
+	"endLineNumber": 370,
+	"endColumn": 14,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'assignedAdminId'.",
+	"source": "ts",
+	"startLineNumber": 371,
+	"startColumn": 9,
+	"endLineNumber": 371,
+	"endColumn": 24,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "1005",
+	"severity": 8,
+	"message": "';' expected.",
+	"source": "ts",
+	"startLineNumber": 371,
+	"startColumn": 24,
+	"endLineNumber": 371,
+	"endColumn": 25,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'notes'.",
+	"source": "ts",
+	"startLineNumber": 372,
+	"startColumn": 9,
+	"endLineNumber": 372,
+	"endColumn": 14,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "1005",
+	"severity": 8,
+	"message": "';' expected.",
+	"source": "ts",
+	"startLineNumber": 372,
+	"startColumn": 14,
+	"endLineNumber": 372,
+	"endColumn": 15,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "1128",
+	"severity": 8,
+	"message": "Declaration or statement expected.",
+	"source": "ts",
+	"startLineNumber": 373,
+	"startColumn": 8,
+	"endLineNumber": 373,
+	"endColumn": 9,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "1128",
+	"severity": 8,
+	"message": "Declaration or statement expected.",
+	"source": "ts",
+	"startLineNumber": 392,
+	"startColumn": 3,
+	"endLineNumber": 392,
+	"endColumn": 4,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "1128",
+	"severity": 8,
+	"message": "Declaration or statement expected.",
+	"source": "ts",
+	"startLineNumber": 392,
+	"startColumn": 4,
+	"endLineNumber": 392,
+	"endColumn": 5,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'type'.",
+	"source": "ts",
+	"startLineNumber": 392,
+	"startColumn": 7,
+	"endLineNumber": 392,
+	"endColumn": 11,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'data'.",
+	"source": "ts",
+	"startLineNumber": 392,
+	"startColumn": 13,
+	"endLineNumber": 392,
+	"endColumn": 17,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "1005",
+	"severity": 8,
+	"message": "';' expected.",
+	"source": "ts",
+	"startLineNumber": 392,
+	"startColumn": 18,
+	"endLineNumber": 392,
+	"endColumn": 19,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2552",
+	"severity": 8,
+	"message": "Cannot find name 'setFormData'. Did you mean 'FormData'?",
+	"source": "ts",
+	"startLineNumber": 395,
+	"startColumn": 5,
+	"endLineNumber": 395,
+	"endColumn": 16,
+	"relatedInformation": [
+		{
+			"startLineNumber": 12263,
+			"startColumn": 13,
+			"endLineNumber": 12263,
+			"endColumn": 21,
+			"message": "'FormData' is declared here.",
+			"resource": "/c:/Users/flori/AppData/Local/Programs/Microsoft VS Code/resources/app/extensions/node_modules/typescript/lib/lib.dom.d.ts"
+		}
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "7006",
+	"severity": 8,
+	"message": "Parameter 'prev' implicitly has an 'any' type.",
+	"source": "ts",
+	"startLineNumber": 395,
+	"startColumn": 18,
+	"endLineNumber": 395,
+	"endColumn": 22,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'type'.",
+	"source": "ts",
+	"startLineNumber": 402,
+	"startColumn": 9,
+	"endLineNumber": 402,
+	"endColumn": 13,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2552",
+	"severity": 8,
+	"message": "Cannot find name 'formData'. Did you mean 'FormData'?",
+	"source": "ts",
+	"startLineNumber": 404,
+	"startColumn": 9,
+	"endLineNumber": 404,
+	"endColumn": 17,
+	"relatedInformation": [
+		{
+			"startLineNumber": 12263,
+			"startColumn": 13,
+			"endLineNumber": 12263,
+			"endColumn": 21,
+			"message": "'FormData' is declared here.",
+			"resource": "/c:/Users/flori/AppData/Local/Programs/Microsoft VS Code/resources/app/extensions/node_modules/typescript/lib/lib.dom.d.ts"
+		}
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2552",
+	"severity": 8,
+	"message": "Cannot find name 'formData'. Did you mean 'FormData'?",
+	"source": "ts",
+	"startLineNumber": 404,
+	"startColumn": 45,
+	"endLineNumber": 404,
+	"endColumn": 53,
+	"relatedInformation": [
+		{
+			"startLineNumber": 12263,
+			"startColumn": 13,
+			"endLineNumber": 12263,
+			"endColumn": 21,
+			"message": "'FormData' is declared here.",
+			"resource": "/c:/Users/flori/AppData/Local/Programs/Microsoft VS Code/resources/app/extensions/node_modules/typescript/lib/lib.dom.d.ts"
+		}
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'type'.",
+	"source": "ts",
+	"startLineNumber": 406,
+	"startColumn": 16,
+	"endLineNumber": 406,
+	"endColumn": 20,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2552",
+	"severity": 8,
+	"message": "Cannot find name 'formData'. Did you mean 'FormData'?",
+	"source": "ts",
+	"startLineNumber": 408,
+	"startColumn": 9,
+	"endLineNumber": 408,
+	"endColumn": 17,
+	"relatedInformation": [
+		{
+			"startLineNumber": 12263,
+			"startColumn": 13,
+			"endLineNumber": 12263,
+			"endColumn": 21,
+			"message": "'FormData' is declared here.",
+			"resource": "/c:/Users/flori/AppData/Local/Programs/Microsoft VS Code/resources/app/extensions/node_modules/typescript/lib/lib.dom.d.ts"
+		}
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2552",
+	"severity": 8,
+	"message": "Cannot find name 'formData'. Did you mean 'FormData'?",
+	"source": "ts",
+	"startLineNumber": 409,
+	"startColumn": 9,
+	"endLineNumber": 409,
+	"endColumn": 17,
+	"relatedInformation": [
+		{
+			"startLineNumber": 12263,
+			"startColumn": 13,
+			"endLineNumber": 12263,
+			"endColumn": 21,
+			"message": "'FormData' is declared here.",
+			"resource": "/c:/Users/flori/AppData/Local/Programs/Microsoft VS Code/resources/app/extensions/node_modules/typescript/lib/lib.dom.d.ts"
+		}
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'formData'.",
+	"source": "ts",
+	"startLineNumber": 410,
+	"startColumn": 9,
+	"endLineNumber": 410,
+	"endColumn": 17,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setInternalMode'.",
+	"source": "ts",
+	"startLineNumber": 417,
+	"startColumn": 5,
+	"endLineNumber": 417,
+	"endColumn": 20,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'internalMode'.",
+	"source": "ts",
+	"startLineNumber": 417,
+	"startColumn": 21,
+	"endLineNumber": 417,
+	"endColumn": 33,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setIsLoading'.",
+	"source": "ts",
+	"startLineNumber": 426,
+	"startColumn": 5,
+	"endLineNumber": 426,
+	"endColumn": 17,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setError'.",
+	"source": "ts",
+	"startLineNumber": 427,
+	"startColumn": 5,
+	"endLineNumber": 427,
+	"endColumn": 13,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "7053",
+	"severity": 8,
+	"message": "Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ readonly student: { readonly prepareData: (formData: any, data: any) => { firstName: any; lastName: any; dateOfBirth: any; school: { name: any; level: any; grade: any; }; contact: { email: any; phone: any; }; courseLocation: { ...; }; availability: string; comments: any; notes: any; }; readonly update: (entityId: ...'.",
+	"source": "ts",
+	"startLineNumber": 430,
+	"startColumn": 23,
+	"endLineNumber": 430,
+	"endColumn": 44,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'type'.",
+	"source": "ts",
+	"startLineNumber": 430,
+	"startColumn": 39,
+	"endLineNumber": 430,
+	"endColumn": 43,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'formData'.",
+	"source": "ts",
+	"startLineNumber": 434,
+	"startColumn": 48,
+	"endLineNumber": 434,
+	"endColumn": 56,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'data'.",
+	"source": "ts",
+	"startLineNumber": 434,
+	"startColumn": 58,
+	"endLineNumber": 434,
+	"endColumn": 62,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'data'.",
+	"source": "ts",
+	"startLineNumber": 437,
+	"startColumn": 11,
+	"endLineNumber": 437,
+	"endColumn": 15,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'data'.",
+	"source": "ts",
+	"startLineNumber": 437,
+	"startColumn": 19,
+	"endLineNumber": 437,
+	"endColumn": 23,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'data'.",
+	"source": "ts",
+	"startLineNumber": 439,
+	"startColumn": 45,
+	"endLineNumber": 439,
+	"endColumn": 49,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'data'.",
+	"source": "ts",
+	"startLineNumber": 439,
+	"startColumn": 69,
+	"endLineNumber": 439,
+	"endColumn": 73,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'familyId'.",
+	"source": "ts",
+	"startLineNumber": 441,
+	"startColumn": 30,
+	"endLineNumber": 441,
+	"endColumn": 38,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setInternalMode'.",
+	"source": "ts",
+	"startLineNumber": 445,
+	"startColumn": 7,
+	"endLineNumber": 445,
+	"endColumn": 22,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'onSuccess'.",
+	"source": "ts",
+	"startLineNumber": 448,
+	"startColumn": 11,
+	"endLineNumber": 448,
+	"endColumn": 20,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'onSuccess'.",
+	"source": "ts",
+	"startLineNumber": 449,
+	"startColumn": 9,
+	"endLineNumber": 449,
+	"endColumn": 18,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setError'.",
+	"source": "ts",
+	"startLineNumber": 455,
+	"startColumn": 7,
+	"endLineNumber": 455,
+	"endColumn": 15,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setIsLoading'.",
+	"source": "ts",
+	"startLineNumber": 457,
+	"startColumn": 7,
+	"endLineNumber": 457,
+	"endColumn": 19,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'type'.",
+	"source": "ts",
+	"startLineNumber": 462,
+	"startColumn": 9,
+	"endLineNumber": 462,
+	"endColumn": 13,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setFormData'.",
+	"source": "ts",
+	"startLineNumber": 463,
+	"startColumn": 7,
+	"endLineNumber": 463,
+	"endColumn": 18,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "7006",
+	"severity": 8,
+	"message": "Parameter 'prev' implicitly has an 'any' type.",
+	"source": "ts",
+	"startLineNumber": 463,
+	"startColumn": 20,
+	"endLineNumber": 463,
+	"endColumn": 24,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setSameAsFamily'.",
+	"source": "ts",
+	"startLineNumber": 479,
+	"startColumn": 7,
+	"endLineNumber": 479,
+	"endColumn": 22,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'type'.",
+	"source": "ts",
+	"startLineNumber": 480,
+	"startColumn": 16,
+	"endLineNumber": 480,
+	"endColumn": 20,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setFormData'.",
+	"source": "ts",
+	"startLineNumber": 485,
+	"startColumn": 7,
+	"endLineNumber": 485,
+	"endColumn": 18,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "7006",
+	"severity": 8,
+	"message": "Parameter 'prev' implicitly has an 'any' type.",
+	"source": "ts",
+	"startLineNumber": 485,
+	"startColumn": 20,
+	"endLineNumber": 485,
+	"endColumn": 24,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'formData'.",
+	"source": "ts",
+	"startLineNumber": 509,
+	"startColumn": 19,
+	"endLineNumber": 509,
+	"endColumn": 27,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'formData'.",
+	"source": "ts",
+	"startLineNumber": 509,
+	"startColumn": 48,
+	"endLineNumber": 509,
+	"endColumn": 56,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'internalMode'.",
+	"source": "ts",
+	"startLineNumber": 510,
+	"startColumn": 24,
+	"endLineNumber": 510,
+	"endColumn": 36,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'sameAsFamily'.",
+	"source": "ts",
+	"startLineNumber": 513,
+	"startColumn": 43,
+	"endLineNumber": 513,
+	"endColumn": 55,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'sameAsFamily'.",
+	"source": "ts",
+	"startLineNumber": 526,
+	"startColumn": 49,
+	"endLineNumber": 526,
+	"endColumn": 61,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setSameAsFamily'.",
+	"source": "ts",
+	"startLineNumber": 529,
+	"startColumn": 19,
+	"endLineNumber": 529,
+	"endColumn": 34,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'internalMode'.",
+	"source": "ts",
+	"startLineNumber": 568,
+	"startColumn": 11,
+	"endLineNumber": 568,
+	"endColumn": 23,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setError'.",
+	"source": "ts",
+	"startLineNumber": 623,
+	"startColumn": 5,
+	"endLineNumber": 623,
+	"endColumn": 13,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setFormData'.",
+	"source": "ts",
+	"startLineNumber": 624,
+	"startColumn": 5,
+	"endLineNumber": 624,
+	"endColumn": 16,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'setSameAsFamily'.",
+	"source": "ts",
+	"startLineNumber": 647,
+	"startColumn": 5,
+	"endLineNumber": 647,
+	"endColumn": 20,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'type'.",
+	"source": "ts",
+	"startLineNumber": 648,
+	"startColumn": 9,
+	"endLineNumber": 648,
+	"endColumn": 13,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'data'.",
+	"source": "ts",
+	"startLineNumber": 648,
+	"startColumn": 31,
+	"endLineNumber": 648,
+	"endColumn": 35,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'data'.",
+	"source": "ts",
+	"startLineNumber": 648,
+	"startColumn": 39,
+	"endLineNumber": 648,
+	"endColumn": 43,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'onClose'.",
+	"source": "ts",
+	"startLineNumber": 650,
+	"startColumn": 5,
+	"endLineNumber": 650,
+	"endColumn": 12,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "2552",
+	"severity": 8,
+	"message": "Cannot find name 'isOpen'. Did you mean 'open'?",
+	"source": "ts",
+	"startLineNumber": 653,
+	"startColumn": 8,
+	"endLineNumber": 653,
+	"endColumn": 14,
+	"relatedInformation": [
+		{
+			"startLineNumber": 38759,
+			"startColumn": 18,
+			"endLineNumber": 38759,
+			"endColumn": 22,
+			"message": "'open' is declared here.",
+			"resource": "/c:/Users/flori/AppData/Local/Programs/Microsoft VS Code/resources/app/extensions/node_modules/typescript/lib/lib.dom.d.ts"
+		}
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "1128",
+	"severity": 8,
+	"message": "Declaration or statement expected.",
+	"source": "ts",
+	"startLineNumber": 799,
+	"startColumn": 1,
+	"endLineNumber": 799,
+	"endColumn": 2,
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'Button' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 3,
+	"startColumn": 3,
+	"endLineNumber": 3,
+	"endColumn": 9,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'DataCard' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 6,
+	"startColumn": 3,
+	"endLineNumber": 6,
+	"endColumn": 11,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'Container' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 7,
+	"startColumn": 3,
+	"endLineNumber": 7,
+	"endColumn": 12,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'PageHeader' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 8,
+	"startColumn": 3,
+	"endLineNumber": 8,
+	"endColumn": 13,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'onClose' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 137,
+	"startColumn": 3,
+	"endLineNumber": 137,
+	"endColumn": 10,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'onSuccess' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 140,
+	"startColumn": 3,
+	"endLineNumber": 140,
+	"endColumn": 12,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'MODAL_CONFIG' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 144,
+	"startColumn": 9,
+	"endLineNumber": 144,
+	"endColumn": 21,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'familyId' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 302,
+	"startColumn": 9,
+	"endLineNumber": 302,
+	"endColumn": 17,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'isLoading' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 303,
+	"startColumn": 10,
+	"endLineNumber": 303,
+	"endColumn": 19,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'setIsLoading' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 303,
+	"startColumn": 21,
+	"endLineNumber": 303,
+	"endColumn": 33,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'error' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 304,
+	"startColumn": 10,
+	"endLineNumber": 304,
+	"endColumn": 15,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'setError' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 304,
+	"startColumn": 17,
+	"endLineNumber": 304,
+	"endColumn": 25,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'sameAsFamily' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 305,
+	"startColumn": 10,
+	"endLineNumber": 305,
+	"endColumn": 22,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'modalTitle' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 311,
+	"startColumn": 9,
+	"endLineNumber": 311,
+	"endColumn": 19,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'formData' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 320,
+	"startColumn": 10,
+	"endLineNumber": 320,
+	"endColumn": 18,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'handleToggleMode' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 416,
+	"startColumn": 9,
+	"endLineNumber": 416,
+	"endColumn": 25,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'handleSave' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 420,
+	"startColumn": 9,
+	"endLineNumber": 420,
+	"endColumn": 19,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'logs' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 431,
+	"startColumn": 13,
+	"endLineNumber": 431,
+	"endColumn": 17,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'result' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 439,
+	"startColumn": 15,
+	"endLineNumber": 439,
+	"endColumn": 21,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'handleFillExample' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 461,
+	"startColumn": 9,
+	"endLineNumber": 461,
+	"endColumn": 26,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'renderField' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 497,
+	"startColumn": 9,
+	"endLineNumber": 497,
+	"endColumn": 20,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+},{
+	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/components/modal/Modal.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'handleCancel' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 622,
+	"startColumn": 9,
+	"endLineNumber": 622,
+	"endColumn": 21,
+	"tags": [
+		1
+	],
+	"origin": "extHost4"
+}]
