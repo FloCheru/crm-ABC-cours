@@ -28,7 +28,8 @@ export function useSettlementGlobal(options: UseSettlementGlobalOptions = {}) {
   const loadSettlements = useSettlementStore((state) => state.loadSettlements);
   const clearCache = useSettlementStore((state) => state.clearCache);
   
-  // Sélecteurs optimisés
+  
+  // Fonctions de sélecteurs pour compatibilité
   const getSettlements = useSettlementStore((state) => state.getSettlements);
   const getSettlementCount = useSettlementStore((state) => state.getSettlementCount);
   const getFirstSettlementDate = useSettlementStore((state) => state.getFirstSettlementDate);
@@ -62,7 +63,7 @@ export function useSettlementGlobal(options: UseSettlementGlobalOptions = {}) {
     getFirstSettlementDate,
     getTotalCount,
     
-    // Getters directs pour compatibilité
+    // Données directes pour compatibilité (même pattern que useFamiliesGlobal)
     settlements: getSettlements(),
     totalCount: getTotalCount(),
   };

@@ -29,7 +29,7 @@ router.get("/", async (req, res) => {
       filter.status = status;
     }
     if (family) {
-      filter.family = family;
+      filter.familyId = family;
     }
     if (level) {
       // Normalisation pour ignorer les accents et la casse
@@ -132,7 +132,7 @@ router.post(
       }
 
       // Vérifier que la famille existe
-      const family = await Family.findById(req.body.family);
+      const family = await Family.findById(req.body.familyId);
       if (!family) {
         return res.status(400).json({ message: "Famille non trouvée" });
       }
@@ -141,7 +141,7 @@ router.post(
       await student.save();
 
       // Ajouter l'élève à la famille
-      await Family.findByIdAndUpdate(req.body.family, {
+      await Family.findByIdAndUpdate(req.body.familyId, {
         $push: { students: student._id },
       });
 
@@ -199,14 +199,14 @@ router.put(
       }
 
       // Si la famille a changé, mettre à jour les relations
-      if (req.body.family && req.body.family !== student.family._id) {
+      if (req.body.familyId && req.body.familyId !== student.familyId._id) {
         // Retirer l'élève de l'ancienne famille
-        await Family.findByIdAndUpdate(student.family._id, {
+        await Family.findByIdAndUpdate(student.familyId._id, {
           $pull: { students: student._id },
         });
 
         // Ajouter l'élève à la nouvelle famille
-        await Family.findByIdAndUpdate(req.body.family, {
+        await Family.findByIdAndUpdate(req.body.familyId, {
           $push: { students: student._id },
         });
       }
@@ -237,7 +237,7 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
     // TODO: Ajouter la vérification des assignations
 
     // Retirer l'élève de la famille
-    await Family.findByIdAndUpdate(student.family, {
+    await Family.findByIdAndUpdate(student.familyId, {
       $pull: { students: student._id },
     });
 

@@ -95,8 +95,11 @@ class SettlementService {
     console.log("🔍 Clés des données:", Object.keys(data));
     console.log("🔍 === FIN DÉBOGAGE SERVICE ===");
 
-    // ✨ NOUVEAU: Utilisation du ActionCacheService pour gestion intelligente du cache
-    return ActionCacheService.executeAction(
+    // ✨ Générer un ID temporaire pour l'optimistic update
+    const tempNdrId = `temp-${Date.now()}`;
+
+    // ✨ Utilisation du ActionCacheService pour gestion intelligente du cache
+    const result = await ActionCacheService.executeAction(
       'CREATE_NDR',
       async () => {
         const response = await rateLimitedApiClient.post("/api/settlement-notes", data);
@@ -105,9 +108,16 @@ class SettlementService {
       {
         familyId: data.familyId,
         newStatus: 'client',
-        ndrData: data
+        ndrData: { ...data, _id: tempNdrId }, // Passer l'ID temporaire
+        tempNdrId: tempNdrId
       }
     );
+
+    // Remplacer l'ID temporaire par le vrai ID dans le store
+    const { useSettlementStore } = await import('../stores/useSettlementStore');
+    useSettlementStore.getState().replaceSettlementId(tempNdrId, result._id);
+    
+    return result;
   }
 
   async getSettlementNotesByFamily(
@@ -218,7 +228,7 @@ class SettlementService {
     }
   }
 
-  async deleteSettlementNote(id: string): Promise<{ message: string }> {
+  async deleteSettlementNote(id: string, familyId?: string): Promise<{ message: string }> {
     // ✨ NOUVEAU: Utilisation du ActionCacheService pour DELETE_NDR
     return ActionCacheService.executeAction(
       'DELETE_NDR',
@@ -228,7 +238,7 @@ class SettlementService {
       },
       {
         ndrId: id,
-        familyId: '', // Sera récupéré par le backend si besoin
+        familyId: familyId || '', // Utiliser le familyId fourni ou vide par défaut
       }
     );
   }

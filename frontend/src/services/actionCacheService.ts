@@ -152,7 +152,8 @@ class ActionCacheService {
       const duration = Math.round(performance.now() - startTime);
       console.error(`❌ [ACTION-CACHE-SERVICE] ${action} failed after ${duration}ms:`, error);
 
-      // 4. Rollback des updates optimistes
+      // 4. Rollback des updates optimistes - MAIS préserver l'état d'erreur pour la UI
+      console.log(`🔄 [ACTION-CACHE-SERVICE] Rolling back optimistic updates while preserving error state...`);
       this.executeRollbacks(affectedStores, action, optimisticData);
 
       // Re-throw l'erreur pour que l'appelant puisse la gérer

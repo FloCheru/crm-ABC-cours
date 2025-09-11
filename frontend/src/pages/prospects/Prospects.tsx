@@ -12,6 +12,7 @@ import {
   DatePicker,
   DeletionPreviewModal,
   PageHeader,
+  Modal,
 } from "../../components";
 import { ModalWrapper } from "../../components/ui/ModalWrapper/ModalWrapper";
 import { EntityForm } from "../../components/forms/EntityForm";
@@ -20,6 +21,7 @@ import type { Family } from "../../types/family";
 // import type { FamilyStats } from "../../services/familyService";
 // import { useRefresh } from "../../hooks/useRefresh"; // Géré par le cache
 import { useFamiliesGlobal } from "../../hooks/useFamiliesGlobal";
+import { usePrefillTest } from "../../hooks/usePrefillTest";
 import { StatusDot, type ProspectStatus } from "../../components/StatusDot";
 import "./Prospects.css";
 
@@ -40,6 +42,9 @@ export const Prospects: React.FC = () => {
     updateProspectOptimistic,
   } = useFamiliesGlobal();
   const familyData = prospects;
+  
+  // Hook pour le préremplissage avec données de test
+  const {} = usePrefillTest();
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateProspectModalOpen, setIsCreateProspectModalOpen] =
     useState(false);
@@ -47,6 +52,8 @@ export const Prospects: React.FC = () => {
     useState(false);
   const [deletionPreviewData, setDeletionPreviewData] = useState(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [selectedFamilyForStudent, setSelectedFamilyForStudent] = useState<string | null>(null);
   const [prospectToDelete, setProspectToDelete] = useState<string | null>(null);
 
 
@@ -60,7 +67,10 @@ export const Prospects: React.FC = () => {
   };
 
   const handleAddStudent = (familyId: string) => {
-    navigate(`/families/${familyId}/add-student?returnTo=prospects`);
+    console.log("🎯 [PROSPECTS] Clic 'Ajouter un élève' - familyId:", familyId);
+    
+    setSelectedFamilyForStudent(familyId);
+    setShowAddStudentModal(true);
   };
 
   // Gérer le changement de statut d'un prospect - avec mise à jour optimiste
@@ -541,6 +551,21 @@ export const Prospects: React.FC = () => {
         onConfirm={handleConfirmDeletion}
         previewData={deletionPreviewData}
         isLoading={isLoadingPreview}
+      />
+
+      {/* Modal d'ajout d'élève */}
+      <Modal
+        type="student"
+        isOpen={showAddStudentModal}
+        onClose={() => {
+          setShowAddStudentModal(false);
+          setSelectedFamilyForStudent(null);
+        }}
+        data={{ familyId: selectedFamilyForStudent }}
+        onSuccess={() => {
+          setShowAddStudentModal(false);
+          setSelectedFamilyForStudent(null);
+        }}
       />
     </main>
   );

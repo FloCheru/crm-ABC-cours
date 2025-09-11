@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button, Input, FormCard } from "../../../../components";
+import { Button, Input, FormCard, Modal } from "../../../../components";
 import { useNDRWizard } from "../../../../contexts/NDRWizardContext";
 import { familyService } from "../../../../services/familyService";
 import { subjectService } from "../../../../services/subjectService";
@@ -36,14 +35,16 @@ interface Student {
 export const Step2StudentsSubjects: React.FC = () => {
   const { state, updateStep2, validateStep2, nextStep, previousStep, errors } =
     useNDRWizard();
-  const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showSubjectSelection, setShowSubjectSelection] = useState(false);
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   // Retiré car non utilisé dans la nouvelle implémentation
   // const [tempStudents, setTempStudents] = useState<Student[]>([]);
+
+  // Hook pour le préremplissage des prospects
 
   // Charger les élèves de la famille et les matières disponibles
   useEffect(() => {
@@ -183,8 +184,35 @@ export const Step2StudentsSubjects: React.FC = () => {
     setShowSubjectSelection(false);
   };
 
-  const handleAddStudent = () => {
-    navigate(`/families/${state.step1.familyId}/add-student?returnTo=wizard`);
+  const handleAddStudent = async () => {
+    try {
+      // Charger les données complètes de la famille pour le préremplissage
+      if (state.step1.familyId) {
+        const family = await familyService.getFamily(state.step1.familyId);
+      }
+      
+      setShowAddStudentModal(true);
+    } catch (error) {
+      console.error("Erreur lors du chargement des données famille:", error);
+      // Continuer même sans données pour ne pas bloquer l'ouverture de la modal
+      setShowAddStudentModal(true);
+    }
+  };
+
+  const handleStudentAdded = async () => {
+    // Nettoyer les données prospect après ajout
+    setShowAddStudentModal(false);
+    // Recharger la liste des élèves
+    if (state.step1.familyId) {
+      try {
+        const family = await familyService.getFamily(state.step1.familyId);
+        if (family.students && Array.isArray(family.students)) {
+          setStudents(family.students);
+        }
+      } catch (error) {
+        console.error("Erreur lors du rechargement des élèves:", error);
+      }
+    }
   };
 
 
@@ -922,6 +950,17 @@ export const Step2StudentsSubjects: React.FC = () => {
           Suivant : Tarifs →
         </Button>
       </div>
+
+      {/* Modal d'ajout d'élève */}
+      <Modal
+        type="student"
+        isOpen={showAddStudentModal}
+        onClose={() => {
+          setShowAddStudentModal(false);
+        }}
+        data={{ _id: state.step1.familyId }}
+        onSuccess={handleStudentAdded}
+      />
     </div>
   );
 };

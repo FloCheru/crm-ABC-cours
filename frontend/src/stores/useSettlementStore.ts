@@ -22,6 +22,7 @@ interface SettlementState {
   loadSettlements: () => Promise<void>;
   clearCache: () => void;
   isExpired: () => boolean;
+  replaceSettlementId: (tempId: string, realId: string) => void;
   
   // Sélecteurs mémorisés
   getSettlements: () => SettlementNote[];
@@ -144,6 +145,112 @@ export const useSettlementStore = create<SettlementState>()(
       getTotalCount: () => {
         const { data } = get();
         return data?.totalCount || 0;
+      },
+
+      // Méthode optimisticUpdate pour ActionCache
+      optimisticUpdate: (action: any, actionData: any) => {
+        if (action === 'CREATE_NDR') {
+          const { familyId, ndrData, tempNdrId } = actionData;
+          const { data } = get();
+          if (!data) return;
+          
+          // Créer NDR optimiste avec ID temporaire fourni
+          const tempNDR = {
+            ...ndrData,
+            _id: tempNdrId || `temp-${Date.now()}`, // Utiliser l'ID fourni ou générer un nouveau
+            status: 'pending',
+            createdAt: new Date().toISOString()
+          };
+          
+          // Mettre à jour settlements, counts, firstDates
+          const updatedSettlements = [...data.settlements, tempNDR];
+          const updatedCounts = { ...data.counts };
+          updatedCounts[familyId] = (updatedCounts[familyId] || 0) + 1;
+          
+          // Première date pour cette famille si nécessaire
+          const updatedFirstDates = { ...data.firstDates };
+          if (!updatedFirstDates[familyId]) {
+            updatedFirstDates[familyId] = new Date().toLocaleDateString('fr-FR');
+          }
+          
+          set({
+            data: {
+              ...data,
+              settlements: updatedSettlements,
+              counts: updatedCounts,
+              firstDates: updatedFirstDates,
+              totalCount: data.totalCount + 1
+            }
+          });
+          
+          console.log(`📋 [SETTLEMENT-STORE] NDR optimiste ajoutée pour famille ${familyId}`);
+        }
+        
+        if (action === 'DELETE_NDR') {
+          const { ndrId, familyId } = actionData;
+          const { data } = get();
+          if (!data) return;
+          
+          // Retirer la NDR des settlements
+          const updatedSettlements = data.settlements.filter(ndr => ndr._id !== ndrId);
+          
+          // Mettre à jour les counts
+          const updatedCounts = { ...data.counts };
+          if (updatedCounts[familyId] > 0) {
+            updatedCounts[familyId] = updatedCounts[familyId] - 1;
+            
+            // Si plus de NDR pour cette famille, retirer de counts et firstDates
+            if (updatedCounts[familyId] === 0) {
+              delete updatedCounts[familyId];
+              const updatedFirstDates = { ...data.firstDates };
+              delete updatedFirstDates[familyId];
+              
+              set({
+                data: {
+                  ...data,
+                  settlements: updatedSettlements,
+                  counts: updatedCounts,
+                  firstDates: updatedFirstDates,
+                  totalCount: data.totalCount - 1
+                }
+              });
+            } else {
+              set({
+                data: {
+                  ...data,
+                  settlements: updatedSettlements,
+                  counts: updatedCounts,
+                  totalCount: data.totalCount - 1
+                }
+              });
+            }
+          }
+          
+          console.log(`📋 [SETTLEMENT-STORE] NDR ${ndrId} supprimée pour famille ${familyId}`);
+        }
+      },
+
+      // Remplacer l'ID temporaire d'une NDR par le vrai ID après création
+      replaceSettlementId: (tempId: string, realId: string) => {
+        const { data } = get();
+        if (!data) return;
+
+        // Remplacer l'ID dans settlements
+        const updatedSettlements = data.settlements.map(ndr => 
+          ndr._id === tempId ? { ...ndr, _id: realId, status: 'active' } : ndr
+        );
+        
+        const updatedData: UnifiedSettlementData = {
+          ...data,
+          settlements: updatedSettlements,
+        };
+
+        set({ 
+          data: updatedData,
+          // Ne pas toucher au lastFetch pour éviter de déclencher un rechargement
+        });
+        
+        console.log(`🔄 [SETTLEMENT-STORE] ID temporaire NDR ${tempId} remplacé par ${realId}`);
       },
     }),
     {

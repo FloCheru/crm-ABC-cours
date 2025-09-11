@@ -227,10 +227,33 @@ class ApiClient {
           }, 100);
         }
 
-        // Essayer de récupérer le corps de la réponse pour plus de détails
+        // Essayer de récupérer et parser le corps de la réponse pour extraire le message détaillé
+        let detailedErrorMessage = `HTTP error! status: ${response.status}`;
         try {
           const errorBody = await response.text();
           logger.error("Corps de l'erreur:", errorBody);
+          
+          // Tenter de parser le JSON pour extraire le message détaillé
+          try {
+            const errorData = JSON.parse(errorBody);
+            
+            // Extraire le message selon différents formats possibles
+            if (errorData.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
+              // Format: {"message": "...", "errors": ["message détaillé"]}
+              detailedErrorMessage = errorData.errors.join(', ');
+            } else if (errorData.message) {
+              // Format: {"message": "message détaillé"}  
+              detailedErrorMessage = errorData.message;
+            } else if (errorData.error) {
+              // Format: {"error": "message détaillé"}
+              detailedErrorMessage = errorData.error;
+            }
+          } catch (jsonParseError) {
+            // Si ce n'est pas du JSON, utiliser le texte brut s'il est lisible
+            if (errorBody && errorBody.length < 200 && !errorBody.includes('<html>')) {
+              detailedErrorMessage = errorBody;
+            }
+          }
         } catch (parseError) {
           logger.error(
             "Impossible de parser le corps de l'erreur:",
@@ -248,7 +271,7 @@ class ApiClient {
           return this.request<T>(endpoint, options, attempt + 1);
         }
 
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(detailedErrorMessage);
       }
 
       // Si la réponse est vide, retourner un objet vide

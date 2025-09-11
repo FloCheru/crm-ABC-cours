@@ -352,7 +352,7 @@ router.get('/template-preview', authenticateToken, async (req, res) => {
           total: 350
         },
         {
-          subjectId: { name: 'Physique-Chimie' },
+          subjectId: { name: 'Physique' },
           hourlyRate: 40,
           quantity: 6,
           professorSalary: 30,

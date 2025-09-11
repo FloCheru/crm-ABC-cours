@@ -36,11 +36,21 @@ export function useCouponSeriesGlobal(options: UseCouponSeriesGlobalOptions = {}
   
   // Chargement automatique au montage (si pas de données ou expirées)
   useEffect(() => {
+    console.log('🔍 [COUPON-SERIES-GLOBAL] useEffect triggered', {
+      autoLoad,
+      hasData: !!data,
+      dataSeriesLength: data?.series?.length || 0,
+      isExpired,
+      shouldLoad: autoLoad && (!data || isExpired)
+    });
+    
     if (autoLoad && (!data || isExpired)) {
       console.log('🚀 [COUPON-SERIES-GLOBAL] Loading coupon series data...');
       loadCouponSeries();
     } else if (data) {
-      console.log('🚀 [COUPON-SERIES-GLOBAL] Using cached data');
+      console.log('🚀 [COUPON-SERIES-GLOBAL] Using cached data:', data.series?.length || 0, 'séries');
+    } else {
+      console.log('🔍 [COUPON-SERIES-GLOBAL] No loading triggered - autoLoad:', autoLoad);
     }
   }, [autoLoad, data, isExpired, loadCouponSeries]);
   

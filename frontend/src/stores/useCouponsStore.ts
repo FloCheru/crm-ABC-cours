@@ -142,6 +142,44 @@ export const useCouponsStore = create<CouponsState>()(
         const { data } = get();
         return data?.totalCount || 0;
       },
+
+      // Méthode optimisticUpdate pour ActionCache
+      optimisticUpdate: (action: any, actionData: any) => {
+        if (action === 'DELETE_NDR') {
+          const { ndrId } = actionData;
+          const { data } = get();
+          if (!data) return;
+          
+          console.log(`🎯 [COUPONS-STORE] Applying DELETE_NDR optimistic update for NDR ${ndrId}`);
+          
+          // Filtrer les coupons liés à cette NDR
+          // Les coupons sont liés aux NDR via couponSeriesId.settlementNoteId
+          const updatedCoupons = data.coupons.filter(coupon => {
+            const settlementNoteId = typeof coupon.couponSeriesId === 'object' 
+              ? coupon.couponSeriesId?.settlementNoteId 
+              : null;
+            return settlementNoteId !== ndrId;
+          });
+          
+          // Recalculer les statistiques
+          const updatedStats = {
+            available: updatedCoupons.filter(c => c.status === 'available').length,
+            used: updatedCoupons.filter(c => c.status === 'used').length,
+            expired: updatedCoupons.filter(c => c.status === 'expired').length,
+            cancelled: updatedCoupons.filter(c => c.status === 'cancelled').length,
+          };
+          
+          const updatedData: UnifiedCouponsData = {
+            coupons: updatedCoupons,
+            totalCount: updatedCoupons.length,
+            stats: updatedStats,
+          };
+          
+          set({ data: updatedData });
+          
+          console.log(`📋 [COUPONS-STORE] Removed ${data.coupons.length - updatedCoupons.length} coupons linked to NDR ${ndrId}`);
+        }
+      },
     }),
     {
       name: 'coupons-storage', // Nom unique pour le localStorage

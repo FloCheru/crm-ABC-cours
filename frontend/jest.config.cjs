@@ -24,7 +24,8 @@ module.exports = {
   // Chemins de tests
   testMatch: [
     '<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}',
-    '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}'
+    '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
+    '<rootDir>/src/**/*.test.{js,jsx,ts,tsx}'
   ],
   
   // Extensions de fichiers

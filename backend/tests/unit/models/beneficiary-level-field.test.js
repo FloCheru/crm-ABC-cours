@@ -153,7 +153,7 @@ describe('📋 TESTS CHAMP NIVEAU DU BÉNÉFICIAIRE', () => {
         demande: {
           beneficiaryType: 'eleves',
           beneficiaryLevel: 'Terminale', // ✅ Niveau Terminale
-          subjects: ['Mathématiques', 'Physique-Chimie'],
+          subjects: ['Mathématiques', 'Physique'],
           notes: 'Préparation BAC scientifique'
         },
         status: 'prospect',
@@ -170,7 +170,7 @@ describe('📋 TESTS CHAMP NIVEAU DU BÉNÉFICIAIRE', () => {
         .expect(201);
 
       expect(response.body.family.demande.beneficiaryLevel).toBe('Terminale');
-      expect(response.body.family.demande.subjects).toEqual(['Mathématiques', 'Physique-Chimie']);
+      expect(response.body.family.demande.subjects).toEqual(['Mathématiques', 'Physique']);
       
       console.log('✅ Prospect Terminale créé avec succès');
       console.log('📊 Données sauvegardées:', {

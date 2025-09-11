@@ -749,7 +749,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
         "companyInfo.urssafNumber": "12345678901",
         "demande.beneficiaryType": "eleves",
         "demande.beneficiaryLevel": "3ème",
-        "demande.subjects": "Mathématiques, Français, Physique-Chimie",
+        "demande.subjects": "Mathématiques, Français, Anglais",
         "notes": "Famille de test - créée automatiquement pour les tests de développement"
       };
     }

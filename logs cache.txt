@@ -1,0 +1,38 @@
+🔍 [DASHBOARD] Extracted familyId from preview data: 
+actionCacheService.ts:132 🚀 [ACTION-CACHE-SERVICE] Executing DELETE_NDR affecting [settlements, families, coupons, couponSeries]
+actionCacheService.ts:78 🔮 [ACTION-CACHE-SERVICE] Applying optimistic updates for DELETE_NDR...
+useSettlementStore.ts:229 📋 [SETTLEMENT-STORE] NDR 68c32c6184867607b586d502 supprimée pour famille 
+actionCacheService.ts:85 ✅ [ACTION-CACHE-SERVICE] Optimistic update applied to settlements
+useFamiliesStore.ts:776 🔍 [FAMILIES-STORE] optimisticUpdate called with action: DELETE_NDR {ndrId: '68c32c6184867607b586d502', familyId: ''}
+useFamiliesStore.ts:784 🔍 [FAMILIES-STORE] Current store data: {familiesCount: 1, prospectsCount: 0, clientsCount: 1, clientsWithNDRCount: 1}
+actionCacheService.ts:85 ✅ [ACTION-CACHE-SERVICE] Optimistic update applied to families
+actionCacheService.ts:139 💾 [ACTION-CACHE-SERVICE] Persisting DELETE_NDR to database...
+logger.ts:36 [2025-09-11T20:09:16.362Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-09-11T20:09:16.362Z] [DEBUG] URL: http://localhost:3000/api/settlement-notes/68c32c6184867607b586d502
+logger.ts:36 [2025-09-11T20:09:16.362Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-09-11T20:09:16.363Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+logger.ts:36 [2025-09-11T20:09:16.590Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-09-11T20:09:16.590Z] [DEBUG] Status: 200
+logger.ts:36 [2025-09-11T20:09:16.591Z] [DEBUG] Status Text: OK
+logger.ts:36 [2025-09-11T20:09:16.591Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
+logger.ts:36 [2025-09-11T20:09:16.591Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-09-11T20:09:16.592Z] [DEBUG] Réponse parsée: {message: 'Settlement note deleted successfully', deletedCoupons: 'yes', deletedSeries: 'yes', statusChanged: 'checked'}
+actionCacheService.ts:141 ✅ [ACTION-CACHE-SERVICE] Database persistence successful for DELETE_NDR
+actionCacheService.ts:144 🎯 [ACTION-CACHE-SERVICE] Keeping optimistic updates (no cache invalidation needed)
+actionCacheService.ts:147 🎉 [ACTION-CACHE-SERVICE] DELETE_NDR completed successfully in 232ms
+useSettlementStore.ts:67 🚀 [SETTLEMENT-STORE] Starting API fetch...
+logger.ts:36 [2025-09-11T20:09:16.594Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-09-11T20:09:16.594Z] [DEBUG] URL: http://localhost:3000/api/settlement-notes?page=1&limit=100
+logger.ts:36 [2025-09-11T20:09:16.594Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-09-11T20:09:16.594Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+useSettlementGlobal.ts:41 🚀 [SETTLEMENT-GLOBAL] Loading settlement data...
+useSettlementStore.ts:63 🚀 [SETTLEMENT-STORE] Loading already in progress
+logger.ts:36 [2025-09-11T20:09:16.647Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-09-11T20:09:16.648Z] [DEBUG] Status: 200
+logger.ts:36 [2025-09-11T20:09:16.648Z] [DEBUG] Status Text: OK
+logger.ts:36 [2025-09-11T20:09:16.648Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
+logger.ts:36 [2025-09-11T20:09:16.648Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-09-11T20:09:16.649Z] [DEBUG] Réponse parsée: {notes: Array(0), pagination: {…}}
+useSettlementStore.ts:105 🚀 [SETTLEMENT-STORE] Data loaded: 0 settlements, 0 families
+useSettlementGlobal.ts:44 🚀 [SETTLEMENT-GLOBAL] Using cached data
+SettlementDashboard.tsx:228 ✅ Note de règlement Martin Dubois (B586D502) supprimée avec succès

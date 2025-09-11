@@ -16,7 +16,7 @@ const studentSchema = new mongoose.Schema(
       type: Date,
       required: [true, "Date de naissance requise"],
     },
-    family: {
+    familyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Family",
       required: [true, "Famille requise"],
@@ -92,7 +92,7 @@ const studentSchema = new mongoose.Schema(
 
 // Index pour améliorer les performances
 studentSchema.index({ firstName: 1, lastName: 1 });
-studentSchema.index({ family: 1 });
+studentSchema.index({ familyId: 1 });
 studentSchema.index({ "school.level": 1 });
 studentSchema.index({ status: 1 });
 

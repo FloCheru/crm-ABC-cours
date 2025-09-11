@@ -36,11 +36,15 @@ class CouponSeriesService {
     console.log("🔍 Récupération des séries de coupons...");
 
     try {
-      const data = await apiClient.get<{ data: CouponSeries[] }>("/api/coupon-series");
+      const data = await apiClient.get<{ data: CouponSeries[] } | CouponSeries[]>("/api/coupon-series");
       console.log("🔍 Données reçues:", data);
+      console.log("🔍 Type des données:", Array.isArray(data) ? "array" : "object");
 
-      // Extraire les données du format de réponse paginée
-      return data.data || [];
+      // Gérer les deux formats possibles: { data: [...] } ou directement [...]
+      const result = Array.isArray(data) ? data : (data.data || []);
+      console.log("🔍 Séries extraites:", result.length, "séries trouvées");
+      
+      return result;
     } catch (error) {
       console.error("🔍 Erreur de l'API:", error);
       throw error;

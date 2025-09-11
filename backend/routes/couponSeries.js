@@ -312,7 +312,7 @@ router.post(
         return res.status(400).json({ error: "Subject not found" });
 
       // Vérifier que l'élève appartient à la famille
-      if (studentExists.family.toString() !== family) {
+      if (studentExists.familyId.toString() !== family) {
         return res
           .status(400)
           .json({ error: "Student does not belong to this family" });

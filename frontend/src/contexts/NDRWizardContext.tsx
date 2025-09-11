@@ -18,7 +18,7 @@ interface NDRWizardContextType {
   // Actions de validation
   validateStep1: () => boolean;
   validateStep2: () => boolean;
-  validateStep3: () => boolean;
+  validateStep3: (step3Data?: Partial<Step3Data>) => boolean;
   
   // Reset
   resetWizard: () => void;
@@ -207,16 +207,16 @@ export const NDRWizardProvider: React.FC<{ children: ReactNode }> = ({ children 
     return isValid;
   };
 
-  const validateStep3 = (): boolean => {
-    const { step3 } = state;
+  const validateStep3 = (step3Data?: Partial<Step3Data>): boolean => {
+    const dataToValidate = step3Data || state.step3;
     const stepErrors: ValidationErrors['step3'] = {};
 
-    if (!step3.paymentMethod) {
+    if (!dataToValidate.paymentMethod) {
       stepErrors.paymentMethod = 'Un mode de paiement doit être sélectionné';
     }
 
     // Validation des tarifs
-    for (const subject of step3.subjects) {
+    for (const subject of dataToValidate.subjects || []) {
       const hourlyRate = parseFloat(subject.hourlyRate.toString());
       const quantity = parseInt(subject.quantity.toString());
       const professorSalary = parseFloat(subject.professorSalary.toString());

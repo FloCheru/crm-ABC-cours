@@ -73,6 +73,8 @@ jest.mock('../src/services/familyService', () => ({
     deleteFamily: jest.fn(),
     updateProspectStatus: jest.fn(),
     updateFamilyStatus: jest.fn(),
+    addStudent: jest.fn().mockResolvedValue({ success: true }),
+    updateStudent: jest.fn().mockResolvedValue({ success: true }),
   }
 }));
 

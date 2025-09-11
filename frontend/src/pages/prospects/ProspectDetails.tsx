@@ -19,7 +19,7 @@ import rdvService from "../../services/rdvService";
 import { subjectService } from "../../services/subjectService";
 import ActionCacheService from "../../services/actionCacheService";
 import { getAllLevels } from "../../constants/schoolLevels";
-import type { Family } from "../../types/family";
+import type { Family, Student } from "../../types/family";
 import type { ProspectStatus } from "../../components/StatusDot";
 import type { RendezVous } from "../../types/rdv";
 import type { Subject } from "../../types/subject";
@@ -44,18 +44,11 @@ export const ProspectDetails: React.FC = () => {
   const prospectRdvs = prospect?.rdvs || [];
   const [showRdvModal, setShowRdvModal] = useState(false);
   const [editingRdv, setEditingRdv] = useState<RendezVous | null>(null);
-  const [rdvFormData, setRdvFormData] = useState({
-    assignedAdminId: "",
-    date: "",
-    time: "",
-    type: "physique" as "physique" | "virtuel",
-    notes: "",
-    familyId: "",
-  });
+  // rdvFormData supprimé car non utilisé
 
   // État pour la modal d'ajout d'élève
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
-  const [selectedDataForView, setSelectedDataForView] = useState<{data: any, type: 'student' | 'rdv'} | null>(null);
+  const [selectedDataForView, setSelectedDataForView] = useState<{data: Student | RendezVous, type: 'student' | 'rdv'} | null>(null);
 
   // États pour la sélection des matières
   const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
@@ -70,37 +63,6 @@ export const ProspectDetails: React.FC = () => {
     }
   }, [familyId]);
 
-  // Debug RDV: vérifier les données RDV du prospect
-  useEffect(() => {
-    console.log("🔍 [RDV DEBUG] Prospect changé:", {
-      prospectId: prospect?._id,
-      hasRdvs: !!prospect?.rdvs,
-      rdvsLength: prospect?.rdvs?.length || 0,
-      rdvsData: prospect?.rdvs,
-      prospectRdvsLength: prospectRdvs.length,
-      prospectRdvsData: prospectRdvs
-    });
-    
-    // Log du contenu brut de prospect.rdvs
-    if (prospect?.rdvs && prospect.rdvs.length > 0) {
-      console.log("🔍 [RAW RDV] Contenu brut de prospect.rdvs:", JSON.stringify(prospect.rdvs, null, 2));
-    }
-    
-    // Log détaillé de chaque RDV
-    if (prospectRdvs.length > 0) {
-      prospectRdvs.forEach((rdv, index) => {
-        console.log(`📅 [RDV ${index}] RDV détaillé:`, {
-          id: rdv._id,
-          date: rdv.date,
-          time: rdv.time,
-          type: rdv.type,
-          status: rdv.status,
-          assignedAdminId: rdv.assignedAdminId,
-          notes: rdv.notes
-        });
-      });
-    }
-  }, [prospect?.rdvs, prospectRdvs]);
 
   // Charger les matières disponibles
   const loadSubjects = async () => {
@@ -115,72 +77,14 @@ export const ProspectDetails: React.FC = () => {
     }
   };
 
-  // Fonctions pour la gestion des RDV
-
-  const handleCreateRdv = async () => {
-    if (!familyId || !rdvFormData.date || !rdvFormData.time) return;
-
-    try {
-      await rdvService.createRdv({
-        familyId,
-        assignedAdminId: rdvFormData.assignedAdminId,
-        date: rdvFormData.date,
-        time: rdvFormData.time,
-        type: rdvFormData.type,
-        notes: rdvFormData.notes,
-      });
-
-      // ActionCache gère automatiquement la mise à jour
-      setShowRdvModal(false);
-      setRdvFormData({
-        assignedAdminId: "",
-        date: "",
-        time: "",
-        type: "physique",
-        notes: "",
-        familyId: "",
-      });
-    } catch (err) {
-      console.error("Erreur lors de la création du RDV:", err);
-    }
-  };
-
-  const handleUpdateRdv = async (
-    rdvId: string,
-    updates: {
-      assignedAdminId?: string;
-      date?: string;
-      time?: string;
-      type?: "physique" | "virtuel";
-      notes?: string;
-    }
-  ) => {
-    try {
-      await rdvService.updateRdv(rdvId, { ...updates, familyId: familyId! });
-      // ActionCache gère automatiquement la mise à jour
-      setEditingRdv(null);
-      setShowRdvModal(false);
-      setRdvFormData({
-        assignedAdminId: "",
-        date: "",
-        time: "",
-        type: "physique",
-        notes: "",
-        familyId: "",
-      });
-    } catch (err) {
-      console.error("Erreur lors de la mise à jour du RDV:", err);
-    }
-  };
+  // Fonctions RDV supprimées - gérées via Modal component
 
   const handleDeleteRdv = async (rdvId: string) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce RDV ?")) return;
 
-    console.log(`🔍 [RDV DELETE] Début suppression RDV ID: ${rdvId}`);
 
     try {
 
-      console.log(`🔍 [RDV DELETE] Suppression via ActionCache`);
 
       await ActionCacheService.executeAction(
         'DELETE_RDV',
@@ -188,10 +92,8 @@ export const ProspectDetails: React.FC = () => {
         { rdvId, familyId: familyId! }
       );
 
-      console.log(`✅ [RDV DELETE] RDV ${rdvId} supprimé avec succès`);
     } catch (err) {
       console.error(`❌ [RDV DELETE] Erreur:`, err);
-      console.log(`🔄 [RDV DELETE] Rollback géré par ActionCache`);
     }
   };
 
@@ -212,31 +114,17 @@ export const ProspectDetails: React.FC = () => {
   ) => {
     try {
       await familyService.updateProspectStatus(prospectId, newStatus);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erreur lors de la mise à jour du statut:", error);
       throw error;
     }
   };
 
   // Fonction pour afficher les détails d'un élève ou RDV
-  const handleViewData = (data: any, type: 'student' | 'rdv') => {
-    const entityName = type === 'student' ? 'ÉLÈVE' : 'RDV';
-    console.log(`👁️ [VIEW] Ouverture modal ${entityName} - ID:`, data._id);
+  const handleViewData = (data: Student | RendezVous, type: 'student' | 'rdv') => {
     setSelectedDataForView({data, type});
   };
 
-  // Debug: tracer les données du prospect
-  React.useEffect(() => {
-    if (prospect) {
-      console.log("📊 [PROSPECT DEBUG] Données prospect:", {
-        id: prospect._id,
-        studentsCount: prospect.students?.length || 0,
-        rdvsCount: prospect.rdvs?.length || 0,
-        hasRdvsProperty: 'rdvs' in prospect,
-        rdvsProperty: prospect.rdvs
-      });
-    }
-  }, [prospect]);
 
   // Fonction pour supprimer un étudiant
   const handleDeleteStudent = async (
@@ -255,23 +143,21 @@ export const ProspectDetails: React.FC = () => {
         capturedStudentId
       );
 
-      console.log(`✅ Étudiant ${capturedStudentName} supprimé avec succès`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erreur lors de la suppression de l'étudiant:", error);
 
       // Gestion d'erreur simplifiée
+      const errorMessage = error instanceof Error ? error.message : String(error);
       if (
-        error.message?.includes("non trouvé") ||
-        error.message?.includes("404")
+        errorMessage.includes("non trouvé") ||
+        errorMessage.includes("404")
       ) {
         alert(
           `L'étudiant ${capturedStudentName} n'existe plus dans la base de données.`
         );
       } else {
         alert(
-          `Erreur lors de la suppression : ${
-            error.message || "Erreur inconnue"
-          }`
+          `Erreur lors de la suppression : ${errorMessage || "Erreur inconnue"}`
         );
       }
     }
@@ -442,9 +328,9 @@ export const ProspectDetails: React.FC = () => {
 
   const getDisplayValue = (prospect: Family, path: string) => {
     const keys = path.split(".");
-    let value: any =
+    let value: string | undefined =
       keys.length === 1
-        ? prospect[path as keyof Family]
+        ? (prospect as any)[path]
         : (prospect as any)[keys[0]]?.[keys[1]];
 
     if (path === "nextActionDate" && value) {
@@ -528,7 +414,7 @@ export const ProspectDetails: React.FC = () => {
           }))}
           onSave={async (data) => {
             // Construire l'objet de données complet pour l'API
-            const updateData: any = {
+            const updateData: Partial<Family> = {
               ...prospect,
               primaryContact: { ...prospect.primaryContact },
               address: { ...prospect.address },
@@ -541,7 +427,7 @@ export const ProspectDetails: React.FC = () => {
                 const fieldParts = field.field.split(".");
                 if (fieldParts.length === 2) {
                   const [parent, child] = fieldParts;
-                  updateData[parent][child] = value;
+                  (updateData as any)[parent][child] = value;
                 }
               }
             });
@@ -639,7 +525,7 @@ export const ProspectDetails: React.FC = () => {
           })}
           onSave={async (data) => {
             // Construire l'objet de données complet pour l'API
-            const updateData: any = {
+            const updateData: Partial<Family> = {
               ...prospect,
               demande: { ...prospect.demande },
               address: { ...prospect.address },
@@ -652,7 +538,7 @@ export const ProspectDetails: React.FC = () => {
                 const fieldParts = field.field.split(".");
                 if (fieldParts.length === 2) {
                   const [parent, child] = fieldParts;
-                  updateData[parent][child] = value;
+                  (updateData as any)[parent][child] = value;
                 }
               }
             });
@@ -688,7 +574,7 @@ export const ProspectDetails: React.FC = () => {
                   {
                     key: "school",
                     label: "École/Niveau",
-                    render: (_, row: any) => {
+                    render: (_, row: Student) => {
                       if (!row.school) return "-";
                       // Correction: utiliser grade directement, pas level
                       const schoolName = row.school.name || "";
@@ -699,8 +585,7 @@ export const ProspectDetails: React.FC = () => {
                   {
                     key: "courseLocation",
                     label: "Lieu des cours",
-                    render: (_, row: any) => {
-                      console.log('🔍 DEBUG - CourseLocation:', row.courseLocation);
+                    render: (_, row: Student) => {
                       if (!row.courseLocation?.type) return "-";
                       return row.courseLocation.type === "domicile"
                         ? "À domicile"
@@ -712,23 +597,22 @@ export const ProspectDetails: React.FC = () => {
                   {
                     key: "phone",
                     label: "Tél",
-                    render: (_, row: any) => {
-                      console.log('🔍 DEBUG - Contact:', row.contact);
+                    render: (_, row: Student) => {
                       return row.contact?.phone || "-";
                     },
                   },
                   {
                     key: "availability",
                     label: "Disponibilités",
-                    render: (value, row: any) => {
-                      return row.availability || value || "-";
+                    render: (value: unknown, row: Student): string => {
+                      return String(row.availability || value || "-");
                     },
                   },
                   {
                     key: "comments",
                     label: "Com.",
-                    render: (value, row: any) => {
-                      const comment = row.comments || row.notes || value || "";
+                    render: (value: unknown, row: Student): string => {
+                      const comment = String(row.comments || row.notes || value || "");
                       return comment.length > 30
                         ? `${comment.substring(0, 30)}...`
                         : comment || "-";
@@ -788,7 +672,11 @@ export const ProspectDetails: React.FC = () => {
             <div>
               <Button
                 variant="primary"
-                onClick={() => setShowAddStudentModal(true)}
+                onClick={() => {
+                  console.log("🎯 [PROSPECT DETAILS] Clic 'Ajouter un élève'");
+                  console.log("🔍 [PROSPECT DETAILS] prospect object:", prospect);
+                  setShowAddStudentModal(true);
+                }}
               >
                 Ajouter un élève
               </Button>
@@ -904,7 +792,7 @@ export const ProspectDetails: React.FC = () => {
 
             // Traiter les autres champs avec UPDATE_FAMILY si nécessaire
             if (Object.keys(otherFields).length > 0) {
-              const updateData: any = {};
+              const updateData: Partial<Family> = {};
               Object.entries(otherFields).forEach(([key, value]) => {
                 const field = fieldConfig.tracking.find((f) => f.key === key);
                 if (
@@ -918,7 +806,7 @@ export const ProspectDetails: React.FC = () => {
                     field.type === "date" && value
                       ? new Date(value as string)
                       : value;
-                  updateData[field.field] = processedValue;
+                  (updateData as any)[field.field] = processedValue;
                 }
               });
 
@@ -1020,14 +908,6 @@ export const ProspectDetails: React.FC = () => {
                 variant="primary"
                 onClick={() => {
                   setEditingRdv(null);
-                  setRdvFormData({
-                    assignedAdminId: "",
-                    date: "",
-                    time: "",
-                    type: "physique",
-                    notes: "",
-                    familyId: familyId!,
-                  });
                   setShowRdvModal(true);
                 }}
               >
@@ -1064,32 +944,21 @@ export const ProspectDetails: React.FC = () => {
         onClose={() => {
           setShowRdvModal(false);
           setEditingRdv(null);
-          setRdvFormData({
-            assignedAdminId: "",
-            date: "",
-            time: "",
-            type: "physique",
-            notes: "",
-            familyId: "",
-          });
         }}
-        data={rdvFormData}
-        onSubmit={() => {
-          if (editingRdv) {
-            handleUpdateRdv(editingRdv._id!, rdvFormData);
-          } else {
-            handleCreateRdv();
-          }
+        data={editingRdv || { familyId: prospect?._id || "" }}
+        onSuccess={() => {
+          setShowRdvModal(false);
+          setEditingRdv(null);
         }}
-        isEditing={editingRdv !== null}
-        loading={false}
       />
 
       {/* Modal ajout d'élève */}
       <Modal
         type="student"
         isOpen={showAddStudentModal}
-        onClose={() => setShowAddStudentModal(false)}
+        onClose={() => {
+          setShowAddStudentModal(false);
+        }}
         data={{ familyId: prospect?._id || "" }}
         onSuccess={() => {
           // Les données du prospect sont automatiquement mises à jour par l'ActionCache

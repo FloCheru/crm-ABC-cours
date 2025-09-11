@@ -264,22 +264,35 @@ export const Step3RatesValidation: React.FC = () => {
 
   // Validation du formulaire avec tarification globale
   const validateForm = (): boolean => {
+    console.log("🔍 [VALIDATE] Début validation formulaire");
+    console.log("🔍 [VALIDATE] Valeurs actuelles:", {
+      globalHourlyRate,
+      globalQuantity,
+      globalProfessorSalary,
+      charges,
+      paymentMethod,
+      paymentType
+    });
+    
     // Vérifier la tarification globale
     const hourlyRate = parseFloat(globalHourlyRate);
     const quantity = parseFloat(globalQuantity);
     const professorSalary = parseFloat(globalProfessorSalary);
 
     if (isNaN(hourlyRate) || hourlyRate <= 0) {
+      console.log("❌ [VALIDATE] Échec: tarif horaire invalide");
       setError("Le tarif horaire doit être une valeur positive");
       return false;
     }
 
     if (isNaN(quantity) || quantity <= 0) {
+      console.log("❌ [VALIDATE] Échec: quantité invalide");
       setError("La quantité doit être une valeur positive");
       return false;
     }
 
     if (isNaN(professorSalary) || professorSalary <= 0) {
+      console.log("❌ [VALIDATE] Échec: salaire professeur invalide");
       setError("Le salaire professeur doit être une valeur positive");
       return false;
     }
@@ -287,34 +300,43 @@ export const Step3RatesValidation: React.FC = () => {
     // Vérifier les charges
     const chargesValue = parseFloat(charges);
     if (isNaN(chargesValue) || chargesValue < 0) {
+      console.log("❌ [VALIDATE] Échec: charges invalides");
       setError("Les charges doivent être une valeur positive ou nulle");
       return false;
     }
 
     // Vérifier le mode de paiement
     if (!paymentMethod) {
+      console.log("❌ [VALIDATE] Échec: mode de paiement manquant");
       setError("Un mode de paiement doit être sélectionné");
       return false;
     }
 
     // Vérifier le type de paiement (maintenant obligatoire)
     if (!paymentType) {
+      console.log("❌ [VALIDATE] Échec: type de paiement manquant");
       setError("Un type de paiement doit être sélectionné");
       return false;
     }
 
+    console.log("✅ [VALIDATE] Validation formulaire réussie");
     return true;
   };
 
   // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("🔥 [SUBMIT] Début handleSubmit - Clic détecté");
     e.preventDefault();
 
+    console.log("🔍 [SUBMIT] Validation du formulaire...");
     if (!validateForm()) {
+      console.log("❌ [SUBMIT] Validation échouée - Arrêt");
       return;
     }
+    console.log("✅ [SUBMIT] Validation réussie");
 
     try {
+      console.log("🔄 [SUBMIT] setIsSubmitting(true)");
       setIsSubmitting(true);
       setError("");
 
@@ -347,13 +369,18 @@ export const Step3RatesValidation: React.FC = () => {
       updateStep3(step3Data);
 
       // Valider avec le contexte
-      const isValid = validateStep3();
+      console.log("🔍 [SUBMIT] Validation du contexte Step3...");
+      const isValid = validateStep3(step3Data);
       if (!isValid) {
+        console.log("❌ [SUBMIT] Validation contexte échouée");
         setError(
           "Erreur de validation. Veuillez vérifier les données saisies."
         );
+        console.log("🔄 [SUBMIT] setIsSubmitting(false) - reset après échec");
+        setIsSubmitting(false);
         return;
       }
+      console.log("✅ [SUBMIT] Validation contexte réussie");
 
       // Préparer les données finales pour l'API
       const settlementData = {
@@ -453,21 +480,26 @@ export const Step3RatesValidation: React.FC = () => {
       console.log("🔍 === FIN DEBUG CRÉATION NDR ===");
 
       // Créer la note de règlement
+      console.log("🚀 [SUBMIT] Création de la note de règlement...");
       await settlementService.createSettlementNote(
         settlementData
       );
+      console.log("✅ [SUBMIT] Note de règlement créée avec succès");
 
       // Déclencher le refresh
+      console.log("🔄 [SUBMIT] Refresh des données...");
       triggerRefresh();
 
       // Rediriger vers les détails de la NDR
+      console.log("🧠 [SUBMIT] Redirection vers dashboard...");
       navigate(`/admin/dashboard`);
     } catch (err: any) {
-      console.error("Erreur lors de la création de la NDR:", err);
+      console.error("❌ [SUBMIT] Erreur lors de la création de la NDR:", err);
       setError(
         err.message || "Erreur lors de la création de la note de règlement"
       );
     } finally {
+      console.log("🔄 [SUBMIT] setIsSubmitting(false) - finally");
       setIsSubmitting(false);
     }
   };

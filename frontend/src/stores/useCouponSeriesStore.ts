@@ -161,6 +161,58 @@ export const useCouponSeriesStore = create<CouponSeriesState>()(
         const { data } = get();
         return data?.totalCount || 0;
       },
+
+      // Méthode optimisticUpdate pour ActionCache
+      optimisticUpdate: (action: any, actionData: any) => {
+        if (action === 'CREATE_NDR') {
+          const { familyId, ndrData, tempNdrId } = actionData;
+          
+          console.log(`🎯 [COUPON-SERIES-STORE] Applying CREATE_NDR optimistic update for family ${familyId}`);
+          
+          // Pour CREATE_NDR, on invalide le cache pour forcer un rechargement
+          // car les séries de coupons peuvent être créées suite à la NDR
+          set({ 
+            data: null, 
+            lastFetch: 0, 
+            error: null 
+          });
+          
+          console.log(`📋 [COUPON-SERIES-STORE] Cache invalidated due to CREATE_NDR - will reload on next access`);
+        }
+        
+        if (action === 'DELETE_NDR') {
+          const { ndrId, familyId } = actionData;
+          const { data } = get();
+          if (!data) return;
+          
+          console.log(`🎯 [COUPON-SERIES-STORE] Applying DELETE_NDR optimistic update for NDR ${ndrId}`);
+          
+          // Filtrer les séries de coupons liées à cette NDR
+          const updatedSeries = data.series.filter(series => {
+            // Les séries sont liées aux NDR via settlementNoteId
+            return series.settlementNoteId !== ndrId;
+          });
+          
+          // Nettoyer le cache des détails pour les séries supprimées
+          const updatedSeriesDetails = { ...data.seriesDetails };
+          Object.keys(updatedSeriesDetails).forEach(seriesId => {
+            const details = updatedSeriesDetails[seriesId];
+            if (details.series.settlementNoteId === ndrId) {
+              delete updatedSeriesDetails[seriesId];
+            }
+          });
+          
+          const updatedData: UnifiedCouponSeriesData = {
+            series: updatedSeries,
+            totalCount: updatedSeries.length,
+            seriesDetails: updatedSeriesDetails,
+          };
+          
+          set({ data: updatedData });
+          
+          console.log(`📋 [COUPON-SERIES-STORE] Removed ${data.series.length - updatedSeries.length} series linked to NDR ${ndrId}`);
+        }
+      },
     }),
     {
       name: 'coupon-series-storage', // Nom unique pour le localStorage

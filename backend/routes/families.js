@@ -796,8 +796,8 @@ router.delete("/:id/students/:studentId", authorize(["admin"]), async (req, res)
     }
 
     // Vérification sécurisée de l'appartenance à la famille
-    if (!student.family || student.family.toString() !== familyId) {
-      console.error(`❌ [DELETE STUDENT] Élève ${studentId} n'appartient pas à la famille ${familyId}. Famille actuelle: ${student.family}`);
+    if (!student.familyId || student.familyId.toString() !== familyId) {
+      console.error(`❌ [DELETE STUDENT] Élève ${studentId} n'appartient pas à la famille ${familyId}. Famille actuelle: ${student.familyId}`);
       return res.status(400).json({ message: "Cet élève n'appartient pas à cette famille" });
     }
 

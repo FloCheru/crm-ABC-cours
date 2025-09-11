@@ -202,7 +202,7 @@ export const SettlementDashboard: React.FC = () => {
 
   // Confirmer la suppression après aperçu
   const handleConfirmDeletion = async () => {
-    if (!noteToDelete) return;
+    if (!noteToDelete || !deletionPreviewData) return;
 
     try {
       const noteDetails = settlements.find(
@@ -213,7 +213,13 @@ export const SettlementDashboard: React.FC = () => {
         .toUpperCase();
       const clientName = noteDetails?.clientName || "Inconnue";
 
-      await settlementService.deleteSettlementNote(noteToDelete);
+      // Extraire familyId de la preview data
+      const familyId = deletionPreviewData.settlementNote?.familyId?._id || 
+                       deletionPreviewData.settlementNote?.familyId || '';
+      
+      console.log(`🔍 [DASHBOARD] Extracted familyId from preview data:`, familyId);
+
+      await settlementService.deleteSettlementNote(noteToDelete, familyId);
 
       // Recharger les données après suppression
       clearCache();

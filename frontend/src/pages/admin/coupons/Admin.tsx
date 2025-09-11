@@ -13,7 +13,11 @@ import {
 } from "../../../components";
 import { couponSeriesService } from "../../../services/couponSeriesService";
 import { useCouponSeriesGlobal } from "../../../hooks/useCouponSeriesGlobal";
-import { getFamilyDisplayName, generateCouponSeriesName, getBeneficiariesDisplay } from "../../../utils/familyNameUtils";
+import {
+  getFamilyDisplayName,
+  generateCouponSeriesName,
+  getBeneficiariesDisplay,
+} from "../../../utils/familyNameUtils";
 import type { CouponSeries } from "../../../types/coupon";
 
 // Type pour les données du tableau avec l'id requis
@@ -22,13 +26,10 @@ type TableRowData = CouponSeries & { id: string };
 export const Admin: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Utilisation du nouveau store global pour les séries
-  const {
-    series,
-    isLoading,
-  } = useCouponSeriesGlobal();
-  
+  const { series, isLoading, error: storeError } = useCouponSeriesGlobal();
+
   const [error, setError] = useState<string>("");
   const couponsData = series;
   const [searchTerm, setSearchTerm] = useState("");
@@ -77,17 +78,18 @@ export const Admin: React.FC = () => {
   };
 
   // Filtrer les données selon le terme de recherche
-  const filteredData = couponsData.filter(
-    (series) => {
-      const familyName = getFamilyDisplayName(series.familyId, "");
-      const subjectName = series.subject?.name || "";
-      const creatorName = series.createdBy?.firstName + " " + series.createdBy?.lastName || "";
-      
-      return familyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             subjectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             creatorName.toLowerCase().includes(searchTerm.toLowerCase());
-    }
-  );
+  const filteredData = couponsData.filter((series) => {
+    const familyName = getFamilyDisplayName(series.familyId, "");
+    const subjectName = series.subject?.name || "";
+    const creatorName =
+      series.createdBy?.firstName + " " + series.createdBy?.lastName || "";
+
+    return (
+      familyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      subjectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      creatorName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   // Transformer les données pour le tableau (ajouter l'id requis)
   const tableData: TableRowData[] = filteredData.map((series) => ({
@@ -97,8 +99,12 @@ export const Admin: React.FC = () => {
 
   // Calculer les statistiques des séries
   const totalSeries = couponsData.length;
-  const activeSeries = couponsData.filter(series => series.status === 'active').length;
-  const completedSeries = couponsData.filter(series => series.status === 'completed').length;
+  const activeSeries = couponsData.filter(
+    (series) => series.status === "active"
+  ).length;
+  const completedSeries = couponsData.filter(
+    (series) => series.status === "completed"
+  ).length;
   const totalCoupons = couponsData.reduce(
     (sum, series) => sum + series.totalCoupons,
     0
@@ -115,7 +121,10 @@ export const Admin: React.FC = () => {
       label: "Nom de la série",
       render: (_: unknown, row: TableRowData) => {
         // Utiliser l'utilitaire pour générer le nom de série
-        const seriesName = generateCouponSeriesName(row.familyId, row.createdAt);
+        const seriesName = generateCouponSeriesName(
+          row.familyId,
+          row.createdAt
+        );
 
         return (
           <div>
@@ -129,10 +138,12 @@ export const Admin: React.FC = () => {
       label: "Famille",
       render: (_: unknown, row: TableRowData) => {
         const familyName = getFamilyDisplayName(row.familyId);
-        const isGenerated = !row.familyId || typeof row.familyId === 'string' || 
-                           !row.familyId.primaryContact ||
-                           !row.familyId.primaryContact.firstName?.trim() ||
-                           !row.familyId.primaryContact.lastName?.trim();
+        const isGenerated =
+          !row.familyId ||
+          typeof row.familyId === "string" ||
+          !row.familyId.primaryContact ||
+          !row.familyId.primaryContact.firstName?.trim() ||
+          !row.familyId.primaryContact.lastName?.trim();
 
         return (
           <div>
@@ -151,9 +162,7 @@ export const Admin: React.FC = () => {
       label: "Bénéficiaires",
       render: (_: unknown, row: TableRowData) => (
         <div>
-          <div className="font-medium">
-            {getBeneficiariesDisplay(row)}
-          </div>
+          <div className="font-medium">{getBeneficiariesDisplay(row)}</div>
         </div>
       ),
     },
@@ -234,19 +243,21 @@ export const Admin: React.FC = () => {
   return (
     <div>
       <Navbar activePath={location.pathname} />
-      <PageHeader 
+      <PageHeader
         title="Gestion des séries de coupons"
         breadcrumb={[
           { label: "Admin", href: "/admin" },
-          { label: "Liste des séries de coupons" }
+          { label: "Liste des séries de coupons" },
         ]}
         backButton={{ label: "Retour admin", href: "/admin" }}
       />
       <Container layout="flex-col">
-
-        {error && (
+        {(error || storeError) && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
+            <div className="font-medium">
+              Erreur de chargement des séries de coupons:
+            </div>
+            <div className="text-sm mt-1">{storeError || error}</div>
           </div>
         )}
 
@@ -269,15 +280,15 @@ export const Admin: React.FC = () => {
           <SummaryCard
             title="STATUT SÉRIES"
             metrics={[
-              { 
-                value: completedSeries, 
-                label: "Séries clôturées", 
-                variant: "primary" 
+              {
+                value: completedSeries,
+                label: "Séries clôturées",
+                variant: "primary",
               },
-              { 
-                value: remainingCoupons, 
-                label: "Coupons restants", 
-                variant: "success" 
+              {
+                value: remainingCoupons,
+                label: "Coupons restants",
+                variant: "success",
               },
             ]}
           />
@@ -341,13 +352,30 @@ export const Admin: React.FC = () => {
           ) : filteredData.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-gray-500">
-                {searchTerm
-                  ? "Aucune série trouvée pour cette recherche"
-                  : "Aucune série de coupons disponible"}
+                {storeError ? (
+                  <div>
+                    <div className="text-red-600 font-medium">
+                      Erreur de chargement
+                    </div>
+                    <div className="text-sm mt-1">
+                      Consultez les détails ci-dessus
+                    </div>
+                  </div>
+                ) : searchTerm ? (
+                  "Aucune série trouvée pour cette recherche"
+                ) : (
+                  <div>
+                    <div>Aucune série de coupons disponible</div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
-            <Table columns={couponsColumns} data={tableData} onRowClick={handleRowClick} />
+            <Table
+              columns={couponsColumns}
+              data={tableData}
+              onRowClick={handleRowClick}
+            />
           )}
         </Container>
       </Container>

@@ -288,16 +288,18 @@ class RdvService {
    * Gestion centralisée des erreurs
    */
   private handleError(error: any, defaultMessage: string): Error {
+    // Nouveau format: apiClient envoie directement l'Error avec le message détaillé
+    if (error.message) {
+      return new Error(error.message);
+    }
+    
+    // Format legacy: structure avec response.data (pour compatibilité)
     if (error.response?.data?.message) {
       return new Error(error.response.data.message);
     }
     
     if (error.response?.data?.errors?.length > 0) {
       return new Error(error.response.data.errors.join(', '));
-    }
-    
-    if (error.message) {
-      return new Error(error.message);
     }
     
     return new Error(defaultMessage);

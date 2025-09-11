@@ -14,6 +14,7 @@ import { ModalWrapper } from "../../components/ui/ModalWrapper/ModalWrapper";
 // import { EntityForm } from "../../components/forms/EntityForm"; // Non utilisé - clients créés via NDR
 import { familyService } from "../../services/familyService";
 import { settlementService } from "../../services/settlementService";
+import ActionCacheService from "../../services/actionCacheService";
 import type { Family } from "../../types/family";
 // import type { FamilyStats } from "../../services/familyService"; // Non utilisé avec cache
 import type { SettlementNote } from "../../services/settlementService";
@@ -244,28 +245,31 @@ export const Clients: React.FC = () => {
       try {
         setIsLoadingNDRs(true);
 
-        // 1. Supprimer la NDR
-        await settlementService.deleteSettlementNote(noteId);
+        // Utiliser ActionCacheService pour la suppression avec optimistic updates
+        await ActionCacheService.executeAction(
+          'DELETE_NDR',
+          () => settlementService.deleteSettlementNote(noteId),
+          { 
+            familyId: selectedFamilyId, 
+            ndrId: noteId 
+          }
+        );
 
-        // 2. Mise à jour optimiste de la liste locale (sans requête)
+        // Mettre à jour la liste locale pour la modal
         const updatedNDRs = selectedFamilyNDRs.filter(
           (note) => note._id !== noteId
         );
         setSelectedFamilyNDRs(updatedNDRs);
-        
-        // Le compte sera automatiquement mis à jour via family.settlementNotes.length
-        // après l'invalidation du cache
 
-        // 3. Si plus de NDR, reclasser la famille en prospect et invalider les caches
+        // Si plus de NDR, reclasser la famille en prospect
         if (updatedNDRs.length === 0) {
           try {
             await familyService.updateFamilyStatus(
               selectedFamilyId,
               "prospect"
             );
-            // Cache déjà mis à jour automatiquement par ActionCache
             console.log(
-              `✅ Client reclassifié en prospect (0 NDR restantes) - Cache invalidé`
+              `✅ Client reclassifié en prospect (0 NDR restantes)`
             );
           } catch (error) {
             console.error("Erreur lors du reclassement:", error);

@@ -1,1 +1,1 @@
-export { default as AddStudent } from './AddStudent';
+// AddStudent removed - replaced by Modal.tsx

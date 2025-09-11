@@ -16,7 +16,6 @@ import {
   Clients,
   ClientDetails,
 } from "./pages";
-import { AddStudent } from "./pages/families";
 import { NDRCreationWizard } from "./pages/admin/dashboard/create/NDRCreationWizard";
 import { TemplatePreview } from "./pages/admin/TemplatePreview";
 import { SeriesDetails } from "./pages/admin/coupons/SeriesDetails";
@@ -83,14 +82,6 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <ProspectDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/families/:familyId/add-student"
-            element={
-              <ProtectedRoute>
-                <AddStudent />
               </ProtectedRoute>
             }
           />
