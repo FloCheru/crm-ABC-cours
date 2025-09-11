@@ -165,7 +165,7 @@ export const useCouponSeriesStore = create<CouponSeriesState>()(
       // Méthode optimisticUpdate pour ActionCache
       optimisticUpdate: (action: any, actionData: any) => {
         if (action === 'CREATE_NDR') {
-          const { familyId, ndrData, tempNdrId } = actionData;
+          const { familyId } = actionData;
           
           console.log(`🎯 [COUPON-SERIES-STORE] Applying CREATE_NDR optimistic update for family ${familyId}`);
           
@@ -181,7 +181,7 @@ export const useCouponSeriesStore = create<CouponSeriesState>()(
         }
         
         if (action === 'DELETE_NDR') {
-          const { ndrId, familyId } = actionData;
+          const { ndrId } = actionData;
           const { data } = get();
           if (!data) return;
           

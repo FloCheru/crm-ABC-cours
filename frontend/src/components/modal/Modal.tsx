@@ -94,12 +94,12 @@ const ENTITY_HANDLERS = {
         familyId: familyId
       });
     },
-    create: async (familyId: string, preparedData: any, adminsData?: any[]) => {
+    create: async (familyId: string, preparedData: any, _adminsData?: any[]) => {
       // Générer un ID temporaire pour la mise à jour optimiste
       const tempRdvId = `temp_rdv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      // Trouver les données complètes de l'admin assigné
-      const assignedAdmin = adminsData?.find(admin => admin.id === preparedData.assignedAdminId);
+      // Trouver les données complètes de l'admin assigné (non utilisé pour l'instant)
+      // const assignedAdmin = adminsData?.find(admin => admin.id === preparedData.assignedAdminId);
       
       return await ActionCacheService.executeAction(
         'CREATE_RDV',
@@ -110,8 +110,7 @@ const ENTITY_HANDLERS = {
         {
           familyId,
           rdvData: preparedData,
-          tempRdvId,
-          assignedAdminData: assignedAdmin
+          tempRdvId
         }
       );
     },
@@ -812,7 +811,6 @@ export const Modal: React.FC<ModalProps> = ({
         {/* Header */}
         <PageHeader
           title={modalTitle}
-          id="modal-title"
           actions={
             <>
               {internalMode === "view" ? (

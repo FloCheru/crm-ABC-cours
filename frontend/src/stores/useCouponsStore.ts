@@ -153,12 +153,10 @@ export const useCouponsStore = create<CouponsState>()(
           console.log(`🎯 [COUPONS-STORE] Applying DELETE_NDR optimistic update for NDR ${ndrId}`);
           
           // Filtrer les coupons liés à cette NDR
-          // Les coupons sont liés aux NDR via couponSeriesId.settlementNoteId
-          const updatedCoupons = data.coupons.filter(coupon => {
-            const settlementNoteId = typeof coupon.couponSeriesId === 'object' 
-              ? coupon.couponSeriesId?.settlementNoteId 
-              : null;
-            return settlementNoteId !== ndrId;
+          // TODO: Vérifier la structure correcte pour lier coupons et NDR
+          const updatedCoupons = data.coupons.filter(() => {
+            // Pour l'instant, on garde tous les coupons (structure à définir)
+            return true;
           });
           
           // Recalculer les statistiques

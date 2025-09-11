@@ -23,7 +23,7 @@ class StudentService {
         console.log(`✅ Étudiant ${studentId} supprimé avec succès`);
         return response;
       }
-    );
+    ) as Promise<void>;
   }
 }
 

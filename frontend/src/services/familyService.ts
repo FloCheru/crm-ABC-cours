@@ -327,8 +327,7 @@ class FamilyService {
       },
       {
         familyId,
-        studentId,
-        action: 'remove_student'
+        studentId
       }
     );
   }

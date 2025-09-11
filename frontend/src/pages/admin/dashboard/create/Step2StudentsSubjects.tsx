@@ -188,7 +188,7 @@ export const Step2StudentsSubjects: React.FC = () => {
     try {
       // Charger les données complètes de la famille pour le préremplissage
       if (state.step1.familyId) {
-        const family = await familyService.getFamily(state.step1.familyId);
+        await familyService.getFamily(state.step1.familyId);
       }
       
       setShowAddStudentModal(true);
@@ -207,7 +207,13 @@ export const Step2StudentsSubjects: React.FC = () => {
       try {
         const family = await familyService.getFamily(state.step1.familyId);
         if (family.students && Array.isArray(family.students)) {
-          setStudents(family.students);
+          const mappedStudents = family.students.map(student => ({
+            ...student,
+            dateOfBirth: student.dateOfBirth instanceof Date 
+              ? student.dateOfBirth.toISOString().split('T')[0]
+              : student.dateOfBirth
+          }));
+          setStudents(mappedStudents);
         }
       } catch (error) {
         console.error("Erreur lors du rechargement des élèves:", error);

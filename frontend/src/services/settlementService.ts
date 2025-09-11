@@ -108,8 +108,7 @@ class SettlementService {
       {
         familyId: data.familyId,
         newStatus: 'client',
-        ndrData: { ...data, _id: tempNdrId }, // Passer l'ID temporaire
-        tempNdrId: tempNdrId
+        ndrData: { ...data, _id: tempNdrId } // Passer l'ID temporaire
       }
     );
 

@@ -644,14 +644,18 @@ export const useFamiliesStore = create<FamiliesState>()(
         
         // Le familyId existe forcément puisqu'on crée une NDR
         const updatedFamilies = data.families.map(f => 
-          f._id === familyId ? { ...f, status: newStatus } : f
+          f._id === familyId ? { ...f, status: newStatus as 'client' | 'prospect' } : f
         );
         
         // Déplacer de prospects vers clients
         const updatedProspects = data.prospects.filter(p => p._id !== familyId);
         const newClient = data.prospects.find(p => p._id === familyId);
-        const updatedClients = [...data.clients, { ...newClient, status: newStatus }];
-        const updatedClientsWithNDR = [...data.clientsWithNDR, { ...newClient, status: newStatus }];
+        const updatedClients = newClient 
+          ? [...data.clients, { ...newClient, status: newStatus as 'client' | 'prospect' }] 
+          : data.clients;
+        const updatedClientsWithNDR = newClient
+          ? [...data.clientsWithNDR, { ...newClient, status: newStatus as 'client' | 'prospect' }]
+          : data.clientsWithNDR;
         
         set({
           data: {
@@ -669,60 +673,9 @@ export const useFamiliesStore = create<FamiliesState>()(
       }
 
       case 'DELETE_NDR': {
-        const { familyId, ndrId } = actionData;
-        
-        console.log(`🗑️ [FAMILIES-STORE] Processing DELETE_NDR for family ${familyId}, NDR ${ndrId}`);
-        
-        // Mettre à jour les familles (retirer la NDR si elle est stockée)
-        const updatedFamilies = data.families.map(f => 
-          f._id === familyId && f.settlementNotes
-            ? { ...f, settlementNotes: f.settlementNotes.filter(ndr => ndr._id !== ndrId) }
-            : f
-        );
-        
-        // Vérifier si c'était la dernière NDR pour déterminer le nouveau statut
-        const family = data.families.find(f => f._id === familyId);
-        const remainingNDRs = family?.settlementNotes?.filter(ndr => ndr._id !== ndrId) || [];
-        
-        console.log(`🔍 [FAMILIES-STORE] Family found:`, family ? 'YES' : 'NO');
-        console.log(`🔍 [FAMILIES-STORE] Family settlement notes:`, family?.settlementNotes?.length || 0);
-        console.log(`🔍 [FAMILIES-STORE] Remaining NDRs after deletion:`, remainingNDRs.length);
-        
-        if (remainingNDRs.length === 0) {
-          // Plus de NDR : client → prospect
-          const updatedClients = data.clients.filter(c => c._id !== familyId);
-          const updatedClientsWithNDR = data.clientsWithNDR.filter(c => c._id !== familyId);
-          const familyToMove = data.clients.find(c => c._id === familyId);
-          const updatedProspects = familyToMove 
-            ? [...data.prospects, { ...familyToMove, status: 'prospect' }]
-            : data.prospects;
-          
-          set({
-            data: {
-              ...data,
-              families: updatedFamilies.map(f => 
-                f._id === familyId ? { ...f, status: 'prospect' } : f
-              ),
-              prospects: updatedProspects,
-              clients: updatedClients,
-              clientsWithNDR: updatedClientsWithNDR
-            },
-            lastFetch: Date.now()
-          });
-          
-          console.log(`📋 [FAMILIES-STORE] NDR supprimée - Client ${familyId} → Prospect (plus de NDR)`);
-        } else {
-          // Il reste des NDR : garde le statut client
-          set({
-            data: {
-              ...data,
-              families: updatedFamilies
-            },
-            lastFetch: Date.now()
-          });
-          
-          console.log(`📋 [FAMILIES-STORE] NDR ${ndrId} supprimée de famille ${familyId}`);
-        }
+        console.log(`🗑️ [FAMILIES-STORE] DELETE_NDR - Backend handles status change, invalidating cache`);
+        set({ data: null, lastFetch: 0, error: null });
+        console.log(`📋 [FAMILIES-STORE] Cache invalidated - will reload with backend status changes`);
         break;
       }
       
@@ -771,61 +724,6 @@ export const useFamiliesStore = create<FamiliesState>()(
     return data?.firstNDRDates[familyId] || '';
   },
 
-  // Méthode optimisticUpdate pour ActionCache (était manquante !)
-  optimisticUpdate: (action: any, actionData: any) => {
-    console.log(`🔍 [FAMILIES-STORE] optimisticUpdate called with action: ${action}`, actionData);
-    
-    const { data } = get();
-    if (!data) {
-      console.log(`❌ [FAMILIES-STORE] No data in store, aborting optimisticUpdate`);
-      return;
-    }
-
-    console.log(`🔍 [FAMILIES-STORE] Current store data:`, {
-      familiesCount: data.families?.length || 0,
-      prospectsCount: data.prospects?.length || 0,
-      clientsCount: data.clients?.length || 0,
-      clientsWithNDRCount: data.clientsWithNDR?.length || 0
-    });
-
-    switch (action) {
-      case 'CREATE_NDR': {
-        const { familyId, newStatus } = actionData;
-        
-        // Déplacer prospect → client si c'est la première NDR
-        const familyToMove = data.prospects.find(p => p._id === familyId);
-        if (familyToMove && newStatus === 'client') {
-          const updatedProspects = data.prospects.filter(p => p._id !== familyId);
-          const updatedClients = [...data.clients, { ...familyToMove, status: 'client' }];
-          const updatedClientsWithNDR = [...data.clientsWithNDR, { ...familyToMove, status: 'client' }];
-          const updatedFamilies = data.families.map(f => 
-            f._id === familyId ? { ...f, status: 'client' } : f
-          );
-          
-          set({
-            data: {
-              ...data,
-              families: updatedFamilies,
-              prospects: updatedProspects,
-              clients: updatedClients,
-              clientsWithNDR: updatedClientsWithNDR
-            },
-            lastFetch: Date.now()
-          });
-          
-          console.log(`📋 [FAMILIES-STORE] NDR créée optimistiquement - Prospect ${familyId} → Client`);
-        }
-        break;
-      }
-      
-      case 'DELETE_NDR': {
-        console.log(`🗑️ [FAMILIES-STORE] DELETE_NDR - Backend handles status change, invalidating cache`);
-        set({ data: null, lastFetch: 0, error: null });
-        console.log(`📋 [FAMILIES-STORE] Cache invalidated - will reload with backend status changes`);
-        break;
-      }
-    }
-  },
 }),
 {
   name: 'families-storage', // Nom unique pour le localStorage

@@ -237,7 +237,7 @@ export const useSettlementStore = create<SettlementState>()(
 
         // Remplacer l'ID dans settlements
         const updatedSettlements = data.settlements.map(ndr => 
-          ndr._id === tempId ? { ...ndr, _id: realId, status: 'active' } : ndr
+          ndr._id === tempId ? { ...ndr, _id: realId, status: 'pending' as 'pending' | 'paid' | 'overdue' } : ndr
         );
         
         const updatedData: UnifiedSettlementData = {

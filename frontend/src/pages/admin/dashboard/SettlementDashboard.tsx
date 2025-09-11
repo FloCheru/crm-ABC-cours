@@ -59,7 +59,7 @@ export const SettlementDashboard: React.FC = () => {
   // États pour la popup de suppression
   const [isDeletionPreviewModalOpen, setIsDeletionPreviewModalOpen] =
     useState(false);
-  const [deletionPreviewData, setDeletionPreviewData] = useState(null);
+  const [deletionPreviewData, setDeletionPreviewData] = useState<any>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
 
