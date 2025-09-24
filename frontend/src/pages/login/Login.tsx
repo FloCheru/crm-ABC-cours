@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Input, Button } from "../components";
-import { useAuth } from "../hooks/useAuth";
+import { Input, Button } from "../../components";
+import { useAuth } from "../../hooks/useAuth";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
-  
+
   const [credentials, setCredentials] = useState({
     email: "",
     password: "",
@@ -128,11 +128,11 @@ export const Login: React.FC = () => {
           variant="outline"
           disabled={isLoading}
           onClick={handleQuickAdminLogin}
-          style={{ 
-            width: "100%", 
+          style={{
+            width: "100%",
             marginTop: "0.5rem",
             fontSize: "0.875rem",
-            opacity: 0.8
+            opacity: 0.8,
           }}
         >
           🚀 Connexion rapide Admin

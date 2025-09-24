@@ -6,17 +6,13 @@ const subjectSchema = new mongoose.Schema(
       type: String,
       required: [true, "Le nom de la matière est requis"],
       trim: true,
-      unique: true,
-      maxlength: [100, "Le nom ne peut pas dépasser 100 caractères"],
+      unique: true, // Note: name déjà indexé via unique: true dans le schéma
     },
   },
   {
     timestamps: true,
   }
 );
-
-// Index pour améliorer les performances
-// Note: name déjà indexé via unique: true dans le schéma
 
 // Méthode pour obtenir toutes les matières
 subjectSchema.statics.getAllSubjects = function () {
@@ -26,7 +22,7 @@ subjectSchema.statics.getAllSubjects = function () {
 // Méthode pour rechercher des matières
 subjectSchema.statics.search = function (query) {
   return this.find({
-    name: { $regex: query, $options: "i" }
+    name: { $regex: `^${query}`, $options: "i" },
   }).sort({ name: 1 });
 };
 

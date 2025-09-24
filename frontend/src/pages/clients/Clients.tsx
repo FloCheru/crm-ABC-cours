@@ -117,13 +117,9 @@ const getStudentName = (
 export const Clients: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  const {
-    isLoading,
-    clientsWithNDR,
-    stats,
-    getFirstNDRDate,
-  } = useFamiliesGlobal();
+
+  const { isLoading, clientsWithNDR, stats, getFirstNDRDate } =
+    useFamiliesGlobal();
 
   // Cache géré automatiquement par ActionCache
   const [error, setError] = useState<string>("");
@@ -139,7 +135,6 @@ export const Clients: React.FC = () => {
 
   // Plus besoin de charger les NDR séparément - inclus dans cache unifié familiesCache
   // Les comptes NDR sont maintenant obtenus directement via family.settlementNotes.length
-
 
   // Plus besoin de handleCreateClient - les clients sont créés via NDR depuis prospects
 
@@ -188,7 +183,9 @@ export const Clients: React.FC = () => {
 
   // Handler pour cliquer sur une ligne du tableau (navigation vers détails)
   const handleRowClick = (row: TableRowData) => {
-    console.log(`🔍 Navigation vers détails client: ${row.primaryContact.firstName} ${row.primaryContact.lastName}`);
+    console.log(
+      `🔍 Navigation vers détails client: ${row.primaryContact.firstName} ${row.primaryContact.lastName}`
+    );
     navigate(`/clients/${row._id}`);
   };
 
@@ -247,11 +244,11 @@ export const Clients: React.FC = () => {
 
         // Utiliser ActionCacheService pour la suppression avec optimistic updates
         await ActionCacheService.executeAction(
-          'DELETE_NDR',
+          "DELETE_NDR",
           () => settlementService.deleteSettlementNote(noteId),
-          { 
-            familyId: selectedFamilyId, 
-            ndrId: noteId 
+          {
+            familyId: selectedFamilyId,
+            ndrId: noteId,
           }
         );
 
@@ -268,9 +265,7 @@ export const Clients: React.FC = () => {
               selectedFamilyId,
               "prospect"
             );
-            console.log(
-              `✅ Client reclassifié en prospect (0 NDR restantes)`
-            );
+            console.log(`✅ Client reclassifié en prospect (0 NDR restantes)`);
           } catch (error) {
             console.error("Erreur lors du reclassement:", error);
           }
@@ -350,7 +345,7 @@ export const Clients: React.FC = () => {
     },
     {
       key: "studentName",
-      label: "Élève",
+      label: "Bénéficiaires",
       render: (_: unknown, row: SettlementNote & { id: string }) => {
         // Récupérer les étudiants de la famille sélectionnée
         const selectedFamily = familyData.find(
@@ -541,9 +536,7 @@ export const Clients: React.FC = () => {
     {
       key: "clientNumber",
       label: "N° client",
-      render: (_: unknown) => (
-        <div className="text-sm text-gray-500">-</div>
-      ),
+      render: (_: unknown) => <div className="text-sm text-gray-500">-</div>,
     },
     {
       key: "source",
@@ -575,7 +568,7 @@ export const Clients: React.FC = () => {
     },
     {
       key: "students",
-      label: "Élèves",
+      label: "Bénéficiaires",
       render: (_: unknown, row: TableRowData) => (
         <div className="text-sm">
           {row.students && row.students.length > 0
@@ -605,7 +598,7 @@ export const Clients: React.FC = () => {
         // Utilisation directe de settlementNotes.length pour le compte
         const ndrCount = row.settlementNotes?.length || 0;
         const hasNDR = ndrCount > 0;
-        
+
         return (
           <div className="table__actions">
             <Button
@@ -646,7 +639,6 @@ export const Clients: React.FC = () => {
       <Navbar activePath={location.pathname} />
       <PageHeader title="Gestion des Clients" />
       <Container layout="flex-col">
-
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
@@ -713,7 +705,11 @@ export const Clients: React.FC = () => {
               </div>
             </div>
           ) : (
-            <Table columns={clientsColumns} data={tableData} onRowClick={handleRowClick} />
+            <Table
+              columns={clientsColumns}
+              data={tableData}
+              onRowClick={handleRowClick}
+            />
           )}
         </Container>
       </Container>

@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const { body, validationResult } = require("express-validator");
 const Family = require("../models/Family");
-const Student = require("../models/Student");
+const FamilyService = require("../services/familyService");
 const { authenticate, authorize } = require("../middleware/auth");
 
 const router = express.Router();
@@ -11,79 +11,18 @@ const router = express.Router();
 router.use(authenticate);
 
 // @route   GET /api/families
-// @desc    Obtenir toutes les familles
+// @desc    Obtenir les 50 premières familles
 // @access  Private
 router.get("/", async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, status } = req.query;
+    const { limit = 50 } = req.query;
 
-    // Construire le filtre
-    const filter = {};
-    if (search) {
-      filter.$or = [
-        { "primaryContact.lastName": { $regex: search, $options: "i" } },
-        { "primaryContact.firstName": { $regex: search, $options: "i" } },
-        { "primaryContact.email": { $regex: search, $options: "i" } },
-        { "primaryContact.primaryPhone": { $regex: search, $options: "i" } },
-      ];
-    }
-    if (status) {
-      filter.status = status;
-    }
+    // Utiliser le service pour récupérer les familles formatées
+    const families = await FamilyService.getFamilies(limit);
 
-    // Pagination
-    const skip = (page - 1) * limit;
-
-    const families = await Family.find(filter)
-      .populate('students')  // Récupérer TOUS les champs des élèves
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    // Populate les RDV pour chaque famille
-    for (let family of families) {
-      const rdvs = await mongoose.model('RendezVous').find({ familyId: family._id })
-        .populate('assignedAdminId', 'firstName lastName email')
-        .sort({ date: -1 })
-        .exec();
-      family.rdvs = rdvs;
-    }
-
-    const total = await Family.countDocuments(filter);
-
-    res.json({
-      families,
-      pagination: {
-        current: parseInt(page),
-        total: Math.ceil(total / limit),
-        hasNext: page * limit < total,
-        hasPrev: page > 1,
-      },
-    });
+    res.json(families);
   } catch (error) {
     console.error("Erreur lors de la récupération des familles:", error);
-    res.status(500).json({ message: "Erreur serveur" });
-  }
-});
-
-// @route   GET /api/families/stats
-// @desc    Obtenir les statistiques des familles
-// @access  Private
-router.get("/stats", async (req, res) => {
-  try {
-    const [total, prospects, clients] = await Promise.all([
-      Family.countDocuments(),
-      Family.countDocuments({ status: "prospect" }),
-      Family.countDocuments({ status: "client" }),
-    ]);
-
-    res.json({
-      total,
-      prospects,
-      clients,
-    });
-  } catch (error) {
-    console.error("Erreur lors de la récupération des statistiques:", error);
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
@@ -93,49 +32,29 @@ router.get("/stats", async (req, res) => {
 // @access  Private
 router.get("/:id", async (req, res) => {
   try {
-    const family = await Family.findById(req.params.id);
+    const family = await FamilyService.getFamilyById(req.params.id);
 
     if (!family) {
       return res.status(404).json({ message: "Famille non trouvée" });
     }
 
-    // Récupérer les élèves et RDV de cette famille avec toutes leurs informations
-    const [students, rdvs] = await Promise.all([
-      Student.find({ family: family._id }).lean(),
-      mongoose.model('RendezVous').find({ familyId: family._id })
-        .populate('assignedAdminId', 'firstName lastName email')
-        .sort({ date: -1 })
-        .lean()
-    ]);
-
-    // Résoudre les adresses dynamiquement pour les élèves utilisant l'adresse de la famille
-    const studentsWithResolvedAddresses = students.map(student => {
-      if (student.courseLocation?.usesFamilyAddress && family.address) {
-        return {
-          ...student,
-          courseLocation: {
-            ...student.courseLocation,
-            address: {
-              street: family.address.street || '',
-              city: family.address.city || '',
-              postalCode: family.address.postalCode || ''
-            }
-          }
-        };
-      }
-      return student;
-    });
-
-    // Ajouter les élèves et RDV à la réponse
-    const familyWithStudentsAndRdvs = {
-      ...family.toObject(),
-      students: studentsWithResolvedAddresses,
-      rdvs: rdvs,
-    };
-
-    res.json({ family: familyWithStudentsAndRdvs });
+    res.json({ family });
   } catch (error) {
     console.error("Erreur lors de la récupération de la famille:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// @route   GET /api/families/stats
+// @desc    Obtenir les statistiques des familles
+// @access  Private
+router.get("/stats", async (req, res) => {
+  try {
+    const familiesStats = await FamilyService.getFamiliesStats();
+
+    res.json(familiesStats);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des statistiques:", error);
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
@@ -175,12 +94,25 @@ router.post(
       .trim()
       .notEmpty()
       .withMessage("Code postal requis"),
-    body("demande.beneficiaryLevel")
+    body("demande.level")
       .trim()
       .notEmpty()
-      .withMessage("Niveau du bénéficiaire requis")
-      .isIn(['CP', 'CE1', 'CE2', 'CM1', 'CM2', '6ème', '5ème', '4ème', '3ème', 'Seconde', 'Première', 'Terminale'])
-      .withMessage("Niveau du bénéficiaire invalide"),
+      .withMessage("Niveau requis")
+      .isIn([
+        "CP",
+        "CE1",
+        "CE2",
+        "CM1",
+        "CM2",
+        "6ème",
+        "5ème",
+        "4ème",
+        "3ème",
+        "Seconde",
+        "Première",
+        "Terminale",
+      ])
+      .withMessage("Niveau invalide"),
     // Validation supprimée pour financialInfo.paymentMethod (champ supprimé du modèle)
   ],
   async (req, res) => {
@@ -196,7 +128,7 @@ router.post(
 
       const family = new Family({
         ...req.body,
-        createdBy: req.user._id, // Ajouter automatiquement l'ID de l'utilisateur créateur
+        createdBy: { userId: req.user._id }, // Structure selon dataFlow.md
       });
       await family.save();
 
@@ -212,32 +144,46 @@ router.post(
       });
     } catch (error) {
       console.error("Erreur lors de la création de la famille:", error);
-      
+
       // Gérer les erreurs de validation Mongoose
-      if (error.name === 'ValidationError') {
-        const errors = Object.values(error.errors).map(err => err.message);
-        return res.status(400).json({ 
-          message: errors.join(', '),
-          errors: errors 
+      if (error.name === "ValidationError") {
+        const errors = Object.values(error.errors).map((err) => err.message);
+        return res.status(400).json({
+          message: errors.join(", "),
+          errors: errors,
         });
       }
-      
+
       res.status(500).json({ message: "Erreur serveur" });
     }
   }
 );
 
-// @route   PUT /api/families/:id
-// @desc    Mettre à jour une famille
+// @route   PATCH /api/families/:id
+// @desc    Mettre à jour les champs simples d'une famille (prospectStatus, nextAction, notes)
 // @access  Private (Admin)
-router.put(
+router.patch(
   "/:id",
   [
     authorize(["admin"]),
-    body("primaryContact.firstName").optional().trim().notEmpty(),
-    body("primaryContact.lastName").optional().trim().notEmpty(),
-    body("primaryContact.email").optional().isEmail().normalizeEmail(),
-    body("primaryContact.primaryPhone").optional().trim().notEmpty(),
+    body("prospectStatus")
+      .trim()
+      .notEmpty()
+      .isIn([
+        "en_reflexion",
+        "interesse_prof_a_trouver",
+        "injoignable",
+        "ndr_editee",
+        "premier_cours_effectue",
+        "rdv_prospect",
+        "ne_va_pas_convertir",
+      ])
+      .withMessage("Statut prospect requis et valide"),
+    body("nextAction")
+      .trim()
+      .notEmpty()
+      .withMessage("Prochaine action requise"),
+    body("notes").optional().trim(),
   ],
   async (req, res) => {
     try {
@@ -250,7 +196,19 @@ router.put(
         });
       }
 
-      const family = await Family.findByIdAndUpdate(req.params.id, req.body, {
+      // Construire l'objet de mise à jour avec seulement les champs autorisés
+      const updateData = {};
+      if (req.body.prospectStatus !== undefined) {
+        updateData.prospectStatus = req.body.prospectStatus;
+      }
+      if (req.body.nextAction !== undefined) {
+        updateData.nextAction = req.body.nextAction;
+      }
+      if (req.body.notes !== undefined) {
+        updateData.notes = req.body.notes;
+      }
+
+      const family = await Family.findByIdAndUpdate(req.params.id, updateData, {
         new: true,
         runValidators: true,
       });
@@ -270,16 +228,29 @@ router.put(
   }
 );
 
-// @route   PATCH /api/families/:id/status
-// @desc    Mettre à jour le statut d'une famille
+// @route   PATCH /api/families/:id/primary-contact
+// @desc    Mettre à jour les informations du contact principal
 // @access  Private (Admin)
 router.patch(
-  "/:id/status",
+  "/:id/primary-contact",
   [
     authorize(["admin"]),
-    body("status")
-      .isIn(["prospect", "client"])
-      .withMessage("Statut doit être 'prospect' ou 'client'"),
+    body("firstName").trim().notEmpty().withMessage("Prénom requis"),
+    body("lastName").trim().notEmpty().withMessage("Nom requis"),
+    body("primaryPhone")
+      .trim()
+      .notEmpty()
+      .withMessage("Téléphone principal requis"),
+    body("secondaryPhone").optional().trim(),
+    body("email").trim().isEmail().withMessage("Email valide requis"),
+    body("birthDate")
+      .isISO8601()
+      .withMessage("Date de naissance valide requise"),
+    body("gender")
+      .trim()
+      .notEmpty()
+      .isIn(["M.", "Mme"])
+      .withMessage("Genre requis (M. ou Mme)"),
   ],
   async (req, res) => {
     try {
@@ -291,10 +262,28 @@ router.patch(
         });
       }
 
-      const family = await Family.findByIdAndUpdate(
+      // Construire l'objet de mise à jour
+      const primaryContactData = {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        primaryPhone: req.body.primaryPhone,
+        email: req.body.email,
+        gender: req.body.gender,
+      };
+
+      // Ajouter les champs optionnels s'ils sont fournis
+      if (req.body.secondaryPhone !== undefined) {
+        primaryContactData.secondaryPhone = req.body.secondaryPhone || null;
+      }
+      if (req.body.birthDate !== undefined) {
+        primaryContactData.birthDate = req.body.birthDate
+          ? new Date(req.body.birthDate)
+          : null;
+      }
+
+      const family = await FamilyService.updatePrimaryContact(
         req.params.id,
-        { status: req.body.status },
-        { new: true, runValidators: true }
+        primaryContactData
       );
 
       if (!family) {
@@ -302,35 +291,37 @@ router.patch(
       }
 
       res.json({
-        message: "Statut mis à jour avec succès",
-        family,
+        message: "Contact principal mis à jour avec succès",
+        primaryContact: family.primaryContact,
+        family: {
+          id: family.id,
+          primaryContact: family.primaryContact,
+        },
       });
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du statut:", error);
+      console.error(
+        "Erreur lors de la mise à jour du contact principal:",
+        error
+      );
       res.status(500).json({ message: "Erreur serveur" });
     }
   }
 );
-
-// @route   PATCH /api/families/:id/prospect-status
-// @desc    Mettre à jour le statut prospect d'une famille
+// @route   PATCH /api/families/:id/secondary-contact
+// @desc    Mettre à jour les informations du contact secondaire
 // @access  Private (Admin)
 router.patch(
-  "/:id/prospect-status",
+  "/:id/secondary-contact",
   [
     authorize(["admin"]),
-    body("prospectStatus")
-      .optional()
-      .isIn([
-        "en_reflexion",
-        "interesse_prof_a_trouver", 
-        "injoignable",
-        "ndr_editee",
-        "premier_cours_effectue",
-        "rdv_prospect",
-        "ne_va_pas_convertir"
-      ])
-      .withMessage("Statut prospect invalide"),
+    body("firstName").trim().notEmpty().withMessage("Prénom requis"),
+    body("lastName").trim().notEmpty().withMessage("Nom requis"),
+    body("phone").trim().notEmpty().withMessage("Téléphone requis"),
+    body("email")
+      .trim()
+      .notEmpty()
+      .isEmail()
+      .withMessage("Email valide requis"),
   ],
   async (req, res) => {
     try {
@@ -342,15 +333,21 @@ router.patch(
         });
       }
 
-      const { prospectStatus } = req.body;
-      
-      const family = await Family.findByIdAndUpdate(
+      const secondaryContactData = {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        phone: req.body.phone,
+        email: req.body.email,
+      };
+
+      // Validation métier
+      FamilyService.validateSecondaryContactData({
+        secondaryContact: secondaryContactData,
+      });
+
+      const family = await FamilyService.updateSecondaryContact(
         req.params.id,
-        { 
-          prospectStatus: prospectStatus || null,
-          updatedAt: new Date()
-        },
-        { new: true, runValidators: true }
+        secondaryContactData
       );
 
       if (!family) {
@@ -358,38 +355,37 @@ router.patch(
       }
 
       res.json({
-        message: "Statut prospect mis à jour avec succès",
-        family,
+        message: "Contact secondaire mis à jour avec succès",
+        secondaryContact: family.secondaryContact,
+        family: {
+          id: family.id,
+          secondaryContact: family.secondaryContact,
+        },
       });
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du statut prospect:", error);
+      console.error(
+        "Erreur lors de la mise à jour du contact secondaire:",
+        error
+      );
       res.status(500).json({ message: "Erreur serveur" });
     }
   }
 );
 
-// @route   PATCH /api/families/:id/reminder-subject
-// @desc    Mettre à jour l'objet du rappel d'une famille
+// @route   PATCH /api/families/:id/demande
+// @desc    Mettre à jour la demande
 // @access  Private (Admin)
 router.patch(
-  "/:id/reminder-subject",
+  "/:id/demande",
   [
     authorize(["admin"]),
-    body("nextActionReminderSubject")
-      .optional()
-      .isIn([
-        "Actions à définir",
-        "Présenter nos cours",
-        "Envoyer le devis",
-        "Relancer après devis",
-        "Planifier rendez-vous",
-        "Editer la NDR",
-        "Négocier les tarifs",
-        "Organiser cours d'essai",
-        "Confirmer les disponibilités",
-        "Suivre satisfaction parent"
-      ])
-      .withMessage("Objet de rappel invalide"),
+    body("level").trim().notEmpty().withMessage("Niveau requis"),
+    body("subjects")
+      .isArray({ min: 1 })
+      .withMessage("Au moins une matière requise"),
+    body("subjects.*.id")
+      .isMongoId()
+      .withMessage("ID de matière invalide (ObjectId requis)"),
   ],
   async (req, res) => {
     try {
@@ -401,15 +397,14 @@ router.patch(
         });
       }
 
-      const { nextActionReminderSubject } = req.body;
-      
-      const family = await Family.findByIdAndUpdate(
+      const demandeData = {
+        level: req.body.level,
+        subjects: req.body.subjects,
+      };
+
+      const family = await FamilyService.updateDemande(
         req.params.id,
-        { 
-          nextActionReminderSubject: nextActionReminderSubject || "Actions à définir",
-          updatedAt: new Date()
-        },
-        { new: true, runValidators: true }
+        demandeData
       );
 
       if (!family) {
@@ -417,107 +412,180 @@ router.patch(
       }
 
       res.json({
-        message: "Objet du rappel mis à jour avec succès",
-        family,
+        message: "Demande mise à jour avec succès",
+        demande: family.demande,
+        family: {
+          id: family.id,
+          demande: family.demande,
+        },
       });
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'objet du rappel:", error);
+      console.error("Erreur lors de la mise à jour de la demande:", error);
       res.status(500).json({ message: "Erreur serveur" });
     }
   }
 );
 
-// @route   GET /api/families/:id/deletion-preview
-// @desc    Aperçu des éléments qui seront supprimés avec la famille
+// @route   PATCH /api/families/:id/address
+// @desc    Mettre à jour l'adresse
 // @access  Private (Admin)
-router.get("/:id/deletion-preview", authorize(["admin"]), async (req, res) => {
-  try {
-    const family = await Family.findById(req.params.id);
+router.patch(
+  "/:id/address",
+  [
+    authorize(["admin"]),
+    body("street").trim().notEmpty().withMessage("Rue requise"),
+    body("city").trim().notEmpty().withMessage("Ville requise"),
+    body("postalCode").trim().notEmpty().withMessage("Code postal requis"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Données invalides",
+          errors: errors.array(),
+        });
+      }
 
-    if (!family) {
-      return res.status(404).json({ message: "Famille non trouvée" });
+      const addressData = {
+        street: req.body.street,
+        city: req.body.city,
+        postalCode: req.body.postalCode,
+      };
+
+      const family = await FamilyService.updateAddress(
+        req.params.id,
+        addressData
+      );
+
+      if (!family) {
+        return res.status(404).json({ message: "Famille non trouvée" });
+      }
+
+      res.json({
+        message: "Adresse mise à jour avec succès",
+        address: family.address,
+        family: {
+          id: family.id,
+          address: family.address,
+        },
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'adresse:", error);
+      res.status(500).json({ message: "Erreur serveur" });
     }
-
-    console.log(`🔍 Aperçu de suppression pour la famille ${req.params.id}`);
-
-    // Compter les éléments liés
-    const Coupon = require("../models/Coupon");
-    const CouponSeries = require("../models/CouponSeries");
-    const SettlementNote = require("../models/SettlementNote");
-
-    const [couponsCount, seriesCount, settlementNotesCount, studentsCount] = await Promise.all([
-      Coupon.countDocuments({ familyId: req.params.id }),
-      CouponSeries.countDocuments({ familyId: req.params.id }),
-      SettlementNote.countDocuments({ familyId: req.params.id }),
-      Student.countDocuments({ family: req.params.id })
-    ]);
-
-    // Récupérer les détails des éléments liés
-    const [couponsDetails, seriesDetails, settlementNotesDetails, studentsDetails] = await Promise.all([
-      Coupon.find({ familyId: req.params.id }).select("code status").lean(),
-      CouponSeries.find({ familyId: req.params.id })
-        .populate("subject", "name")
-        .select("totalCoupons usedCoupons hourlyRate status subject")
-        .lean(),
-      SettlementNote.find({ familyId: req.params.id })
-        .select("clientName subjects.quantity subjects.hourlyRate status createdAt")
-        .lean(),
-      Student.find({ family: req.params.id })
-        .select("firstName lastName school.grade")
-        .lean()
-    ]);
-
-    const deletionPreview = {
-      family: {
-        name: `${family.primaryContact.firstName} ${family.primaryContact.lastName}`,
-        status: family.status,
-        prospectStatus: family.prospectStatus
-      },
-      itemsToDelete: {
-        students: {
-          count: studentsCount,
-          details: studentsDetails.map(s => ({
-            name: `${s.firstName} ${s.lastName}`,
-            grade: s.school?.grade || "Non précisé"
-          }))
-        },
-        couponSeries: {
-          count: seriesCount,
-          details: seriesDetails.map(s => ({
-            subject: s.subject?.name || "Matière non précisée",
-            totalCoupons: s.totalCoupons,
-            usedCoupons: s.usedCoupons,
-            remainingCoupons: s.totalCoupons - s.usedCoupons,
-            hourlyRate: s.hourlyRate,
-            status: s.status
-          }))
-        },
-        coupons: {
-          count: couponsCount,
-          availableCount: couponsDetails.filter(c => c.status === 'available').length,
-          usedCount: couponsDetails.filter(c => c.status === 'used').length
-        },
-        settlementNotes: {
-          count: settlementNotesCount,
-          details: settlementNotesDetails.map(ndr => ({
-            clientName: ndr.clientName,
-            totalHours: ndr.subjects?.reduce((sum, s) => sum + (s.quantity || 0), 0) || 0,
-            totalAmount: ndr.subjects?.reduce((sum, s) => sum + ((s.quantity || 0) * (s.hourlyRate || 0)), 0) || 0,
-            status: ndr.status,
-            date: new Date(ndr.createdAt).toLocaleDateString("fr-FR")
-          }))
-        }
-      },
-      totalItems: studentsCount + seriesCount + couponsCount + settlementNotesCount
-    };
-
-    console.log(`🔍 Aperçu calculé: ${deletionPreview.totalItems} éléments à supprimer`);
-    res.json(deletionPreview);
-  } catch (error) {
-    console.error("Erreur lors du calcul de l'aperçu de suppression:", error);
-    res.status(500).json({ message: "Erreur serveur" });
   }
-});
+);
+
+// @route   PATCH /api/families/:id/billing-address
+// @desc    Mettre à jour l'adresse de facturation
+// @access  Private (Admin)
+router.patch(
+  "/:id/billing-address",
+  [
+    authorize(["admin"]),
+    body("street").trim().notEmpty().withMessage("Rue requise"),
+    body("city").trim().notEmpty().withMessage("Ville requise"),
+    body("postalCode").trim().notEmpty().withMessage("Code postal requis"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Données invalides",
+          errors: errors.array(),
+        });
+      }
+
+      const billingAddressData = {
+        street: req.body.street,
+        city: req.body.city,
+        postalCode: req.body.postalCode,
+      };
+
+      const family = await FamilyService.updateBillingAddress(
+        req.params.id,
+        billingAddressData
+      );
+
+      if (!family) {
+        return res.status(404).json({ message: "Famille non trouvée" });
+      }
+
+      res.json({
+        message: "Adresse de facturation mise à jour avec succès",
+        billingAddress: family.billingAddress,
+        family: {
+          id: family.id,
+          billingAddress: family.billingAddress,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "Erreur lors de la mise à jour de l'adresse de facturation:",
+        error
+      );
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
+
+// @route   PATCH /api/families/:id/company-info
+// @desc    Mettre à jour les informations entreprise
+// @access  Private (Admin)
+router.patch(
+  "/:id/company-info",
+  [
+    authorize(["admin"]),
+    body("urssafNumber").trim().notEmpty().withMessage("Numéro URSSAF requis"),
+    body("siret").optional().trim(),
+    body("ceNumber").optional().trim(),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Données invalides",
+          errors: errors.array(),
+        });
+      }
+
+      const companyInfoData = {
+        urssafNumber: req.body.urssafNumber,
+      };
+
+      const family = await FamilyService.updateCompanyInfo(
+        req.params.id,
+        companyInfoData
+      );
+
+      if (!family) {
+        return res.status(404).json({ message: "Famille non trouvée" });
+      }
+
+      res.json({
+        message: "Informations entreprise mises à jour avec succès",
+        companyInfo: family.companyInfo,
+        family: {
+          id: family.id,
+          companyInfo: family.companyInfo,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "Erreur lors de la mise à jour des infos entreprise:",
+        error
+      );
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
+
+//====================
+//SUPPRESSION
+//====================
 
 // @route   DELETE /api/families/:id
 // @desc    Supprimer une famille
@@ -525,23 +593,23 @@ router.get("/:id/deletion-preview", authorize(["admin"]), async (req, res) => {
 router.delete("/:id", authorize(["admin"]), async (req, res) => {
   try {
     const familyId = req.params.id;
-    
+
     // Validation de l'ID
-    if (!familyId || typeof familyId !== 'string') {
+    if (!familyId || typeof familyId !== "string") {
       console.log(`❌ ID de famille invalide: ${familyId}`);
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "ID de famille invalide",
-        id: familyId 
+        id: familyId,
       });
     }
 
     // Validation format ObjectId
-    const mongoose = require('mongoose');
+    const mongoose = require("mongoose");
     if (!mongoose.Types.ObjectId.isValid(familyId)) {
       console.log(`❌ Format ObjectId invalide: ${familyId}`);
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Format d'ID invalide (doit être un ObjectId MongoDB valide)",
-        id: familyId 
+        id: familyId,
       });
     }
 
@@ -550,46 +618,53 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
 
     if (!family) {
       console.log(`❌ Famille non trouvée: ${familyId}`);
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: "Famille non trouvée ou déjà supprimée",
-        id: familyId 
+        id: familyId,
       });
     }
 
-    console.log(`🔍 Début de la suppression en cascade pour la famille ${req.params.id}`);
+    console.log(
+      `🔍 Début de la suppression en cascade pour la famille ${req.params.id}`
+    );
 
     // 1. Supprimer tous les coupons individuels liés à cette famille
     const Coupon = require("../models/Coupon");
     const deletedCoupons = await Coupon.deleteMany({
       familyId: req.params.id,
     });
-    console.log(`🔍 ${deletedCoupons.deletedCount} coupons individuels supprimés`);
+    console.log(
+      `🔍 ${deletedCoupons.deletedCount} coupons individuels supprimés`
+    );
 
     // 2. Supprimer toutes les séries de coupons liées à cette famille
     const CouponSeries = require("../models/CouponSeries");
     const deletedSeries = await CouponSeries.deleteMany({
       familyId: req.params.id,
     });
-    console.log(`🔍 ${deletedSeries.deletedCount} séries de coupons supprimées`);
+    console.log(
+      `🔍 ${deletedSeries.deletedCount} séries de coupons supprimées`
+    );
 
     // 3. Supprimer les notes de règlement liées (NDR)
-    const SettlementNote = require("../models/SettlementNote");
+    const SettlementNote = require("../models/NDR");
     const deletedSettlementNotes = await SettlementNote.deleteMany({
       familyId: req.params.id,
     });
-    console.log(`🔍 ${deletedSettlementNotes.deletedCount} notes de règlement supprimées`);
+    console.log(
+      `🔍 ${deletedSettlementNotes.deletedCount} notes de règlement supprimées`
+    );
 
-    // 4. Supprimer tous les élèves associés à cette famille
-    console.log(`🔍 Suppression des élèves pour la famille ${req.params.id}`);
-    const deletedStudents = await Student.deleteMany({
-      family: req.params.id,
-    });
-    console.log(`🔍 ${deletedStudents.deletedCount} élèves supprimés`);
+    // 4. Les élèves sont maintenant embedded dans la famille (pas de suppression séparée nécessaire)
+    const studentsCount = family.students ? family.students.length : 0;
+    console.log(
+      `🔍 ${studentsCount} élèves embedded seront supprimés avec la famille`
+    );
 
     // 5. Supprimer tous les RDV liés à cette famille
-    const RendezVous = require("../models/RendezVous");
+    const RendezVous = require("../models/RDV");
     const deletedRdvs = await RendezVous.deleteMany({
-      familyId: req.params.id,
+      "family.id": req.params.id,
     });
     console.log(`🔍 ${deletedRdvs.deletedCount} rendez-vous supprimés`);
 
@@ -597,15 +672,15 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
     await Family.findByIdAndDelete(req.params.id);
     console.log(`🔍 Famille ${req.params.id} supprimée avec succès`);
 
-    res.json({ 
+    res.json({
       message: "Famille et tous les éléments liés supprimés avec succès",
       deletedItems: {
-        students: deletedStudents.deletedCount,
+        students: studentsCount, // Students embedded
         couponSeries: deletedSeries.deletedCount,
         coupons: deletedCoupons.deletedCount,
         settlementNotes: deletedSettlementNotes.deletedCount,
-        rdvs: deletedRdvs.deletedCount
-      }
+        rdvs: deletedRdvs.deletedCount,
+      },
     });
   } catch (error) {
     console.error("Erreur lors de la suppression de la famille:", error);
@@ -613,30 +688,38 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
   }
 });
 
-// @route   PATCH /api/families/:id/next-action-date
-// @desc    Mettre à jour la date de prochaine action d'une famille
+//_____STUDENTS______
+
+// @route   POST /api/families/:id/students
+// @desc    Ajouter un élève embedded à une famille existante (selon dataFlow.md)
 // @access  Private (Admin)
-router.patch(
-  "/:id/next-action-date",
+router.post(
+  "/:id/students",
   [
     authorize(["admin"]),
-    body("nextActionDate")
+    // Validation technique : types et formats
+    body("firstName").trim().notEmpty().withMessage("Prénom de l'élève requis"),
+    body("lastName").trim().notEmpty().withMessage("Nom de l'élève requis"),
+    body("birthDate")
+      .isISO8601()
+      .withMessage("Date de naissance valide requise"),
+    body("school.name").optional().trim(),
+    body("school.grade").optional().trim(),
+    body("contact.phone").optional().trim(),
+    body("contact.email")
       .optional()
-      .custom((value) => {
-        // Accepter null ou une date valide
-        if (value === null || value === undefined) {
-          return true;
-        }
-        const date = new Date(value);
-        if (isNaN(date.getTime())) {
-          throw new Error("Date invalide");
-        }
-        return true;
-      })
-      .withMessage("Date de prochaine action invalide"),
+      .trim()
+      .isEmail()
+      .withMessage("Email invalide si fourni"),
+    body("address.street").optional().trim(),
+    body("address.city").optional().trim(),
+    body("address.postalCode").optional().trim(),
+    body("availability").optional().trim(),
+    body("notes").optional().trim(),
   ],
   async (req, res) => {
     try {
+      // Vérifier les erreurs de validation technique
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
@@ -645,14 +728,19 @@ router.patch(
         });
       }
 
-      const { nextActionDate } = req.body;
-      
+      // Validation métier
+      FamilyService.validateStudentData(req.body);
+
+      // Créer l'élève embedded avec un nouvel ObjectId
+      const studentData = {
+        id: new mongoose.Types.ObjectId(),
+        ...req.body,
+      };
+
+      // Ajouter l'élève au tableau students de la famille
       const family = await Family.findByIdAndUpdate(
         req.params.id,
-        { 
-          nextActionDate: nextActionDate ? new Date(nextActionDate) : null,
-          updatedAt: new Date()
-        },
+        { $push: { students: studentData } },
         { new: true, runValidators: true }
       );
 
@@ -660,54 +748,76 @@ router.patch(
         return res.status(404).json({ message: "Famille non trouvée" });
       }
 
-      res.json({
-        message: "Date de prochaine action mise à jour avec succès",
-        family,
+      console.log(
+        `✅ Élève ${studentData.firstName} ${studentData.lastName} ajouté à la famille ${req.params.id}`
+      );
+
+      res.status(201).json({
+        message: "Élève ajouté avec succès à la famille",
+        student: studentData,
       });
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de la date de prochaine action:", error);
+      console.error("Erreur lors de l'ajout de l'élève:", error);
+
+      // Gérer les erreurs de validation Mongoose
+      if (error.name === "ValidationError") {
+        const errors = Object.values(error.errors).map((err) => err.message);
+        return res.status(400).json({
+          message: "Erreur de validation : " + errors.join(", "),
+          errors: errors,
+        });
+      }
+
       res.status(500).json({ message: "Erreur serveur" });
     }
   }
 );
 
-// @route   POST /api/families/:id/students
-// @desc    Ajouter un élève à une famille existante
+// @route   PATCH /api/families/:id/students/:studentId
+// @desc    Modifier un élève embedded dans une famille (selon dataFlow.md)
 // @access  Private (Admin)
-router.post(
-  "/:id/students",
+router.patch(
+  "/:id/students/:studentId",
   [
     authorize(["admin"]),
+    // Validation technique : types et formats (tous optionnels pour PATCH)
     body("firstName")
+      .optional()
       .trim()
       .notEmpty()
-      .withMessage("Prénom de l'élève requis"),
+      .withMessage("Prénom de l'élève requis si fourni"),
     body("lastName")
+      .optional()
       .trim()
       .notEmpty()
-      .withMessage("Nom de l'élève requis"),
-    body("dateOfBirth")
+      .withMessage("Nom de l'élève requis si fourni"),
+    body("birthDate")
+      .optional()
       .isISO8601()
       .withMessage("Date de naissance valide requise"),
-    body("school.name")
-      .trim()
-      .notEmpty()
-      .withMessage("Nom de l'établissement requis"),
-    body("school.level")
-      .isIn(["primaire", "collège", "lycée", "supérieur"])
-      .withMessage("Niveau scolaire invalide"),
-    body("school.grade")
-      .trim()
-      .notEmpty()
-      .withMessage("Classe requise"),
-    body("courseLocation.type")
+    body("school.name").optional().trim(),
+    body("school.grade").optional().trim(),
+    body("contact.phone").optional().trim(),
+    body("contact.email")
       .optional()
-      .isIn(["domicile", "professeur", "autre"])
-      .withMessage("Type de lieu de cours invalide"),
+      .trim()
+      .isEmail()
+      .withMessage("Email invalide si fourni"),
+    body("address.street").optional().trim(),
+    body("address.city").optional().trim(),
+    body("address.postalCode").optional().trim(),
+    body("availability").optional().trim(),
+    body("notes").optional().trim(),
   ],
   async (req, res) => {
     try {
-      // Vérifier les erreurs de validation
+      const { id: familyId, studentId } = req.params;
+
+      console.log(
+        `✏️ [UPDATE STUDENT] Tentative de modification - Famille: ${familyId}, Élève: ${studentId}`
+      );
+
+      // Vérifier les erreurs de validation technique
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
@@ -716,130 +826,272 @@ router.post(
         });
       }
 
-      // Vérifier que la famille existe
-      const family = await Family.findById(req.params.id);
+      // Validation métier (pour les champs fournis dans la mise à jour)
+      FamilyService.validateStudentData(req.body);
+
+      // Trouver la famille
+      const family = await Family.findById(familyId);
       if (!family) {
+        console.error(`❌ [UPDATE STUDENT] Famille non trouvée: ${familyId}`);
         return res.status(404).json({ message: "Famille non trouvée" });
       }
 
-      // Créer l'élève avec référence vers la famille
-      const studentData = {
-        ...req.body,
-        family: req.params.id,
-      };
+      // Trouver l'élève dans le tableau
+      const studentIndex = family.students.findIndex(
+        (s) => s.id.toString() === studentId
+      );
+      if (studentIndex === -1) {
+        console.error(`❌ [UPDATE STUDENT] Élève non trouvé: ${studentId}`);
+        return res
+          .status(404)
+          .json({ message: "Élève non trouvé dans cette famille" });
+      }
 
-      const student = new Student(studentData);
-      await student.save();
-
-      // Ajouter la référence de l'élève à la famille
-      await Family.findByIdAndUpdate(
-        req.params.id,
-        { $push: { students: student._id } },
-        { new: true }
+      const oldStudent = family.students[studentIndex];
+      console.log(
+        `🔄 [UPDATE STUDENT] Modification de l'élève ${oldStudent.firstName} ${oldStudent.lastName}...`
       );
 
-      console.log(`✅ Élève ${student.firstName} ${student.lastName} ajouté à la famille ${req.params.id}`);
+      // Préparer les nouvelles données de l'élève
+      const updatedStudentData = {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        birthDate: new Date(req.body.birthDate),
+        school: {
+          name: req.body.school.name,
+          grade: req.body.school.grade,
+        },
+        contact: req.body.contact || oldStudent.contact,
+        address: req.body.address || oldStudent.address,
+        availability: req.body.availability || oldStudent.availability,
+        notes: req.body.notes || oldStudent.notes,
+      };
 
-      res.status(201).json({
-        message: "Élève ajouté avec succès à la famille",
-        student: student.toObject(),
+      // Mettre à jour l'élève dans le tableau
+      family.students[studentIndex] = {
+        ...oldStudent.toObject(),
+        ...updatedStudentData,
+      };
+
+      // Sauvegarder la famille
+      const updatedFamily = await family.save();
+
+      console.log(
+        `✅ [UPDATE STUDENT] Élève modifié avec succès: ${updatedStudentData.firstName} ${updatedStudentData.lastName}`
+      );
+
+      res.status(200).json({
+        message: "Élève modifié avec succès",
+        student: family.students[studentIndex],
+        family: {
+          id: updatedFamily._id,
+          primaryContact: {
+            firstName: updatedFamily.primaryContact.firstName,
+            lastName: updatedFamily.primaryContact.lastName,
+          },
+          studentsCount: updatedFamily.students.length,
+        },
       });
     } catch (error) {
-      console.error("Erreur lors de l'ajout de l'élève:", error);
-      
-      // Gérer les erreurs de validation Mongoose
-      if (error.name === 'ValidationError') {
-        const errors = Object.values(error.errors).map(err => err.message);
-        return res.status(400).json({ 
-          message: "Erreur de validation : " + errors.join(', '),
-          errors: errors 
-        });
-      }
-      
+      console.error("❌ [UPDATE STUDENT] Erreur:", error);
       res.status(500).json({ message: "Erreur serveur" });
     }
   }
 );
 
 // @route   DELETE /api/families/:id/students/:studentId
-// @desc    Supprimer un élève d'une famille
+// @desc    Supprimer un élève embedded  (selon dataFlow.md)
 // @access  Private (Admin)
-router.delete("/:id/students/:studentId", authorize(["admin"]), async (req, res) => {
-  try {
-    const { id: familyId, studentId } = req.params;
+router.delete(
+  "/:id/students/:studentId",
+  authorize(["admin"]),
+  async (req, res) => {
+    try {
+      const { id: familyId, studentId } = req.params;
 
-    console.log(`🗑️ [DELETE STUDENT] Tentative de suppression - Famille: ${familyId}, Élève: ${studentId}`);
+      console.log(
+        `🗑️ [DELETE STUDENT] Tentative de suppression - Famille: ${familyId}, Élève: ${studentId}`
+      );
 
-    // Validation des IDs ObjectId
-    if (!mongoose.Types.ObjectId.isValid(familyId)) {
-      console.error(`❌ [DELETE STUDENT] ID famille invalide: ${familyId}`);
-      return res.status(400).json({ message: "ID de famille invalide" });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(studentId)) {
-      console.error(`❌ [DELETE STUDENT] ID élève invalide: ${studentId}`);
-      return res.status(400).json({ message: "ID d'élève invalide" });
-    }
-
-    // Vérifier que la famille existe
-    const family = await Family.findById(familyId);
-    if (!family) {
-      console.error(`❌ [DELETE STUDENT] Famille non trouvée: ${familyId}`);
-      return res.status(404).json({ message: "Famille non trouvée" });
-    }
-
-    // Vérifier que l'élève existe
-    const student = await Student.findById(studentId);
-    if (!student) {
-      console.error(`❌ [DELETE STUDENT] Élève non trouvé: ${studentId}`);
-      return res.status(404).json({ message: "Élève non trouvé" });
-    }
-
-    // Vérification sécurisée de l'appartenance à la famille
-    if (!student.familyId || student.familyId.toString() !== familyId) {
-      console.error(`❌ [DELETE STUDENT] Élève ${studentId} n'appartient pas à la famille ${familyId}. Famille actuelle: ${student.familyId}`);
-      return res.status(400).json({ message: "Cet élève n'appartient pas à cette famille" });
-    }
-
-    console.log(`🔄 [DELETE STUDENT] Suppression de l'élève ${student.firstName} ${student.lastName} de la famille...`);
-
-    // Retirer la référence de l'élève de la famille
-    const updatedFamily = await Family.findByIdAndUpdate(
-      familyId,
-      { $pull: { students: studentId } },
-      { new: true }
-    );
-
-    if (!updatedFamily) {
-      console.error(`❌ [DELETE STUDENT] Échec de la mise à jour de la famille ${familyId}`);
-      return res.status(500).json({ message: "Erreur lors de la mise à jour de la famille" });
-    }
-
-    // Supprimer l'élève
-    const deletedStudent = await Student.findByIdAndDelete(studentId);
-    
-    if (!deletedStudent) {
-      console.error(`❌ [DELETE STUDENT] Échec de la suppression de l'élève ${studentId}`);
-      return res.status(500).json({ message: "Erreur lors de la suppression de l'élève" });
-    }
-
-    console.log(`✅ [DELETE STUDENT] Élève ${student.firstName} ${student.lastName} supprimé avec succès de la famille ${familyId}`);
-
-    res.json({
-      message: "Élève supprimé avec succès de la famille",
-      deletedStudent: {
-        id: studentId,
-        name: `${student.firstName} ${student.lastName}`
+      // Validation des IDs ObjectId
+      if (!mongoose.Types.ObjectId.isValid(familyId)) {
+        console.error(`❌ [DELETE STUDENT] ID famille invalide: ${familyId}`);
+        return res.status(400).json({ message: "ID de famille invalide" });
       }
-    });
-  } catch (error) {
-    console.error("❌ [DELETE STUDENT] Erreur lors de la suppression de l'élève:", error);
-    console.error("❌ [DELETE STUDENT] Stack trace:", error.stack);
-    res.status(500).json({ 
-      message: "Erreur serveur lors de la suppression de l'élève",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+
+      if (!mongoose.Types.ObjectId.isValid(studentId)) {
+        console.error(`❌ [DELETE STUDENT] ID élève invalide: ${studentId}`);
+        return res.status(400).json({ message: "ID d'élève invalide" });
+      }
+
+      // Trouver et supprimer l'élève du tableau students
+      const family = await Family.findById(familyId);
+      if (!family) {
+        console.error(`❌ [DELETE STUDENT] Famille non trouvée: ${familyId}`);
+        return res.status(404).json({ message: "Famille non trouvée" });
+      }
+
+      // Trouver l'élève dans le tableau
+      const student = family.students.find(
+        (s) => s.id.toString() === studentId
+      );
+      if (!student) {
+        console.error(`❌ [DELETE STUDENT] Élève non trouvé: ${studentId}`);
+        return res
+          .status(404)
+          .json({ message: "Élève non trouvé dans cette famille" });
+      }
+
+      console.log(
+        `🔄 [DELETE STUDENT] Suppression de l'élève ${student.firstName} ${student.lastName} de la famille...`
+      );
+
+      // Supprimer l'élève du tableau students
+      const updatedFamily = await Family.findByIdAndUpdate(
+        familyId,
+        { $pull: { students: { id: studentId } } },
+        { new: true }
+      );
+
+      if (!updatedFamily) {
+        console.error(
+          `❌ [DELETE STUDENT] Échec de la mise à jour de la famille ${familyId}`
+        );
+        return res
+          .status(500)
+          .json({ message: "Erreur lors de la mise à jour de la famille" });
+      }
+
+      console.log(
+        `✅ [DELETE STUDENT] Élève ${student.firstName} ${student.lastName} supprimé avec succès de la famille ${familyId}`
+      );
+
+      res.json({
+        message: "Élève supprimé avec succès de la famille",
+        deletedStudent: {
+          id: studentId,
+          name: `${student.firstName} ${student.lastName}`,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "❌ [DELETE STUDENT] Erreur lors de la suppression de l'élève:",
+        error
+      );
+      console.error("❌ [DELETE STUDENT] Stack trace:", error.stack);
+      res.status(500).json({
+        message: "Erreur serveur lors de la suppression de l'élève",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
   }
-});
+);
 
 module.exports = router;
+
+// @route   GET /api/families/:id/deletion-preview
+// @desc    Aperçu des éléments qui seront supprimés avec la famille
+// @access  Private (Admin)
+// router.get("/:id/deletion-preview", authorize(["admin"]), async (req, res) => {
+//   try {
+//     const family = await Family.findById(req.params.id);
+
+//     if (!family) {
+//       return res.status(404).json({ message: "Famille non trouvée" });
+//     }
+
+//     console.log(`🔍 Aperçu de suppression pour la famille ${req.params.id}`);
+
+//     // Compter les éléments liés
+//     const Coupon = require("../models/Coupon");
+//     const CouponSeries = require("../models/CouponSeries");
+//     const SettlementNote = require("../models/NDR");
+
+//     // Les students sont maintenant embedded dans la famille
+//     const studentsCount = family.students ? family.students.length : 0;
+//     const studentsDetails = family.students || [];
+
+//     const [couponsCount, seriesCount, settlementNotesCount] = await Promise.all(
+//       [
+//         Coupon.countDocuments({ familyId: req.params.id }),
+//         CouponSeries.countDocuments({ familyId: req.params.id }),
+//         SettlementNote.countDocuments({ familyId: req.params.id }),
+//       ]
+//     );
+
+//     // Récupérer les détails des éléments liés
+//     const [couponsDetails, seriesDetails, settlementNotesDetails] =
+//       await Promise.all([
+//         Coupon.find({ familyId: req.params.id }).select("code status").lean(),
+//         CouponSeries.find({ familyId: req.params.id })
+//           .populate("subject", "name")
+//           .select("totalCoupons usedCoupons hourlyRate status subject")
+//           .lean(),
+//         SettlementNote.find({ familyId: req.params.id })
+//           .select(
+//             "clientName subjects.quantity subjects.hourlyRate status createdAt"
+//           )
+//           .lean(),
+//       ]);
+
+//     const deletionPreview = {
+//       family: {
+//         name: `${family.primaryContact.firstName} ${family.primaryContact.lastName}`,
+//         status: family.status,
+//         prospectStatus: family.prospectStatus,
+//       },
+//       itemsToDelete: {
+//         students: {
+//           count: studentsCount,
+//           details: studentsDetails.map((s) => ({
+//             name: `${s.firstName} ${s.lastName}`,
+//             grade: s.school?.grade || "Non précisé",
+//           })),
+//         },
+//         couponSeries: {
+//           count: seriesCount,
+//           details: seriesDetails.map((s) => ({
+//             subject: s.subject?.name || "Matière non précisée",
+//             totalCoupons: s.totalCoupons,
+//             usedCoupons: s.usedCoupons,
+//             remainingCoupons: s.totalCoupons - s.usedCoupons,
+//             hourlyRate: s.hourlyRate,
+//             status: s.status,
+//           })),
+//         },
+//         coupons: {
+//           count: couponsCount,
+//           availableCount: couponsDetails.filter((c) => c.status === "available")
+//             .length,
+//           usedCount: couponsDetails.filter((c) => c.status === "used").length,
+//         },
+//         settlementNotes: {
+//           count: settlementNotesCount,
+//           details: settlementNotesDetails.map((ndr) => ({
+//             clientName: ndr.clientName,
+//             totalHours:
+//               ndr.subjects?.reduce((sum, s) => sum + (s.quantity || 0), 0) || 0,
+//             totalAmount:
+//               ndr.subjects?.reduce(
+//                 (sum, s) => sum + (s.quantity || 0) * (s.hourlyRate || 0),
+//                 0
+//               ) || 0,
+//             status: ndr.status,
+//             date: new Date(ndr.createdAt).toLocaleDateString("fr-FR"),
+//           })),
+//         },
+//       },
+//       totalItems:
+//         studentsCount + seriesCount + couponsCount + settlementNotesCount,
+//     };
+
+//     console.log(
+//       `🔍 Aperçu calculé: ${deletionPreview.totalItems} éléments à supprimer`
+//     );
+//     res.json(deletionPreview);
+//   } catch (error) {
+//     console.error("Erreur lors du calcul de l'aperçu de suppression:", error);
+//     res.status(500).json({ message: "Erreur serveur" });
+//   }
+// });

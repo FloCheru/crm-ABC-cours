@@ -30,7 +30,7 @@ export function useSettlementGlobal(options: UseSettlementGlobalOptions = {}) {
   
   
   // Fonctions de sélecteurs pour compatibilité
-  const getSettlements = useSettlementStore((state) => state.getSettlements);
+  const getSettlements = useSettlementStore((state) => state.getSettlements());
   const getSettlementCount = useSettlementStore((state) => state.getSettlementCount);
   const getFirstSettlementDate = useSettlementStore((state) => state.getFirstSettlementDate);
   const getTotalCount = useSettlementStore((state) => state.getTotalCount);
@@ -64,7 +64,7 @@ export function useSettlementGlobal(options: UseSettlementGlobalOptions = {}) {
     getTotalCount,
     
     // Données directes pour compatibilité (même pattern que useFamiliesGlobal)
-    settlements: getSettlements(),
+    settlements: getSettlements,
     totalCount: getTotalCount(),
   };
 }

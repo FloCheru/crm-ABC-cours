@@ -31,6 +31,7 @@ interface FamiliesState {
   updateProspectOptimistic: (prospectId: string, updates: Partial<Family>) => void;
   replaceProspectId: (tempId: string, realId: string) => void;
   replaceStudentId: (familyId: string, tempStudentId: string, realStudentId: string) => void;
+  replaceNdrId: (tempNdrId: string, realNdrId: string) => void;
   
   // Sélecteurs mémorisés
   getProspects: () => Family[];
@@ -722,6 +723,17 @@ export const useFamiliesStore = create<FamiliesState>()(
   getFirstNDRDate: (familyId: string) => {
     const { data } = get();
     return data?.firstNDRDates[familyId] || '';
+  },
+
+  // Remplacer l'ID temporaire d'une NDR par le vrai ID après création
+  replaceNdrId: (tempNdrId: string, realNdrId: string) => {
+    const { data } = get();
+    if (!data) return;
+
+    // Les familles ne stockent pas directement les IDs des NDR
+    // mais elles peuvent avoir des références indirectes dans certains champs
+    // Pour l'instant, cette fonction maintient la cohérence architecturale
+    console.log(`🔄 [FAMILIES-STORE] NDR ID replacement ${tempNdrId} → ${realNdrId} (no direct NDR references in families)`);
   },
 
 }),

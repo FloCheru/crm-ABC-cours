@@ -52,6 +52,12 @@ export const SettlementDashboard: React.FC = () => {
     clearCache,
     loadSettlements,
   } = useSettlementGlobal();
+
+  // Logs de diagnostic pour tracer les données reçues
+  console.log(`🔍 [SETTLEMENT-DASHBOARD] Render - settlements reçus du store: ${settlements.length} items`);
+  settlements.forEach((settlement, index) => {
+    console.log(`🔍 [SETTLEMENT-DASHBOARD] Settlement[${index}]: ${settlement._id} (temp: ${settlement._id.startsWith('temp-')}) - ${settlement.clientName}`);
+  });
   
   const [searchTerm, setSearchTerm] = useState("");
   const [localError, setLocalError] = useState<string>("");
@@ -179,6 +185,15 @@ export const SettlementDashboard: React.FC = () => {
   };
 
   const handleViewNote = (noteId: string) => {
+    console.log(`🔍 [SETTLEMENT-DASHBOARD] Navigation attempt to: ${noteId}`);
+    
+    // Bloquer navigation si ID temporaire
+    if (noteId.startsWith('temp-')) {
+      console.log(`🚫 [SETTLEMENT-DASHBOARD] Navigation blocked - temporary ID: ${noteId}`);
+      return; // Pas de navigation
+    }
+    
+    console.log(`✅ [SETTLEMENT-DASHBOARD] Navigation allowed - valid ID: ${noteId}`);
     navigate(`/admin/dashboard/${noteId}`);
   };
 
@@ -273,6 +288,12 @@ export const SettlementDashboard: React.FC = () => {
     ...note,
     id: note._id,
   }));
+
+  // Logs de diagnostic pour les données finales du tableau
+  console.log(`🔍 [SETTLEMENT-DASHBOARD] TableData final - ${tableData.length} items pour affichage:`);
+  tableData.forEach((item, index) => {
+    console.log(`🔍 [SETTLEMENT-DASHBOARD] TableData[${index}]: ${item._id} (temp: ${item._id.startsWith('temp-')}) - ${item.clientName}`);
+  });
 
   // Calculer les statistiques globales
   const totalNotes = settlements.length;

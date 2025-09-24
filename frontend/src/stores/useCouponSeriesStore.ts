@@ -23,6 +23,7 @@ interface CouponSeriesState {
   loadSeriesDetails: (seriesId: string) => Promise<{ series: CouponSeries; coupons: Coupon[] }>;
   clearCache: () => void;
   isExpired: () => boolean;
+  replaceNdrId: (tempNdrId: string, realNdrId: string) => void;
   
   // Sélecteurs mémorisés
   getCouponSeries: () => CouponSeries[];
@@ -212,6 +213,57 @@ export const useCouponSeriesStore = create<CouponSeriesState>()(
           
           console.log(`📋 [COUPON-SERIES-STORE] Removed ${data.series.length - updatedSeries.length} series linked to NDR ${ndrId}`);
         }
+      },
+
+      // Remplacer l'ID temporaire d'une NDR par le vrai ID après création
+      replaceNdrId: (tempNdrId: string, realNdrId: string) => {
+        const { data } = get();
+        if (!data) return;
+
+        console.log(`🔍 [COUPON-SERIES-STORE] AVANT remplacement - Store contient ${data.series.length} series:`);
+        data.series.forEach((series, index) => {
+          console.log(`🔍 [COUPON-SERIES-STORE] Series[${index}]: ${series._id} (settlementNoteId: ${series.settlementNoteId})`);
+        });
+
+        // Remplacer l'ID dans les séries de coupons
+        const updatedSeries = data.series.map(series => 
+          series.settlementNoteId === tempNdrId 
+            ? { ...series, settlementNoteId: realNdrId } 
+            : series
+        );
+
+        console.log(`🔍 [COUPON-SERIES-STORE] APRÈS remplacement series - ${updatedSeries.length} series mises à jour:`);
+        updatedSeries.forEach((series, index) => {
+          console.log(`🔍 [COUPON-SERIES-STORE] Updated Series[${index}]: ${series._id} (settlementNoteId: ${series.settlementNoteId})`);
+        });
+
+        // Remplacer l'ID dans les détails des séries
+        const updatedSeriesDetails = { ...data.seriesDetails };
+        console.log(`🔍 [COUPON-SERIES-STORE] Traitement des détails de séries - ${Object.keys(updatedSeriesDetails).length} détails à vérifier`);
+        
+        Object.keys(updatedSeriesDetails).forEach(seriesId => {
+          const details = updatedSeriesDetails[seriesId];
+          if (details.series.settlementNoteId === tempNdrId) {
+            console.log(`🔍 [COUPON-SERIES-STORE] Remplacement ID dans détails de série ${seriesId}: ${tempNdrId} → ${realNdrId}`);
+            updatedSeriesDetails[seriesId] = {
+              ...details,
+              series: { ...details.series, settlementNoteId: realNdrId }
+            };
+          }
+        });
+
+        const updatedData: UnifiedCouponSeriesData = {
+          ...data,
+          series: updatedSeries,
+          seriesDetails: updatedSeriesDetails,
+        };
+
+        console.log(`🔍 [COUPON-SERIES-STORE] Déclenchement set() pour forcer réactivité Zustand`);
+        set({ 
+          data: { ...updatedData }, // Force nouvelle référence pour réactivité Zustand
+        });
+        
+        console.log(`✅ [COUPON-SERIES-STORE] ID temporaire NDR ${tempNdrId} remplacé par ${realNdrId} - Réactivité déclenchée`);
       },
     }),
     {

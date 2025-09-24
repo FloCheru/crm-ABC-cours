@@ -26,6 +26,7 @@ interface CouponsState {
   loadCoupons: (filters?: any) => Promise<void>;
   clearCache: () => void;
   isExpired: () => boolean;
+  replaceNdrId: (tempNdrId: string, realNdrId: string) => void;
   
   // Sélecteurs mémorisés
   getCoupons: () => Coupon[];
@@ -177,6 +178,17 @@ export const useCouponsStore = create<CouponsState>()(
           
           console.log(`📋 [COUPONS-STORE] Removed ${data.coupons.length - updatedCoupons.length} coupons linked to NDR ${ndrId}`);
         }
+      },
+
+      // Remplacer l'ID temporaire d'une NDR par le vrai ID après création
+      replaceNdrId: (tempNdrId: string, realNdrId: string) => {
+        const { data } = get();
+        if (!data) return;
+
+        // Les coupons sont liés aux NDR via les CouponSeries
+        // Cette fonction est fournie pour cohérence architecturale mais 
+        // le remplacement d'ID se fait au niveau CouponSeriesStore
+        console.log(`🔄 [COUPONS-STORE] NDR ID replacement ${tempNdrId} → ${realNdrId} (handled by CouponSeries)`);
       },
     }),
     {

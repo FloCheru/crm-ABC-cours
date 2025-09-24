@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, "Email invalide"],
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Email invalide"],
     },
     password: {
       type: String,
@@ -18,8 +18,11 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "professor"],
-      default: "professor",
+      enum: {
+        values: ["admin", "professor"],
+        message: "Rôle invalide. Valeurs autorisées: admin, professor",
+      },
+      required: [true, "Rôle de l'utilisateur requis"],
     },
     firstName: {
       type: String,

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const RendezVous = require('../models/RendezVous');
+const RendezVous = require('../models/RDV');
 const Family = require('../models/Family');
 const User = require('../models/User');
 const { authenticateToken, authorize } = require('../middleware/auth');

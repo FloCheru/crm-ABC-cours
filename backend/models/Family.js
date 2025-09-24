@@ -45,67 +45,71 @@ const familySchema = new mongoose.Schema(
         lowercase: true,
         trim: true,
       },
-      dateOfBirth: {
+      birthDate: {
         type: Date,
-      },
-      relationship: {
-        type: String,
-        trim: true,
-        default: "Contact principal",
       },
       gender: {
         type: String,
         required: [true, "Civilité requise"],
-        enum: ["M.", "Mme"],
+        enum: {
+          values: ["M.", "Mme"],
+          message: "Civilité invalide. Valeurs autorisées: M., Mme",
+        },
         trim: true,
       },
     },
     secondaryContact: {
-      firstName: {
-        type: String,
-        trim: true,
-      },
-      lastName: {
-        type: String,
-        trim: true,
-      },
-      phone: {
-        type: String,
-        trim: true,
-      },
-      email: {
-        type: String,
-        lowercase: true,
-        trim: true,
-      },
-      relationship: {
-        type: String,
-        trim: true,
-        default: "Contact secondaire",
-      },
-      dateOfBirth: {
-        type: Date,
+      type: {
+        firstName: {
+          type: String,
+          required: [true, "Prénom du contact secondaire requis"],
+          trim: true,
+        },
+        lastName: {
+          type: String,
+          required: [true, "Nom du contact secondaire requis"],
+          trim: true,
+        },
+        phone: {
+          type: String,
+          required: [true, "Téléphone du contact secondaire requis"],
+          trim: true,
+        },
+        email: {
+          type: String,
+          lowercase: true,
+          required: [true, "Email du contact secondaire requis"],
+          trim: true,
+        },
+        birthDate: {
+          type: Date,
+        },
       },
     },
     // Notes de règlement liées à cette famille
-    settlementNotes: [
+    ndr: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "SettlementNote",
+        id: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: [true, "ID de la NDR requis"],
+        },
       },
     ],
-    // Adresse de facturation (optionnelle)
+    // Adresse de facturation
     billingAddress: {
       street: {
         type: String,
+        required: [true, "Rue de l'adresse de facturation requise"],
         trim: true,
       },
       city: {
         type: String,
+        required: [true, "Ville de l'adresse de facturation requise"],
         trim: true,
       },
       postalCode: {
         type: String,
+        required: [true, "Code postal de l'adresse de facturation requise"],
         trim: true,
       },
     },
@@ -124,43 +128,26 @@ const familySchema = new mongoose.Schema(
         trim: true,
       },
     },
-    status: {
-      type: String,
-      enum: ["prospect", "client"],
-      default: "prospect",
-    },
-    // Champs spécifiques aux prospects
     prospectStatus: {
       type: String,
-      enum: [
-        "en_reflexion",
-        "interesse_prof_a_trouver", 
-        "injoignable",
-        "ndr_editee",
-        "premier_cours_effectue",
-        "rdv_prospect",
-        "ne_va_pas_convertir"
-      ],
+      enum: {
+        values: [
+          "en_reflexion",
+          "interesse_prof_a_trouver",
+          "injoignable",
+          "ndr_editee",
+          "premier_cours_effectue",
+          "rdv_prospect",
+          "ne_va_pas_convertir",
+        ],
+        message:
+          "Statut prospect invalide. Valeurs autorisées: en_reflexion, interesse_prof_a_trouver, injoignable, ndr_editee, premier_cours_effectue, rdv_prospect, ne_va_pas_convertir",
+      },
+      required: [true, "Le statut du prospect est requis"],
     },
-    nextActionReminderSubject: {
+    nextAction: {
       type: String,
-      enum: [
-        "Actions à définir",
-        "Présenter nos cours",
-        "Envoyer le devis",
-        "Relancer après devis",
-        "Planifier rendez-vous",
-        "Editer la NDR",
-        "Négocier les tarifs",
-        "Organiser cours d'essai",
-        "Confirmer les disponibilités",
-        "Suivre satisfaction parent"
-      ],
-      default: "Actions à définir",
       trim: true,
-    },
-    nextActionDate: {
-      type: Date,
     },
     source: {
       type: String,
@@ -170,51 +157,122 @@ const familySchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    // Section demande de cours (obligatoire)
     demande: {
-      beneficiaryType: {
+      level: {
         type: String,
-        enum: ["adulte", "eleves"],
-        required: [true, "Type de bénéficiaire requis"],
-      },
-      beneficiaryLevel: {
-        type: String,
-        enum: ['CP', 'CE1', 'CE2', 'CM1', 'CM2', '6ème', '5ème', '4ème', '3ème', 'Seconde', 'Première', 'Terminale'],
-        required: [true, "Niveau du bénéficiaire requis"],
+        enum: {
+          values: [
+            "CP",
+            "CE1",
+            "CE2",
+            "CM1",
+            "CM2",
+            "6ème",
+            "5ème",
+            "4ème",
+            "3ème",
+            "Seconde",
+            "Première",
+            "Terminale",
+          ],
+          message:
+            "Niveau invalide. Valeurs autorisées: CP, CE1, CE2, CM1, CM2, 6ème, 5ème, 4ème, 3ème, Seconde, Première, Terminale",
+        },
+        required: [true, "Niveau requis"],
       },
       subjects: [
         {
-          type: String,
-          trim: true,
-        }
+          id: {
+            type: String,
+            required: [true, "ID de la matière requis dans la demande"],
+          },
+        },
       ],
-      notes: {
-        type: String,
-        trim: true,
-      },
     },
-    // Professeur prévu
     plannedTeacher: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       trim: true,
     },
     createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: [true, "Utilisateur créateur requis"],
+      },
     },
-    // Students devient optionnel
     students: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Student",
+        id: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: [true, "ID de l'étudiant requis"],
+        },
+        firstName: {
+          type: String,
+          required: [true, "Prénom de l'étudiant requis"],
+          trim: true,
+        },
+        lastName: {
+          type: String,
+          required: [true, "Nom de l'étudiant requis"],
+          trim: true,
+        },
+        birthDate: {
+          type: Date,
+          required: [true, "Date de naissance requise"],
+        },
+        school: {
+          name: {
+            type: String,
+            required: [true, "Nom de l'école requis"],
+            trim: true,
+          },
+          grade: {
+            type: String,
+            required: [true, "Classe requise"],
+            trim: true,
+          },
+        },
+        contact: {
+          phone: {
+            type: String,
+            trim: true,
+          },
+          email: {
+            type: String,
+            lowercase: true,
+            trim: true,
+          },
+        },
+        address: {
+          street: {
+            type: String,
+            trim: true,
+          },
+          city: {
+            type: String,
+            trim: true,
+          },
+          postalCode: {
+            type: String,
+            trim: true,
+          },
+        },
+        availability: {
+          type: String,
+          trim: true,
+        },
+        notes: {
+          type: String,
+          trim: true,
+        },
       },
     ],
     // RDV liés à cette famille
     rdvs: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "RendezVous",
+        id: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: [true, "ID du RDV requis"],
+        },
       },
     ],
   },
@@ -223,45 +281,43 @@ const familySchema = new mongoose.Schema(
   }
 );
 
-// Index pour améliorer les performances
+// Index pour améliorer les performances selon dataFlow.md
 familySchema.index({ "primaryContact.lastName": 1 });
 familySchema.index({ "primaryContact.email": 1 });
 familySchema.index({ status: 1 });
 familySchema.index({ createdAt: -1 });
-familySchema.index({ "address.city": 1 });
-familySchema.index({ "demande.beneficiaryType": 1 });
-familySchema.index({ rdvs: 1 });
+familySchema.index({ "createdBy.userId": 1 });
 
-// Méthode pour obtenir le contact principal
-familySchema.methods.getPrimaryContact = function () {
-  return {
-    firstName: this.primaryContact.firstName,
-    lastName: this.primaryContact.lastName,
-    email: this.primaryContact.email,
-    phone: this.primaryContact.primaryPhone,
-  };
-};
+// // Méthode pour obtenir le contact principal
+// familySchema.methods.getPrimaryContact = function () {
+//   return {
+//     firstName: this.primaryContact.firstName,
+//     lastName: this.primaryContact.lastName,
+//     email: this.primaryContact.email,
+//     phone: this.primaryContact.primaryPhone,
+//   };
+// };
 
-// Méthode pour obtenir le contact secondaire
-familySchema.methods.getSecondaryContact = function () {
-  if (this.secondaryContact && this.secondaryContact.firstName) {
-    return this.secondaryContact;
-  }
-  return null;
-};
+// // Méthode pour obtenir le contact secondaire
+// familySchema.methods.getSecondaryContact = function () {
+//   if (this.secondaryContact && this.secondaryContact.firstName) {
+//     return this.secondaryContact;
+//   }
+//   return null;
+// };
 
-// Méthode pour obtenir l'adresse complète
-familySchema.methods.getFullAddress = function () {
-  return `${this.address.street}, ${this.address.postalCode} ${this.address.city}`;
-};
+// // Méthode pour obtenir l'adresse complète
+// familySchema.methods.getFullAddress = function () {
+//   return `${this.address.street}, ${this.address.postalCode} ${this.address.city}`;
+// };
 
-// Virtual pour le nom de famille (contact principal)
-familySchema.virtual('name').get(function() {
-  return `${this.primaryContact.firstName} ${this.primaryContact.lastName}`;
-});
+// // Virtual pour le nom de famille (contact principal)
+// familySchema.virtual("name").get(function () {
+//   return `${this.primaryContact.firstName} ${this.primaryContact.lastName}`;
+// });
 
-// Assurer que les virtuals sont inclus lors de JSON.stringify
-familySchema.set('toJSON', { virtuals: true });
-familySchema.set('toObject', { virtuals: true });
+// // Assurer que les virtuals sont inclus lors de JSON.stringify
+// familySchema.set("toJSON", { virtuals: true });
+// familySchema.set("toObject", { virtuals: true });
 
 module.exports = mongoose.model("Family", familySchema);

@@ -112,9 +112,27 @@ class SettlementService {
       }
     );
 
-    // Remplacer l'ID temporaire par le vrai ID dans le store
+    // Remplacer l'ID temporaire par le vrai ID dans tous les stores
+    console.log(`🔄 [SETTLEMENT-SERVICE] Starting ID replacement: ${tempNdrId} → ${result._id}`);
+    
     const { useSettlementStore } = await import('../stores/useSettlementStore');
+    const { useFamiliesStore } = await import('../stores/useFamiliesStore');
+    const { useCouponsStore } = await import('../stores/useCouponsStore');
+    const { useCouponSeriesStore } = await import('../stores/useCouponSeriesStore');
+
+    console.log(`🔄 [SETTLEMENT-SERVICE] Calling replaceSettlementId on SettlementStore`);
     useSettlementStore.getState().replaceSettlementId(tempNdrId, result._id);
+    
+    console.log(`🔄 [SETTLEMENT-SERVICE] Calling replaceNdrId on FamiliesStore`);
+    useFamiliesStore.getState().replaceNdrId(tempNdrId, result._id);
+    
+    console.log(`🔄 [SETTLEMENT-SERVICE] Calling replaceNdrId on CouponsStore`);
+    useCouponsStore.getState().replaceNdrId(tempNdrId, result._id);
+    
+    console.log(`🔄 [SETTLEMENT-SERVICE] Calling replaceNdrId on CouponSeriesStore`);
+    useCouponSeriesStore.getState().replaceNdrId(tempNdrId, result._id);
+    
+    console.log(`✅ [SETTLEMENT-SERVICE] All stores updated successfully: ${tempNdrId} → ${result._id}`);
     
     return result;
   }
