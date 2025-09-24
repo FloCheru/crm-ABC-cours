@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  mongodb-test:
+    image: mongo:7.0
+    container_name: abc-cours-mongodb-test
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: abc-cours-test
+    volumes:
+      - mongodb-test-data:/data/db
+    networks:
+      - abc-cours-test
+
+  mongodb-test-standalone:
+    image: mongo:7.0
+    container_name: abc-cours-mongodb-test-standalone
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: abc-cours-test-standalone
+    command: mongod --noauth
+    volumes:
+      - mongodb-test-standalone-data:/data/db
+    networks:
+      - abc-cours-test
+
+volumes:
+  mongodb-test-data:
+  mongodb-test-standalone-data:
+
+networks:
+  abc-cours-test:
+    driver: bridge

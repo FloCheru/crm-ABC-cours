@@ -24,9 +24,11 @@ console.error = (...args) => {
   // Garder l'affichage console original
   originalConsoleError(...args);
   // Ajouter au fichier de log via AutoLogger
-  const message = args.map(arg => 
-    typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-  ).join(' ');
+  const message = args
+    .map((arg) =>
+      typeof arg === "object" ? JSON.stringify(arg, null, 2) : String(arg)
+    )
+    .join(" ");
   logger.error(message, true); // forceSync = true for errors
 };
 
@@ -35,19 +37,21 @@ logger.info(`🔍 Environnement chargé: ${envFile}`);
 logger.info(`🔍 NODE_ENV: ${process.env.NODE_ENV}`);
 logger.info(`🔍 MONGODB_URI défini: ${!!process.env.MONGODB_URI}`);
 
+// Import du cache manager
+const CacheManager = require("./cache/cacheManager");
+
 // Import des routes
 const authRoutes = require("./routes/auth");
 const familyRoutes = require("./routes/families");
-const studentRoutes = require("./routes/students");
+// const studentRoutes = require("./routes/students"); // Supprimé
 const professorRoutes = require("./routes/professors");
-const assignmentRoutes = require("./routes/assignments");
+
 const subjectRoutes = require("./routes/subjects");
-const couponRoutes = require("./routes/coupons");
-const couponSeriesRoutes = require("./routes/couponSeries");
-const settlementNotesRoutes = require("./routes/settlementNotes");
-const pdfRoutes = require("./routes/pdf");
+// const couponRoutes = require("./routes/coupons"); // Supprimé
+// const settlementNotesRoutes = require("./routes/settlementNotes"); // Supprimé
+// const pdfRoutes = require("./routes/pdf"); // Supprimé
 const rdvRoutes = require("./routes/rdv");
-const debugRoutes = require("./routes/debug");
+// const debugRoutes = require("./routes/debug"); // Supprimé
 
 // Import de la configuration de la base de données
 const connectDB = require("./config/database");
@@ -76,39 +80,39 @@ logger.info(`🔍 FRONTEND_URL: ${process.env.FRONTEND_URL}`);
 
 app.use(
   cors({
-    origin: function(origin, callback) {
+    origin: function (origin, callback) {
       // Permettre les requêtes sans origine (ex: Postman, curl)
       if (!origin) return callback(null, true);
-      
+
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
         logger.warn(`⚠️ CORS bloqué pour l'origine: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
+        callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true, //Auth/cookies
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 // Configuration Trust Proxy pour Railway/Heroku
 // CRITIQUE: Nécessaire pour le bon fonctionnement du rate limiting en production
-if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1); // Trust premier proxy (Railway/Heroku)
-  logger.info('🔧 Trust proxy activé pour la production');
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1); // Trust premier proxy (Railway/Heroku)
+  logger.info("🔧 Trust proxy activé pour la production");
 }
 
 // Rate limiting - Configuration adaptée pour le développement
-const isDevelopment = process.env.NODE_ENV !== 'production';
+const isDevelopment = process.env.NODE_ENV !== "production";
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: isDevelopment ? 1000 : 100, // 1000 requêtes en dev, 100 en prod
   message: {
-    error: 'Trop de requêtes, veuillez réessayer plus tard',
-    retryAfter: '15 minutes'
-  }
+    error: "Trop de requêtes, veuillez réessayer plus tard",
+    retryAfter: "15 minutes",
+  },
 });
 app.use("/api/", limiter);
 
@@ -116,9 +120,9 @@ app.use("/api/", limiter);
 const customMorganStream = {
   write: (message) => {
     // Retirer le \n final de Morgan pour éviter les doubles retours à la ligne
-    const cleanMessage = message.replace(/\n$/, '');
+    const cleanMessage = message.replace(/\n$/, "");
     logger.info(cleanMessage);
-  }
+  },
 };
 
 // Morgan avec écriture via AutoLogger
@@ -162,16 +166,15 @@ app.get("/health", (req, res) => {
 // Routes API
 app.use("/api/auth", authRoutes);
 app.use("/api/families", familyRoutes);
-app.use("/api/students", studentRoutes);
+// app.use("/api/students", studentRoutes); // Supprimé
 app.use("/api/professors", professorRoutes);
-app.use("/api/assignments", assignmentRoutes);
+
 app.use("/api/subjects", subjectRoutes);
-app.use("/api/coupons", couponRoutes);
-app.use("/api/coupon-series", couponSeriesRoutes);
-app.use("/api/settlement-notes", settlementNotesRoutes);
-app.use("/api", pdfRoutes);
+// app.use("/api/coupons", couponRoutes); // Supprimé
+// app.use("/api/settlement-notes", settlementNotesRoutes); // Supprimé
+// app.use("/api", pdfRoutes); // Supprimé
 app.use("/api/rdv", rdvRoutes);
-app.use("/debug", debugRoutes);
+// app.use("/debug", debugRoutes); // Supprimé
 
 // Middleware de gestion d'erreurs
 app.use((err, req, res, next) => {
@@ -197,6 +200,17 @@ app.use("*", (req, res) => {
 // Variable globale pour stocker le serveur
 let server;
 
+// Fonction de nettoyage automatique du cache
+const startCacheCleanup = () => {
+  setInterval(() => {
+    const cleared = CacheManager.clearExpiredEntries();
+    if (cleared > 0) {
+      logger.info(`🧹 Cache: ${cleared} entrées expirées supprimées`);
+    }
+  }, 5 * 60 * 1000); // Nettoyage toutes les 5 minutes
+  logger.info(`🔄 Nettoyage automatique du cache démarré (intervalle: 5min)`);
+};
+
 // Démarrage du serveur
 const startServer = async () => {
   try {
@@ -208,6 +222,9 @@ const startServer = async () => {
       logger.info(`✅ Backend prêt pour les tests`);
       logger.info(`🎯 Environnement: ${envFile}`);
       logger.info(`📝 Logs automatiques activés: backend/logs/server.log`);
+
+      // Démarrer le nettoyage automatique du cache
+      startCacheCleanup();
     });
   } catch (error) {
     logger.error(`Erreur lors du démarrage du serveur: ${error.message}`);
@@ -218,30 +235,30 @@ const startServer = async () => {
 // Graceful shutdown
 const gracefulShutdown = async (signal) => {
   logger.info(`\n🛑 Signal ${signal} reçu. Arrêt propre du serveur...`);
-  
+
   if (server) {
     server.close(() => {
-      logger.info('✅ Serveur HTTP fermé');
-      
+      logger.info("✅ Serveur HTTP fermé");
+
       // Fermer la connexion MongoDB
       mongoose.connection.close(false, () => {
-        logger.info('✅ Connexion MongoDB fermée');
-        logger.info('👋 Processus terminé proprement');
+        logger.info("✅ Connexion MongoDB fermée");
+        logger.info("👋 Processus terminé proprement");
         process.exit(0);
       });
     });
-    
+
     // Forcer la fermeture après 10 secondes
     setTimeout(() => {
-      logger.error('⚠️ Fermeture forcée après timeout');
+      logger.error("⚠️ Fermeture forcée après timeout");
       process.exit(1);
     }, 10000);
   }
 };
 
 // Écouter les signaux de terminaison
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 // Démarrer le serveur seulement si ce fichier est exécuté directement
 if (require.main === module) {
