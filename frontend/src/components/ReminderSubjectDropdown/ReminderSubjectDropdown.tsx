@@ -60,7 +60,9 @@ export const ReminderSubjectDropdown: React.FC<ReminderSubjectDropdownProps> = (
     
     try {
       // Utiliser familyService qui gère ActionCache automatiquement
-      await familyService.updateReminderSubject(familyId, newSubject);
+      await familyService.updateFamily(familyId, {
+        nextAction: newSubject
+      });
 
       // Mise à jour locale immédiate
       setCurrentValue(newSubject);

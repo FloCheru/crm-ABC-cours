@@ -29,7 +29,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
     try {
       setIsLoading(true);
-      await familyService.updateNextActionDate(familyId, newDate);
+      await familyService.updateFamily(familyId, {
+        nextActionDate: newDate
+      });
       
       // Mise à jour locale optimisée
       if (onUpdate) {

@@ -11,18 +11,31 @@ const router = express.Router();
 router.use(authenticate);
 
 // @route   GET /api/families
-// @desc    Obtenir les 50 premières familles
+// @desc    Obtenir les familles
 // @access  Private
 router.get("/", async (req, res) => {
   try {
     const { limit = 50 } = req.query;
-
     // Utiliser le service pour récupérer les familles formatées
     const families = await FamilyService.getFamilies(limit);
 
     res.json(families);
   } catch (error) {
     console.error("Erreur lors de la récupération des familles:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// @route   GET /api/families/stats
+// @desc    Obtenir les statistiques des familles
+// @access  Private
+router.get("/stats", async (req, res) => {
+  try {
+    const familiesStats = await FamilyService.getFamiliesStats();
+
+    res.json(familiesStats);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des statistiques:", error);
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
@@ -45,294 +58,130 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// @route   GET /api/families/stats
-// @desc    Obtenir les statistiques des familles
-// @access  Private
-router.get("/stats", async (req, res) => {
+// @route   POST /api/families
+// @desc    Créer une nouvelle famille
+// @access  Private (Admin)
+router.post("/", authorize(["admin"]), async (req, res) => {
   try {
-    const familiesStats = await FamilyService.getFamiliesStats();
+    const familyData = {
+      ...req.body,
+      createdBy: { userId: req.user._id },
+    };
 
-    res.json(familiesStats);
+    const savedFamily = await FamilyService.createFamily(familyData);
+
+    res.status(201).json({
+      message: "Famille créée avec succès",
+      family: savedFamily.toObject(),
+    });
   } catch (error) {
-    console.error("Erreur lors de la récupération des statistiques:", error);
+    console.error("Erreur lors de la création de la famille:", error);
+
+    // Gérer les erreurs de validation Mongoose
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({
+        message: errors.join(", "),
+        errors: errors,
+      });
+    }
+
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
-// @route   POST /api/families
-// @desc    Créer une nouvelle famille
-// @access  Private (Admin)
-router.post(
-  "/",
-  [
-    authorize(["admin"]),
-    body("primaryContact.firstName")
-      .trim()
-      .notEmpty()
-      .withMessage("Prénom du contact principal requis"),
-    body("primaryContact.lastName")
-      .trim()
-      .notEmpty()
-      .withMessage("Nom du contact principal requis"),
-    body("primaryContact.primaryPhone")
-      .trim()
-      .notEmpty()
-      .withMessage("Téléphone principal requis"),
-    body("primaryContact.email")
-      .isEmail()
-      .normalizeEmail()
-      .withMessage("Email valide requis"),
-    body("primaryContact.gender")
-      .trim()
-      .notEmpty()
-      .withMessage("Civilité requise")
-      .isIn(["M.", "Mme"])
-      .withMessage("Civilité doit être M. ou Mme"),
-    body("address.street").trim().notEmpty().withMessage("Adresse requise"),
-    body("address.city").trim().notEmpty().withMessage("Ville requise"),
-    body("address.postalCode")
-      .trim()
-      .notEmpty()
-      .withMessage("Code postal requis"),
-    body("demande.level")
-      .trim()
-      .notEmpty()
-      .withMessage("Niveau requis")
-      .isIn([
-        "CP",
-        "CE1",
-        "CE2",
-        "CM1",
-        "CM2",
-        "6ème",
-        "5ème",
-        "4ème",
-        "3ème",
-        "Seconde",
-        "Première",
-        "Terminale",
-      ])
-      .withMessage("Niveau invalide"),
-    // Validation supprimée pour financialInfo.paymentMethod (champ supprimé du modèle)
-  ],
-  async (req, res) => {
-    try {
-      // Vérifier les erreurs de validation
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          message: "Données invalides",
-          errors: errors.array(),
-        });
-      }
-
-      const family = new Family({
-        ...req.body,
-        createdBy: { userId: req.user._id }, // Structure selon dataFlow.md
-      });
-      await family.save();
-
-      // Debug: vérifier ce qui est dans family après sauvegarde
-      console.log("🔍 DEBUG - family après save():", family);
-      console.log("🔍 DEBUG - family._id:", family._id);
-      console.log("🔍 DEBUG - family.primaryContact:", family.primaryContact);
-      console.log("🔍 DEBUG - family.toObject():", family.toObject());
-
-      res.status(201).json({
-        message: "Famille créée avec succès",
-        family: family.toObject(),
-      });
-    } catch (error) {
-      console.error("Erreur lors de la création de la famille:", error);
-
-      // Gérer les erreurs de validation Mongoose
-      if (error.name === "ValidationError") {
-        const errors = Object.values(error.errors).map((err) => err.message);
-        return res.status(400).json({
-          message: errors.join(", "),
-          errors: errors,
-        });
-      }
-
-      res.status(500).json({ message: "Erreur serveur" });
-    }
-  }
-);
-
 // @route   PATCH /api/families/:id
-// @desc    Mettre à jour les champs simples d'une famille (prospectStatus, nextAction, notes)
+// @desc    Mettre à jour les champs simples d'une famille
 // @access  Private (Admin)
-router.patch(
-  "/:id",
-  [
-    authorize(["admin"]),
-    body("prospectStatus")
-      .trim()
-      .notEmpty()
-      .isIn([
-        "en_reflexion",
-        "interesse_prof_a_trouver",
-        "injoignable",
-        "ndr_editee",
-        "premier_cours_effectue",
-        "rdv_prospect",
-        "ne_va_pas_convertir",
-      ])
-      .withMessage("Statut prospect requis et valide"),
-    body("nextAction")
-      .trim()
-      .notEmpty()
-      .withMessage("Prochaine action requise"),
-    body("notes").optional().trim(),
-  ],
-  async (req, res) => {
-    try {
-      // Vérifier les erreurs de validation
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          message: "Données invalides",
-          errors: errors.array(),
-        });
-      }
+router.patch("/:id", authorize(["admin"]), async (req, res) => {
+  try {
+    // Appeler la fonction du service qui gère la validation, mise à jour et cache
+    const result = await FamilyService.updateFamily(req.params.id, req.body);
 
-      // Construire l'objet de mise à jour avec seulement les champs autorisés
-      const updateData = {};
-      if (req.body.prospectStatus !== undefined) {
-        updateData.prospectStatus = req.body.prospectStatus;
-      }
-      if (req.body.nextAction !== undefined) {
-        updateData.nextAction = req.body.nextAction;
-      }
-      if (req.body.notes !== undefined) {
-        updateData.notes = req.body.notes;
-      }
+    res.json(result);
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de la famille:", error);
 
-      const family = await Family.findByIdAndUpdate(req.params.id, updateData, {
-        new: true,
-        runValidators: true,
-      });
-
-      if (!family) {
-        return res.status(404).json({ message: "Famille non trouvée" });
-      }
-
-      res.json({
-        message: "Famille mise à jour avec succès",
-        family,
-      });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de la famille:", error);
-      res.status(500).json({ message: "Erreur serveur" });
+    // Gérer les erreurs métier du service
+    if (error.message === "Famille non trouvée") {
+      return res.status(404).json({ message: error.message });
     }
+    if (error.message === "ID famille invalide") {
+      return res.status(400).json({ message: error.message });
+    }
+    if (error.message === "Aucun champ valide à mettre à jour") {
+      return res.status(400).json({ message: error.message });
+    }
+
+    res.status(500).json({ message: "Erreur serveur" });
   }
-);
+});
 
 // @route   PATCH /api/families/:id/primary-contact
-// @desc    Mettre à jour les informations du contact principal
+// @desc    Mettre à jour les informations du contact principal ET l'adresse
 // @access  Private (Admin)
-router.patch(
-  "/:id/primary-contact",
-  [
-    authorize(["admin"]),
-    body("firstName").trim().notEmpty().withMessage("Prénom requis"),
-    body("lastName").trim().notEmpty().withMessage("Nom requis"),
-    body("primaryPhone")
-      .trim()
-      .notEmpty()
-      .withMessage("Téléphone principal requis"),
-    body("secondaryPhone").optional().trim(),
-    body("email").trim().isEmail().withMessage("Email valide requis"),
-    body("birthDate")
-      .isISO8601()
-      .withMessage("Date de naissance valide requise"),
-    body("gender")
-      .trim()
-      .notEmpty()
-      .isIn(["M.", "Mme"])
-      .withMessage("Genre requis (M. ou Mme)"),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          message: "Données invalides",
-          errors: errors.array(),
-        });
-      }
+router.patch("/:id/primary-contact", authorize(["admin"]), async (req, res) => {
+  try {
+    // Construire l'objet de mise à jour pour primaryContact
+    const primaryContactData = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      primaryPhone: req.body.primaryPhone,
+      secondaryPhone: req.body.secondaryPhone,
+      email: req.body.email,
+      birthDate: req.body.birthDate,
+      gender: req.body.gender,
+    };
 
-      // Construire l'objet de mise à jour
-      const primaryContactData = {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        primaryPhone: req.body.primaryPhone,
-        email: req.body.email,
-        gender: req.body.gender,
-      };
-
-      // Ajouter les champs optionnels s'ils sont fournis
-      if (req.body.secondaryPhone !== undefined) {
-        primaryContactData.secondaryPhone = req.body.secondaryPhone || null;
-      }
-      if (req.body.birthDate !== undefined) {
-        primaryContactData.birthDate = req.body.birthDate
-          ? new Date(req.body.birthDate)
-          : null;
-      }
-
-      const family = await FamilyService.updatePrimaryContact(
-        req.params.id,
-        primaryContactData
-      );
-
-      if (!family) {
-        return res.status(404).json({ message: "Famille non trouvée" });
-      }
-
-      res.json({
-        message: "Contact principal mis à jour avec succès",
-        primaryContact: family.primaryContact,
-        family: {
-          id: family.id,
-          primaryContact: family.primaryContact,
-        },
-      });
-    } catch (error) {
-      console.error(
-        "Erreur lors de la mise à jour du contact principal:",
-        error
-      );
-      res.status(500).json({ message: "Erreur serveur" });
+    // Ajouter les champs optionnels s'ils sont fournis
+    if (req.body.secondaryPhone !== undefined) {
+      primaryContactData.secondaryPhone = req.body.secondaryPhone || null;
     }
+    if (req.body.birthDate !== undefined) {
+      primaryContactData.birthDate = req.body.birthDate
+        ? new Date(req.body.birthDate)
+        : null;
+    }
+
+    // Ajouter l'adresse dans primaryContact si fournie
+    if (req.body.address) {
+      primaryContactData.address = {
+        street: req.body.address.street,
+        city: req.body.address.city,
+        postalCode: req.body.address.postalCode,
+      };
+    }
+
+    const family = await FamilyService.updatePrimaryContact(
+      req.params.id,
+      primaryContactData
+    );
+
+    if (!family) {
+      return res.status(404).json({ message: "Famille non trouvée" });
+    }
+
+    res.json({
+      message: "Contact principal mis à jour avec succès",
+      primaryContact: family.primaryContact,
+      family: {
+        id: family.id,
+        primaryContact: family.primaryContact,
+      },
+    });
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du contact principal:", error);
+    res.status(500).json({ message: "Erreur serveur" });
   }
-);
+});
 // @route   PATCH /api/families/:id/secondary-contact
 // @desc    Mettre à jour les informations du contact secondaire
 // @access  Private (Admin)
 router.patch(
   "/:id/secondary-contact",
-  [
-    authorize(["admin"]),
-    body("firstName").trim().notEmpty().withMessage("Prénom requis"),
-    body("lastName").trim().notEmpty().withMessage("Nom requis"),
-    body("phone").trim().notEmpty().withMessage("Téléphone requis"),
-    body("email")
-      .trim()
-      .notEmpty()
-      .isEmail()
-      .withMessage("Email valide requis"),
-  ],
+  authorize(["admin"]),
   async (req, res) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          message: "Données invalides",
-          errors: errors.array(),
-        });
-      }
-
       const secondaryContactData = {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
@@ -375,213 +224,105 @@ router.patch(
 // @route   PATCH /api/families/:id/demande
 // @desc    Mettre à jour la demande
 // @access  Private (Admin)
-router.patch(
-  "/:id/demande",
-  [
-    authorize(["admin"]),
-    body("level").trim().notEmpty().withMessage("Niveau requis"),
-    body("subjects")
-      .isArray({ min: 1 })
-      .withMessage("Au moins une matière requise"),
-    body("subjects.*.id")
-      .isMongoId()
-      .withMessage("ID de matière invalide (ObjectId requis)"),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          message: "Données invalides",
-          errors: errors.array(),
-        });
-      }
+router.patch("/:id/demande", authorize(["admin"]), async (req, res) => {
+  try {
+    const demandeData = {
+      level: req.body.level,
+      subjects: req.body.subjects,
+    };
 
-      const demandeData = {
-        level: req.body.level,
-        subjects: req.body.subjects,
-      };
+    const family = await FamilyService.updateDemande(
+      req.params.id,
+      demandeData
+    );
 
-      const family = await FamilyService.updateDemande(
-        req.params.id,
-        demandeData
-      );
+    if (!family) {
+      return res.status(404).json({ message: "Famille non trouvée" });
+    }
 
-      if (!family) {
-        return res.status(404).json({ message: "Famille non trouvée" });
-      }
-
-      res.json({
-        message: "Demande mise à jour avec succès",
+    res.json({
+      message: "Demande mise à jour avec succès",
+      demande: family.demande,
+      family: {
+        id: family.id,
         demande: family.demande,
-        family: {
-          id: family.id,
-          demande: family.demande,
-        },
-      });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de la demande:", error);
-      res.status(500).json({ message: "Erreur serveur" });
-    }
+      },
+    });
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de la demande:", error);
+    res.status(500).json({ message: "Erreur serveur" });
   }
-);
+});
 
-// @route   PATCH /api/families/:id/address
-// @desc    Mettre à jour l'adresse
-// @access  Private (Admin)
-router.patch(
-  "/:id/address",
-  [
-    authorize(["admin"]),
-    body("street").trim().notEmpty().withMessage("Rue requise"),
-    body("city").trim().notEmpty().withMessage("Ville requise"),
-    body("postalCode").trim().notEmpty().withMessage("Code postal requis"),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          message: "Données invalides",
-          errors: errors.array(),
-        });
-      }
-
-      const addressData = {
-        street: req.body.street,
-        city: req.body.city,
-        postalCode: req.body.postalCode,
-      };
-
-      const family = await FamilyService.updateAddress(
-        req.params.id,
-        addressData
-      );
-
-      if (!family) {
-        return res.status(404).json({ message: "Famille non trouvée" });
-      }
-
-      res.json({
-        message: "Adresse mise à jour avec succès",
-        address: family.address,
-        family: {
-          id: family.id,
-          address: family.address,
-        },
-      });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'adresse:", error);
-      res.status(500).json({ message: "Erreur serveur" });
-    }
-  }
-);
 
 // @route   PATCH /api/families/:id/billing-address
 // @desc    Mettre à jour l'adresse de facturation
 // @access  Private (Admin)
-router.patch(
-  "/:id/billing-address",
-  [
-    authorize(["admin"]),
-    body("street").trim().notEmpty().withMessage("Rue requise"),
-    body("city").trim().notEmpty().withMessage("Ville requise"),
-    body("postalCode").trim().notEmpty().withMessage("Code postal requis"),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          message: "Données invalides",
-          errors: errors.array(),
-        });
-      }
+router.patch("/:id/billing-address", authorize(["admin"]), async (req, res) => {
+  try {
+    const billingAddressData = {
+      street: req.body.street,
+      city: req.body.city,
+      postalCode: req.body.postalCode,
+    };
 
-      const billingAddressData = {
-        street: req.body.street,
-        city: req.body.city,
-        postalCode: req.body.postalCode,
-      };
+    const family = await FamilyService.updateBillingAddress(
+      req.params.id,
+      billingAddressData
+    );
 
-      const family = await FamilyService.updateBillingAddress(
-        req.params.id,
-        billingAddressData
-      );
-
-      if (!family) {
-        return res.status(404).json({ message: "Famille non trouvée" });
-      }
-
-      res.json({
-        message: "Adresse de facturation mise à jour avec succès",
-        billingAddress: family.billingAddress,
-        family: {
-          id: family.id,
-          billingAddress: family.billingAddress,
-        },
-      });
-    } catch (error) {
-      console.error(
-        "Erreur lors de la mise à jour de l'adresse de facturation:",
-        error
-      );
-      res.status(500).json({ message: "Erreur serveur" });
+    if (!family) {
+      return res.status(404).json({ message: "Famille non trouvée" });
     }
+
+    res.json({
+      message: "Adresse de facturation mise à jour avec succès",
+      billingAddress: family.billingAddress,
+      family: {
+        id: family.id,
+        billingAddress: family.billingAddress,
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Erreur lors de la mise à jour de l'adresse de facturation:",
+      error
+    );
+    res.status(500).json({ message: "Erreur serveur" });
   }
-);
+});
 
 // @route   PATCH /api/families/:id/company-info
 // @desc    Mettre à jour les informations entreprise
 // @access  Private (Admin)
-router.patch(
-  "/:id/company-info",
-  [
-    authorize(["admin"]),
-    body("urssafNumber").trim().notEmpty().withMessage("Numéro URSSAF requis"),
-    body("siret").optional().trim(),
-    body("ceNumber").optional().trim(),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          message: "Données invalides",
-          errors: errors.array(),
-        });
-      }
+router.patch("/:id/company-info", authorize(["admin"]), async (req, res) => {
+  try {
+    const companyInfoData = {
+      urssafNumber: req.body.urssafNumber,
+    };
 
-      const companyInfoData = {
-        urssafNumber: req.body.urssafNumber,
-      };
+    const family = await FamilyService.updateCompanyInfo(
+      req.params.id,
+      companyInfoData
+    );
 
-      const family = await FamilyService.updateCompanyInfo(
-        req.params.id,
-        companyInfoData
-      );
-
-      if (!family) {
-        return res.status(404).json({ message: "Famille non trouvée" });
-      }
-
-      res.json({
-        message: "Informations entreprise mises à jour avec succès",
-        companyInfo: family.companyInfo,
-        family: {
-          id: family.id,
-          companyInfo: family.companyInfo,
-        },
-      });
-    } catch (error) {
-      console.error(
-        "Erreur lors de la mise à jour des infos entreprise:",
-        error
-      );
-      res.status(500).json({ message: "Erreur serveur" });
+    if (!family) {
+      return res.status(404).json({ message: "Famille non trouvée" });
     }
+
+    res.json({
+      message: "Informations entreprise mises à jour avec succès",
+      companyInfo: family.companyInfo,
+      family: {
+        id: family.id,
+        companyInfo: family.companyInfo,
+      },
+    });
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour des infos entreprise:", error);
+    res.status(500).json({ message: "Erreur serveur" });
   }
-);
+});
 
 //====================
 //SUPPRESSION
@@ -592,98 +333,30 @@ router.patch(
 // @access  Private (Admin)
 router.delete("/:id", authorize(["admin"]), async (req, res) => {
   try {
-    const familyId = req.params.id;
+    const result = await FamilyService.deleteFamily(req.params.id);
 
-    // Validation de l'ID
-    if (!familyId || typeof familyId !== "string") {
-      console.log(`❌ ID de famille invalide: ${familyId}`);
-      return res.status(400).json({
-        message: "ID de famille invalide",
-        id: familyId,
-      });
-    }
-
-    // Validation format ObjectId
-    const mongoose = require("mongoose");
-    if (!mongoose.Types.ObjectId.isValid(familyId)) {
-      console.log(`❌ Format ObjectId invalide: ${familyId}`);
-      return res.status(400).json({
-        message: "Format d'ID invalide (doit être un ObjectId MongoDB valide)",
-        id: familyId,
-      });
-    }
-
-    console.log(`🔍 Recherche famille pour suppression: ${familyId}`);
-    const family = await Family.findById(familyId);
-
-    if (!family) {
-      console.log(`❌ Famille non trouvée: ${familyId}`);
+    if (!result) {
       return res.status(404).json({
         message: "Famille non trouvée ou déjà supprimée",
-        id: familyId,
+        id: req.params.id,
       });
     }
 
-    console.log(
-      `🔍 Début de la suppression en cascade pour la famille ${req.params.id}`
-    );
-
-    // 1. Supprimer tous les coupons individuels liés à cette famille
-    const Coupon = require("../models/Coupon");
-    const deletedCoupons = await Coupon.deleteMany({
-      familyId: req.params.id,
-    });
-    console.log(
-      `🔍 ${deletedCoupons.deletedCount} coupons individuels supprimés`
-    );
-
-    // 2. Supprimer toutes les séries de coupons liées à cette famille
-    const CouponSeries = require("../models/CouponSeries");
-    const deletedSeries = await CouponSeries.deleteMany({
-      familyId: req.params.id,
-    });
-    console.log(
-      `🔍 ${deletedSeries.deletedCount} séries de coupons supprimées`
-    );
-
-    // 3. Supprimer les notes de règlement liées (NDR)
-    const SettlementNote = require("../models/NDR");
-    const deletedSettlementNotes = await SettlementNote.deleteMany({
-      familyId: req.params.id,
-    });
-    console.log(
-      `🔍 ${deletedSettlementNotes.deletedCount} notes de règlement supprimées`
-    );
-
-    // 4. Les élèves sont maintenant embedded dans la famille (pas de suppression séparée nécessaire)
-    const studentsCount = family.students ? family.students.length : 0;
-    console.log(
-      `🔍 ${studentsCount} élèves embedded seront supprimés avec la famille`
-    );
-
-    // 5. Supprimer tous les RDV liés à cette famille
-    const RendezVous = require("../models/RDV");
-    const deletedRdvs = await RendezVous.deleteMany({
-      "family.id": req.params.id,
-    });
-    console.log(`🔍 ${deletedRdvs.deletedCount} rendez-vous supprimés`);
-
-    // 6. Supprimer la famille elle-même
-    await Family.findByIdAndDelete(req.params.id);
-    console.log(`🔍 Famille ${req.params.id} supprimée avec succès`);
-
-    res.json({
-      message: "Famille et tous les éléments liés supprimés avec succès",
-      deletedItems: {
-        students: studentsCount, // Students embedded
-        couponSeries: deletedSeries.deletedCount,
-        coupons: deletedCoupons.deletedCount,
-        settlementNotes: deletedSettlementNotes.deletedCount,
-        rdvs: deletedRdvs.deletedCount,
-      },
-    });
+    res.json(result);
   } catch (error) {
     console.error("Erreur lors de la suppression de la famille:", error);
+
+    // Gérer les erreurs de validation du service
+    if (
+      error.message.includes("ID de famille invalide") ||
+      error.message.includes("Format d'ID invalide")
+    ) {
+      return res.status(400).json({
+        message: error.message,
+        id: req.params.id,
+      });
+    }
+
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
@@ -693,122 +366,38 @@ router.delete("/:id", authorize(["admin"]), async (req, res) => {
 // @route   POST /api/families/:id/students
 // @desc    Ajouter un élève embedded à une famille existante (selon dataFlow.md)
 // @access  Private (Admin)
-router.post(
-  "/:id/students",
-  [
-    authorize(["admin"]),
-    // Validation technique : types et formats
-    body("firstName").trim().notEmpty().withMessage("Prénom de l'élève requis"),
-    body("lastName").trim().notEmpty().withMessage("Nom de l'élève requis"),
-    body("birthDate")
-      .isISO8601()
-      .withMessage("Date de naissance valide requise"),
-    body("school.name").optional().trim(),
-    body("school.grade").optional().trim(),
-    body("contact.phone").optional().trim(),
-    body("contact.email")
-      .optional()
-      .trim()
-      .isEmail()
-      .withMessage("Email invalide si fourni"),
-    body("address.street").optional().trim(),
-    body("address.city").optional().trim(),
-    body("address.postalCode").optional().trim(),
-    body("availability").optional().trim(),
-    body("notes").optional().trim(),
-  ],
-  async (req, res) => {
-    try {
-      // Vérifier les erreurs de validation technique
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          message: "Données invalides",
-          errors: errors.array(),
-        });
-      }
+router.post("/:id/students", authorize(["admin"]), async (req, res) => {
+  try {
+    const result = await FamilyService.addStudent(req.params.id, req.body);
 
-      // Validation métier
-      FamilyService.validateStudentData(req.body);
+    res.status(201).json(result);
+  } catch (error) {
+    console.error("Erreur lors de l'ajout de l'élève:", error);
 
-      // Créer l'élève embedded avec un nouvel ObjectId
-      const studentData = {
-        id: new mongoose.Types.ObjectId(),
-        ...req.body,
-      };
-
-      // Ajouter l'élève au tableau students de la famille
-      const family = await Family.findByIdAndUpdate(
-        req.params.id,
-        { $push: { students: studentData } },
-        { new: true, runValidators: true }
-      );
-
-      if (!family) {
-        return res.status(404).json({ message: "Famille non trouvée" });
-      }
-
-      console.log(
-        `✅ Élève ${studentData.firstName} ${studentData.lastName} ajouté à la famille ${req.params.id}`
-      );
-
-      res.status(201).json({
-        message: "Élève ajouté avec succès à la famille",
-        student: studentData,
+    // Gérer les erreurs de validation Mongoose
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({
+        message: "Erreur de validation : " + errors.join(", "),
+        errors: errors,
       });
-    } catch (error) {
-      console.error("Erreur lors de l'ajout de l'élève:", error);
-
-      // Gérer les erreurs de validation Mongoose
-      if (error.name === "ValidationError") {
-        const errors = Object.values(error.errors).map((err) => err.message);
-        return res.status(400).json({
-          message: "Erreur de validation : " + errors.join(", "),
-          errors: errors,
-        });
-      }
-
-      res.status(500).json({ message: "Erreur serveur" });
     }
+
+    // Gérer les erreurs métier du service
+    if (error.message === "Famille non trouvée") {
+      return res.status(404).json({ message: error.message });
+    }
+
+    res.status(500).json({ message: "Erreur serveur" });
   }
-);
+});
 
 // @route   PATCH /api/families/:id/students/:studentId
 // @desc    Modifier un élève embedded dans une famille (selon dataFlow.md)
 // @access  Private (Admin)
 router.patch(
   "/:id/students/:studentId",
-  [
-    authorize(["admin"]),
-    // Validation technique : types et formats (tous optionnels pour PATCH)
-    body("firstName")
-      .optional()
-      .trim()
-      .notEmpty()
-      .withMessage("Prénom de l'élève requis si fourni"),
-    body("lastName")
-      .optional()
-      .trim()
-      .notEmpty()
-      .withMessage("Nom de l'élève requis si fourni"),
-    body("birthDate")
-      .optional()
-      .isISO8601()
-      .withMessage("Date de naissance valide requise"),
-    body("school.name").optional().trim(),
-    body("school.grade").optional().trim(),
-    body("contact.phone").optional().trim(),
-    body("contact.email")
-      .optional()
-      .trim()
-      .isEmail()
-      .withMessage("Email invalide si fourni"),
-    body("address.street").optional().trim(),
-    body("address.city").optional().trim(),
-    body("address.postalCode").optional().trim(),
-    body("availability").optional().trim(),
-    body("notes").optional().trim(),
-  ],
+  authorize(["admin"]),
   async (req, res) => {
     try {
       const { id: familyId, studentId } = req.params;
@@ -816,15 +405,6 @@ router.patch(
       console.log(
         `✏️ [UPDATE STUDENT] Tentative de modification - Famille: ${familyId}, Élève: ${studentId}`
       );
-
-      // Vérifier les erreurs de validation technique
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          message: "Données invalides",
-          errors: errors.array(),
-        });
-      }
 
       // Validation métier (pour les champs fournis dans la mise à jour)
       FamilyService.validateStudentData(req.body);

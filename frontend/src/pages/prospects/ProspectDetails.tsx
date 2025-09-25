@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Navbar,
   Button,
@@ -14,7 +14,6 @@ import {
   DatePicker,
 } from "../../components";
 import { familyService } from "../../services/familyService";
-import { useFamiliesGlobal } from "../../hooks/useFamiliesGlobal";
 import rdvService from "../../services/rdvService";
 import { subjectService } from "../../services/subjectService";
 import ActionCacheService from "../../services/actionCacheService";
@@ -23,6 +22,12 @@ import type { Family, Student } from "../../types/family";
 import type { ProspectStatus } from "../../components/StatusDot";
 import type { RendezVous } from "../../types/rdv";
 import type { Subject } from "../../types/subject";
+import {
+  updateProspectStatus,
+  updateNextAction,
+  updateNextActionDate,
+} from "../../utils/prospectUpdates";
+import { useStudentModal, createTestStudent } from "../../utils/studentUtils";
 
 type FieldType =
   | "text"
@@ -36,9 +41,12 @@ type FieldType =
 export const ProspectDetails: React.FC = () => {
   const { familyId } = useParams<{ familyId: string }>();
   const navigate = useNavigate();
-  const { prospects, isLoading } = useFamiliesGlobal();
-  const prospect = prospects.find((p) => p._id === familyId) || null;
-  const [error] = useState<string>("");
+  const location = useLocation();
+  // Les données du prospect doivent être passées obligatoirement via state
+  const [prospect, setProspect] = useState<Family | null>(
+    location.state?.prospect || null
+  );
+  const [error, setError] = useState<string>("");
 
   // RDV depuis le store global
   const prospectRdvs = prospect?.rdvs || [];
@@ -46,9 +54,27 @@ export const ProspectDetails: React.FC = () => {
   const [editingRdv, setEditingRdv] = useState<RendezVous | null>(null);
   // rdvFormData supprimé car non utilisé
 
-  // État pour la modal d'ajout d'élève
-  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
-  const [selectedDataForView, setSelectedDataForView] = useState<{data: Student | RendezVous, type: 'student' | 'rdv'} | null>(null);
+  // Utilisation du hook factorisé pour la gestion des élèves
+  const { showAddStudentModal, selectedFamilyForStudent, handleAddStudent, handleStudentSuccess } = useStudentModal();
+
+  // Créer un élève de test avec données fixes
+  const handleAddStudentTest = async (familyId: string) => {
+    const refreshData = async () => {
+      const updatedFamily = await familyService.getFamily(familyId);
+      setProspect(updatedFamily);
+    };
+
+    await createTestStudent(
+      familyId,
+      handleStudentSuccess,
+      handleAddStudent,
+      refreshData
+    );
+  };
+  const [selectedDataForView, setSelectedDataForView] = useState<{
+    data: Student | RendezVous;
+    type: "student" | "rdv";
+  } | null>(null);
 
   // États pour la sélection des matières
   const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
@@ -62,7 +88,6 @@ export const ProspectDetails: React.FC = () => {
       loadSubjects();
     }
   }, [familyId]);
-
 
   // Charger les matières disponibles
   const loadSubjects = async () => {
@@ -82,21 +107,16 @@ export const ProspectDetails: React.FC = () => {
   const handleDeleteRdv = async (rdvId: string) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce RDV ?")) return;
 
-
     try {
-
-
       await ActionCacheService.executeAction(
-        'DELETE_RDV',
+        "DELETE_RDV",
         () => rdvService.deleteRdv(rdvId),
         { rdvId, familyId: familyId! }
       );
-
     } catch (err) {
       console.error(`❌ [RDV DELETE] Erreur:`, err);
     }
   };
-
 
   const handleBack = () => {
     navigate("/prospects");
@@ -108,23 +128,81 @@ export const ProspectDetails: React.FC = () => {
     }
   };
 
+  // Handlers avec mise à jour optimiste locale
   const handleStatusChange = async (
-    prospectId: string,
+    familyId: string,
     newStatus: ProspectStatus | null
   ) => {
+    if (!prospect) return;
+
+    // Mise à jour optimiste locale
+    setProspect((prev) =>
+      prev ? { ...prev, prospectStatus: newStatus } : prev
+    );
+
     try {
-      await familyService.updateProspectStatus(prospectId, newStatus);
-    } catch (error: unknown) {
+      await updateProspectStatus(familyId, newStatus);
+      console.log(`✅ Statut du prospect ${familyId} mis à jour`);
+    } catch (error) {
       console.error("Erreur lors de la mise à jour du statut:", error);
-      throw error;
+      // En cas d'erreur, restaurer l'état précédent
+      setProspect((prev) =>
+        prev ? { ...prev, prospectStatus: prospect.prospectStatus } : prev
+      );
+    }
+  };
+
+  const handleNextActionUpdate = async (
+    familyId: string,
+    newAction: string
+  ) => {
+    if (!prospect) return;
+
+    // Mise à jour optimiste locale
+    setProspect((prev) => (prev ? { ...prev, nextAction: newAction } : prev));
+
+    try {
+      await updateNextAction(familyId, newAction);
+      console.log(`✅ Prochaine action du prospect ${familyId} mise à jour`);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'action:", error);
+      // En cas d'erreur, restaurer l'état précédent
+      setProspect((prev) =>
+        prev ? { ...prev, nextAction: prospect.nextAction } : prev
+      );
+    }
+  };
+
+  const handleNextActionDateUpdate = async (
+    familyId: string,
+    newDate: Date | null
+  ) => {
+    if (!prospect) return;
+
+    // Mise à jour optimiste locale
+    setProspect((prev) => (prev ? { ...prev, nextActionDate: newDate } : prev));
+
+    try {
+      await updateNextActionDate(familyId, newDate);
+      console.log(
+        `✅ Date de la prochaine action du prospect ${familyId} mise à jour`
+      );
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la date:", error);
+      // En cas d'erreur, restaurer l'état précédent
+      setProspect((prev) =>
+        prev ? { ...prev, nextActionDate: prospect.nextActionDate } : prev
+      );
     }
   };
 
   // Fonction pour afficher les détails d'un élève ou RDV
-  const handleViewData = (data: Student | RendezVous, type: 'student' | 'rdv') => {
-    setSelectedDataForView({data, type});
+  const handleViewData = (
+    data: Student | RendezVous,
+    type: "student" | "rdv"
+  ) => {
+    setSelectedDataForView({ data, type });
   };
-
 
   // Fonction pour supprimer un étudiant
   const handleDeleteStudent = async (
@@ -142,16 +220,13 @@ export const ProspectDetails: React.FC = () => {
         capturedFamilyId,
         capturedStudentId
       );
-
     } catch (error: unknown) {
       console.error("Erreur lors de la suppression de l'étudiant:", error);
 
       // Gestion d'erreur simplifiée
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (
-        errorMessage.includes("non trouvé") ||
-        errorMessage.includes("404")
-      ) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes("non trouvé") || errorMessage.includes("404")) {
         alert(
           `L'étudiant ${capturedStudentName} n'existe plus dans la base de données.`
         );
@@ -163,30 +238,10 @@ export const ProspectDetails: React.FC = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div>
-        <Navbar activePath="/prospects" />
-        <div className="text-center py-8">
-          <div className="text-gray-500">Chargement des détails...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !prospect) {
-    return (
-      <div>
-        <Navbar activePath="/prospects" />
-        <div className="text-center py-8">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">Erreur</h2>
-          <p className="text-gray-600 mb-6">{error || "Prospect non trouvé"}</p>
-          <Button variant="primary" onClick={handleBack}>
-            Retour aux prospects
-          </Button>
-        </div>
-      </div>
-    );
+  // Redirection si pas de données prospect (accès direct à l'URL sans state)
+  if (!prospect) {
+    navigate("/prospects", { replace: true });
+    return null;
   }
 
   const students = prospect.students || [];
@@ -294,17 +349,15 @@ export const ProspectDetails: React.FC = () => {
         readOnly: false,
       },
       {
-        key: "nextActionReminderSubject",
+        key: "nextAction",
         label: "Objet de rappel",
-        field: "nextActionReminderSubject",
+        field: "nextAction",
         type: "custom",
         customRender: () => (
           <ReminderSubjectDropdown
-            value={prospect.nextActionReminderSubject || "Actions à définir"}
+            value={prospect.nextAction || "Actions à définir"}
             familyId={prospect._id}
-            onUpdate={() => {
-              // La mise à jour est gérée par ActionCache, pas besoin de refresh manuel
-            }}
+            onUpdate={handleNextActionUpdate}
           />
         ),
       },
@@ -317,9 +370,7 @@ export const ProspectDetails: React.FC = () => {
           <DatePicker
             value={prospect.nextActionDate || null}
             familyId={prospect._id}
-            onUpdate={() => {
-              // La mise à jour est gérée par ActionCache, pas besoin de refresh manuel
-            }}
+            onUpdate={handleNextActionDateUpdate}
           />
         ),
       },
@@ -356,8 +407,8 @@ export const ProspectDetails: React.FC = () => {
       return "Non assigné";
     }
 
-    // Gestion spéciale pour nextActionReminderSubject - doit être string
-    if (path === "nextActionReminderSubject") {
+    // Gestion spéciale pour nextAction - doit être string
+    if (path === "nextAction") {
       if (!value) return "Actions à définir";
       if (typeof value === "string") return value;
       return "Actions à définir";
@@ -413,27 +464,23 @@ export const ProspectDetails: React.FC = () => {
             placeholder: field.placeholder,
           }))}
           onSave={async (data) => {
-            // Construire l'objet de données complet pour l'API
-            const updateData: Partial<Family> = {
-              ...prospect,
-              primaryContact: { ...prospect.primaryContact },
-              address: { ...prospect.address },
+            // Séparer les données de contact et d'adresse
+            const contactData = {
+              firstName: data.firstName as string,
+              lastName: data.lastName as string,
+              primaryPhone: data.primaryPhone as string,
+              email: data.email as string,
+              gender: prospect.primaryContact.gender,
+              secondaryPhone: data.secondaryPhone as string || null,
+              address: {
+                street: data.street as string,
+                city: data.city as string,
+                postalCode: data.postalCode as string,
+              }
             };
 
-            // Mapper les données du formulaire vers les champs de l'API
-            Object.entries(data).forEach(([key, value]) => {
-              const field = fieldConfig.personal.find((f) => f.key === key);
-              if (field) {
-                const fieldParts = field.field.split(".");
-                if (fieldParts.length === 2) {
-                  const [parent, child] = fieldParts;
-                  (updateData as any)[parent][child] = value;
-                }
-              }
-            });
-
-            // Mettre à jour via l'API avec l'objet complet
-            await familyService.updateFamily(familyId!, updateData);
+            // Un seul appel maintenant que l'adresse est dans primaryContact
+            await familyService.updatePrimaryContact(familyId!, contactData);
           }}
           className="mb-8"
         />
@@ -463,9 +510,9 @@ export const ProspectDetails: React.FC = () => {
                     >
                       {prospect.demande?.subjects &&
                       prospect.demande.subjects.length > 0 ? (
-                        prospect.demande.subjects.map((subject: string) => (
+                        prospect.demande.subjects.map((subject: any) => (
                           <span
-                            key={subject}
+                            key={subject.id || subject.name || subject}
                             style={{
                               padding: "4px 8px",
                               backgroundColor: "#f3f4f6",
@@ -473,7 +520,9 @@ export const ProspectDetails: React.FC = () => {
                               fontSize: "14px",
                             }}
                           >
-                            {subject}
+                            {typeof subject === "object"
+                              ? subject.name
+                              : subject}
                           </span>
                         ))
                       ) : (
@@ -487,14 +536,20 @@ export const ProspectDetails: React.FC = () => {
                       variant="outline"
                       onClick={() => {
                         // Filtrer pour ne garder que les matières qui existent vraiment dans la DB
-                        const validSubjects = (
-                          prospect.demande?.subjects || []
-                        ).filter((subject) =>
-                          availableSubjects.some(
-                            (availableSubject) =>
-                              availableSubject.name === subject
-                          )
-                        );
+                        const validSubjects = (prospect.demande?.subjects || [])
+                          .filter((subject) => {
+                            const subjectName =
+                              typeof subject === "object"
+                                ? subject.name
+                                : subject;
+                            return availableSubjects.some(
+                              (availableSubject) =>
+                                availableSubject.name === subjectName
+                            );
+                          })
+                          .map((subject) =>
+                            typeof subject === "object" ? subject.name : subject
+                          );
                         setSelectedSubjects(validSubjects);
                         setShowSubjectModal(true);
                       }}
@@ -524,27 +579,13 @@ export const ProspectDetails: React.FC = () => {
             };
           })}
           onSave={async (data) => {
-            // Construire l'objet de données complet pour l'API
-            const updateData: Partial<Family> = {
-              ...prospect,
-              demande: { ...prospect.demande },
-              address: { ...prospect.address },
+            // Utiliser la fonction spécialisée pour demande
+            const demandeData = {
+              level: data.beneficiaryLevel as string,
+              subjects: prospect.demande?.subjects || [],
             };
 
-            // Mapper les données du formulaire vers les champs de l'API
-            Object.entries(data).forEach(([key, value]) => {
-              const field = fieldConfig.courseData.find((f) => f.key === key);
-              if (field && !field.readOnly) {
-                const fieldParts = field.field.split(".");
-                if (fieldParts.length === 2) {
-                  const [parent, child] = fieldParts;
-                  (updateData as any)[parent][child] = value;
-                }
-              }
-            });
-
-            // Mettre à jour via l'API avec l'objet complet
-            await familyService.updateFamily(familyId!, updateData);
+            await familyService.updateDemande(familyId!, demandeData);
           }}
           className="mb-8"
         />
@@ -612,7 +653,9 @@ export const ProspectDetails: React.FC = () => {
                     key: "comments",
                     label: "Com.",
                     render: (value: unknown, row: Student): string => {
-                      const comment = String(row.comments || row.notes || value || "");
+                      const comment = String(
+                        row.comments || row.notes || value || ""
+                      );
                       return comment.length > 30
                         ? `${comment.substring(0, 30)}...`
                         : comment || "-";
@@ -660,7 +703,7 @@ export const ProspectDetails: React.FC = () => {
                   ...student,
                   id: student._id || `student-${students.indexOf(student)}`,
                 }))}
-                onRowClick={(student) => handleViewData(student, 'student')}
+                onRowClick={(student) => handleViewData(student, "student")}
                 itemsPerPage={10}
               />
             ) : (
@@ -673,9 +716,7 @@ export const ProspectDetails: React.FC = () => {
               <Button
                 variant="primary"
                 onClick={() => {
-                  console.log("🎯 [PROSPECT DETAILS] Clic 'Ajouter un élève'");
-                  console.log("🔍 [PROSPECT DETAILS] prospect object:", prospect);
-                  setShowAddStudentModal(true);
+                  handleAddStudent(prospect._id);
                 }}
               >
                 Ajouter un élève
@@ -708,20 +749,18 @@ export const ProspectDetails: React.FC = () => {
             }
 
             // Traitement spécial pour l'objet du rappel
-            if (field.key === "nextActionReminderSubject") {
+            if (field.key === "nextAction") {
               return {
                 key: field.key,
                 label: field.label,
-                value: prospect.nextActionReminderSubject || "Actions à définir",
+                value: prospect.nextAction || "Actions à définir",
                 type: "text",
                 readOnly: true,
                 customRender: () => (
                   <ReminderSubjectDropdown
-                    value={prospect.nextActionReminderSubject || "Actions à définir"}
+                    value={prospect.nextAction || "Actions à définir"}
                     familyId={prospect._id}
-                    onUpdate={() => {
-                      // La mise à jour est gérée par ActionCache, pas besoin de refresh manuel
-                    }}
+                    onUpdate={handleNextActionUpdate}
                   />
                 ),
               };
@@ -739,9 +778,7 @@ export const ProspectDetails: React.FC = () => {
                   <DatePicker
                     value={prospect.nextActionDate || null}
                     familyId={prospect._id}
-                    onUpdate={() => {
-                      // La mise à jour est gérée par ActionCache, pas besoin de refresh manuel
-                    }}
+                    onUpdate={handleNextActionDateUpdate}
                   />
                 ),
               };
@@ -762,7 +799,7 @@ export const ProspectDetails: React.FC = () => {
             // Séparer les champs par type d'action
             const {
               prospectStatus,
-              nextActionReminderSubject,
+              nextAction,
               nextActionDate,
               ...otherFields
             } = data;
@@ -776,18 +813,19 @@ export const ProspectDetails: React.FC = () => {
             }
 
             // Traiter les champs de rappel avec UPDATE_REMINDER
-            if (nextActionReminderSubject !== undefined) {
-              await familyService.updateReminderSubject(
-                familyId!,
-                nextActionReminderSubject as string
-              );
+            if (nextAction !== undefined) {
+              await familyService.updateFamily(familyId!, {
+                nextAction: nextAction as string,
+              });
             }
 
             if (nextActionDate !== undefined) {
               const dateValue = nextActionDate
                 ? new Date(nextActionDate as string)
                 : null;
-              await familyService.updateNextActionDate(familyId!, dateValue);
+              await familyService.updateFamily(familyId!, {
+                nextActionDate: dateValue,
+              });
             }
 
             // Traiter les autres champs avec UPDATE_FAMILY si nécessaire
@@ -799,7 +837,7 @@ export const ProspectDetails: React.FC = () => {
                   field &&
                   !field.readOnly &&
                   key !== "prospectStatus" &&
-                  key !== "nextActionReminderSubject" &&
+                  key !== "nextAction" &&
                   key !== "nextActionDate"
                 ) {
                   const processedValue =
@@ -825,11 +863,7 @@ export const ProspectDetails: React.FC = () => {
           className="mb-8"
         >
           <div>
-            {isLoading ? (
-              <div>
-                <div>Chargement des RDV...</div>
-              </div>
-            ) : prospectRdvs.length > 0 ? (
+            {prospectRdvs.length > 0 ? (
               <Table
                 columns={[
                   {
@@ -894,7 +928,7 @@ export const ProspectDetails: React.FC = () => {
                   },
                 ]}
                 data={prospectRdvs.map((rdv) => ({ ...rdv, id: rdv._id }))}
-                onRowClick={(rdv) => handleViewData(rdv, 'rdv')}
+                onRowClick={(rdv) => handleViewData(rdv, "rdv")}
                 itemsPerPage={5}
               />
             ) : (
@@ -957,13 +991,14 @@ export const ProspectDetails: React.FC = () => {
         type="student"
         isOpen={showAddStudentModal}
         onClose={() => {
-          setShowAddStudentModal(false);
+          handleStudentSuccess();
         }}
-        data={{ familyId: prospect?._id || "" }}
+        data={{ familyId: selectedFamilyForStudent || prospect?._id || "" }}
         onSuccess={() => {
           // Les données du prospect sont automatiquement mises à jour par l'ActionCache
-          setShowAddStudentModal(false);
+          handleStudentSuccess();
         }}
+        onAddStudentTest={handleAddStudentTest}
       />
 
       {/* Modal unifiée pour élèves ET RDV */}

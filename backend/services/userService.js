@@ -18,6 +18,23 @@ class UserService {
       throw new Error("Erreur lors de la vérification de l'email");
     }
   }
+
+  /**
+   * Récupère tous les utilisateurs ayant le rôle admin
+   * @returns {Promise<Array>} - Liste des utilisateurs admin
+   */
+  static async getAdminUsers() {
+    try {
+      const adminUsers = await User.find({ role: "admin" })
+        .select("_id email firstName lastName role createdAt")
+        .sort({ createdAt: -1 });
+
+      return adminUsers;
+    } catch (error) {
+      console.error("Erreur lors de la récupération des utilisateurs admin:", error);
+      throw new Error("Erreur lors de la récupération des utilisateurs admin");
+    }
+  }
 }
 
 module.exports = UserService;

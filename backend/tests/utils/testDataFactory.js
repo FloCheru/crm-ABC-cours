@@ -78,7 +78,7 @@ class TestDataFactory {
       },
       demande: {
         level: "3ème",
-        subjects: [{ id: "math001" }],
+        subjects: [{ id: new mongoose.Types.ObjectId() }],
         beneficiaryType: "eleves",
         beneficiaryLevel: "3ème",
       },

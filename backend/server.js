@@ -166,6 +166,7 @@ app.get("/health", (req, res) => {
 // Routes API
 app.use("/api/auth", authRoutes);
 app.use("/api/families", familyRoutes);
+app.use("/api/users", require("./routes/users"));
 // app.use("/api/students", studentRoutes); // Supprimé
 app.use("/api/professors", professorRoutes);
 
@@ -200,16 +201,6 @@ app.use("*", (req, res) => {
 // Variable globale pour stocker le serveur
 let server;
 
-// Fonction de nettoyage automatique du cache
-const startCacheCleanup = () => {
-  setInterval(() => {
-    const cleared = CacheManager.clearExpiredEntries();
-    if (cleared > 0) {
-      logger.info(`🧹 Cache: ${cleared} entrées expirées supprimées`);
-    }
-  }, 5 * 60 * 1000); // Nettoyage toutes les 5 minutes
-  logger.info(`🔄 Nettoyage automatique du cache démarré (intervalle: 5min)`);
-};
 
 // Démarrage du serveur
 const startServer = async () => {
@@ -223,8 +214,6 @@ const startServer = async () => {
       logger.info(`🎯 Environnement: ${envFile}`);
       logger.info(`📝 Logs automatiques activés: backend/logs/server.log`);
 
-      // Démarrer le nettoyage automatique du cache
-      startCacheCleanup();
     });
   } catch (error) {
     logger.error(`Erreur lors du démarrage du serveur: ${error.message}`);

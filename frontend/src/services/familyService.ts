@@ -1,7 +1,6 @@
 import { apiClient } from "../utils";
-import type { Family, Student } from "../types/family";
+import type { Family, Student, CreateFamilyData } from "../types/family";
 import type { ProspectStatus } from "../components/StatusDot";
-import ActionCacheService from "./actionCacheService";
 
 export interface FamilyStats {
   total: number;
@@ -68,201 +67,61 @@ export interface AddStudentData {
 
 class FamilyService {
   async getFamilies(): Promise<Family[]> {
-    const response = (await apiClient.get("/api/families")) as FamiliesResponse;
-    return response.families || [];
+    return await apiClient.get("/api/families");
   }
 
   async getFamily(id: string): Promise<Family> {
-    const response = (await apiClient.get(
-      `/api/families/${id}`
+    const response = (await apiClient.get(`/api/families/${id}`)) as FamilyResponse;
+    return response.family;
+  }
+
+  async createFamily(familyData: CreateFamilyData): Promise<Family> {
+    const response = (await apiClient.post(
+      "/api/families",
+      familyData
     )) as FamilyResponse;
     return response.family;
   }
 
-  async createFamily(
-    familyData: Omit<Family, "_id" | "createdAt" | "updatedAt">
-  ): Promise<Family> {
-    // ✨ NOUVEAU: Utilisation du ActionCacheService pour CREATE_PROSPECT
-    const tempId = `temp-${Date.now()}`;
-    
-    const result = await ActionCacheService.executeAction(
-      'CREATE_PROSPECT',
-      async () => {
-        const response = (await apiClient.post(
-          "/api/families",
-          familyData
-        )) as FamilyResponse;
-        return response.family;
-      },
-      {
-        tempId: tempId, // ID temporaire pour optimistic update
-        familyData: familyData
-      }
-    );
-
-    // Remplacer l'ID temporaire par le vrai ID dans le store
-    const { useFamiliesStore } = await import('../stores/useFamiliesStore');
-    useFamiliesStore.getState().replaceProspectId(tempId, result._id);
-    
-    return result;
-  }
-
-  async updateFamily(id: string, familyData: Partial<Family>): Promise<Family> {
-    // ✨ NOUVEAU: Utilisation du ActionCacheService pour UPDATE_FAMILY
-    return ActionCacheService.executeAction(
-      'UPDATE_FAMILY',
-      async () => {
-        const response = (await apiClient.put(
-          `/api/families/${id}`,
-          familyData
-        )) as FamilyResponse;
-        return response.family;
-      },
-      {
-        familyId: id,
-        updates: familyData,
-        previousData: undefined // Sera rempli par le store si nécessaire
-      }
-    );
-  }
+  // Note: updateFamily() avec PUT supprimée - utiliser la version PATCH ci-dessous
 
   async getDeletionPreview(id: string): Promise<any> {
-    const response = await apiClient.get(`/api/families/${id}/deletion-preview`);
+    const response = await apiClient.get(
+      `/api/families/${id}/deletion-preview`
+    );
     return response;
   }
 
   async deleteFamily(id: string): Promise<void> {
-    // Validation de l'ID avant suppression
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      throw new Error('ID de famille invalide pour la suppression');
-    }
-
-    // Validation format ObjectId MongoDB (24 caractères hexadécimaux)
-    const objectIdRegex = /^[0-9a-fA-F]{24}$/;
-    if (!objectIdRegex.test(id)) {
-      throw new Error('Format d\'ID de famille invalide (doit être un ObjectId MongoDB valide)');
-    }
-
-    // Déterminer l'action en fonction du statut de la famille (pour cache intelligent)
-    let action: 'DELETE_PROSPECT' | 'DELETE_CLIENT' = 'DELETE_PROSPECT';
-    
     try {
-      // Récupérer la famille pour déterminer son statut
-      const family = await this.getFamily(id);
-      action = family.status === 'client' ? 'DELETE_CLIENT' : 'DELETE_PROSPECT';
-    } catch (error) {
-      // Si on ne peut pas récupérer la famille, on suppose que c'est un prospect
-      console.warn('Impossible de déterminer le statut de la famille, supposé prospect');
+      await apiClient.delete(`/api/families/${id}`);
+    } catch (error: any) {
+      console.error(
+        `❌ Erreur lors de la suppression de la famille ${id}:`,
+        error
+      );
+
+      if (error.response?.status === 404) {
+        throw new Error(
+          `Cette famille n'existe plus ou a déjà été supprimée. Veuillez rafraîchir la page.`
+        );
+      } else if (error.response?.status === 403) {
+        throw new Error(
+          "Vous n'avez pas les permissions pour supprimer cette famille."
+        );
+      } else if (error.response?.status >= 500) {
+        throw new Error(
+          "Erreur serveur lors de la suppression. Veuillez réessayer plus tard."
+        );
+      } else {
+        throw new Error(
+          `Erreur lors de la suppression: ${error.message || "Erreur inconnue"}`
+        );
+      }
     }
-
-    // ✨ NOUVEAU: Utilisation du ActionCacheService pour DELETE_PROSPECT ou DELETE_CLIENT
-    return ActionCacheService.executeAction(
-      action,
-      async () => {
-        try {
-          console.log(`🗑️ Suppression famille ID: ${id} (${action})`);
-          await apiClient.delete(`/api/families/${id}`);
-          console.log(`✅ Famille ${id} supprimée avec succès`);
-        } catch (error: any) {
-          console.error(`❌ Erreur lors de la suppression de la famille ${id}:`, error);
-          
-          if (error.response?.status === 404) {
-            throw new Error(`Cette famille n'existe plus ou a déjà été supprimée. Veuillez rafraîchir la page.`);
-          } else if (error.response?.status === 403) {
-            throw new Error('Vous n\'avez pas les permissions pour supprimer cette famille.');
-          } else if (error.response?.status >= 500) {
-            throw new Error('Erreur serveur lors de la suppression. Veuillez réessayer plus tard.');
-          } else {
-            throw new Error(`Erreur lors de la suppression: ${error.message || 'Erreur inconnue'}`);
-          }
-        }
-      },
-      action === 'DELETE_CLIENT' 
-        ? { clientId: id }
-        : { prospectId: id }
-    );
   }
 
-  async updateStatus(
-    id: string,
-    status: "prospect" | "client"
-  ): Promise<Family> {
-    const response = (await apiClient.patch(`/api/families/${id}/status`, {
-      status,
-    })) as FamilyResponse;
-    return response.family;
-  }
-
-  async updateProspectStatus(
-    id: string,
-    prospectStatus: ProspectStatus | null
-  ): Promise<Family> {
-    // ✨ NOUVEAU: Utilisation du ActionCacheService pour UPDATE_PROSPECT_STATUS
-    return ActionCacheService.executeAction(
-      'UPDATE_PROSPECT_STATUS',
-      async () => {
-        const response = (await apiClient.patch(`/api/families/${id}/prospect-status`, {
-          prospectStatus,
-        })) as FamilyResponse;
-        return response.family;
-      },
-      {
-        prospectId: id,
-        newStatus: prospectStatus,
-        oldStatus: undefined // Sera rempli par le store si nécessaire
-      }
-    );
-  }
-
-  async updateNextActionDate(
-    id: string,
-    nextActionDate: Date | null
-  ): Promise<Family> {
-    // ✨ NOUVEAU: Utilisation du ActionCacheService pour UPDATE_REMINDER
-    return ActionCacheService.executeAction(
-      'UPDATE_REMINDER',
-      async () => {
-        const response = (await apiClient.patch(`/api/families/${id}/next-action-date`, {
-          nextActionDate: nextActionDate ? nextActionDate.toISOString() : null,
-        })) as FamilyResponse;
-        return response.family;
-      },
-      {
-        familyId: id,
-        reminderData: {
-          nextActionDate: nextActionDate ? nextActionDate.toISOString() : undefined
-        },
-        previousData: undefined
-      }
-    );
-  }
-
-  async updateFamilyStatus(id: string, status: 'client' | 'prospect'): Promise<Family> {
-    const response = (await apiClient.patch(`/api/families/${id}/status`, {
-      status,
-    })) as FamilyResponse;
-    return response.family;
-  }
-
-  async updateReminderSubject(id: string, nextActionReminderSubject: string): Promise<Family> {
-    // ✨ NOUVEAU: Utilisation du ActionCacheService pour UPDATE_REMINDER
-    return ActionCacheService.executeAction(
-      'UPDATE_REMINDER',
-      async () => {
-        const response = (await apiClient.patch(`/api/families/${id}/reminder-subject`, {
-          nextActionReminderSubject,
-        })) as FamilyResponse;
-        return response.family;
-      },
-      {
-        familyId: id,
-        reminderData: {
-          nextActionReminderSubject
-        },
-        previousData: undefined
-      }
-    );
-  }
+  // Note: updateReminderSubject supprimée - utiliser updateFamily() avec nextActionReminderSubject
 
   async getFamilyStats(): Promise<FamilyStats> {
     const response = (await apiClient.get(
@@ -271,65 +130,102 @@ class FamilyService {
     return response;
   }
 
-  async addStudent(familyId: string, studentData: AddStudentData): Promise<Student> {
-    // ✨ NOUVEAU: Utilisation du ActionCacheService pour ADD_STUDENT
-    const tempStudentId = `temp-student-${Date.now()}`;
-    
-    const result = await ActionCacheService.executeAction(
-      'ADD_STUDENT',
-      async () => {
-        const response = (await apiClient.post(
-          `/api/families/${familyId}/students`,
-          studentData
-        )) as StudentResponse;
-        return response.student;
-      },
-      {
-        familyId,
-        studentData,
-        tempStudentId: tempStudentId
-      }
-    );
-
-    // Remplacer l'ID temporaire par le vrai ID dans le store
-    const { useFamiliesStore } = await import('../stores/useFamiliesStore');
-    useFamiliesStore.getState().replaceStudentId(familyId, tempStudentId, result._id);
-    
-    return result;
+  async addStudent(
+    familyId: string,
+    studentData: AddStudentData
+  ): Promise<Student> {
+    const response = (await apiClient.post(
+      `/api/families/${familyId}/students`,
+      studentData
+    )) as StudentResponse;
+    return response.student;
   }
 
-  async updateStudent(familyId: string, studentId: string, studentData: AddStudentData): Promise<Student> {
-    // ✨ NOUVEAU: Utilisation du ActionCacheService pour UPDATE_STUDENT
-    return ActionCacheService.executeAction(
-      'UPDATE_STUDENT',
-      async () => {
-        const response = (await apiClient.put(
-          `/api/students/${studentId}`,
-          studentData
-        )) as StudentResponse;
-        return response.student;
-      },
-      {
-        familyId,
-        studentId,
-        studentUpdates: studentData
-      }
-    );
+  async updateStudent(
+    familyId: string,
+    studentId: string,
+    studentData: AddStudentData
+  ): Promise<Student> {
+    const response = (await apiClient.put(
+      `/api/students/${studentId}`,
+      studentData
+    )) as StudentResponse;
+    return response.student;
   }
 
-  async removeStudentFromFamily(familyId: string, studentId: string): Promise<void> {
-    // ✨ NOUVEAU: Utilisation du ActionCacheService pour UPDATE_FAMILY (suppression étudiant)
-    return ActionCacheService.executeAction(
-      'UPDATE_FAMILY',
-      async () => {
-        await apiClient.delete(`/api/families/${familyId}/students/${studentId}`);
-        console.log(`✅ Étudiant ${studentId} retiré de la famille ${familyId}`);
-      },
-      {
-        familyId,
-        studentId
-      }
-    );
+  async removeStudent(familyId: string, studentId: string): Promise<void> {
+    await apiClient.delete(`/api/families/${familyId}/students/${studentId}`);
+    console.log(`✅ Étudiant ${studentId} retiré de la famille ${familyId}`);
+  }
+
+  async updateFamily(
+    familyId: string,
+    updateData: {
+      prospectStatus?: string | null;
+      nextAction?: string;
+      nextActionDate?: Date | null;
+      notes?: string;
+    }
+  ): Promise<Family> {
+    // Convertir Date en ISO string pour l'API
+    const apiData = {
+      ...updateData,
+      nextActionDate: updateData.nextActionDate
+        ? updateData.nextActionDate.toISOString()
+        : updateData.nextActionDate, // preserve null/undefined
+    };
+
+    const response = (await apiClient.patch(
+      `/api/families/${familyId}`,
+      apiData
+    )) as FamilyResponse;
+    return response.family;
+  }
+
+  async updatePrimaryContact(
+    familyId: string,
+    contactData: {
+      firstName: string;
+      lastName: string;
+      primaryPhone: string;
+      email: string;
+      gender: string;
+      secondaryPhone?: string | null;
+      birthDate?: Date | null;
+      address?: {
+        street: string;
+        city: string;
+        postalCode: string;
+      };
+    }
+  ): Promise<Family> {
+    // Convertir Date en ISO string pour l'API
+    const apiData = {
+      ...contactData,
+      birthDate: contactData.birthDate
+        ? contactData.birthDate.toISOString()
+        : contactData.birthDate,
+    };
+
+    const response = (await apiClient.patch(
+      `/api/families/${familyId}/primary-contact`,
+      apiData
+    )) as FamilyResponse;
+    return response.family;
+  }
+
+  async updateDemande(
+    familyId: string,
+    demandeData: {
+      level: string;
+      subjects: string[];
+    }
+  ): Promise<Family> {
+    const response = (await apiClient.patch(
+      `/api/families/${familyId}/demande`,
+      demandeData
+    )) as FamilyResponse;
+    return response.family;
   }
 }
 

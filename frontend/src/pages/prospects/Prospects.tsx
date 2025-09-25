@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Navbar,
@@ -10,53 +10,62 @@ import {
   Table,
   ReminderSubjectDropdown,
   DatePicker,
-  DeletionPreviewModal,
   PageHeader,
   Modal,
 } from "../../components";
 import { ModalWrapper } from "../../components/ui/ModalWrapper/ModalWrapper";
 import { EntityForm } from "../../components/forms/EntityForm";
 import { familyService } from "../../services/familyService";
-import type { Family } from "../../types/family";
-// import type { FamilyStats } from "../../services/familyService";
-// import { useRefresh } from "../../hooks/useRefresh"; // Géré par le cache
-import { useFamiliesGlobal } from "../../hooks/useFamiliesGlobal";
-import { usePrefillTest } from "../../hooks/usePrefillTest";
+import { subjectService } from "../../services/subjectService";
+import { userService } from "../../services/userService";
+import type {
+  Family,
+  CreateFamilyData as CreateFamilyDataType,
+} from "../../types/family";
 import { StatusDot, type ProspectStatus } from "../../components/StatusDot";
+import { updateProspectStatus, updateNextAction, updateNextActionDate } from "../../utils/prospectUpdates";
+import { useStudentModal, createTestStudent } from "../../utils/studentUtils";
 import "./Prospects.css";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Family & { id: string };
-type CreateFamilyData = Omit<Family, "_id" | "createdAt" | "updatedAt">;
 
 export const Prospects: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  const {
-    isLoading,
-    prospects,
-    stats,
-    clearCache,
-    removeProspectOptimistic,
-    updateProspectOptimistic,
-  } = useFamiliesGlobal();
-  const familyData = prospects;
-  
-  // Hook pour le préremplissage avec données de test
-  const {} = usePrefillTest();
+
+  // États locaux simples
+  const [prospects, setProspects] = useState<Family[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({ prospects: 0 });
+
+  // Récupération des données au chargement
+  useEffect(() => {
+    const fetchProspects = async () => {
+      try {
+        setIsLoading(true);
+        const families = await familyService.getFamilies();
+        console.log("Familles Voiiir:", families);
+        setProspects(
+          families.filter((family) => !family.ndr || family.ndr.length === 0)
+        );
+        setStats({ prospects: families.length });
+      } catch (error) {
+        console.error("Erreur lors de la récupération des prospects:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProspects();
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateProspectModalOpen, setIsCreateProspectModalOpen] =
     useState(false);
-  const [isDeletionPreviewModalOpen, setIsDeletionPreviewModalOpen] =
-    useState(false);
-  const [deletionPreviewData, setDeletionPreviewData] = useState(null);
-  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
-  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
-  const [selectedFamilyForStudent, setSelectedFamilyForStudent] = useState<string | null>(null);
-  const [prospectToDelete, setProspectToDelete] = useState<string | null>(null);
 
-
+  // Utilisation du hook factorisé pour la gestion des élèves
+  const { showAddStudentModal, selectedFamilyForStudent, handleAddStudent, handleStudentSuccess } = useStudentModal();
 
   const handleCreateProspect = () => {
     setIsCreateProspectModalOpen(true);
@@ -66,154 +75,119 @@ export const Prospects: React.FC = () => {
     navigate(`/admin/dashboard/create/wizard?familyId=${familyId}`);
   };
 
-  const handleAddStudent = (familyId: string) => {
-    console.log("🎯 [PROSPECTS] Clic 'Ajouter un élève' - familyId:", familyId);
-    
-    setSelectedFamilyForStudent(familyId);
-    setShowAddStudentModal(true);
-  };
+  // handleAddStudent maintenant fourni par le hook useStudentModal
 
-  // Gérer le changement de statut d'un prospect - avec mise à jour optimiste
+  // Handlers avec mise à jour optimiste locale
   const handleStatusChange = async (
-    prospectId: string,
+    familyId: string,
     newStatus: ProspectStatus | null
   ) => {
-    if (!familyData.length) return;
+    // Mise à jour optimiste locale
+    setProspects(prev =>
+      prev.map(prospect =>
+        prospect._id === familyId
+          ? { ...prospect, prospectStatus: newStatus }
+          : prospect
+      )
+    );
 
     try {
-      // 1. MISE À JOUR OPTIMISTE - UX instantanée (0ms)
-      updateProspectOptimistic(prospectId, { prospectStatus: newStatus });
-      console.log(`✏️ Statut prospect ${prospectId} mis à jour de manière optimiste`);
-
-      // 2. SYNCHRONISATION API avec ActionCache (gère automatiquement le cache)
-      await familyService.updateProspectStatus(prospectId, newStatus);
-      console.log(`✅ Statut prospect ${prospectId} synchronisé avec l'API et cache mis à jour automatiquement`);
+      await updateProspectStatus(familyId, newStatus);
+      console.log(`✅ Statut de la famille ${familyId} mis à jour`);
     } catch (error) {
       console.error("Erreur lors de la mise à jour du statut:", error);
-      // En cas d'erreur, forcer un rechargement avec les vraies données
-      clearCache();
-      throw error;
+      // En cas d'erreur, recharger les données
+      const families = await familyService.getFamilies();
+      setProspects(families.filter(family => !family.ndr || family.ndr.length === 0));
     }
   };
 
-  // Gérer le changement d'objet de rappel - avec mise à jour optimiste
-  const handleReminderSubjectUpdate = async (
+  const handleNextActionUpdate = async (
     familyId: string,
-    newSubject: string
+    newAction: string
   ) => {
-    if (!familyData.length) return;
+    // Mise à jour optimiste locale
+    setProspects(prev =>
+      prev.map(prospect =>
+        prospect._id === familyId
+          ? { ...prospect, nextAction: newAction }
+          : prospect
+      )
+    );
 
     try {
-      // 1. MISE À JOUR OPTIMISTE - UX instantanée (0ms)
-      updateProspectOptimistic(familyId, { nextActionReminderSubject: newSubject });
-      console.log(`✏️ Objet rappel famille ${familyId} mis à jour de manière optimiste`);
-
-      // 2. SYNCHRONISATION API - en arrière-plan
-      await familyService.updateFamily(familyId, { nextActionReminderSubject: newSubject });
-      console.log(`✅ Objet rappel famille ${familyId} synchronisé avec l'API`);
-
-      // 3. INVALIDER CACHE - pour autres composants
-      // Cache déjà mis à jour automatiquement par ActionCache
+      await updateNextAction(familyId, newAction);
+      console.log(`✅ Prochaine action de la famille ${familyId} mise à jour`);
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'objet de rappel:", error);
-      // En cas d'erreur, forcer un rechargement avec les vraies données
-      clearCache();
+      console.error("Erreur lors de la mise à jour de l'action:", error);
+      // En cas d'erreur, recharger les données
+      const families = await familyService.getFamilies();
+      setProspects(families.filter(family => !family.ndr || family.ndr.length === 0));
     }
   };
 
-  // Gérer le changement de date de rappel - avec mise à jour optimiste
   const handleNextActionDateUpdate = async (
     familyId: string,
     newDate: Date | null
   ) => {
-    if (!familyData.length) return;
+    // Mise à jour optimiste locale
+    setProspects(prev =>
+      prev.map(prospect =>
+        prospect._id === familyId
+          ? { ...prospect, nextActionDate: newDate }
+          : prospect
+      )
+    );
 
     try {
-      // 1. MISE À JOUR OPTIMISTE - UX instantanée (0ms)
-      updateProspectOptimistic(familyId, { nextActionDate: newDate });
-      console.log(`✏️ Date rappel famille ${familyId} mise à jour de manière optimiste`);
-
-      // 2. SYNCHRONISATION API - en arrière-plan
-      await familyService.updateFamily(familyId, { nextActionDate: newDate });
-      console.log(`✅ Date rappel famille ${familyId} synchronisée avec l'API`);
-
-      // 3. INVALIDER CACHE - pour autres composants
-      // Cache déjà mis à jour automatiquement par ActionCache
+      await updateNextActionDate(familyId, newDate);
+      console.log(`✅ Date de la prochaine action de la famille ${familyId} mise à jour`);
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de la date de rappel:", error);
-      // En cas d'erreur, forcer un rechargement avec les vraies données
-      clearCache();
+      console.error("Erreur lors de la mise à jour de la date:", error);
+      // En cas d'erreur, recharger les données
+      const families = await familyService.getFamilies();
+      setProspects(families.filter(family => !family.ndr || family.ndr.length === 0));
     }
   };
 
-  // Gérer la suppression d'un prospect avec aperçu détaillé
+  // Gérer la suppression d'un prospect avec confirmation simple
   const handleDeleteProspect = async (prospectId: string) => {
-    try {
-      setProspectToDelete(prospectId);
-      setIsLoadingPreview(true);
-      setIsDeletionPreviewModalOpen(true);
-
-      // Récupérer l'aperçu de suppression
-      const previewData = await familyService.getDeletionPreview(prospectId);
-      setDeletionPreviewData(previewData);
-    } catch (error) {
-      console.error("Erreur lors du chargement de l'aperçu:", error);
-      setDeletionPreviewData(null);
-    } finally {
-      setIsLoadingPreview(false);
-    }
-  };
-
-  // Confirmer la suppression après l'aperçu
-  const handleConfirmDeletion = async () => {
+    const prospectToDelete = prospects.find((p) => p._id === prospectId);
     if (!prospectToDelete) return;
 
-    const prospect = familyData.find((f) => f._id === prospectToDelete);
-    const fullName = prospect
-      ? `${prospect.primaryContact.firstName} ${prospect.primaryContact.lastName}`
-      : "le prospect";
+    const fullName = `${prospectToDelete.primaryContact?.firstName} ${prospectToDelete.primaryContact?.lastName}`;
+
+    // Demander confirmation
+    const confirmed = window.confirm(
+      `Êtes-vous sûr de vouloir supprimer le prospect "${fullName}" ? Cette action est irréversible.`
+    );
+
+    if (!confirmed) return;
 
     try {
-      // 1. SUPPRESSION OPTIMISTE - UX instantanée (0ms)
-      removeProspectOptimistic(prospectToDelete);
-      
-      // Fermer le modal immédiatement
-      setIsDeletionPreviewModalOpen(false);
-      setProspectToDelete(null);
-      setDeletionPreviewData(null);
-      
-      console.log(`🗑️ Prospect ${fullName} supprimé de manière optimiste - UX instantanée`);
+      // Mise à jour optimiste de l'UI
+      setProspects((prev) => prev.filter((p) => p._id !== prospectId));
+      setStats((prev) => ({ prospects: prev.prospects - 1 }));
 
-      // 2. SYNCHRONISATION API - en arrière-plan
-      await familyService.deleteFamily(prospectToDelete);
-      console.log(`✅ Prospect ${fullName} synchronisé avec l'API - suppression confirmée`);
-
-      // 3. INVALIDER CACHE - pour autres composants
-      // Cache déjà mis à jour automatiquement par ActionCache
-      console.log("✅ Caches families et NDR invalidés après suppression");
-      
-      // Pas besoin de recharger - la suppression optimiste est définitive !
+      // Suppression via l'API
+      await familyService.deleteFamily(prospectId);
+      console.log(`✅ Prospect ${fullName} supprimé avec succès`);
     } catch (error) {
       console.error("Erreur lors de la suppression du prospect:", error);
-      alert("Erreur lors de la suppression du prospect");
+
+      // En cas d'erreur, recharger les données
+      const families = await familyService.getFamilies();
+      setProspects(
+        families.filter((family) => !family.ndr || family.ndr.length === 0)
+      );
+      setStats({ prospects: families.length });
+
+      alert("Erreur lors de la suppression du prospect. Veuillez réessayer.");
     }
   };
 
-  // Annuler la suppression
-  const handleCancelDeletion = () => {
-    setIsDeletionPreviewModalOpen(false);
-    setProspectToDelete(null);
-    setDeletionPreviewData(null);
-    setIsLoadingPreview(false);
-  };
 
-  const handleSearch = () => {
-    console.log("Recherche:", searchTerm);
-  };
-
-  const handleFilter = () => {
-    console.log("Filtres appliqués");
-  };
+  const handleFilter = () => {};
 
   const handleReset = () => {
     setSearchTerm("");
@@ -221,7 +195,7 @@ export const Prospects: React.FC = () => {
   };
 
   // Filtrer les données selon le terme de recherche
-  const filteredData = familyData.filter((family) => {
+  const filteredData = prospects.filter((family) => {
     const searchLower = searchTerm.toLowerCase();
     const fullName =
       `${family.primaryContact.firstName} ${family.primaryContact.lastName}`.toLowerCase();
@@ -235,12 +209,6 @@ export const Prospects: React.FC = () => {
       address.includes(searchLower)
     );
   });
-
-  // Transformer les données pour le tableau
-  const tableData: TableRowData[] = filteredData.map((family) => ({
-    ...family,
-    id: family._id,
-  }));
 
   // Configuration des colonnes du tableau
   const prospectsColumns = [
@@ -286,9 +254,9 @@ export const Prospects: React.FC = () => {
       label: "Objet du rappel",
       render: (_: unknown, row: TableRowData) => (
         <ReminderSubjectDropdown
-          value={row.nextActionReminderSubject || "Actions à définir"}
+          value={row.nextAction || "Actions à définir"}
           familyId={row._id}
-          onUpdate={handleReminderSubjectUpdate}
+          onUpdate={handleNextActionUpdate}
         />
       ),
     },
@@ -330,51 +298,48 @@ export const Prospects: React.FC = () => {
         // Priorité 1: Niveaux des élèves s'ils existent
         if (row.students && row.students.length > 0) {
           const studentLevels = row.students
-            .map(student => student.school?.grade)
-            .filter(level => level) // Filtrer les niveaux vides
+            .map((student) => student.school?.grade)
+            .filter((level) => level) // Filtrer les niveaux vides
             .filter((level, index, array) => array.indexOf(level) === index); // Niveaux uniques
-          
+
           if (studentLevels.length > 0) {
             return <div className="text-sm">{studentLevels.join(", ")}</div>;
           }
         }
-        
+
         // Priorité 2: Niveau de la demande (logique actuelle)
-        const level = row.demande?.beneficiaryLevel;
+        const level = row.demande?.level;
         return <div className="text-sm">{level || "-"}</div>;
       },
     },
     {
       key: "beneficiaire",
-      label: "Bénéficiaire", 
+      label: "Bénéficiaire",
       render: (_: unknown, row: TableRowData) => {
         if (row.demande?.beneficiaryType === "adulte") {
           return <div className="text-sm">Adulte</div>;
         }
-        const studentNames = row.students?.map(s => `${s.firstName} ${s.lastName}`) || [];
-        
-        // Afficher les élèves + bouton "Ajouter un élève" si beneficiaryType est "eleves"
-        if (row.demande?.beneficiaryType === "eleves") {
-          return (
-            <div className="flex items-center gap-2">
-              {studentNames.length > 0 && (
-                <div className="text-sm">{studentNames.join(", ")}</div>
-              )}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation(); // Empêcher le clic sur la ligne
-                  handleAddStudent(row._id);
-                }}
-              >
-                Ajouter un élève
-              </Button>
+
+        const studentNames =
+          row.students?.map((s) => `${s.firstName} ${s.lastName}`) || [];
+
+        return (
+          <div className="flex items-center gap-2">
+            <div className="text-sm">
+              {studentNames.join(", ") || "Aucun élève"}
             </div>
-          );
-        }
-        
-        return <div className="text-sm">{studentNames.join(", ") || "Élèves à créer"}</div>;
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddStudent(row._id);
+              }}
+            >
+              Ajouter un élève
+            </Button>
+          </div>
+        );
       },
     },
     {
@@ -385,11 +350,12 @@ export const Prospects: React.FC = () => {
       ),
     },
     {
-      key: "matiere", 
+      key: "matiere",
       label: "Matière",
       render: (_: unknown, row: TableRowData) => {
         const subjects = row.demande?.subjects || [];
-        return <div className="text-sm">{subjects.join(", ") || "-"}</div>;
+        const subjectNames = subjects.map((subject) => subject.name).join(", ");
+        return <div className="text-sm">{subjectNames || "-"}</div>;
       },
     },
     {
@@ -417,7 +383,7 @@ export const Prospects: React.FC = () => {
     },
   ];
 
-  const handleCreateProspectSubmit = async (data: CreateFamilyData) => {
+  const handleCreateProspectSubmit = async (data: CreateFamilyDataType) => {
     try {
       // Ajouter le statut prospect aux données
       const prospectData = {
@@ -428,13 +394,107 @@ export const Prospects: React.FC = () => {
       // Fermer le modal immédiatement
       setIsCreateProspectModalOpen(false);
 
-      // ActionCache gère automatiquement l'optimistic update et la synchronisation API
-      await familyService.createFamily(prospectData);
-      console.log("✅ Prospect créé avec succès via ActionCache");
+      // Créer le prospect via l'API
+      const newProspect = await familyService.createFamily(prospectData);
+
+      // Ajouter à la liste locale
+      setProspects((prev) => [...prev, newProspect]);
+      setStats((prev) => ({ prospects: prev.prospects + 1 }));
+
+      console.log("✅ Prospect créé avec succès");
     } catch (err) {
       console.error("Erreur lors de la création du prospect:", err);
       throw err;
     }
+  };
+
+  // Créer un prospect de test avec données fixes
+  const handleCreateTestProspect = async () => {
+    try {
+      // Récupérer les données nécessaires
+      const [subjects, adminUsers] = await Promise.all([
+        subjectService.getSubjects(),
+        userService.getAdminUsers(),
+      ]);
+
+      // Prendre les 2 premières matières
+      const subjectIds = [{ id: subjects[0]._id }, { id: subjects[1]._id }];
+
+      // Prendre le premier admin
+      const adminId = adminUsers[0]._id;
+
+      const testProspectData = {
+        primaryContact: {
+          firstName: "Jean",
+          lastName: "Dupont",
+          primaryPhone: "0123456789",
+          email: "jean.dupont@email.com",
+          gender: "M." as const,
+          relationship: "père",
+        },
+        address: {
+          street: "123 Rue de la Paix",
+          city: "Paris",
+          postalCode: "75001",
+        },
+        demande: {
+          beneficiaryType: "eleves" as const,
+          level: "5ème",
+          subjects: subjectIds, // Utilise les vrais IDs
+          notes: "Prospect créé automatiquement pour les tests",
+        },
+        billingAddress: {
+          street: "123 Rue de la Paix",
+          city: "Paris",
+          postalCode: "75001",
+        },
+        ndr: [], // Tableau vide (prospect sans NDR)
+        status: "prospect" as const,
+        prospectStatus: "en_reflexion" as const,
+        notes: "⚡ Prospect de test généré automatiquement",
+        createdBy: adminId, // ID du premier admin trouvé
+      };
+      console.log(testProspectData);
+
+      // Fermer le modal immédiatement
+      setIsCreateProspectModalOpen(false);
+
+      // Créer le prospect via l'API
+      const newProspect = await familyService.createFamily(testProspectData);
+
+      // Ajouter à la liste locale
+      setProspects((prev) => [...prev, newProspect]);
+      setStats((prev) => ({ prospects: prev.prospects + 1 }));
+
+      console.log("🚀 Prospect de test créé avec succès avec vraies données:", {
+        subjects: subjects.length,
+        admins: adminUsers.length,
+        adminUsed: adminId,
+      });
+    } catch (err) {
+      console.error("Erreur lors de la création du prospect de test:", err);
+      // Réouvrir la modal en cas d'erreur
+      setIsCreateProspectModalOpen(true);
+    }
+  };
+
+  // Créer un élève de test avec données fixes
+  const handleAddStudentTest = async (familyId: string) => {
+    const refreshData = async () => {
+      const updatedFamilies = await familyService.getFamilies();
+      setProspects(
+        updatedFamilies.filter(
+          (family) => !family.ndr || family.ndr.length === 0
+        )
+      );
+    };
+
+    await createTestStudent(
+      familyId,
+      handleStudentSuccess,
+      handleAddStudent,
+      refreshData
+    );
   };
 
   return (
@@ -442,18 +502,17 @@ export const Prospects: React.FC = () => {
       <Navbar activePath={location.pathname} />
       <Container layout="flex-col">
         <PageHeader title="Gestion des Prospects" />
-
         <Container layout="grid" padding="none">
           <SummaryCard
             title="PROSPECTS"
             metrics={[
               {
-                value: stats?.prospects || 0,
+                value: prospects.length || 0,
                 label: "Total prospects",
                 variant: "primary",
               },
               {
-                value: familyData.length,
+                value: prospects.length,
                 label: "Prospects actifs",
                 variant: "success",
               },
@@ -479,11 +538,6 @@ export const Prospects: React.FC = () => {
             placeholder="Rechercher par nom, téléphone, adresse..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            button={
-              <Button variant="primary" onClick={handleSearch}>
-                Appliquer
-              </Button>
-            }
           />
           <ButtonGroup
             variant="double"
@@ -514,15 +568,14 @@ export const Prospects: React.FC = () => {
               </div>
             </div>
           ) : (
-            <>
-              {console.log("🔍 [DEBUG] TableData IDs:", tableData.map(row => `${row.id} (${typeof row.id})`))}
-              {console.log("🔍 [DEBUG] TableData _ids:", tableData.map(row => `${row._id} (${typeof row._id})`))}
-              <Table 
-                columns={prospectsColumns} 
-                data={tableData}
-                onRowClick={(row) => navigate(`/families/${row._id}`)}
-              />
-            </>
+            <Table
+              columns={prospectsColumns}
+              data={filteredData.map((family) => ({
+                ...family,
+                id: family._id,
+              }))}
+              onRowClick={(row) => navigate(`/families/${row._id}`, { state: { prospect: row } })}
+            />
           )}
         </Container>
       </Container>
@@ -533,39 +586,29 @@ export const Prospects: React.FC = () => {
           isOpen={isCreateProspectModalOpen}
           onClose={() => setIsCreateProspectModalOpen(false)}
         >
-          <EntityForm
+          <EntityForm<"family">
             entityType="family"
             familyMode="prospect"
-            onSubmit={async (data) =>
-              await handleCreateProspectSubmit(data as CreateFamilyData)
-            }
+            onSubmit={async (data) => await handleCreateProspectSubmit(data)}
             onCancel={() => setIsCreateProspectModalOpen(false)}
+            onCreateTestProspect={handleCreateTestProspect}
           />
         </ModalWrapper>
       )}
 
-      {/* Modal d'aperçu de suppression */}
-      <DeletionPreviewModal
-        isOpen={isDeletionPreviewModalOpen}
-        onClose={handleCancelDeletion}
-        onConfirm={handleConfirmDeletion}
-        previewData={deletionPreviewData}
-        isLoading={isLoadingPreview}
-      />
 
       {/* Modal d'ajout d'élève */}
       <Modal
         type="student"
         isOpen={showAddStudentModal}
         onClose={() => {
-          setShowAddStudentModal(false);
-          setSelectedFamilyForStudent(null);
+          handleStudentSuccess();
         }}
         data={{ familyId: selectedFamilyForStudent }}
         onSuccess={() => {
-          setShowAddStudentModal(false);
-          setSelectedFamilyForStudent(null);
+          handleStudentSuccess();
         }}
+        onAddStudentTest={handleAddStudentTest}
       />
     </main>
   );

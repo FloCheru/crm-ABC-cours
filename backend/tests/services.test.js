@@ -262,7 +262,9 @@ describe("FamilyService", () => {
         // Act & Assert
         await expect(
           FamilyService.updatePrimaryContact(testFamily._id, updateData)
-        ).rejects.toThrow("Données invalides: Civilité invalide. Valeurs autorisées: M., Mme");
+        ).rejects.toThrow(
+          "Données invalides: Civilité invalide. Valeurs autorisées: M., Mme"
+        );
       });
 
       it("should throw CastError for invalid family ID", async () => {
@@ -326,7 +328,9 @@ describe("FamilyService", () => {
         // Act & Assert
         await expect(
           FamilyService.updateDemande(testFamily._id, updateData)
-        ).rejects.toThrow("Données invalides: Niveau invalide. Valeurs autorisées: CP, CE1, CE2, CM1, CM2, 6ème, 5ème, 4ème, 3ème, Seconde, Première, Terminale");
+        ).rejects.toThrow(
+          "Données invalides: Niveau invalide. Valeurs autorisées: CP, CE1, CE2, CM1, CM2, 6ème, 5ème, 4ème, 3ème, Seconde, Première, Terminale"
+        );
       });
 
       it("should throw ValidationError for missing subject id", async () => {
@@ -339,7 +343,9 @@ describe("FamilyService", () => {
         // Act & Assert
         await expect(
           FamilyService.updateDemande(testFamily._id, updateData)
-        ).rejects.toThrow("Données invalides: ID de la matière requis dans la demande");
+        ).rejects.toThrow(
+          "Données invalides: ID de la matière requis dans la demande"
+        );
       });
 
       it("should throw CastError for invalid family ID", async () => {
@@ -477,7 +483,9 @@ describe("FamilyService", () => {
         // Act & Assert
         await expect(
           FamilyService.updateBillingAddress(testFamily._id, updateData)
-        ).rejects.toThrow("Données invalides: Code postal de l'adresse de facturation requise");
+        ).rejects.toThrow(
+          "Données invalides: Code postal de l'adresse de facturation requise"
+        );
       });
 
       it("should throw CastError for invalid family ID", async () => {
@@ -634,6 +642,101 @@ describe("FamilyService", () => {
         await expect(
           FamilyService.updateCompanyInfo(invalidId, updateData)
         ).rejects.toThrow("ID famille invalide");
+      });
+    });
+  });
+
+  describe("Create/Delete family Methods", () => {
+    let testUser;
+
+    beforeEach(async () => {
+      // Créer un utilisateur de test
+      const userData = testDataFactory.createTestAdmin();
+      testUser = await User.create(userData);
+    });
+
+    describe("createFamily()", () => {
+      it("should create family successfully and invalidate cache", async () => {
+        // Arrange
+        const familyData = testDataFactory.createTestFamilyComplete(testUser._id);
+
+        // Act
+        const result = await FamilyService.createFamily(familyData);
+
+        // Assert
+        expect(result).toBeDefined();
+        expect(result._id).toBeDefined();
+        expect(result.primaryContact.firstName).toBe(familyData.primaryContact.firstName);
+        expect(result.primaryContact.lastName).toBe(familyData.primaryContact.lastName);
+        expect(result.createdBy.userId.toString()).toBe(testUser._id.toString());
+
+        // Verify family exists in DB
+        const dbFamily = await Family.findById(result._id);
+        expect(dbFamily).toBeDefined();
+      });
+
+      it("should throw ValidationError for invalid data", async () => {
+        // Arrange
+        const invalidFamilyData = {
+          // Missing required fields
+          primaryContact: {
+            firstName: "Test"
+            // lastName missing
+          }
+        };
+
+        // Act & Assert
+        await expect(
+          FamilyService.createFamily(invalidFamilyData)
+        ).rejects.toThrow();
+      });
+    });
+
+    describe("deleteFamily()", () => {
+      let testFamily;
+
+      beforeEach(async () => {
+        // Créer une famille de test
+        const familyData = testDataFactory.createTestFamilyComplete(testUser._id);
+        testFamily = await Family.create(familyData);
+      });
+
+      it("should delete family successfully and invalidate cache", async () => {
+        // Act
+        const result = await FamilyService.deleteFamily(testFamily._id);
+
+        // Assert
+        expect(result).toBeDefined();
+        expect(result.message).toBe("Famille et tous les éléments liés supprimés avec succès");
+        expect(result.deletedItems).toBeDefined();
+        expect(result.deletedItems.students).toBeGreaterThanOrEqual(0);
+        expect(result.deletedItems.settlementNotes).toBeGreaterThanOrEqual(0);
+        expect(result.deletedItems.rdvs).toBeGreaterThanOrEqual(0);
+
+        // Verify family is deleted from DB
+        const dbFamily = await Family.findById(testFamily._id);
+        expect(dbFamily).toBeNull();
+      });
+
+      it("should return null when family not found", async () => {
+        // Arrange
+        const nonExistentId = new mongoose.Types.ObjectId();
+
+        // Act
+        const result = await FamilyService.deleteFamily(nonExistentId);
+
+        // Assert
+        expect(result).toBeNull();
+      });
+
+      it("should throw CastError for invalid family ID", async () => {
+        // Arrange
+        const invalidId = "invalid-id";
+
+        // Act & Assert
+        await expect(
+          FamilyService.deleteFamily(invalidId)
+        ).rejects.toThrow();
       });
     });
   });

@@ -37,19 +37,19 @@ export interface Family {
     relationship?: string; // Lien de parenté
     dateOfBirth?: Date;
   };
-  settlementNotes: string[]; // ObjectId refs
+  ndr: Array<{ id: string }>; // NDR ObjectId refs
   status: 'prospect' | 'client';
   notes?: string;
   // Champs spécifiques aux prospects
   prospectStatus?: 'en_reflexion' | 'interesse_prof_a_trouver' | 'injoignable' | 'ndr_editee' | 'premier_cours_effectue' | 'rdv_prospect' | 'ne_va_pas_convertir' | null;
-  nextActionReminderSubject?: string; // Objet du rappel
+  nextAction?: string; // Objet du rappel
   nextActionDate?: Date | null; // Date de la prochaine action (RRR)
   source?: string; // Source du prospect
   // Section demande de cours (obligatoire)
   demande: {
     beneficiaryType: "adulte" | "eleves";
-    beneficiaryLevel: string;
-    subjects: string[];
+    level: string; // Changé de beneficiaryLevel à level pour correspondre au modèle MongoDB
+    subjects: Array<{ id: string; name: string }>; // Objets avec id et name populé depuis le backend
     notes?: string;
   };
   // Professeur prévu
@@ -181,11 +181,11 @@ export interface CreateFamilyData {
     relationship?: string; // Lien de parenté
     dateOfBirth?: Date;
   };
-  // Section demande de cours (obligatoire)
+  // Section demande de cours (obligatoire) - INPUT TYPE (pour création)
   demande: {
     beneficiaryType: "adulte" | "eleves";
-    beneficiaryLevel: string;
-    subjects: string[];
+    level: string; // Changé de beneficiaryLevel à level pour correspondre au modèle MongoDB
+    subjects: Array<{ id: string }>; // Input API - seulement l'id, name sera populé par le backend
     notes?: string;
   };
   // Professeur prévu

@@ -25,6 +25,8 @@ interface ModalProps {
   onSubmit?: (data: any) => void;
   isEditing?: boolean;
   loading?: boolean;
+  // Props Student
+  onAddStudentTest?: (familyId: string) => Promise<void>;
 }
 
 // Configuration des handlers par type d'entité
@@ -160,6 +162,7 @@ export const Modal: React.FC<ModalProps> = ({
   data,
   onSuccess,
   mode = "edit",
+  onAddStudentTest,
 }) => {
   // Hook pour les données de test de préremplissage
   const { studentTestData, rdvTestData } = usePrefillTest();
@@ -590,30 +593,35 @@ export const Modal: React.FC<ModalProps> = ({
     }
   };
 
-  const handlePrefillFromProspect = () => {
+  const handlePrefillFromProspect = async () => {
     console.log("🎯 [MODAL] Clic 'Préremplir' déclenché");
     console.log("🔍 [MODAL] type de modal:", type);
-    
+
     if (type === "student") {
-      console.log("✅ [MODAL] Préremplissage élève avec données de test");
-      console.log("🔍 [MODAL] Données de test:", studentTestData);
-      
-      setFormData((prev) => ({
-        ...prev,
-        ...studentTestData
-      }));
-      setSameAsFamily(studentTestData.sameAsFamily);
-      console.log("✅ [MODAL] Préremplissage élève terminé avec succès");
+      if (onAddStudentTest && familyId) {
+        console.log("🚀 [MODAL] Appel de handleAddStudentTest");
+        await onAddStudentTest(familyId);
+      } else {
+        console.log("✅ [MODAL] Préremplissage élève avec données de test");
+        console.log("🔍 [MODAL] Données de test:", studentTestData);
+
+        setFormData((prev) => ({
+          ...prev,
+          ...studentTestData
+        }));
+        setSameAsFamily(studentTestData.sameAsFamily);
+        console.log("✅ [MODAL] Préremplissage élève terminé avec succès");
+      }
     } else if (type === "rdv") {
       console.log("✅ [MODAL] Préremplissage RDV avec données de test");
       console.log("🔍 [MODAL] Données de test:", rdvTestData);
-      
+
       // Utiliser l'ID du premier admin disponible si possible
       let adminId = rdvTestData.assignedAdminId;
       if (admins.length > 0) {
         adminId = admins[0].id;
       }
-      
+
       setFormData((prev) => ({
         ...prev,
         ...rdvTestData,

@@ -7,28 +7,12 @@ class CacheManager {
     users: new Map(),
   };
 
-  static TTL = {
-    families: { list: 5 * 60 * 1000, detail: 10 * 60 * 1000 },
-    ndrs: { list: 3 * 60 * 1000, detail: 8 * 60 * 1000 },
-    rdvs: { list: 2 * 60 * 1000, detail: 5 * 60 * 1000 },
-    subjects: { list: 60 * 60 * 1000 }, // Référentiel stable
-    users: { list: 15 * 60 * 1000 },
-  };
-
   // Méthodes génériques
   static get(entity, key) {
     const cacheEntry = this.cache[entity]?.get(key); //on vérifie si la key existe
     if (!cacheEntry) {
       return null;
     }
-
-    // Vérifier si le cache est expiré
-    const now = Date.now();
-    if (now > cacheEntry.timestamp + cacheEntry.ttl) {
-      this.cache[entity].delete(key);
-      return null;
-    }
-
     return cacheEntry.data;
   }
 
@@ -52,19 +36,13 @@ class CacheManager {
       );
     }
 
-    // Déterminer automatiquement le type TTL selon la clé
-    const ttlType =
-      key.includes("list") || key.includes("stats") ? "list" : "detail";
-    const ttl = this.TTL[entity]?.[ttlType];
-
     const cacheEntry = {
       data,
       timestamp: Date.now(),
-      ttl,
     };
 
     this.cache[entity].set(key, cacheEntry);
-    console.log(`Cache set for ${entity}:${key}, TTL: ${ttl}ms (${ttlType})`);
+    console.log(`Cache set for ${entity}:${key}`);
     return true;
   }
 
@@ -191,26 +169,6 @@ class CacheManager {
     }
 
     return stats;
-  }
-
-  static clearExpiredEntries() {
-    const now = Date.now();
-    let totalCleared = 0;
-
-    for (const entity in this.cache) {
-      const expiredKeys = [];
-
-      for (const [key, cacheEntry] of this.cache[entity]) {
-        if (now > cacheEntry.timestamp + cacheEntry.ttl) {
-          expiredKeys.push(key);
-        }
-      }
-
-      expiredKeys.forEach((key) => this.cache[entity].delete(key));
-      totalCleared += expiredKeys.length;
-    }
-
-    return totalCleared;
   }
 }
 

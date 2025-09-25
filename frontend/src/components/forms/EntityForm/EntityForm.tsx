@@ -3,10 +3,19 @@ import { Button } from "../../button/Button";
 import { Input } from "../input/Input";
 import { logger } from "../../../utils/logger";
 import { getAllLevels, getLevelsByCategory, type SchoolCategory } from "../../../constants/schoolLevels";
+import type { CreateFamilyData } from "../../../types/family";
 import "./EntityForm.css";
 
 // Types de configuration pour différentes entités
 export type EntityType = "family" | "student" | "professor" | "subject";
+
+// Mapping des types d'entité vers leurs types de données
+type EntityDataMap = {
+  family: CreateFamilyData;
+  student: Record<string, unknown>; // À typer plus tard si nécessaire
+  professor: Record<string, unknown>; // À typer plus tard si nécessaire
+  subject: Record<string, unknown>; // À typer plus tard si nécessaire
+};
 
 // Configuration des champs pour chaque type d'entité
 interface FieldConfig {
@@ -415,11 +424,11 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
   },
 };
 
-interface EntityFormProps {
+interface EntityFormProps<T extends EntityType = EntityType> {
   /** Type d'entité à créer */
-  entityType: EntityType;
+  entityType: T;
   /** Fonction appelée lors de la soumission */
-  onSubmit: (data: Record<string, unknown>) => Promise<void> | void;
+  onSubmit: (data: EntityDataMap[T]) => Promise<void> | void;
   /** Fonction appelée lors de l'annulation */
   onCancel: () => void;
   /** Indique si le formulaire est en cours de soumission */
@@ -432,21 +441,25 @@ interface EntityFormProps {
   className?: string;
   /** Mode spécifique pour les familles (prospect/client) */
   familyMode?: "prospect" | "client";
+  /** Fonction pour créer un prospect de test (family uniquement) */
+  onCreateTestProspect?: () => Promise<void>;
 }
 
 /**
  * Composant de formulaire générique pour créer/éditer des entités
  */
-export const EntityForm: React.FC<EntityFormProps> = ({
-  entityType,
-  onSubmit,
-  onCancel,
-  isLoading = false,
-  initialData = {},
-  additionalProps = {},
-  className = "",
-  familyMode = "prospect",
-}) => {
+export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): React.ReactElement => {
+  const {
+    entityType,
+    onSubmit,
+    onCancel,
+    isLoading = false,
+    initialData = {},
+    additionalProps = {},
+    className = "",
+    onCreateTestProspect,
+    familyMode = "prospect",
+  } = props;
   const config = ENTITY_CONFIGS[entityType];
   
   // Adapter le titre et le texte du bouton selon le mode famille
@@ -805,7 +818,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
     // Traitement spécial pour les familles : transformer subjects en tableau
     let processedData = { ...formData };
     if (entityType === 'family' && processedData.demande && typeof processedData.demande === 'object') {
-      const demande = processedData.demande as any;
+      const demande = processedData.demande as Record<string, unknown>;
       if (demande.subjects && typeof demande.subjects === 'string') {
         demande.subjects = demande.subjects
           .split(',')
@@ -817,7 +830,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({
     try {
       // Réinitialiser l'erreur de soumission
       setSubmitError("");
-      await onSubmit(processedData);
+      await onSubmit(processedData as EntityDataMap[T]);
       logger.info("SOUMISSION - Succès de la soumission");
     } catch (error) {
       logger.error("SOUMISSION - Erreur lors de la soumission:", error);
@@ -1038,16 +1051,16 @@ export const EntityForm: React.FC<EntityFormProps> = ({
       <div className="entity-form__header">
         <h2>{displayConfig.title}</h2>
         
-        {/* Bouton de remplissage automatique en haut */}
-        {entityType === "family" && (
+        {/* Bouton de création directe de prospect de test */}
+        {entityType === "family" && onCreateTestProspect && (
           <Button
             type="button"
-            variant="outline"
-            onClick={fillTestData}
+            variant="primary"
+            onClick={onCreateTestProspect}
             disabled={isLoading}
-            title="Remplit automatiquement le formulaire avec des données de test"
+            title="Crée directement un prospect de test avec des données prédéfinies"
           >
-            🧪 Remplir pour test
+            🚀 Prospect test
           </Button>
         )}
       </div>

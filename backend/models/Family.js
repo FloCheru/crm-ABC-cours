@@ -2,23 +2,6 @@ const mongoose = require("mongoose");
 
 const familySchema = new mongoose.Schema(
   {
-    address: {
-      street: {
-        type: String,
-        required: [true, "Adresse requise"],
-        trim: true,
-      },
-      city: {
-        type: String,
-        required: [true, "Ville requise"],
-        trim: true,
-      },
-      postalCode: {
-        type: String,
-        required: [true, "Code postal requis"],
-        trim: true,
-      },
-    },
     primaryContact: {
       firstName: {
         type: String,
@@ -57,6 +40,20 @@ const familySchema = new mongoose.Schema(
         },
         trim: true,
       },
+      address: {
+        street: {
+          type: String,
+          trim: true,
+        },
+        city: {
+          type: String,
+          trim: true,
+        },
+        postalCode: {
+          type: String,
+          trim: true,
+        },
+      },
     },
     secondaryContact: {
       type: {
@@ -89,6 +86,7 @@ const familySchema = new mongoose.Schema(
     // Notes de règlement liées à cette famille
     ndr: [
       {
+        _id: false, // Désactiver l'auto-génération d'_id pour ce sous-document
         id: {
           type: mongoose.Schema.Types.ObjectId,
           required: [true, "ID de la NDR requis"],
@@ -147,7 +145,26 @@ const familySchema = new mongoose.Schema(
     },
     nextAction: {
       type: String,
+      enum: {
+        values: [
+          "Actions à définir",
+          "Présenter nos cours",
+          "Envoyer le devis",
+          "Relancer après devis",
+          "Planifier rendez-vous",
+          "Editer la NDR",
+          "Négocier les tarifs",
+          "Organiser cours d'essai",
+          "Confirmer les disponibilités",
+          "Suivre satisfaction parent",
+        ],
+        message:
+          "Action invalide. Valeurs autorisées: Actions à définir, Présenter nos cours, Envoyer le devis, Relancer après devis, Planifier rendez-vous, Editer la NDR, Négocier les tarifs, Organiser cours d'essai, Confirmer les disponibilités, Suivre satisfaction parent",
+      },
       trim: true,
+    },
+    nextActionDate: {
+      type: Date,
     },
     source: {
       type: String,
@@ -182,8 +199,9 @@ const familySchema = new mongoose.Schema(
       },
       subjects: [
         {
+          _id: false, // Désactiver l'auto-génération d'_id pour ce sous-document
           id: {
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
             required: [true, "ID de la matière requis dans la demande"],
           },
         },
@@ -191,6 +209,7 @@ const familySchema = new mongoose.Schema(
     },
     plannedTeacher: {
       type: mongoose.Schema.Types.ObjectId,
+      required: false, // Optionnel
       trim: true,
     },
     createdBy: {
@@ -201,6 +220,7 @@ const familySchema = new mongoose.Schema(
     },
     students: [
       {
+        _id: false, // Désactiver l'auto-génération d'_id pour ce sous-document
         id: {
           type: mongoose.Schema.Types.ObjectId,
           required: [true, "ID de l'étudiant requis"],
@@ -269,6 +289,7 @@ const familySchema = new mongoose.Schema(
     // RDV liés à cette famille
     rdvs: [
       {
+        _id: false, // Désactiver l'auto-génération d'_id pour ce sous-document
         id: {
           type: mongoose.Schema.Types.ObjectId,
           required: [true, "ID du RDV requis"],
