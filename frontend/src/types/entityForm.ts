@@ -26,7 +26,7 @@ export interface FamilyFormData {
 export interface StudentFormData {
   firstName: string;
   lastName: string;
-  dateOfBirth: string;
+  birthDate: string;
   school: {
     name: string;
     level: string;

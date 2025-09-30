@@ -11,8 +11,7 @@ import {
   Table,
   StatusBadge,
 } from "../../../components";
-import { couponSeriesService } from "../../../services/couponSeriesService";
-import { useCouponSeriesGlobal } from "../../../hooks/useCouponSeriesGlobal";
+import { ndrService } from "../../../services/ndrService";
 import {
   getFamilyDisplayName,
   generateCouponSeriesName,

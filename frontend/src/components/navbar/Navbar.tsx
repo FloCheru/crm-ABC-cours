@@ -34,7 +34,7 @@ const NAV_ITEMS = [
   { label: "Professeurs", path: "/under-development" },
   { label: "Prospects", path: "/prospects" },
   { label: "Clients", path: "/clients" },
-  { label: "Tableau de bord", path: "/admin/dashboard" },
+  { label: "NDR", path: "/ndrs" },
   { label: "Candidats", path: "/under-development" },
   { label: "ATP", path: "/under-development" },
   { label: "Messagerie", path: "/under-development" },

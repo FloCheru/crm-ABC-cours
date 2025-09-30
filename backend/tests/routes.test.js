@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const app = require("../server");
 const Family = require("../models/Family");
 const User = require("../models/User");
+const NDR = require("../models/NDR");
+const Subject = require("../models/Subject");
 
 // Import des utilitaires centralisés
 const TestSetup = require("./utils/testSetup");
@@ -295,6 +297,188 @@ describe("Routes API - Families", () => {
       expect(response.body).toHaveProperty("message", "Informations entreprise mises à jour avec succès");
       expect(response.body).toHaveProperty("companyInfo");
       expect(response.body.companyInfo.urssafNumber).toBe("98765432101");
+    });
+  });
+});
+
+describe("Routes API - NDR", () => {
+  let authToken;
+  let testUser;
+  let testFamily;
+  let testSubject;
+
+  beforeAll(async () => {
+    await TestSetup.beforeAll();
+  });
+
+  afterAll(async () => {
+    await TestSetup.afterAll();
+  });
+
+  beforeEach(async () => {
+    await TestSetup.beforeEach();
+    testDataFactory.reset();
+
+    // Clear cache before each test
+    CacheManager.clear('families');
+    CacheManager.clear('ndrs');
+
+    // Créer un utilisateur admin de test
+    const adminData = testDataFactory.createTestAdmin();
+    testUser = await User.create(adminData);
+
+    // Créer le token d'authentification
+    authToken = testDataFactory.createAuthToken(testUser);
+
+    // Créer une famille de test
+    const familyData = testDataFactory.createTestFamilyComplete(testUser._id);
+    testFamily = await Family.create(familyData);
+
+    // Créer une matière de test
+    testSubject = await Subject.create({
+      name: "Mathématiques",
+      description: "Test subject for NDR",
+    });
+  });
+
+  describe("POST /api/ndrs", () => {
+    it("should create NDR successfully with correct data structure", async () => {
+      const ndrData = {
+        familyId: testFamily._id.toString(),
+        beneficiaries: {
+          students: [{ id: testFamily.students[0].id }],
+          adult: false,
+        },
+        subjects: [{ id: testSubject._id.toString() }],
+        paymentMethod: "card",
+        paymentType: "avance",
+        hourlyRate: 25,
+        quantity: 10,
+        charges: 0,
+        notes: "Test NDR creation",
+        createdBy: {
+          userId: testUser._id.toString(),
+        },
+        status: "brouillon",
+      };
+
+      const response = await request(app)
+        .post("/api/ndrs")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(ndrData)
+        .expect(201);
+
+      // Vérifications de la structure de réponse
+      expect(response.body).toHaveProperty("message", "NDR créée avec succès");
+      expect(response.body).toHaveProperty("ndr");
+
+      const ndr = response.body.ndr;
+      expect(ndr).toHaveProperty("_id");
+      expect(ndr).toHaveProperty("familyId", testFamily._id.toString());
+      expect(ndr).toHaveProperty("beneficiaries");
+      expect(ndr).toHaveProperty("subjects");
+      expect(ndr).toHaveProperty("paymentMethod", "card");
+      expect(ndr).toHaveProperty("paymentType", "avance");
+      expect(ndr).toHaveProperty("hourlyRate", 25);
+      expect(ndr).toHaveProperty("quantity", 10);
+      expect(ndr).toHaveProperty("charges", 0);
+      expect(ndr).toHaveProperty("notes", "Test NDR creation");
+      expect(ndr).toHaveProperty("createdAt");
+      expect(ndr).toHaveProperty("updatedAt");
+
+      // Vérifier la structure des bénéficiaires
+      expect(ndr.beneficiaries).toHaveProperty("students");
+      expect(ndr.beneficiaries).toHaveProperty("adult", false);
+      expect(Array.isArray(ndr.beneficiaries.students)).toBe(true);
+      expect(ndr.beneficiaries.students).toHaveLength(1);
+
+      // Vérifier la structure des matières
+      expect(Array.isArray(ndr.subjects)).toBe(true);
+      expect(ndr.subjects).toHaveLength(1);
+
+      // Vérifier que la NDR est persistée en base
+      const savedNDR = await NDR.findById(ndr._id);
+      expect(savedNDR).toBeTruthy();
+      expect(savedNDR.familyId.toString()).toBe(testFamily._id.toString());
+      expect(savedNDR.quantity).toBe(10);
+      expect(savedNDR.hourlyRate).toBe(25);
+
+      // Vérifier que les coupons sont correctement créés dans la NDR
+      expect(savedNDR).toHaveProperty("coupons");
+      expect(Array.isArray(savedNDR.coupons)).toBe(true);
+      expect(savedNDR.coupons).toHaveLength(10); // Doit être égal à quantity, pas quantity+1
+
+      // Vérifier la structure des coupons
+      savedNDR.coupons.forEach((coupon, index) => {
+        expect(coupon).toHaveProperty("code");
+        expect(coupon).toHaveProperty("status", "available");
+        expect(typeof coupon.code).toBe("string");
+        expect(coupon.code).toMatch(/^[A-Z0-9]+$/); // Format code coupon
+      });
+
+      // Vérifier l'unicité des codes de coupons
+      const codes = savedNDR.coupons.map(c => c.code);
+      const uniqueCodes = [...new Set(codes)];
+      expect(uniqueCodes).toHaveLength(codes.length); // Tous les codes doivent être uniques
+    });
+
+    it("should require authentication", async () => {
+      const ndrData = {
+        familyId: testFamily._id.toString(),
+        beneficiaries: { students: [], adult: true },
+        subjects: [{ id: testSubject._id.toString() }],
+        paymentMethod: "card",
+        paymentType: "avance",
+        hourlyRate: 25,
+        quantity: 10,
+        charges: 0,
+        createdBy: {
+          userId: testUser._id.toString(),
+        },
+        status: "brouillon",
+      };
+
+      await request(app)
+        .post("/api/ndrs")
+        .send(ndrData)
+        .expect(401);
+    });
+
+    it("should return 400 when required fields are missing", async () => {
+      const invalidData = {
+        // Missing familyId
+        beneficiaries: { students: [], adult: true },
+        subjects: [{ id: testSubject._id.toString() }],
+      };
+
+      await request(app)
+        .post("/api/ndrs")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(invalidData)
+        .expect(400);
+    });
+
+    it("should return 404 when familyId does not exist", async () => {
+      const ndrData = {
+        familyId: new mongoose.Types.ObjectId().toString(),
+        beneficiaries: { students: [], adult: true },
+        subjects: [{ id: testSubject._id.toString() }],
+        paymentMethod: "card",
+        paymentType: "avance",
+        hourlyRate: 25,
+        quantity: 10,
+        charges: 0,
+        createdBy: {
+          userId: testUser._id.toString(),
+        },
+        status: "brouillon",
+      };
+
+      await request(app)
+        .post("/api/ndrs")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(ndrData)
+        .expect(404);
     });
   });
 });

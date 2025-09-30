@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Navbar,
@@ -11,13 +11,12 @@ import {
   Table,
 } from "../../components";
 import { ModalWrapper } from "../../components/ui/ModalWrapper/ModalWrapper";
-// import { EntityForm } from "../../components/forms/EntityForm"; // Non utilisé - clients créés via NDR
 import { familyService } from "../../services/familyService";
-import { settlementService } from "../../services/settlementService";
-import ActionCacheService from "../../services/actionCacheService";
+import { ndrService } from "../../services/ndrService";
 import type { Family } from "../../types/family";
-// import type { FamilyStats } from "../../services/familyService"; // Non utilisé avec cache
-import type { SettlementNote } from "../../services/settlementService";
+import type { FamilyStats } from "../../services/familyService";
+import type { SettlementNote } from "../../types/settlement";
+import "./Clients.css";
 
 // Types pour les sujets avec typage sûr
 interface SubjectWithName {
@@ -40,10 +39,6 @@ interface StudentData {
   firstName: string;
   lastName: string;
 }
-// import { useRefresh } from "../../hooks/useRefresh"; // Géré par le cache
-import { useFamiliesGlobal } from "../../hooks/useFamiliesGlobal";
-// useNDRCache supprimé - NDR data maintenant dans cache unifié
-import "./Clients.css";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Family & { id: string };
@@ -118,25 +113,62 @@ export const Clients: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { isLoading, clientsWithNDR, stats, getFirstNDRDate } =
-    useFamiliesGlobal();
-
-  // Cache géré automatiquement par ActionCache
+  // State for data management
+  const [isLoading, setIsLoading] = useState(true);
+  const [clients, setClients] = useState<Family[]>([]);
+  const [stats, setStats] = useState<FamilyStats | null>(null);
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
-  const familyData = clientsWithNDR;
   const [isNDRModalOpen, setIsNDRModalOpen] = useState(false);
   const [selectedFamilyId, setSelectedFamilyId] = useState<string>("");
   const [selectedFamilyNDRs, setSelectedFamilyNDRs] = useState<
     SettlementNote[]
   >([]);
   const [isLoadingNDRs, setIsLoadingNDRs] = useState(false);
-  // const [ndrCounts, setNdrCounts] = useState<{ [familyId: string]: number }>({}); // Supprimé - utilisation de settlementNotes.length
 
-  // Plus besoin de charger les NDR séparément - inclus dans cache unifié familiesCache
-  // Les comptes NDR sont maintenant obtenus directement via family.settlementNotes.length
+  // Load families and stats data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
 
-  // Plus besoin de handleCreateClient - les clients sont créés via NDR depuis prospects
+        // Load families (clients only - those with NDRs)
+        const families = await familyService.getFamilies();
+        const clientsWithNDR = families.filter(
+          (family) => family.ndr && family.ndr.length > 0
+        );
+        setClients(clientsWithNDR);
+
+        // Load stats
+        const familyStats = await familyService.getFamilyStats();
+        setStats(familyStats);
+      } catch (err) {
+        console.error("Erreur lors du chargement des données:", err);
+        setError("Impossible de charger les données des clients");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Function to get first NDR date for a family
+  const getFirstNDRDate = (familyId: string): string => {
+    const family = clients.find((f) => f._id === familyId);
+    if (!family?.settlementNotes || family.settlementNotes.length === 0) {
+      return "";
+    }
+
+    // Find the earliest NDR date
+    const earliestDate = family.settlementNotes.reduce((earliest, note) => {
+      const noteDate = new Date(note.createdAt);
+      return noteDate < earliest ? noteDate : earliest;
+    }, new Date(family.settlementNotes[0].createdAt));
+
+    return earliestDate.toLocaleDateString("fr-FR");
+  };
 
   const handleViewSettlementNotes = async (familyId: string) => {
     try {
@@ -144,14 +176,12 @@ export const Clients: React.FC = () => {
       setSelectedFamilyId(familyId);
 
       // Charger les NDR de la famille sélectionnée
-      const ndrList = await settlementService.getSettlementNotesByFamily(
-        familyId
-      );
+      const ndrList = await ndrService.getNdrsByFamily(familyId);
       setSelectedFamilyNDRs(ndrList);
 
       // S'assurer que la famille sélectionnée a ses étudiants peuplés
       // Si ce n'est pas le cas, recharger les données de toutes les familles
-      const selectedFamily = familyData.find((f) => f._id === familyId);
+      const selectedFamily = clients.find((f) => f._id === familyId);
       console.log("🔍 Famille sélectionnée:", {
         familyId: familyId.substring(familyId.length - 8),
         students: selectedFamily?.students,
@@ -186,12 +216,13 @@ export const Clients: React.FC = () => {
     console.log(
       `🔍 Navigation vers détails client: ${row.primaryContact.firstName} ${row.primaryContact.lastName}`
     );
-    navigate(`/clients/${row._id}`);
+    localStorage.setItem("clientId", row._id);
+    navigate("/clientDetails");
   };
 
   // Gérer la suppression d'un client
   const handleDeleteClient = async (clientId: string) => {
-    const client = familyData.find((f) => f._id === clientId);
+    const client = clients.find((f) => f._id === clientId);
     const fullName = client
       ? `${client.primaryContact.firstName} ${client.primaryContact.lastName}`
       : "ce client";
@@ -205,14 +236,25 @@ export const Clients: React.FC = () => {
       try {
         await familyService.deleteFamily(clientId);
 
-        // Note: Les mises à jour locales seront gérées par le système de cache
-        // lors du prochain rafraîchissement automatique
+        // Update local state by removing the deleted client
+        setClients((prevData) => prevData.filter((f) => f._id !== clientId));
 
         console.log(`Client ${fullName} supprimé avec succès`);
       } catch (error) {
         console.error("Erreur lors de la suppression du client:", error);
         alert("Erreur lors de la suppression du client");
       }
+    }
+  };
+
+  const handleCreateNDR = (familyId: string) => {
+    // Trouver la famille dans la liste des clients
+    const selectedFamily = clients.find((family) => family._id === familyId);
+    if (selectedFamily) {
+      // Stocker la famille complète et l'origine
+      localStorage.setItem("selectedFamily", JSON.stringify(selectedFamily));
+      localStorage.setItem("from", "clients");
+      navigate(`/beneficiaries-subjects`);
     }
   };
 
@@ -241,16 +283,6 @@ export const Clients: React.FC = () => {
     ) {
       try {
         setIsLoadingNDRs(true);
-
-        // Utiliser ActionCacheService pour la suppression avec optimistic updates
-        await ActionCacheService.executeAction(
-          "DELETE_NDR",
-          () => settlementService.deleteSettlementNote(noteId),
-          {
-            familyId: selectedFamilyId,
-            ndrId: noteId,
-          }
-        );
 
         // Mettre à jour la liste locale pour la modal
         const updatedNDRs = selectedFamilyNDRs.filter(
@@ -288,7 +320,7 @@ export const Clients: React.FC = () => {
   };
 
   // Filtrer les données selon le terme de recherche
-  const filteredData = familyData.filter((family) => {
+  const filteredData = clients.filter((family) => {
     const searchLower = searchTerm.toLowerCase();
     const fullName =
       `${family.primaryContact.firstName} ${family.primaryContact.lastName}`.toLowerCase();
@@ -348,9 +380,7 @@ export const Clients: React.FC = () => {
       label: "Bénéficiaires",
       render: (_: unknown, row: SettlementNote & { id: string }) => {
         // Récupérer les étudiants de la famille sélectionnée
-        const selectedFamily = familyData.find(
-          (f) => f._id === selectedFamilyId
-        );
+        const selectedFamily = clients.find((f) => f._id === selectedFamilyId);
         const familyStudents = selectedFamily?.students || [];
         // Convertir en format attendu par getStudentName
         const typedStudents: {
@@ -595,18 +625,12 @@ export const Clients: React.FC = () => {
       key: "actions",
       label: "Actions",
       render: (_: unknown, row: TableRowData) => {
-        // Utilisation directe de settlementNotes.length pour le compte
-        const ndrCount = row.settlementNotes?.length || 0;
-        const hasNDR = ndrCount > 0;
-
         return (
           <div className="table__actions">
             <Button
               size="sm"
               variant="primary"
-              onClick={() =>
-                navigate(`/admin/dashboard/create/wizard?familyId=${row._id}`)
-              }
+              onClick={() => handleCreateNDR(row._id)}
               title="Créer une nouvelle note de règlement"
             >
               Créer NDR
@@ -616,7 +640,7 @@ export const Clients: React.FC = () => {
               variant="primary"
               onClick={() => handleViewSettlementNotes(row._id)}
             >
-              {hasNDR ? `Voir les NDR (${ndrCount})` : "Aucune NDR"}
+              Voir les NDR ({row.ndr?.length || 0})
             </Button>
             <Button
               size="sm"
@@ -655,7 +679,7 @@ export const Clients: React.FC = () => {
                 variant: "primary",
               },
               {
-                value: familyData.length,
+                value: clients.length,
                 label: "Clients actifs",
                 variant: "success",
               },
@@ -734,11 +758,11 @@ export const Clients: React.FC = () => {
               >
                 Notes de règlement -{" "}
                 {
-                  familyData.find((f) => f._id === selectedFamilyId)
+                  clients.find((f) => f._id === selectedFamilyId)
                     ?.primaryContact.firstName
                 }{" "}
                 {
-                  familyData.find((f) => f._id === selectedFamilyId)
+                  clients.find((f) => f._id === selectedFamilyId)
                     ?.primaryContact.lastName
                 }
               </h2>

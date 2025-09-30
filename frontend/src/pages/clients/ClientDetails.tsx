@@ -10,23 +10,24 @@ import {
   Modal,
 } from "../../components";
 import { familyService } from "../../services/familyService";
-import { settlementService } from "../../services/settlementService";
+import { ndrService } from "../../services/ndrService";
 import type { Family } from "../../types/family";
-import type { SettlementNote } from "../../services/settlementService";
+import type { SettlementNote } from "../../services/ndrService";
 
 export const ClientDetails: React.FC = () => {
-  const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Récupérer l'ID depuis localStorage
+  const clientId = localStorage.getItem("clientId");
 
   const [client, setClient] = useState<Family | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
-  
+
   // États pour les NDRs
   const [settlementNotes, setSettlementNotes] = useState<SettlementNote[]>([]);
   const [isLoadingNDRs, setIsLoadingNDRs] = useState(false);
-
 
   // État pour la modal d'ajout d'élève
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
@@ -53,7 +54,7 @@ export const ClientDetails: React.FC = () => {
       console.log(`📡 Chargement des NDRs pour la famille: ${clientId}`);
       setIsLoadingNDRs(true);
       try {
-        const notes = await settlementService.getSettlementNotesByFamily(clientId);
+        const notes = await ndrService.getNdrsByFamily(clientId);
         console.log(`✅ NDRs reçues:`, notes);
         setSettlementNotes(notes);
       } catch (ndrError) {
@@ -83,25 +84,28 @@ export const ClientDetails: React.FC = () => {
     await loadClientDetails();
   };
 
-
-
-
-
-
   // Fonctions utilitaires pour les NDRs
-  const getStatusBadge = (status: SettlementNote['status']) => {
+  const getStatusBadge = (status: SettlementNote["status"]) => {
     const statusConfig = {
-      pending: { label: "En attente", className: "inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-orange-600 bg-orange-100 rounded-full" },
-      paid: { label: "Payée", className: "inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-green-600 bg-green-100 rounded-full" },
-      overdue: { label: "En retard", className: "inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-red-600 bg-red-100 rounded-full" }
+      pending: {
+        label: "En attente",
+        className:
+          "inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-orange-600 bg-orange-100 rounded-full",
+      },
+      paid: {
+        label: "Payée",
+        className:
+          "inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-green-600 bg-green-100 rounded-full",
+      },
+      overdue: {
+        label: "En retard",
+        className:
+          "inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-red-600 bg-red-100 rounded-full",
+      },
     };
-    
+
     const config = statusConfig[status];
-    return (
-      <span className={config.className}>
-        {config.label}
-      </span>
-    );
+    return <span className={config.className}>{config.label}</span>;
   };
 
   const calculateTotalAmount = (note: SettlementNote): number => {
@@ -109,14 +113,24 @@ export const ClientDetails: React.FC = () => {
     if (note.totalHourlyRate && note.totalQuantity) {
       return note.totalHourlyRate * note.totalQuantity;
     }
-    return note.subjects.reduce((total, subject) => total + (subject.hourlyRate * subject.quantity), 0);
+    return note.subjects.reduce(
+      (total, subject) => total + subject.hourlyRate * subject.quantity,
+      0
+    );
   };
 
-  const formatSubjectsDisplay = (subjects: SettlementNote['subjects']): string => {
-    return subjects.map(subject => {
-      const subjectName = typeof subject.subjectId === 'string' ? subject.subjectId : subject.subjectId.name;
-      return `${subjectName} (${subject.quantity}h)`;
-    }).join(', ');
+  const formatSubjectsDisplay = (
+    subjects: SettlementNote["subjects"]
+  ): string => {
+    return subjects
+      .map((subject) => {
+        const subjectName =
+          typeof subject.subjectId === "string"
+            ? subject.subjectId
+            : subject.subjectId?.name || "Matière inconnue";
+        return `${subjectName} (${subject.quantity}h)`;
+      })
+      .join(", ");
   };
 
   const getDisplayValue = (client: Family, path: string) => {
@@ -145,13 +159,13 @@ export const ClientDetails: React.FC = () => {
       return "Non assigné";
     }
 
-    // Gestion des dates
+    // Gestion des dates - retourner format ISO pour input type="date"
     if (
-      (path === "primaryContact.dateOfBirth" ||
-        path === "secondaryContact.dateOfBirth") &&
+      (path === "primaryContact.birthDate" ||
+        path === "secondaryContact.birthDate") &&
       value
     ) {
-      return new Date(value).toLocaleDateString("fr-FR");
+      return value.split("T")[0]; // Format yyyy-MM-dd pour input date
     }
 
     return value || "Non renseigné";
@@ -161,9 +175,12 @@ export const ClientDetails: React.FC = () => {
     return (
       <div>
         <Navbar activePath={location.pathname} />
-        <PageHeader 
-          title="Chargement..." 
-          breadcrumb={[{ label: "Clients", href: "/clients" }, { label: "Chargement..." }]}
+        <PageHeader
+          title="Chargement..."
+          breadcrumb={[
+            { label: "Clients", href: "/clients" },
+            { label: "Chargement..." },
+          ]}
         />
         <Container layout="flex-col">
           <div className="text-center py-8">
@@ -180,9 +197,12 @@ export const ClientDetails: React.FC = () => {
     return (
       <div>
         <Navbar activePath={location.pathname} />
-        <PageHeader 
-          title="Erreur" 
-          breadcrumb={[{ label: "Clients", href: "/clients" }, { label: "Erreur" }]}
+        <PageHeader
+          title="Erreur"
+          breadcrumb={[
+            { label: "Clients", href: "/clients" },
+            { label: "Erreur" },
+          ]}
         />
         <Container layout="flex-col">
           <div className="text-center py-8">
@@ -222,14 +242,6 @@ export const ClientDetails: React.FC = () => {
         required: true,
       },
       {
-        key: "email",
-        label: "Email",
-        field: "primaryContact.email",
-        type: "email",
-        placeholder: "email@exemple.com",
-        required: true,
-      },
-      {
         key: "primaryPhone",
         label: "Téléphone principal",
         field: "primaryContact.primaryPhone",
@@ -246,6 +258,14 @@ export const ClientDetails: React.FC = () => {
         required: false,
       },
       {
+        key: "email",
+        label: "Email",
+        field: "primaryContact.email",
+        type: "email",
+        placeholder: "email@exemple.com",
+        required: true,
+      },
+      {
         key: "gender",
         label: "Civilité",
         field: "primaryContact.gender",
@@ -256,23 +276,6 @@ export const ClientDetails: React.FC = () => {
         ],
         required: true,
       },
-      {
-        key: "dateOfBirth",
-        label: "Date de naissance",
-        field: "primaryContact.dateOfBirth",
-        type: "date",
-        required: false,
-      },
-      {
-        key: "relationship",
-        label: "Relation",
-        field: "primaryContact.relationship",
-        type: "text",
-        placeholder: "Père, Mère, etc.",
-        required: false,
-      },
-    ],
-    address: [
       {
         key: "street",
         label: "Rue",
@@ -296,6 +299,22 @@ export const ClientDetails: React.FC = () => {
         type: "text",
         placeholder: "Code postal",
         required: true,
+      },
+
+      {
+        key: "birthDate",
+        label: "Date de naissance",
+        field: "primaryContact.birthDate",
+        type: "date",
+        required: false,
+      },
+      {
+        key: "relationship",
+        label: "Relation",
+        field: "primaryContact.relationship",
+        type: "text",
+        placeholder: "Père, Mère, etc.",
+        required: false,
       },
     ],
     commercial: [
@@ -379,17 +398,9 @@ export const ClientDetails: React.FC = () => {
         required: false,
       },
       {
-        key: "relationship",
-        label: "Relation",
-        field: "secondaryContact.relationship",
-        type: "text",
-        placeholder: "Père, Mère, etc.",
-        required: false,
-      },
-      {
-        key: "dateOfBirth",
+        key: "birthDate",
         label: "Date de naissance",
-        field: "secondaryContact.dateOfBirth",
+        field: "secondaryContact.birthDate",
         type: "date",
         required: false,
       },
@@ -451,14 +462,20 @@ export const ClientDetails: React.FC = () => {
   return (
     <div>
       <Navbar activePath={location.pathname} />
-      <PageHeader 
+      <PageHeader
         title={`Détails du client ${clientName}`}
-        breadcrumb={[{ label: "Clients", href: "/clients" }, { label: "Détails" }]}
-        description={`Créé le ${new Date(client.createdAt).toLocaleDateString("fr-FR")} • Dernière modification le ${new Date(client.updatedAt).toLocaleDateString("fr-FR")}`}
+        breadcrumb={[
+          { label: "Clients", href: "/clients" },
+          { label: "Détails" },
+        ]}
+        description={`Créé le ${new Date(client.createdAt).toLocaleDateString(
+          "fr-FR"
+        )} • Dernière modification le ${new Date(
+          client.updatedAt
+        ).toLocaleDateString("fr-FR")}`}
         backButton={{ label: "Retour aux clients", href: "/clients" }}
       />
       <Container layout="flex-col">
-
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
@@ -487,26 +504,27 @@ export const ClientDetails: React.FC = () => {
               options: (field as any).options,
             }))}
             onSave={async (data) => {
-              // Construire l'objet de données pour l'API
-              const updateData: any = {
-                primaryContact: {}
+              // Séparer les données de contact et d'adresse
+              const contactData = {
+                firstName: data.firstName as string,
+                lastName: data.lastName as string,
+                primaryPhone: data.primaryPhone as string,
+                email: data.email as string,
+                gender: data.gender as string,
+                secondaryPhone: (data.secondaryPhone as string) || null,
+                address: {
+                  street: data.street as string,
+                  city: data.city as string,
+                  postalCode: data.postalCode as string,
+                },
               };
-              
-              // Mapper les données du formulaire vers les champs de l'API
-              Object.entries(data).forEach(([key, value]) => {
-                const field = fieldConfig.personal.find(f => f.key === key);
-                if (field) {
-                  const fieldParts = field.field.split('.');
-                  if (fieldParts.length === 2) {
-                    const [parent, child] = fieldParts;
-                    updateData[parent][child] = value;
-                  }
-                }
-              });
-              
-              // Mettre à jour via l'API
-              await familyService.updateFamily(clientId!, updateData);
-              await refetchClient();
+
+              // Un seul appel maintenant que l'adresse est dans primaryContact
+              await familyService.updatePrimaryContact(clientId!, contactData);
+
+              // Recharger les données depuis la base
+              const updated = await familyService.getFamily(clientId!);
+              setClient(updated);
             }}
             className="client-details__section client-details__section--primary-contact"
           />
@@ -531,71 +549,32 @@ export const ClientDetails: React.FC = () => {
               options: (field as any).options,
             }))}
             onSave={async (data) => {
-              // Construire l'objet de données pour l'API
-              const updateData: any = {
-                secondaryContact: {}
+              console.log("📝 data reçu depuis DataCard:", data);
+
+              // Structure explicite pour secondaryContact
+              const contactData = {
+                firstName: data.firstName as string,
+                lastName: data.lastName as string,
+                phone: data.phone as string,
+                email: data.email as string,
+                birthDate: data.birthDate
+                  ? new Date(data.birthDate as string)
+                  : null,
               };
-              
-              // Mapper les données du formulaire vers les champs de l'API
-              Object.entries(data).forEach(([key, value]) => {
-                const field = fieldConfig.secondaryContact.find(f => f.key === key);
-                if (field) {
-                  const fieldParts = field.field.split('.');
-                  if (fieldParts.length === 2) {
-                    const [parent, child] = fieldParts;
-                    updateData[parent][child] = value;
-                  }
-                }
-              });
-              
-              // Mettre à jour via l'API
-              await familyService.updateFamily(clientId!, updateData);
-              await refetchClient();
+
+              console.log("📝 contactData construit:", contactData);
+
+              // Appel à updateSecondaryContact
+              await familyService.updateSecondaryContact(
+                clientId!,
+                contactData
+              );
+
+              // Recharger les données depuis la base
+              const updated = await familyService.getFamily(clientId!);
+              setClient(updated);
             }}
             className="client-details__section client-details__section--secondary-contact"
-          />
-
-          {/* Adresse principale */}
-          <DataCard
-            title="Adresse principale"
-            fields={fieldConfig.address.map((field) => ({
-              key: field.key,
-              label: field.label,
-              value: getDisplayValue(client, field.field),
-              type: field.type as
-                | "text"
-                | "email"
-                | "tel"
-                | "number"
-                | "date"
-                | "textarea"
-                | "select",
-              required: field.required || false,
-              placeholder: field.placeholder,
-            }))}
-            onSave={async (data) => {
-              // Construire l'objet de données pour l'API
-              const updateData: any = {
-                address: {}
-              };
-              
-              // Mapper les données du formulaire vers les champs de l'API
-              Object.entries(data).forEach(([key, value]) => {
-                const field = fieldConfig.address.find(f => f.key === key);
-                if (field) {
-                  const fieldParts = field.field.split('.');
-                  if (fieldParts.length === 2) {
-                    const [parent, child] = fieldParts;
-                    updateData[parent][child] = value;
-                  }
-                }
-              });
-              
-              // Mettre à jour via l'API
-              await familyService.updateFamily(clientId!, updateData);
-              await refetchClient();
-            }}
-            className="client-details__section client-details__section--address"
           />
 
           {/* Adresse de facturation */}
@@ -619,24 +598,29 @@ export const ClientDetails: React.FC = () => {
             onSave={async (data) => {
               // Construire l'objet de données pour l'API
               const updateData: any = {
-                billingAddress: {}
+                billingAddress: {},
               };
-              
+
               // Mapper les données du formulaire vers les champs de l'API
               Object.entries(data).forEach(([key, value]) => {
-                const field = fieldConfig.billingAddress.find(f => f.key === key);
+                const field = fieldConfig.billingAddress.find(
+                  (f) => f.key === key
+                );
                 if (field) {
-                  const fieldParts = field.field.split('.');
+                  const fieldParts = field.field.split(".");
                   if (fieldParts.length === 2) {
                     const [parent, child] = fieldParts;
                     updateData[parent][child] = value;
                   }
                 }
               });
-              
+
               // Mettre à jour via l'API
               await familyService.updateFamily(clientId!, updateData);
-              await refetchClient();
+
+              // Recharger les données depuis la base
+              const updated = await familyService.getFamily(clientId!);
+              setClient(updated);
             }}
             className="client-details__section client-details__section--billing-address"
           />
@@ -682,18 +666,22 @@ export const ClientDetails: React.FC = () => {
             onSave={async (data) => {
               // Construire l'objet de données pour l'API
               const updateData: any = {};
-              
+
               // Mapper les données du formulaire vers les champs de l'API
               Object.entries(data).forEach(([key, value]) => {
-                const field = fieldConfig.commercial.find(f => f.key === key);
-                if (field && field.key !== 'status') {  // Exclure les champs read-only
+                const field = fieldConfig.commercial.find((f) => f.key === key);
+                if (field && field.key !== "status") {
+                  // Exclure les champs read-only
                   updateData[field.field] = value;
                 }
               });
-              
+
               // Mettre à jour via l'API
               await familyService.updateFamily(clientId!, updateData);
-              await refetchClient();
+
+              // Recharger les données depuis la base
+              const updated = await familyService.getFamily(clientId!);
+              setClient(updated);
             }}
             className="client-details__section client-details__section--commercial"
           />
@@ -719,24 +707,29 @@ export const ClientDetails: React.FC = () => {
             onSave={async (data) => {
               // Construire l'objet de données pour l'API
               const updateData: any = {
-                companyInfo: {}
+                companyInfo: {},
               };
-              
+
               // Mapper les données du formulaire vers les champs de l'API
               Object.entries(data).forEach(([key, value]) => {
-                const field = fieldConfig.companyInfo.find(f => f.key === key);
+                const field = fieldConfig.companyInfo.find(
+                  (f) => f.key === key
+                );
                 if (field) {
-                  const fieldParts = field.field.split('.');
+                  const fieldParts = field.field.split(".");
                   if (fieldParts.length === 2) {
                     const [parent, child] = fieldParts;
                     updateData[parent][child] = value;
                   }
                 }
               });
-              
+
               // Mettre à jour via l'API
               await familyService.updateFamily(clientId!, updateData);
-              await refetchClient();
+
+              // Recharger les données depuis la base
+              const updated = await familyService.getFamily(clientId!);
+              setClient(updated);
             }}
             className="client-details__section client-details__section--company"
           />
@@ -753,20 +746,24 @@ export const ClientDetails: React.FC = () => {
                     {
                       key: "firstName",
                       label: "Prénom",
-                      render: (value, row: any) => typeof row === "string" ? row : value
+                      render: (value, row: any) =>
+                        typeof row === "string" ? row : value,
                     },
                     {
                       key: "lastName",
                       label: "Nom",
-                      render: (value, row: any) => typeof row === "string" ? "" : value
+                      render: (value, row: any) =>
+                        typeof row === "string" ? "" : value,
                     },
                     {
-                      key: "dateOfBirth",
+                      key: "birthDate",
                       label: "Né(e) le",
                       render: (value, row: any) => {
                         if (typeof row === "string") return "-";
-                        return value ? new Date(value).toLocaleDateString("fr-FR") : "-";
-                      }
+                        return value
+                          ? new Date(value).toLocaleDateString("fr-FR")
+                          : "-";
+                      },
                     },
                     {
                       key: "courseLocation",
@@ -774,9 +771,12 @@ export const ClientDetails: React.FC = () => {
                       render: (_, row: any) => {
                         if (typeof row === "string") return "-";
                         if (!row.courseLocation?.type) return "-";
-                        return row.courseLocation.type === "domicile" ? "À domicile" : 
-                               row.courseLocation.type === "professeur" ? "Chez le professeur" : "Autre";
-                      }
+                        return row.courseLocation.type === "domicile"
+                          ? "À domicile"
+                          : row.courseLocation.type === "professeur"
+                          ? "Chez le professeur"
+                          : "Autre";
+                      },
                     },
                     {
                       key: "postalCode",
@@ -784,7 +784,7 @@ export const ClientDetails: React.FC = () => {
                       render: (_, row: any) => {
                         if (typeof row === "string") return "-";
                         return row.courseLocation?.address?.postalCode || "-";
-                      }
+                      },
                     },
                     {
                       key: "city",
@@ -792,7 +792,7 @@ export const ClientDetails: React.FC = () => {
                       render: (_, row: any) => {
                         if (typeof row === "string") return "-";
                         return row.courseLocation?.address?.city || "-";
-                      }
+                      },
                     },
                     {
                       key: "phone",
@@ -800,7 +800,7 @@ export const ClientDetails: React.FC = () => {
                       render: (_, row: any) => {
                         if (typeof row === "string") return "-";
                         return row.contact?.phone || "-";
-                      }
+                      },
                     },
                     {
                       key: "availability",
@@ -808,7 +808,7 @@ export const ClientDetails: React.FC = () => {
                       render: (value, row: any) => {
                         if (typeof row === "string") return "-";
                         return value || "-";
-                      }
+                      },
                     },
                     {
                       key: "comments",
@@ -816,8 +816,10 @@ export const ClientDetails: React.FC = () => {
                       render: (value, row: any) => {
                         if (typeof row === "string") return "-";
                         const comment = value || row.notes || "";
-                        return comment.length > 30 ? `${comment.substring(0, 30)}...` : comment || "-";
-                      }
+                        return comment.length > 30
+                          ? `${comment.substring(0, 30)}...`
+                          : comment || "-";
+                      },
                     },
                     {
                       key: "settlementNoteIds",
@@ -826,7 +828,7 @@ export const ClientDetails: React.FC = () => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full">
                           {row.settlementNoteIds?.length || 0}
                         </span>
-                      )
+                      ),
                     },
                     {
                       key: "actions",
@@ -848,8 +850,15 @@ export const ClientDetails: React.FC = () => {
                             size="sm"
                             variant="error"
                             onClick={() => {
-                              const studentName = typeof row === "string" ? row : `${row.firstName} ${row.lastName}`;
-                              if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'élève ${studentName} ?`)) {
+                              const studentName =
+                                typeof row === "string"
+                                  ? row
+                                  : `${row.firstName} ${row.lastName}`;
+                              if (
+                                window.confirm(
+                                  `Êtes-vous sûr de vouloir supprimer l'élève ${studentName} ?`
+                                )
+                              ) {
                                 // TODO: Implémenter suppression élève
                                 console.log("Suppression élève:", row);
                               }
@@ -859,18 +868,20 @@ export const ClientDetails: React.FC = () => {
                             ✕
                           </Button>
                         </div>
-                      )
-                    }
+                      ),
+                    },
                   ]}
                   data={client.students.map((student, index) => ({
-                    ...(typeof student === "string" ? { 
-                      firstName: student, 
-                      lastName: "", 
-                      id: `string-${index}` 
-                    } : { 
-                      ...student, 
-                      id: student._id || `student-${index}` 
-                    })
+                    ...(typeof student === "string"
+                      ? {
+                          firstName: student,
+                          lastName: "",
+                          id: `string-${index}`,
+                        }
+                      : {
+                          ...student,
+                          id: student._id || `student-${index}`,
+                        }),
                   }))}
                   itemsPerPage={10}
                 />
@@ -899,7 +910,9 @@ export const ClientDetails: React.FC = () => {
             <div>
               {isLoadingNDRs ? (
                 <div className="text-center py-4">
-                  <div className="text-gray-500">Chargement des notes de règlement...</div>
+                  <div className="text-gray-500">
+                    Chargement des notes de règlement...
+                  </div>
                 </div>
               ) : settlementNotes && settlementNotes.length > 0 ? (
                 <Table
@@ -907,25 +920,29 @@ export const ClientDetails: React.FC = () => {
                     {
                       key: "createdAt",
                       label: "Date création",
-                      render: (value) => new Date(value).toLocaleDateString("fr-FR")
+                      render: (value) =>
+                        new Date(value).toLocaleDateString("fr-FR"),
                     },
                     {
                       key: "status",
                       label: "Statut",
-                      render: (value) => getStatusBadge(value)
+                      render: (value) => getStatusBadge(value),
                     },
                     {
                       key: "totalAmount",
                       label: "Montant total",
-                      render: (_, row: SettlementNote) => `${calculateTotalAmount(row).toFixed(2)} €`
+                      render: (_, row: SettlementNote) =>
+                        `${calculateTotalAmount(row).toFixed(2)} €`,
                     },
                     {
                       key: "subjects",
                       label: "Matières",
                       render: (value) => {
                         const display = formatSubjectsDisplay(value);
-                        return display.length > 50 ? `${display.substring(0, 50)}...` : display;
-                      }
+                        return display.length > 50
+                          ? `${display.substring(0, 50)}...`
+                          : display;
+                      },
                     },
                     {
                       key: "actions",
@@ -935,7 +952,9 @@ export const ClientDetails: React.FC = () => {
                           <Button
                             size="sm"
                             variant="primary"
-                            onClick={() => navigate(`/admin/settlement-details/${row._id}`)}
+                            onClick={() =>
+                              navigate(`/admin/settlement-details/${row._id}`)
+                            }
                             title="Voir les détails"
                           >
                             👁️
@@ -943,7 +962,11 @@ export const ClientDetails: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => navigate(`/admin/settlement-details/${row._id}?mode=edit`)}
+                            onClick={() =>
+                              navigate(
+                                `/admin/settlement-details/${row._id}?mode=edit`
+                              )
+                            }
                             title="Modifier"
                           >
                             ✏️
@@ -952,7 +975,11 @@ export const ClientDetails: React.FC = () => {
                             size="sm"
                             variant="error"
                             onClick={() => {
-                              if (window.confirm(`Êtes-vous sûr de vouloir supprimer cette note de règlement ?`)) {
+                              if (
+                                window.confirm(
+                                  `Êtes-vous sûr de vouloir supprimer cette note de règlement ?`
+                                )
+                              ) {
                                 // TODO: Implémenter suppression NDR avec refetch
                                 console.log("Suppression NDR:", row._id);
                               }
@@ -962,12 +989,12 @@ export const ClientDetails: React.FC = () => {
                             ✕
                           </Button>
                         </div>
-                      )
-                    }
+                      ),
+                    },
                   ]}
                   data={settlementNotes.map((note) => ({
                     ...note,
-                    id: note._id
+                    id: note._id,
                   }))}
                   itemsPerPage={10}
                 />
@@ -980,7 +1007,9 @@ export const ClientDetails: React.FC = () => {
               <div>
                 <Button
                   variant="primary"
-                  onClick={() => navigate(`/admin/create-settlement?familyId=${client?._id}`)}
+                  onClick={() =>
+                    navigate(`/admin/create-settlement?familyId=${client?._id}`)
+                  }
                 >
                   Nouvelle note de règlement
                 </Button>

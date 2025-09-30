@@ -1,104 +1,48 @@
-const Coupon = require("../models/Coupon");
+const NDR = require("../models/NDR");
+const Family = require("../models/Family");
+const CacheManager = require("../cache/cacheManager");
+const mongoose = require("mongoose");
 
-// Système de numérotation en base 32
-const BASE32_CHARS = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // Exclut I, O, Q
-const BASE32_LENGTH = BASE32_CHARS.length;
+class CouponService {
+  /**
+   * Récupère tous les coupons de la base de données (embeddés dans les NDR)
+   * @returns {Array} - Tableau de tous les coupons {id, }
+   */
+  static async getAllCoupons() {
+    try {
+      const result = await NDR.aggregate([
+        { $match: { coupons: { $exists: true, $ne: [] } } },
+        { $unwind: "$coupons" },
+        {
+          $project: {
+            coupon: "$coupons",
+            ndrId: "$_id",
+            familyId: 1,
+            subjects: 1,
+            hourlyRate: 1,
+            ndrCreatedAt: "$createdAt",
+          },
+        },
+      ]);
 
-/**
- * Convertit un nombre décimal en base 32
- * @param {number} decimal - Nombre décimal
- * @param {number} minLength - Longueur minimale du code (optionnel)
- * @returns {string} - Code en base 32
- */
-function decimalToBase32(decimal, minLength = 1) {
-  if (decimal === 0) return "0";
-
-  let result = "";
-  let num = decimal;
-
-  while (num > 0) {
-    result = BASE32_CHARS[num % BASE32_LENGTH] + result;
-    num = Math.floor(num / BASE32_LENGTH);
-  }
-
-  // Ajouter des zéros en tête si nécessaire
-  while (result.length < minLength) {
-    result = "0" + result;
-  }
-
-  return result;
-}
-
-/**
- * Génère un code de coupon unique avec préfixe de série
- * @param {string} seriesId - ID de la série (6 premiers caractères)
- * @param {number} couponNumber - Numéro du coupon dans la série
- * @returns {string} - Code unique du coupon
- */
-function generateCouponCode(seriesId, couponNumber) {
-  const seriesPrefix = seriesId.substring(0, 6).toUpperCase();
-  const base32Number = decimalToBase32(couponNumber, 3); // Minimum 3 caractères
-  return `${seriesPrefix}-${base32Number}`;
-}
-
-/**
- * Décode un code de coupon pour obtenir le numéro
- * @param {string} code - Code du coupon (ex: "ABC123-001")
- * @returns {number} - Numéro du coupon
- */
-function decodeCouponCode(code) {
-  const parts = code.split("-");
-  if (parts.length !== 2) {
-    throw new Error("Format de code invalide");
-  }
-
-  const base32Number = parts[1];
-  let result = 0;
-
-  for (let i = 0; i < base32Number.length; i++) {
-    const char = base32Number[i];
-    const charValue = BASE32_CHARS.indexOf(char);
-    if (charValue === -1) {
-      throw new Error("Caractère invalide dans le code");
+      return result;
+    } catch (error) {
+      console.error("Erreur lors de la récupération des coupons:", error);
+      throw error;
     }
-    result = result * BASE32_LENGTH + charValue;
   }
 
-  return result;
-}
-
-/**
- * Génère un code de coupon unique en vérifiant qu'il n'existe pas déjà
- * @param {string} seriesId - ID de la série
- * @param {number} couponNumber - Numéro du coupon dans la série
- * @returns {Promise<string>} - Code unique du coupon
- */
-async function generateUniqueCouponCode(seriesId, couponNumber) {
-  let attempts = 0;
-  const maxAttempts = 10; // Limite de sécurité
-
-  while (attempts < maxAttempts) {
-    const couponCode = generateCouponCode(seriesId, couponNumber + attempts);
-
-    // Vérifier que le code n'existe pas déjà
-    const Coupon = require("../models/Coupon");
-    const existingCoupon = await Coupon.findOne({ code: couponCode });
-
-    if (!existingCoupon) {
-      return couponCode; // Code unique trouvé
-    }
-
-    attempts++;
-    console.log(`Code ${couponCode} existe déjà, tentative ${attempts + 1}`);
+  /**
+   * Génère un code de coupon unique en hexadécimal
+   * @param {number} index - Index du coupon (1, 2, 3...)
+   * @returns {string} - Code hexadécimal du coupon
+   */
+  static async generateCouponCode(index) {
+    const allCoupons = await this.getAllCoupons();
+    const number = allCoupons.length + index + 1;
+    return number.toString(16).toUpperCase();
   }
 
-  // Si on arrive ici, utiliser un timestamp pour garantir l'unicité
-  const timestamp = Date.now().toString(36).substring(0, 4);
-  const baseCode = generateCouponCode(seriesId, couponNumber);
-  return `${baseCode}-${timestamp}`;
-}
-
-class CouponGenerationService {
   /**
    * Marque un coupon comme utilisé
    * @param {string} couponId - ID du coupon
@@ -135,30 +79,7 @@ class CouponGenerationService {
    * @param {string} couponSeriesId - ID de la série
    * @returns {Object} - Statistiques de la série
    */
-  static async getCouponSeriesStats(couponSeriesId) {
-    try {
-      const couponSeries = await CouponSeries.findById(couponSeriesId);
-      if (!couponSeries) {
-        throw new Error("Série de coupons non trouvée");
-      }
-
-      const stats = {
-        totalCoupons: couponSeries.totalCoupons,
-        usedCoupons: couponSeries.usedCoupons,
-        remainingCoupons: couponSeries.getRemainingCoupons(),
-        status: couponSeries.status,
-        usagePercentage: (
-          (couponSeries.usedCoupons / couponSeries.totalCoupons) *
-          100
-        ).toFixed(1),
-      };
-
-      return stats;
-    } catch (error) {
-      console.error("Erreur lors de la récupération des statistiques:", error);
-      throw error;
-    }
-  }
+  static async getCouponSeriesStats(couponSeriesId) {}
 
   /**
    * Recherche un coupon par son code
@@ -168,10 +89,7 @@ class CouponGenerationService {
   static async findCouponByCode(code) {
     try {
       const coupon = await Coupon.findOne({ code })
-        .populate(
-          "couponSeriesId",
-          "settlementNoteId familyId subject hourlyRate"
-        )
+        .populate("couponSeriesId", "NDRId familyId subject hourlyRate")
         .populate("familyId", "name")
         .lean();
 
@@ -187,8 +105,104 @@ class CouponGenerationService {
   }
 }
 
-module.exports = CouponGenerationService;
+class NdrService {
+  /**
+   * Récupère toutes les NDRs
+   * @returns {Array} - Tableau de toutes les NDRs
+   */
+  static async getAllNDRs() {
+    try {
+      const ndrs = await NDR.find()
+        .populate("familyId", "primaryContact address")
+        .populate("subjects.id", "name")
+        .populate("createdBy.userId", "firstName lastName")
+        .sort({ createdAt: -1 })
+        .lean();
 
-// Export des fonctions utilitaires pour usage direct
-module.exports.generateCouponCode = generateCouponCode;
-module.exports.generateUniqueCouponCode = generateUniqueCouponCode;
+      return ndrs;
+    } catch (error) {
+      console.error("Erreur lors de la récupération des NDRs:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Récupère une NDR par son ID
+   * @param {string} ndrId - ID de la NDR
+   * @returns {Object} - La NDR avec ses détails
+   */
+  static async getNDRById(ndrId) {
+    try {
+      const ndr = await NDR.findById(ndrId)
+        .populate("familyId", "primaryContact address students")
+        .populate("subjects.id", "name")
+        .populate("createdBy.userId", "firstName lastName")
+        .populate("professor.id", "firstName lastName")
+        .lean();
+
+      if (!ndr) {
+        throw new Error("NDR non trouvée");
+      }
+
+      return ndr;
+    } catch (error) {
+      console.error("Erreur lors de la récupération de la NDR:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Crée une nouvelle NDR avec génération automatique des coupons
+   * @param {Object} ndrData - Données de la NDR
+   * @returns {Object} - La NDR créée
+   */
+  static async createNDR(ndrData) {
+    //1) Format NDR : ajout des coupons
+    try {
+      // Générer les coupons
+      const coupons = [];
+      for (let i = 0; i < ndrData.quantity; i++) {
+        const couponCode = await CouponService.generateCouponCode(i);
+        coupons.push({
+          id: new mongoose.Types.ObjectId(),
+          code: couponCode,
+          status: "available",
+          updatedAt: new Date(),
+        });
+      }
+      const ndrWithCoupons = {
+        ...ndrData,
+        coupons,
+      };
+      //2) Enregistrement de la NDR en base
+
+      const newNDR = new NDR(ndrWithCoupons);
+      const savedNDR = await newNDR.save();
+
+      //3) Récupération de la NDR en base pour la réponse
+      const finalNDR = await this.getNDRById(savedNDR._id);
+
+      //4) Ajout de la NDR à la famille
+      await Family.findByIdAndUpdate(
+        finalNDR.familyId,
+        { $push: { ndr: { id: savedNDR._id } } }
+      );
+
+      //5) Invalider les caches après création de la NDR
+      CacheManager.invalidate("families", "families_list*");
+      CacheManager.invalidate("families", "families_stats");
+      CacheManager.invalidate("ndrs", "ndrs_list*");
+
+      return finalNDR;
+    } catch (error) {
+      console.error(
+        "❌ [NDR-SERVICE] ERREUR lors de la création de la NDR:",
+        error
+      );
+      console.error("❌ [NDR-SERVICE] Stack trace:", error.stack);
+      throw error;
+    }
+  }
+}
+
+module.exports = { CouponService, NdrService };

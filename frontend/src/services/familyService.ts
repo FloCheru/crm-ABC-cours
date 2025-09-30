@@ -29,7 +29,7 @@ interface StudentResponse {
 export interface AddStudentData {
   firstName: string;
   lastName: string;
-  dateOfBirth: string; // ISO string format
+  birthDate: string; // ISO string format
   school: {
     name: string;
     level: "primaire" | "collège" | "lycée" | "supérieur";
@@ -71,7 +71,9 @@ class FamilyService {
   }
 
   async getFamily(id: string): Promise<Family> {
-    const response = (await apiClient.get(`/api/families/${id}`)) as FamilyResponse;
+    const response = (await apiClient.get(
+      `/api/families/${id}`
+    )) as FamilyResponse;
     return response.family;
   }
 
@@ -209,6 +211,35 @@ class FamilyService {
 
     const response = (await apiClient.patch(
       `/api/families/${familyId}/primary-contact`,
+      apiData
+    )) as FamilyResponse;
+    return response.family;
+  }
+
+  async updateSecondaryContact(
+    familyId: string,
+    contactData: {
+      firstName: string;
+      lastName: string;
+      phone: string;
+      email: string;
+      birthDate?: Date | null;
+    }
+  ): Promise<Family> {
+    console.log("📤 contactData avant transformation:", contactData);
+
+    // Convertir Date en ISO string pour l'API
+    const apiData = {
+      ...contactData,
+      birthDate: contactData.birthDate
+        ? contactData.birthDate.toISOString()
+        : contactData.birthDate,
+    };
+
+    console.log("📤 apiData envoyé au backend:", apiData);
+
+    const response = (await apiClient.patch(
+      `/api/families/${familyId}/secondary-contact`,
       apiData
     )) as FamilyResponse;
     return response.family;

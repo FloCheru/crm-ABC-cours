@@ -23,7 +23,11 @@ import type {
   CreateFamilyData as CreateFamilyDataType,
 } from "../../types/family";
 import { StatusDot, type ProspectStatus } from "../../components/StatusDot";
-import { updateProspectStatus, updateNextAction, updateNextActionDate } from "../../utils/prospectUpdates";
+import {
+  updateProspectStatus,
+  updateNextAction,
+  updateNextActionDate,
+} from "../../utils/prospectUpdates";
 import { useStudentModal, createTestStudent } from "../../utils/studentUtils";
 import "./Prospects.css";
 
@@ -41,6 +45,11 @@ export const Prospects: React.FC = () => {
 
   // Récupération des données au chargement
   useEffect(() => {
+    // // Nettoyage des données de session NDR
+    // localStorage.removeItem("selectedFamily");
+    // localStorage.removeItem("from");
+    // localStorage.removeItem("ndrData");
+
     const fetchProspects = async () => {
       try {
         setIsLoading(true);
@@ -65,14 +74,26 @@ export const Prospects: React.FC = () => {
     useState(false);
 
   // Utilisation du hook factorisé pour la gestion des élèves
-  const { showAddStudentModal, selectedFamilyForStudent, handleAddStudent, handleStudentSuccess } = useStudentModal();
+  const {
+    showAddStudentModal,
+    selectedFamilyForStudent,
+    handleAddStudent,
+    handleStudentSuccess,
+  } = useStudentModal();
 
   const handleCreateProspect = () => {
     setIsCreateProspectModalOpen(true);
   };
 
-  const handleCreateSettlementNote = (familyId: string) => {
-    navigate(`/admin/dashboard/create/wizard?familyId=${familyId}`);
+  const handleCreateNDR = (familyId: string) => {
+    // Trouver la famille dans la liste des prospects
+    const selectedFamily = prospects.find((family) => family._id === familyId);
+    if (selectedFamily) {
+      // Stocker la famille complète et l'origine
+      localStorage.setItem("selectedFamily", JSON.stringify(selectedFamily));
+      localStorage.setItem("from", "prospects");
+      navigate(`/beneficiaries-subjects`);
+    }
   };
 
   // handleAddStudent maintenant fourni par le hook useStudentModal
@@ -83,8 +104,8 @@ export const Prospects: React.FC = () => {
     newStatus: ProspectStatus | null
   ) => {
     // Mise à jour optimiste locale
-    setProspects(prev =>
-      prev.map(prospect =>
+    setProspects((prev) =>
+      prev.map((prospect) =>
         prospect._id === familyId
           ? { ...prospect, prospectStatus: newStatus }
           : prospect
@@ -98,7 +119,9 @@ export const Prospects: React.FC = () => {
       console.error("Erreur lors de la mise à jour du statut:", error);
       // En cas d'erreur, recharger les données
       const families = await familyService.getFamilies();
-      setProspects(families.filter(family => !family.ndr || family.ndr.length === 0));
+      setProspects(
+        families.filter((family) => !family.ndr || family.ndr.length === 0)
+      );
     }
   };
 
@@ -107,8 +130,8 @@ export const Prospects: React.FC = () => {
     newAction: string
   ) => {
     // Mise à jour optimiste locale
-    setProspects(prev =>
-      prev.map(prospect =>
+    setProspects((prev) =>
+      prev.map((prospect) =>
         prospect._id === familyId
           ? { ...prospect, nextAction: newAction }
           : prospect
@@ -122,7 +145,9 @@ export const Prospects: React.FC = () => {
       console.error("Erreur lors de la mise à jour de l'action:", error);
       // En cas d'erreur, recharger les données
       const families = await familyService.getFamilies();
-      setProspects(families.filter(family => !family.ndr || family.ndr.length === 0));
+      setProspects(
+        families.filter((family) => !family.ndr || family.ndr.length === 0)
+      );
     }
   };
 
@@ -131,8 +156,8 @@ export const Prospects: React.FC = () => {
     newDate: Date | null
   ) => {
     // Mise à jour optimiste locale
-    setProspects(prev =>
-      prev.map(prospect =>
+    setProspects((prev) =>
+      prev.map((prospect) =>
         prospect._id === familyId
           ? { ...prospect, nextActionDate: newDate }
           : prospect
@@ -141,12 +166,16 @@ export const Prospects: React.FC = () => {
 
     try {
       await updateNextActionDate(familyId, newDate);
-      console.log(`✅ Date de la prochaine action de la famille ${familyId} mise à jour`);
+      console.log(
+        `✅ Date de la prochaine action de la famille ${familyId} mise à jour`
+      );
     } catch (error) {
       console.error("Erreur lors de la mise à jour de la date:", error);
       // En cas d'erreur, recharger les données
       const families = await familyService.getFamilies();
-      setProspects(families.filter(family => !family.ndr || family.ndr.length === 0));
+      setProspects(
+        families.filter((family) => !family.ndr || family.ndr.length === 0)
+      );
     }
   };
 
@@ -186,7 +215,6 @@ export const Prospects: React.FC = () => {
     }
   };
 
-
   const handleFilter = () => {};
 
   const handleReset = () => {
@@ -200,8 +228,9 @@ export const Prospects: React.FC = () => {
     const fullName =
       `${family.primaryContact.firstName} ${family.primaryContact.lastName}`.toLowerCase();
     const phone = family.primaryContact.primaryPhone || "";
-    const address =
-      `${family.address.street} ${family.address.city}`.toLowerCase();
+    const address = `${family.address?.street || ""} ${
+      family.address?.city || ""
+    } ${family.address?.postalCode || ""}`.toLowerCase();
 
     return (
       fullName.includes(searchLower) ||
@@ -239,14 +268,14 @@ export const Prospects: React.FC = () => {
       key: "postalCode",
       label: "Code postal",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.address.postalCode}</div>
+        <div className="text-sm">{row.address?.postalCode || "-"}</div>
       ),
     },
     {
       key: "city",
       label: "Ville",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.address.city}</div>
+        <div className="text-sm">{row.address?.city || "-"}</div>
       ),
     },
     {
@@ -366,7 +395,7 @@ export const Prospects: React.FC = () => {
           <Button
             size="sm"
             variant="primary"
-            onClick={() => handleCreateSettlementNote(row._id)}
+            onClick={() => handleCreateNDR(row._id)}
           >
             Créer NDR
           </Button>
@@ -574,7 +603,10 @@ export const Prospects: React.FC = () => {
                 ...family,
                 id: family._id,
               }))}
-              onRowClick={(row) => navigate(`/families/${row._id}`, { state: { prospect: row } })}
+              onRowClick={(row) => {
+                localStorage.setItem("prospectId", row._id);
+                navigate("/prospectDetails");
+              }}
             />
           )}
         </Container>
@@ -595,7 +627,6 @@ export const Prospects: React.FC = () => {
           />
         </ModalWrapper>
       )}
-
 
       {/* Modal d'ajout d'élève */}
       <Modal

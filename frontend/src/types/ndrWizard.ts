@@ -4,31 +4,31 @@ export interface Step1Data {
   familyId: string;
   clientName: string;
   department: string;
-  
+
   // Informations personnelles
   primaryContact: {
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
-    dateOfBirth?: Date;
-    gender?: 'M.' | 'Mme';
+    birthDate?: Date;
+    gender?: "M." | "Mme";
   };
-  
+
   // Adresse principale
   address: {
     street: string;
     city: string;
     postalCode: string;
   };
-  
+
   // Informations entreprise
   companyInfo: {
     urssafNumber?: string;
     siretNumber?: string;
     ceNumber?: string;
   };
-  
+
   // Adresse de facturation
   sameBillingAddress: boolean;
   billingAddress?: {
@@ -42,19 +42,19 @@ export interface Step1Data {
 export interface Step2Data {
   // Famille sélectionnée comme bénéficiaire
   familySelected: boolean;
-  
+
   // Élèves sélectionnés
   studentIds: string[];
-  
+
   // Détails par élève
   studentsDetails: Array<{
     studentId: string;
     firstName: string;
     lastName: string;
-    
+
     // Localisation des cours
     courseLocation: {
-      type: 'domicile' | 'professeur' | 'autre';
+      type: "domicile" | "professeur" | "autre";
       address?: {
         street: string;
         city: string;
@@ -63,16 +63,16 @@ export interface Step2Data {
       };
       otherDetails?: string;
     };
-    
+
     // Horaires disponibilité
     availability?: string;
   }>;
-  
+
   // Détails famille (si sélectionnée)
   familyDetails?: {
     // Localisation des cours pour la famille
     courseLocation: {
-      type: 'domicile' | 'professeur' | 'autre';
+      type: "domicile" | "professeur" | "autre";
       address?: {
         street: string;
         city: string;
@@ -80,11 +80,11 @@ export interface Step2Data {
       };
       otherDetails?: string;
     };
-    
+
     // Horaires disponibilité famille
     availability?: string;
   };
-  
+
   // Matières sélectionnées
   selectedSubjectIds: string[];
 }
@@ -98,25 +98,25 @@ export interface Step3Data {
     quantity: number | string;
     professorSalary: number | string;
   }>;
-  
+
   // Charges
   charges: number;
-  
+
   // Paiement
-  paymentMethod: 'card' | 'CESU' | 'check' | 'transfer' | 'cash' | 'PRLV' | '';
-  paymentType?: 'immediate_advance' | 'tax_credit_n1' | '';
-  
+  paymentMethod: "card" | "CESU" | "check" | "transfer" | "cash" | "PRLV" | "";
+  paymentType?: "immediate_advance" | "tax_credit_n1" | "";
+
   // Échéancier
   hasPaymentSchedule: boolean;
   paymentSchedule?: {
-    paymentMethod: 'PRLV' | 'check';
+    paymentMethod: "PRLV" | "check";
     numberOfInstallments: number;
     dayOfMonth: number;
   };
-  
+
   // Notes
   notes: string;
-  
+
   // Calculs (automatiques)
   marginAmount: number;
   marginPercentage: number;

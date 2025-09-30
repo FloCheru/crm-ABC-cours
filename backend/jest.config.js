@@ -12,4 +12,10 @@ module.exports = {
   ],
   detectOpenHandles: true,
   forceExit: true,
+
+  // Support TypeScript pour les services frontend
+  transform: {
+    '^.+\\.tsx?$': 'ts-jest'
+  },
+  moduleFileExtensions: ['js', 'ts', 'tsx', 'json'],
 };

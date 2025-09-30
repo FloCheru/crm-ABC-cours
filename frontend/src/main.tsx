@@ -8,15 +8,20 @@ import {
   UnderDevelopment,
   CouponSeriesCreate,
   CouponsList,
-  SettlementDashboard,
-  SettlementDetails,
   PdfPreview,
   Prospects,
   ProspectDetails,
   Clients,
   ClientDetails,
 } from "./pages";
-import { NDRCreationWizard } from "./pages/admin/dashboard/create/NDRCreationWizard";
+import {
+  Ndrs,
+  NdrDetails,
+  FamilySelection,
+  BeneficiariesSubjects,
+  PricingPayment
+} from "./pages/admin/ndrs";
+// import { NDRCreationWizard } from "./pages/admin/dashboard/create/NDRCreationWizard"; // Supprimé
 import { TemplatePreview } from "./pages/admin/TemplatePreview";
 import { SeriesDetails } from "./pages/admin/coupons/SeriesDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -78,7 +83,7 @@ function AppRoutes() {
             }
           />
           <Route
-            path="/families/:familyId"
+            path="/prospectDetails"
             element={
               <ProtectedRoute>
                 <ProspectDetails />
@@ -94,7 +99,7 @@ function AppRoutes() {
             }
           />
           <Route
-            path="/clients/:clientId"
+            path="/clientDetails"
             element={
               <ProtectedRoute>
                 <ClientDetails />
@@ -102,26 +107,42 @@ function AppRoutes() {
             }
           />
           <Route
-            path="/admin/dashboard"
+            path="/ndrs"
             element={
               <ProtectedRoute>
-                <SettlementDashboard />
+                <Ndrs />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/admin/dashboard/create/wizard"
+            path="/ndrDetails"
             element={
               <ProtectedRoute>
-                <NDRCreationWizard />
+                <NdrDetails />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/admin/dashboard/:noteId"
+            path="/family-selection"
             element={
               <ProtectedRoute>
-                <SettlementDetails />
+                <FamilySelection />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/beneficiaries-subjects"
+            element={
+              <ProtectedRoute>
+                <BeneficiariesSubjects />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pricing-payment"
+            element={
+              <ProtectedRoute>
+                <PricingPayment />
               </ProtectedRoute>
             }
           />

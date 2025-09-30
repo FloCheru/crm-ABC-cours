@@ -69,10 +69,11 @@ router.post("/", authorize(["admin"]), async (req, res) => {
     };
 
     const savedFamily = await FamilyService.createFamily(familyData);
+    const formattedFamily = await FamilyService.formatFamilyForCache(savedFamily.toObject());
 
     res.status(201).json({
       message: "Famille créée avec succès",
-      family: savedFamily.toObject(),
+      family: formattedFamily,
     });
   } catch (error) {
     console.error("Erreur lors de la création de la famille:", error);
@@ -187,7 +188,10 @@ router.patch(
         lastName: req.body.lastName,
         phone: req.body.phone,
         email: req.body.email,
+        birthDate: req.body.birthDate,
       };
+
+      console.log("📋 secondaryContactData reçu:", secondaryContactData);
 
       // Validation métier
       FamilyService.validateSecondaryContactData({

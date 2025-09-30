@@ -5,7 +5,7 @@
 export interface StudentTestData {
   firstName: string;
   lastName: string;
-  dateOfBirth: string;
+  birthDate: string;
   sameAsFamily: boolean;
   studentStreet: string;
   studentPostalCode: string;
@@ -35,7 +35,7 @@ export const usePrefillTest = () => {
   const studentTestData: StudentTestData = {
     firstName: "Jean",
     lastName: "Dupont",
-    dateOfBirth: "2010-05-15",
+    birthDate: "2010-05-15",
     sameAsFamily: true,
     studentStreet: "123 Rue de la Paix",
     studentPostalCode: "75001",
@@ -46,7 +46,7 @@ export const usePrefillTest = () => {
     courseLocation: "domicile",
     email: "jean.dupont@example.com",
     phone: "06 12 34 56 78",
-    notes: "Élève motivé, besoin d'aide en mathématiques"
+    notes: "Élève motivé, besoin d'aide en mathématiques",
   };
 
   // Calcul automatique de la prochaine date (demain)
@@ -60,11 +60,11 @@ export const usePrefillTest = () => {
     time: "14:00",
     type: "physique",
     assignedAdminId: "admin", // ID par défaut, à adapter selon les admins disponibles
-    notes: "Rendez-vous de suivi pédagogique"
+    notes: "Rendez-vous de suivi pédagogique",
   };
 
   return {
     studentTestData,
-    rdvTestData
+    rdvTestData,
   };
 };

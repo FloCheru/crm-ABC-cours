@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Button } from "../../button/Button";
 import { Input } from "../input/Input";
 import { logger } from "../../../utils/logger";
-import { getAllLevels, getLevelsByCategory, type SchoolCategory } from "../../../constants/schoolLevels";
+import {
+  getAllLevels,
+  getLevelsByCategory,
+  type SchoolCategory,
+} from "../../../constants/schoolLevels";
 import type { CreateFamilyData } from "../../../types/family";
 import "./EntityForm.css";
 
@@ -165,7 +169,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
       },
       // Nouveaux champs famille
       {
-        key: "primaryContact.dateOfBirth",
+        key: "primaryContact.birthDate",
         label: "Date de naissance",
         type: "date",
         group: "primaryContact",
@@ -186,7 +190,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         conditional: { field: "sameAddress", value: false },
       },
       {
-        key: "billingAddress.city", 
+        key: "billingAddress.city",
         label: "Ville de facturation",
         type: "text",
         group: "billing",
@@ -194,7 +198,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
       },
       {
         key: "billingAddress.postalCode",
-        label: "Code postal de facturation", 
+        label: "Code postal de facturation",
         type: "text",
         group: "billing",
         conditional: { field: "sameAddress", value: false },
@@ -238,7 +242,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         group: "demande",
         options: [
           { value: "", label: "Sélectionner un niveau" },
-          ...getAllLevels()
+          ...getAllLevels(),
         ],
       },
       {
@@ -263,7 +267,12 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         group: "demande",
         placeholder: "Nom du professeur prévu (optionnel)",
       },
-      { key: "notes", label: "Notes générales", type: "textarea", group: "notes" },
+      {
+        key: "notes",
+        label: "Notes générales",
+        type: "textarea",
+        group: "notes",
+      },
     ],
   },
 
@@ -287,7 +296,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         group: "personal",
       },
       {
-        key: "dateOfBirth",
+        key: "birthDate",
         label: "Date de naissance",
         type: "date",
         required: true,
@@ -448,7 +457,9 @@ interface EntityFormProps<T extends EntityType = EntityType> {
 /**
  * Composant de formulaire générique pour créer/éditer des entités
  */
-export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): React.ReactElement => {
+export const EntityForm = <T extends EntityType>(
+  props: EntityFormProps<T>
+): React.ReactElement => {
   const {
     entityType,
     onSubmit,
@@ -461,7 +472,7 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
     familyMode = "prospect",
   } = props;
   const config = ENTITY_CONFIGS[entityType];
-  
+
   // Adapter le titre et le texte du bouton selon le mode famille
   const getDisplayConfig = () => {
     if (entityType === "family") {
@@ -482,7 +493,7 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
       submitButtonText: config.submitButtonText,
     };
   };
-  
+
   const displayConfig = getDisplayConfig();
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -491,25 +502,32 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
   // Initialiser les données du formulaire
   useEffect(() => {
     const initData = { ...additionalProps, ...initialData };
-    
+
     // Initialiser les valeurs par défaut des champs
     const config = ENTITY_CONFIGS[entityType];
     config.fields.forEach((field) => {
       if (field.defaultValue !== undefined) {
         const currentValue = getNestedValue(initData, field.key);
         // Initialiser si la valeur n'existe pas (undefined) ou si c'est une checkbox
-        if (currentValue === undefined || currentValue === null || currentValue === "") {
+        if (
+          currentValue === undefined ||
+          currentValue === null ||
+          currentValue === ""
+        ) {
           setNestedValue(initData, field.key, field.defaultValue);
-          logger.debug(`INIT - Valeur par défaut définie pour "${field.key}":`, field.defaultValue);
+          logger.debug(
+            `INIT - Valeur par défaut définie pour "${field.key}":`,
+            field.defaultValue
+          );
         }
       }
     });
-    
+
     setFormData(initData);
     console.log(`🚀 INIT DEBUG - FormData après initialisation:`, {
       initData,
       sameAddress: initData.sameAddress,
-      keys: Object.keys(initData)
+      keys: Object.keys(initData),
     });
   }, []); // Une seule fois au montage
 
@@ -521,10 +539,7 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
   }, [additionalProps?.familyId]); // Accès sécurisé à familyId
 
   // Obtenir la valeur d'un champ imbriqué (ex: "address.street")
-  const getNestedValue = (
-    obj: Record<string, unknown>,
-    path: string
-  ): any => {
+  const getNestedValue = (obj: Record<string, unknown>, path: string): any => {
     const value = path.split(".").reduce((current, key) => {
       if (current && typeof current === "object" && key in current) {
         return (current as Record<string, unknown>)[key];
@@ -580,7 +595,9 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
   };
 
   // Obtenir les options dynamiques pour le champ classe
-  const getClassOptions = (schoolLevel: string): { value: string; label: string }[] => {
+  const getClassOptions = (
+    schoolLevel: string
+  ): { value: string; label: string }[] => {
     // Utilise les constants centralisées
     return getLevelsByCategory(schoolLevel as SchoolCategory);
   };
@@ -604,8 +621,12 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
       // Logique spéciale pour la case "même adresse"
       if (fieldKey === "sameAddress" && value === true) {
         // Copier l'adresse principale vers l'adresse de facturation
-        if (newData.address && typeof newData.address === 'object') {
-          const address = newData.address as { street?: string; city?: string; postalCode?: string };
+        if (newData.address && typeof newData.address === "object") {
+          const address = newData.address as {
+            street?: string;
+            city?: string;
+            postalCode?: string;
+          };
           newData = {
             ...newData,
             billingAddress: {
@@ -630,7 +651,9 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
       // Logique spéciale pour le niveau scolaire - réinitialiser la classe
       if (fieldKey === "school.level") {
         newData = setNestedValue(newData, "school.grade", "");
-        logger.debug("CHANGEMENT - Classe réinitialisée suite au changement de niveau");
+        logger.debug(
+          "CHANGEMENT - Classe réinitialisée suite au changement de niveau"
+        );
       }
 
       logger.debug(
@@ -743,13 +766,13 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
     if (entityType === "family") {
       return {
         "primaryContact.firstName": "Martin",
-        "primaryContact.lastName": "Dubois", 
+        "primaryContact.lastName": "Dubois",
         "primaryContact.email": "martin.dubois@email.com",
         "primaryContact.primaryPhone": "0123456789",
         "primaryContact.gender": "M.",
         "primaryContact.relationship": "père",
         "primaryContact.secondaryPhone": "0987654321",
-        "primaryContact.dateOfBirth": "1980-05-15",
+        "primaryContact.birthDate": "1980-05-15",
         "address.street": "123 Rue de la Paix",
         "address.city": "Paris",
         "address.postalCode": "75001",
@@ -758,12 +781,13 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
         "secondaryContact.email": "sophie.dubois@email.com",
         "secondaryContact.phone": "0145678901",
         "secondaryContact.relationship": "mère",
-        "sameAddress": true,
+        sameAddress: true,
         "companyInfo.urssafNumber": "12345678901",
         "demande.beneficiaryType": "eleves",
         "demande.beneficiaryLevel": "3ème",
         "demande.subjects": "Mathématiques, Français, Anglais",
-        "notes": "Famille de test - créée automatiquement pour les tests de développement"
+        notes:
+          "Famille de test - créée automatiquement pour les tests de développement",
       };
     }
     return {};
@@ -772,29 +796,29 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
   // Fonction pour remplir automatiquement le formulaire avec des données de test
   const fillTestData = () => {
     const testData = getTestData();
-    
+
     // Utiliser handleFieldChange pour chaque champ pour déclencher les mises à jour
     Object.entries(testData).forEach(([key, value]) => {
       handleFieldChange(key, value);
     });
-    
+
     // Effacer les erreurs existantes
     setErrors({});
     setSubmitError("");
-    
+
     logger.info("🧪 Données de test appliquées au formulaire");
     console.log("🧪 Données appliquées:", testData);
   };
 
   // Vérifier si on est en environnement de développement
-  const isDevelopment = import.meta.env.VITE_ENVIRONMENT === 'development';
-  
+  const isDevelopment = import.meta.env.VITE_ENVIRONMENT === "development";
+
   // Debug pour vérifier les conditions d'affichage du bouton
-  console.log('🔍 DEBUG Bouton test:', {
+  console.log("🔍 DEBUG Bouton test:", {
     isDevelopment,
     VITE_ENVIRONMENT: import.meta.env.VITE_ENVIRONMENT,
     entityType,
-    shouldShowButton: isDevelopment && entityType === "family"
+    shouldShowButton: isDevelopment && entityType === "family",
   });
 
   // Gérer la soumission
@@ -817,11 +841,15 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
 
     // Traitement spécial pour les familles : transformer subjects en tableau
     let processedData = { ...formData };
-    if (entityType === 'family' && processedData.demande && typeof processedData.demande === 'object') {
+    if (
+      entityType === "family" &&
+      processedData.demande &&
+      typeof processedData.demande === "object"
+    ) {
       const demande = processedData.demande as Record<string, unknown>;
-      if (demande.subjects && typeof demande.subjects === 'string') {
+      if (demande.subjects && typeof demande.subjects === "string") {
         demande.subjects = demande.subjects
-          .split(',')
+          .split(",")
           .map((s: string) => s.trim())
           .filter((s: string) => s.length > 0);
       }
@@ -834,7 +862,7 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
       logger.info("SOUMISSION - Succès de la soumission");
     } catch (error) {
       logger.error("SOUMISSION - Erreur lors de la soumission:", error);
-      
+
       // Extraire le message d'erreur
       let errorMessage = "Une erreur est survenue lors de la création";
       if (error instanceof Error) {
@@ -844,7 +872,7 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
       } else if (error && typeof error === "object" && "message" in error) {
         errorMessage = (error as any).message;
       }
-      
+
       // Gérer les erreurs de validation spécifiques
       if (errorMessage.includes("Type de bénéficiaire requis")) {
         errorMessage = "Le type de bénéficiaire est obligatoire";
@@ -853,7 +881,7 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
       } else if (errorMessage.includes("email")) {
         errorMessage = "L'adresse email n'est pas valide";
       }
-      
+
       setSubmitError(errorMessage);
     }
   };
@@ -861,13 +889,14 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
   // Vérifier si un champ doit être affiché (logique conditionnelle)
   const shouldShowField = (field: FieldConfig): boolean => {
     if (!field.conditional) return true;
-    
+
     const conditionValue = getNestedValue(formData, field.conditional.field);
-    
+
     // Logique spéciale pour "any" - s'affiche si une valeur existe et n'est pas vide
     if (field.conditional.value === "any") {
-      const shouldShow = conditionValue && conditionValue.toString().trim() !== "";
-      
+      const shouldShow =
+        conditionValue && conditionValue.toString().trim() !== "";
+
       // Debug pour school.grade
       if (field.key === "school.grade") {
         console.log(`🔍 CONDITIONAL DEBUG - Champ classe "${field.key}":`, {
@@ -875,24 +904,24 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
           conditionValueExpected: field.conditional.value,
           conditionValueActual: conditionValue,
           shouldShow,
-          schoolLevel: getNestedValue(formData, "school.level")
+          schoolLevel: getNestedValue(formData, "school.level"),
         });
       }
-      
+
       return shouldShow;
     }
-    
+
     // Convertir les valeurs booléennes pour comparaison stricte
     let actualValue = conditionValue;
     let expectedValue = field.conditional.value;
-    
+
     // Si on attend une valeur booléenne, s'assurer que la comparaison est correcte
     if (typeof expectedValue === "boolean") {
       actualValue = Boolean(conditionValue);
     }
-    
+
     const shouldShow = actualValue === expectedValue;
-    
+
     // Debug pour billingAddress
     if (field.key.includes("billingAddress")) {
       console.log(`🔍 CONDITIONAL DEBUG - Champ "${field.key}":`, {
@@ -902,10 +931,10 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
         conditionValueType: typeof conditionValue,
         shouldShow,
         formDataSameAddress: formData.sameAddress,
-        formDataKeys: Object.keys(formData)
+        formDataKeys: Object.keys(formData),
       });
     }
-    
+
     return shouldShow;
   };
 
@@ -924,7 +953,8 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
         // Options dynamiques pour le champ classe basées sur le niveau scolaire
         let selectOptions = field.options || [];
         if (field.key === "school.grade") {
-          const schoolLevel = getNestedValue(formData, "school.level")?.toString() || "";
+          const schoolLevel =
+            getNestedValue(formData, "school.level")?.toString() || "";
           selectOptions = getClassOptions(schoolLevel);
         }
 
@@ -944,13 +974,11 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
               className={`input ${error ? "input--error" : ""}`}
             >
               <option value="">Sélectionner...</option>
-              {selectOptions.map(
-                (option: { value: string; label: string }) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                )
-              )}
+              {selectOptions.map((option: { value: string; label: string }) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
         );
@@ -1050,7 +1078,7 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
     <div className={`entity-form ${className}`}>
       <div className="entity-form__header">
         <h2>{displayConfig.title}</h2>
-        
+
         {/* Bouton de création directe de prospect de test */}
         {entityType === "family" && onCreateTestProspect && (
           <Button
@@ -1097,7 +1125,6 @@ export const EntityForm = <T extends EntityType>(props: EntityFormProps<T>): Rea
           >
             {isLoading ? "Création..." : displayConfig.submitButtonText}
           </button>
-
 
           <Button
             type="button"

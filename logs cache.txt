@@ -1,13 +1,32 @@
-Erreur dans FamilyService.updateFamily: Error: Aucun champ valide à mettre à jour
-[0]     at FamilyService.updateFamily (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:206:15)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:99:40
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\express\lib\router\route.js:149:13)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:85:5
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\express\lib\router\route.js:149:13)
-[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\express\lib\router\route.js:119:3)       
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\express\lib\router\layer.js:95:5)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\express\lib\router\index.js:284:15
-[0] [2025-09-25T19:21:17.917Z] [ERROR] Erreur dans FamilyService.updateFamily: {}
-[0] [2025-09-25T19:21:17.918Z] [ERROR] Erreur lors de la mise à jour de la famille: {}
+📝 data reçu depuis DataCard: {firstName: 'Alice', lastName: 'scsqc', email: 'qsdqsdq@gmail.com', phone: '0625354812', relationship: 'mère', …}birthDate: "2025-09-03"email: "qsdqsdq@gmail.com"firstName: "Alice"lastName: "scsqc"phone: "0625354812"relationship: "mère"[[Prototype]]: Object
+ClientDetails.tsx:570 📝 contactData construit: {firstName: 'Alice', lastName: 'scsqc', phone: '0625354812', email: 'qsdqsdq@gmail.com'}
+familyService.ts:229 📤 contactData avant transformation: {firstName: 'Alice', lastName: 'scsqc', phone: '0625354812', email: 'qsdqsdq@gmail.com'}
+familyService.ts:239 📤 apiData envoyé au backend: {firstName: 'Alice', lastName: 'scsqc', phone: '0625354812', email: 'qsdqsdq@gmail.com', birthDate: undefined}
+logger.ts:36 [2025-09-30T10:15:16.438Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-09-30T10:15:16.438Z] [DEBUG] URL: http://localhost:3000/api/families/68d5675bf30d8787c8580311/secondary-contact
+logger.ts:36 [2025-09-30T10:15:16.438Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-09-30T10:15:16.438Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+logger.ts:36 [2025-09-30T10:15:16.533Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-09-30T10:15:16.533Z] [DEBUG] Status: 200
+logger.ts:36 [2025-09-30T10:15:16.533Z] [DEBUG] Status Text: OK
+logger.ts:36 [2025-09-30T10:15:16.533Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
+logger.ts:36 [2025-09-30T10:15:16.533Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-09-30T10:15:16.534Z] [DEBUG] Réponse parsée: {message: 'Contact secondaire mis à jour avec succès', secondaryContact: {…}, family: {…}}
+logger.ts:36 [2025-09-30T10:15:16.534Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-09-30T10:15:16.534Z] [DEBUG] URL: http://localhost:3000/api/families/68d5675bf30d8787c8580311
+logger.ts:36 [2025-09-30T10:15:16.534Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-09-30T10:15:16.535Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+logger.ts:36 [2025-09-30T10:15:16.610Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-09-30T10:15:16.611Z] [DEBUG] Status: 200
+logger.ts:36 [2025-09-30T10:15:16.611Z] [DEBUG] Status Text: OK
+logger.ts:36 [2025-09-30T10:15:16.611Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
+logger.ts:36 [2025-09-30T10:15:16.611Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-09-30T10:15:16.612Z] [DEBUG] Réponse parsée: {family: {…}}
+
+📋 secondaryContactData reçu: {
+[0]   firstName: 'Alice',
+[0]   lastName: 'scsqc',
+[0]   phone: '0625354812',
+[0]   email: 'qsdqsdq@gmail.com',
+[0]   birthDate: undefined
+[0] }

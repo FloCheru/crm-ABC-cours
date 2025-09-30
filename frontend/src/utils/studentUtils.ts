@@ -7,7 +7,9 @@ import { familyService } from "../services/familyService";
  */
 export const useStudentModal = () => {
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
-  const [selectedFamilyForStudent, setSelectedFamilyForStudent] = useState<string | null>(null);
+  const [selectedFamilyForStudent, setSelectedFamilyForStudent] = useState<
+    string | null
+  >(null);
 
   /**
    * Ouvre la modal d'ajout d'élève pour une famille donnée
@@ -55,7 +57,7 @@ export const createTestStudent = async (
     const testStudentData = {
       firstName: "Emma",
       lastName: "Martin",
-      dateOfBirth: "2010-05-15",
+      birthDate: "2010-05-15",
       school: {
         name: "Collège Victor Hugo",
         level: "collège" as const,

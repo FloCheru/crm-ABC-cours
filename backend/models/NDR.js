@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const settlementNoteSchema = new mongoose.Schema(
+const ndrSchema = new mongoose.Schema(
   {
     familyId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -23,6 +23,31 @@ const settlementNoteSchema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       required: [true, "Mode de règlement requis"],
+      enum: {
+        values: ["card", "CESU", "check", "transfer", "cash", "PRLV"],
+        message:
+          "Mode de paiement invalide. Valeurs autorisées: card, CESU, check, transfer, cash, PRLV",
+      },
+    },
+    paymentType: {
+      type: String,
+      required: [true, "Type de paiement requis"],
+      enum: {
+        values: ["avance", "credit"],
+        message:
+          "Type de paiement invalide. Valeurs autorisées: avance, credit",
+      },
+    },
+    deadlines: {
+      deadlinesNumber: {
+        type: Number,
+        min: [1, "Le nombre d'échéances doit être au moins 1"],
+      },
+      deadlinesDay: {
+        type: Number,
+        min: [1, "Le jour d'échéance doit être entre 1 et 31"],
+        max: [31, "Le jour d'échéance doit être entre 1 et 31"],
+      },
     },
     subjects: {
       type: [
@@ -85,7 +110,8 @@ const settlementNoteSchema = new mongoose.Schema(
           required: [true, "Statut du coupon requis"],
           enum: {
             values: ["available", "used", "deleted"],
-            message: "Statut du coupon invalide. Valeurs autorisées: available, used, deleted"
+            message:
+              "Statut du coupon invalide. Valeurs autorisées: available, used, deleted",
           },
           default: "available",
         },
@@ -117,9 +143,9 @@ const settlementNoteSchema = new mongoose.Schema(
 );
 
 // Index pour améliorer les performances selon dataFlow.md
-settlementNoteSchema.index({ familyId: 1 });
-settlementNoteSchema.index({ status: 1 });
-settlementNoteSchema.index({ createdAt: -1 });
-settlementNoteSchema.index({ "createdBy.userId": 1 });
+ndrSchema.index({ familyId: 1 });
+ndrSchema.index({ status: 1 });
+ndrSchema.index({ createdAt: -1 });
+ndrSchema.index({ "createdBy.userId": 1 });
 
-module.exports = mongoose.model("SettlementNote", settlementNoteSchema);
+module.exports = mongoose.model("NDR", ndrSchema, "ndrs");

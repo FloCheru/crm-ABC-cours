@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Input,
@@ -10,7 +10,6 @@ import {
 import { familyService } from "../../services/familyService";
 import rdvService from "../../services/rdvService";
 import { adminService, type Admin } from "../../services/adminService";
-import ActionCacheService from "../../services/actionCacheService";
 import { usePrefillTest } from "../../hooks/usePrefillTest";
 import "./Modal.css";
 
@@ -38,7 +37,7 @@ const ENTITY_HANDLERS = {
       const preparedData = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        dateOfBirth: formData.dateOfBirth,
+        birthDate: formData.birthDate,
         school: {
           name: formData.schoolName.trim(),
           level: data?.school?.level || "collège",
@@ -68,7 +67,11 @@ const ENTITY_HANDLERS = {
       return preparedData;
     },
     update: async (studentId: string, preparedData: any, familyId: string) => {
-      return await familyService.updateStudent(familyId, studentId, preparedData);
+      return await familyService.updateStudent(
+        familyId,
+        studentId,
+        preparedData
+      );
     },
     create: async (familyId: string, preparedData: any) => {
       return await familyService.addStudent(familyId, preparedData);
@@ -91,38 +94,25 @@ const ENTITY_HANDLERS = {
       };
     },
     update: async (rdvId: string, preparedData: any, familyId: string) => {
-      return await rdvService.updateRdv(rdvId, {
+      return await rdvService.updateRdvById(rdvId, {
         ...preparedData,
-        familyId: familyId
+        familyId: familyId,
       });
     },
-    create: async (familyId: string, preparedData: any, _adminsData?: any[]) => {
-      // Générer un ID temporaire pour la mise à jour optimiste
-      const tempRdvId = `temp_rdv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Trouver les données complètes de l'admin assigné (non utilisé pour l'instant)
-      // const assignedAdmin = adminsData?.find(admin => admin.id === preparedData.assignedAdminId);
-      
-      return await ActionCacheService.executeAction(
-        'CREATE_RDV',
-        () => rdvService.createRdv({
-          ...preparedData,
-          familyId: familyId
-        }),
-        {
-          familyId,
-          rdvData: preparedData,
-          tempRdvId
-        }
-      );
+    create: async (
+      familyId: string,
+      preparedData: any,
+      _adminsData?: any[]
+    ) => {
+      return await rdvService.createRdv(preparedData);
     },
     logs: {
       entityName: "RDV",
       updateStart: "🔄 DÉBUT MODIFICATION RDV",
-      createStart: "➕ CRÉATION NOUVEAU RDV",
+      createStart: "➕ AJOUT NOUVEAU RDV",
     },
   },
-} as const;
+};
 
 // Mapping des titres selon type, data et mode
 const TITLE_MAP = {
@@ -166,7 +156,7 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   // Hook pour les données de test de préremplissage
   const { studentTestData, rdvTestData } = usePrefillTest();
-  
+
   // Nouvelle logique de détection création vs modification
   const entityId = data.studentId || data.rdvId;
   const familyId = data.familyId;
@@ -189,7 +179,7 @@ export const Modal: React.FC<ModalProps> = ({
               type: "text",
               required: true,
             },
-            { key: "dateOfBirth", label: "Date de naissance", type: "date" },
+            { key: "birthDate", label: "Date de naissance", type: "date" },
           ],
         },
         {
@@ -335,9 +325,6 @@ export const Modal: React.FC<ModalProps> = ({
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
 
-  // Ref pour le focus trap
-  const modalRef = useRef<HTMLDivElement>(null);
-
   // État interne pour gérer le mode (peut changer dans la modal)
   const [internalMode, setInternalMode] = useState(mode);
 
@@ -376,7 +363,7 @@ export const Modal: React.FC<ModalProps> = ({
     firstName: "",
     lastName: "",
     level: "",
-    dateOfBirth: "",
+    birthDate: "",
     street: "",
     postalCode: "",
     city: "",
@@ -405,8 +392,8 @@ export const Modal: React.FC<ModalProps> = ({
         firstName: data.firstName || "",
         lastName: data.lastName || "",
         grade: data.school?.grade || "",
-        dateOfBirth: data.dateOfBirth
-          ? new Date(data.dateOfBirth).toISOString().split("T")[0]
+        birthDate: data.birthDate
+          ? new Date(data.birthDate).toISOString().split("T")[0]
           : "",
         studentStreet: data.courseLocation?.address?.street || "",
         studentPostalCode: data.courseLocation?.address?.postalCode || "",
@@ -424,9 +411,9 @@ export const Modal: React.FC<ModalProps> = ({
         ? new Date(data.date).toISOString().split("T")[0]
         : "";
       const adminId = data.assignedAdminId
-        ? (typeof data.assignedAdminId === 'object' 
-            ? data.assignedAdminId.id 
-            : data.assignedAdminId)
+        ? typeof data.assignedAdminId === "object"
+          ? data.assignedAdminId.id
+          : data.assignedAdminId
         : "";
 
       setFormData((prev) => ({
@@ -439,58 +426,6 @@ export const Modal: React.FC<ModalProps> = ({
       }));
     }
   }, [type, data]);
-
-  // Gestion de la touche ESC pour fermer la modal
-  useEffect(() => {
-    if (isOpen) {
-      const handleEsc = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          onClose();
-        }
-      };
-      
-      document.addEventListener('keydown', handleEsc);
-      return () => document.removeEventListener('keydown', handleEsc);
-    }
-  }, [isOpen, onClose]);
-
-  // Focus trap - Empêche le focus de sortir de la modal
-  useEffect(() => {
-    if (isOpen && modalRef.current) {
-      const modal = modalRef.current;
-      const focusableElements = modal.querySelectorAll(
-        'button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      const firstElement = focusableElements[0] as HTMLElement;
-      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-      // Focus initial sur le premier élément
-      if (firstElement) {
-        firstElement.focus();
-      }
-
-      const handleTabKey = (event: KeyboardEvent) => {
-        if (event.key === 'Tab') {
-          if (event.shiftKey) {
-            // Shift + Tab - retour arrière
-            if (document.activeElement === firstElement) {
-              event.preventDefault();
-              lastElement?.focus();
-            }
-          } else {
-            // Tab - avancer
-            if (document.activeElement === lastElement) {
-              event.preventDefault();
-              firstElement?.focus();
-            }
-          }
-        }
-      };
-
-      document.addEventListener('keydown', handleTabKey);
-      return () => document.removeEventListener('keydown', handleTabKey);
-    }
-  }, [isOpen]);
 
   const handleFieldChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -543,7 +478,7 @@ export const Modal: React.FC<ModalProps> = ({
         await handler.update(entityId, preparedData, familyId);
       } else {
         // Mode CREATE
-        const additionalData = type === 'rdv' ? admins : undefined;
+        const additionalData = type === "rdv" ? admins : undefined;
         await handler.create(familyId, preparedData, additionalData);
       }
 
@@ -561,20 +496,27 @@ export const Modal: React.FC<ModalProps> = ({
           onSuccess();
         }
       }
-
     } catch (error) {
       console.error("❌ [HANDLESAVE] Erreur lors de la sauvegarde:", error);
       // Extraire et adapter le message d'erreur pour une meilleure UX
       let errorMessage = "Erreur lors de la sauvegarde. Veuillez réessayer.";
-      
+
       if (error instanceof Error) {
         // Messages d'erreur plus conviviaux - ordre important (plus spécifique d'abord)
-        if (error.message.includes("déjà un rendez-vous prévu à cette date et heure") || 
-            error.message.includes("Cet administrateur a déjà un rendez-vous")) {
-          errorMessage = "Ce créneau est déjà pris. Veuillez choisir une autre date ou heure.";
-        } else if (error.message.includes("ValidationError") || 
-                   error.message.includes("Données invalides")) {
-          errorMessage = "Données invalides. Veuillez vérifier les informations saisies.";
+        if (
+          error.message.includes(
+            "déjà un rendez-vous prévu à cette date et heure"
+          ) ||
+          error.message.includes("Cet administrateur a déjà un rendez-vous")
+        ) {
+          errorMessage =
+            "Ce créneau est déjà pris. Veuillez choisir une autre date ou heure.";
+        } else if (
+          error.message.includes("ValidationError") ||
+          error.message.includes("Données invalides")
+        ) {
+          errorMessage =
+            "Données invalides. Veuillez vérifier les informations saisies.";
         } else if (error.message.includes("HTTP error! status:")) {
           // Fallback pour les erreurs HTTP génériques qui n'ont pas été parsées
           errorMessage = "Erreur lors de la sauvegarde. Veuillez réessayer.";
@@ -583,7 +525,7 @@ export const Modal: React.FC<ModalProps> = ({
           errorMessage = error.message;
         }
       }
-      
+
       // Préserver l'état de la modal pour afficher l'erreur
       setError(errorMessage);
       // NE PAS fermer la modal ou changer de mode en cas d'erreur
@@ -594,28 +536,17 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   const handlePrefillFromProspect = async () => {
-    console.log("🎯 [MODAL] Clic 'Préremplir' déclenché");
-    console.log("🔍 [MODAL] type de modal:", type);
-
     if (type === "student") {
       if (onAddStudentTest && familyId) {
-        console.log("🚀 [MODAL] Appel de handleAddStudentTest");
         await onAddStudentTest(familyId);
       } else {
-        console.log("✅ [MODAL] Préremplissage élève avec données de test");
-        console.log("🔍 [MODAL] Données de test:", studentTestData);
-
         setFormData((prev) => ({
           ...prev,
-          ...studentTestData
+          ...studentTestData,
         }));
         setSameAsFamily(studentTestData.sameAsFamily);
-        console.log("✅ [MODAL] Préremplissage élève terminé avec succès");
       }
     } else if (type === "rdv") {
-      console.log("✅ [MODAL] Préremplissage RDV avec données de test");
-      console.log("🔍 [MODAL] Données de test:", rdvTestData);
-
       // Utiliser l'ID du premier admin disponible si possible
       let adminId = rdvTestData.assignedAdminId;
       if (admins.length > 0) {
@@ -625,9 +556,8 @@ export const Modal: React.FC<ModalProps> = ({
       setFormData((prev) => ({
         ...prev,
         ...rdvTestData,
-        assignedAdminId: adminId
+        assignedAdminId: adminId,
       }));
-      console.log("✅ [MODAL] Préremplissage RDV terminé avec succès");
     }
   };
 
@@ -712,7 +642,7 @@ export const Modal: React.FC<ModalProps> = ({
         } else if (admins.length > 0) {
           selectOptions = admins.map((admin: Admin) => ({
             value: admin.id,
-            label: `${admin.firstName} ${admin.lastName}`
+            label: `${admin.firstName} ${admin.lastName}`,
           }));
         } else {
           selectOptions = [{ value: "", label: "Aucun admin disponible" }];
@@ -782,7 +712,7 @@ export const Modal: React.FC<ModalProps> = ({
       firstName: "",
       lastName: "",
       level: "",
-      dateOfBirth: "",
+      birthDate: "",
       street: "",
       postalCode: "",
       city: "",
@@ -809,11 +739,10 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div 
-        ref={modalRef}
-        className="modal-container" 
-        role="dialog" 
-        aria-modal="true" 
+      <div
+        className="modal-container"
+        role="dialog"
+        aria-modal="true"
         aria-labelledby="modal-title"
       >
         {/* Header */}
@@ -878,7 +807,9 @@ export const Modal: React.FC<ModalProps> = ({
                       ? "En cours..."
                       : data
                       ? "Enregistrer"
-                      : type === "student" ? "Créer l'élève" : "Créer RDV"}
+                      : type === "student"
+                      ? "Créer l'élève"
+                      : "Créer RDV"}
                   </Button>
                 </>
               )}
@@ -920,7 +851,12 @@ export const Modal: React.FC<ModalProps> = ({
           <Container layout="flex" justify="end" align="center" padding="md">
             {internalMode === "view" ? (
               <>
-                <Button type="button" variant="outline" onClick={handleCancel} data-testid="close-button-footer">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  data-testid="close-button-footer"
+                >
                   Fermer
                 </Button>
                 <Button
@@ -954,7 +890,9 @@ export const Modal: React.FC<ModalProps> = ({
                     ? "En cours..."
                     : data
                     ? "Enregistrer"
-                    : type === "student" ? "Créer l'élève" : "Créer RDV"}
+                    : type === "student"
+                    ? "Créer l'élève"
+                    : "Créer RDV"}
                 </Button>
               </>
             )}

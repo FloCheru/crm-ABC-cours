@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Navbar,
@@ -11,27 +11,25 @@ import {
   Table,
   SettlementDeletionPreviewModal,
 } from "../../../components";
-import { settlementService } from "../../../services/settlementService";
-import type { SettlementNote } from "../../../services/settlementService";
-import { useSettlementGlobal } from "../../../hooks/useSettlementGlobal";
+import { ndrService, type NDR } from "../../../services/ndrService";
 
 // Type pour les données du tableau avec l'id requis
-type TableRowData = SettlementNote & {
+type TableRowData = NDR & {
   id: string;
   extractedDepartment?: string;
 };
 
+// Fonctions utilitaires pour extraire les valeurs des NDR
 // Fonctions utilitaires pour extraire les valeurs des subjects
 const getSubjectValue = (
-  note: SettlementNote,
+  note: NDR,
   field: "hourlyRate" | "quantity" | "professorSalary"
 ): number => {
   if (!note.subjects || note.subjects.length === 0) return 0;
-  // Pour l'instant, on prend la première matière. Plus tard on pourra gérer plusieurs matières
   return note.subjects[0][field] || 0;
 };
 
-const getSubjectName = (note: SettlementNote): string => {
+const getSubjectName = (note: NDR): string => {
   if (!note.subjects || note.subjects.length === 0) return "N/A";
   const firstSubject = note.subjects[0];
   if (typeof firstSubject.subjectId === "object") {
@@ -40,25 +38,42 @@ const getSubjectName = (note: SettlementNote): string => {
   return "Matière";
 };
 
-export const SettlementDashboard: React.FC = () => {
+export const Ndrs: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  // Utilisation du nouveau store global pour les NDR
-  const {
-    settlements,
-    isLoading,
-    error,
-    clearCache,
-    loadSettlements,
-  } = useSettlementGlobal();
 
-  // Logs de diagnostic pour tracer les données reçues
-  console.log(`🔍 [SETTLEMENT-DASHBOARD] Render - settlements reçus du store: ${settlements.length} items`);
-  settlements.forEach((settlement, index) => {
-    console.log(`🔍 [SETTLEMENT-DASHBOARD] Settlement[${index}]: ${settlement._id} (temp: ${settlement._id.startsWith('temp-')}) - ${settlement.clientName}`);
-  });
-  
+  // Nettoyage des données de session NDR au chargement
+  // Nettoyage des données de session NDR au chargement
+  useEffect(() => {
+    localStorage.removeItem('selectedFamily');
+    localStorage.removeItem('from');
+    localStorage.removeItem('ndrData');
+  }, []);
+
+  // Chargement des NDRs au montage du composant
+  useEffect(() => {
+    const loadNdrs = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+        const response = await ndrService.getAllNdrs();
+        setNdrs(response.ndrs || []);
+      } catch (err) {
+        console.error("Erreur lors du chargement des NDRs:", err);
+        setError("Erreur lors du chargement des notes de règlement");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadNdrs();
+  }, []);
+
+  // État pour stocker les NDRs
+  const [ndrs, setNdrs] = useState<NDR[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>("");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [localError, setLocalError] = useState<string>("");
 
@@ -148,22 +163,27 @@ export const SettlementDashboard: React.FC = () => {
   ): number => {
     const ca = calculateCA(hourlyRate, quantity);
     if (ca === 0) return 0;
-    const marge = calculateMarge(hourlyRate, quantity, professorSalary, charges);
+    const marge = calculateMarge(
+      hourlyRate,
+      quantity,
+      professorSalary,
+      charges
+    );
     return (marge / ca) * 100;
   };
 
   // Calculer la TVA selon le département
   const calculateTVA = (marge: number, department: string): number => {
     if (!department) return 0;
-    
+
     // Nettoyer le département (enlever les espaces, convertir en majuscules)
     const cleanDept = department.trim().toUpperCase();
-    
+
     // Si département d'outre-mer (commence par 97) : 2.1% de la marge
     if (cleanDept.startsWith("97")) {
       return marge * 0.021;
     }
-    
+
     // Autres départements : 10% de la marge
     return marge * 0.1;
   };
@@ -181,22 +201,25 @@ export const SettlementDashboard: React.FC = () => {
   };
 
   const handleCreateNote = () => {
-    navigate("/admin/dashboard/create/wizard");
+    navigate("/family-selection");
   };
 
   const handleViewNote = (noteId: string) => {
     console.log(`🔍 [SETTLEMENT-DASHBOARD] Navigation attempt to: ${noteId}`);
-    
+
     // Bloquer navigation si ID temporaire
-    if (noteId.startsWith('temp-')) {
-      console.log(`🚫 [SETTLEMENT-DASHBOARD] Navigation blocked - temporary ID: ${noteId}`);
+    if (noteId.startsWith("temp-")) {
+      console.log(
+        `🚫 [SETTLEMENT-DASHBOARD] Navigation blocked - temporary ID: ${noteId}`
+      );
       return; // Pas de navigation
     }
-    
-    console.log(`✅ [SETTLEMENT-DASHBOARD] Navigation allowed - valid ID: ${noteId}`);
+
+    console.log(
+      `✅ [SETTLEMENT-DASHBOARD] Navigation allowed - valid ID: ${noteId}`
+    );
     navigate(`/admin/dashboard/${noteId}`);
   };
-
 
   const handleDeleteNote = async (noteId: string) => {
     try {
@@ -205,7 +228,7 @@ export const SettlementDashboard: React.FC = () => {
       setIsDeletionPreviewModalOpen(true);
 
       // Récupérer l'aperçu de suppression
-      const previewData = await settlementService.getDeletionPreview(noteId);
+      const previewData = await ndrService.getDeletionPreview(noteId);
       setDeletionPreviewData(previewData);
     } catch (error) {
       console.error("Erreur lors du chargement de l'aperçu:", error);
@@ -220,25 +243,28 @@ export const SettlementDashboard: React.FC = () => {
     if (!noteToDelete || !deletionPreviewData) return;
 
     try {
-      const noteDetails = settlements.find(
-        (note) => note._id === noteToDelete
-      );
+      const noteDetails = ndrs.find((note) => note._id === noteToDelete);
       const noteNumber = noteToDelete
         .substring(noteToDelete.length - 8)
         .toUpperCase();
       const clientName = noteDetails?.clientName || "Inconnue";
 
       // Extraire familyId de la preview data
-      const familyId = deletionPreviewData.settlementNote?.familyId?._id || 
-                       deletionPreviewData.settlementNote?.familyId || '';
-      
-      console.log(`🔍 [DASHBOARD] Extracted familyId from preview data:`, familyId);
+      const familyId =
+        deletionPreviewData.settlementNote?.familyId?._id ||
+        deletionPreviewData.settlementNote?.familyId ||
+        "";
 
-      await settlementService.deleteSettlementNote(noteToDelete, familyId);
+      console.log(
+        `🔍 [DASHBOARD] Extracted familyId from preview data:`,
+        familyId
+      );
 
-      // Recharger les données après suppression
-      clearCache();
-      await loadSettlements();
+      await ndrService.deleteSettlementNote(noteToDelete, familyId);
+
+      // TODO: Recharger les données après suppression
+      // clearCache();
+      // await loadSettlements();
 
       console.log(
         `✅ Note de règlement ${clientName} (${noteNumber}) supprimée avec succès`
@@ -267,7 +293,7 @@ export const SettlementDashboard: React.FC = () => {
   };
 
   // Filtrer les données selon le terme de recherche
-  const filteredData = settlements.filter((note) => {
+  const filteredData = ndrs.filter((note) => {
     const searchLower = searchTerm.toLowerCase();
     const clientName = note.clientName?.toLowerCase() || "";
     const department = note.department?.toLowerCase() || "";
@@ -290,14 +316,11 @@ export const SettlementDashboard: React.FC = () => {
   }));
 
   // Logs de diagnostic pour les données finales du tableau
-  console.log(`🔍 [SETTLEMENT-DASHBOARD] TableData final - ${tableData.length} items pour affichage:`);
-  tableData.forEach((item, index) => {
-    console.log(`🔍 [SETTLEMENT-DASHBOARD] TableData[${index}]: ${item._id} (temp: ${item._id.startsWith('temp-')}) - ${item.clientName}`);
-  });
+  console.log(`🔍 [NDR-DASHBOARD] TableData final - ${tableData.length} items pour affichage`);
 
   // Calculer les statistiques globales
-  const totalNotes = settlements.length;
-  const totalCA = settlements.reduce(
+  const totalNotes = ndrs.length;
+  const totalCA = ndrs.reduce(
     (sum, note) =>
       sum +
       calculateCA(
@@ -306,19 +329,18 @@ export const SettlementDashboard: React.FC = () => {
       ),
     0
   );
-  const totalMarge = settlements.reduce(
-    (sum, note) => {
-      return sum +
-        calculateMarge(
-          getSubjectValue(note, "hourlyRate"),
-          getSubjectValue(note, "quantity"),
-          getSubjectValue(note, "professorSalary"),
-          note.charges
-        );
-    },
-    0
-  );
-  const totalSalaire = settlements.reduce(
+  const totalMarge = ndrs.reduce((sum, note) => {
+    return (
+      sum +
+      calculateMarge(
+        getSubjectValue(note, "hourlyRate"),
+        getSubjectValue(note, "quantity"),
+        getSubjectValue(note, "professorSalary"),
+        note.charges
+      )
+    );
+  }, 0);
+  const totalSalaire = ndrs.reduce(
     (sum, note) =>
       sum +
       getSubjectValue(note, "professorSalary") *
@@ -463,7 +485,7 @@ export const SettlementDashboard: React.FC = () => {
       render: (_: unknown, row: TableRowData) => {
         // Utiliser d'abord le département extrait, puis le département existant, sinon extraire du code postal
         let department = row.extractedDepartment || row.department;
-        
+
         // Si aucun département n'est disponible, essayer d'extraire à partir des données de famille
         if (
           !department &&
@@ -481,14 +503,10 @@ export const SettlementDashboard: React.FC = () => {
           getSubjectValue(row, "professorSalary"),
           row.charges
         );
-        
+
         const tva = calculateTVA(marge, department || "");
-        
-        return (
-          <div>
-            {tva.toFixed(2)} €
-          </div>
-        );
+
+        return <div>{tva.toFixed(2)} €</div>;
       },
     },
     {
@@ -521,9 +539,7 @@ export const SettlementDashboard: React.FC = () => {
       key: "charges",
       label: "Charges",
       render: (_: unknown, row: TableRowData) => (
-        <div>
-          {row.charges.toFixed(2)} €
-        </div>
+        <div>{row.charges.toFixed(2)} €</div>
       ),
     },
     {
@@ -555,11 +571,7 @@ export const SettlementDashboard: React.FC = () => {
           getSubjectValue(row, "professorSalary"),
           charges
         );
-        return (
-          <div>
-            {margePercentage.toFixed(1)}%
-          </div>
-        );
+        return <div>{margePercentage.toFixed(1)}%</div>;
       },
     },
     {
@@ -584,12 +596,9 @@ export const SettlementDashboard: React.FC = () => {
       <Navbar activePath={location.pathname} />
       <PageHeader title="Tableau de bord" />
       <Container layout="flex-col">
-
         {(error || localError) && (
           <div className="border px-4 py-3 rounded mb-4 bg-red-100 border-red-400 text-red-700">
-            <div className="flex items-center">
-              {error || localError}
-            </div>
+            <div className="flex items-center">{error || localError}</div>
           </div>
         )}
 
@@ -679,7 +688,14 @@ export const SettlementDashboard: React.FC = () => {
                 : "Aucune note de règlement disponible"}
             </span>
           ) : (
-            <Table columns={settlementColumns} data={tableData} onRowClick={(row) => handleViewNote(row._id)} />
+            <Table
+              columns={settlementColumns}
+              data={tableData}
+              onRowClick={(row) => {
+                localStorage.setItem("ndrId", row._id);
+                navigate("/ndrDetails");
+              }}
+            />
           )}
         </Container>
       </Container>

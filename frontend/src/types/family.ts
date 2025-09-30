@@ -1,4 +1,4 @@
-import type { RendezVous } from './rdv';
+import type { RendezVous } from "./rdv";
 
 export interface Family {
   _id: string;
@@ -25,7 +25,7 @@ export interface Family {
     primaryPhone: string;
     secondaryPhone?: string;
     email: string;
-    dateOfBirth?: Date;
+    birthDate?: Date;
     relationship?: string; // Lien de parenté
     gender: "M." | "Mme";
   };
@@ -35,13 +35,21 @@ export interface Family {
     phone?: string;
     email?: string;
     relationship?: string; // Lien de parenté
-    dateOfBirth?: Date;
+    birthDate?: Date;
   };
   ndr: Array<{ id: string }>; // NDR ObjectId refs
-  status: 'prospect' | 'client';
+  status: "prospect" | "client";
   notes?: string;
   // Champs spécifiques aux prospects
-  prospectStatus?: 'en_reflexion' | 'interesse_prof_a_trouver' | 'injoignable' | 'ndr_editee' | 'premier_cours_effectue' | 'rdv_prospect' | 'ne_va_pas_convertir' | null;
+  prospectStatus?:
+    | "en_reflexion"
+    | "interesse_prof_a_trouver"
+    | "injoignable"
+    | "ndr_editee"
+    | "premier_cours_effectue"
+    | "rdv_prospect"
+    | "ne_va_pas_convertir"
+    | null;
   nextAction?: string; // Objet du rappel
   nextActionDate?: Date | null; // Date de la prochaine action (RRR)
   source?: string; // Source du prospect
@@ -58,10 +66,10 @@ export interface Family {
   rdvs?: RendezVous[];
   // Students avec informations complètes
   students?: Array<{
-    _id: string;
+    id: string;
     firstName: string;
     lastName: string;
-    dateOfBirth?: Date;
+    birthDate?: Date;
     school?: {
       name?: string;
       level?: string;
@@ -103,7 +111,7 @@ export interface Student {
   _id: string;
   firstName: string;
   lastName: string;
-  dateOfBirth: Date;
+  birthDate: Date;
   school: {
     name: string;
     level: "primaire" | "collège" | "lycée" | "supérieur";
@@ -137,10 +145,12 @@ export interface Student {
   status: "active" | "inactive" | "graduated";
   notes?: string;
   settlementNoteIds?: string[];
-  familyId: string | {
-    _id: string;
-    name: string;
-  };
+  familyId:
+    | string
+    | {
+        _id: string;
+        name: string;
+      };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -169,7 +179,7 @@ export interface CreateFamilyData {
     primaryPhone: string;
     secondaryPhone?: string;
     email: string;
-    dateOfBirth?: Date;
+    birthDate?: Date;
     relationship?: string; // Lien de parenté
     gender: "M." | "Mme";
   };
@@ -179,7 +189,7 @@ export interface CreateFamilyData {
     phone?: string;
     email?: string;
     relationship?: string; // Lien de parenté
-    dateOfBirth?: Date;
+    birthDate?: Date;
   };
   // Section demande de cours (obligatoire) - INPUT TYPE (pour création)
   demande: {
@@ -190,7 +200,7 @@ export interface CreateFamilyData {
   };
   // Professeur prévu
   plannedTeacher?: string;
-  status?: 'prospect' | 'client';
+  status?: "prospect" | "client";
   notes?: string;
 }
 
@@ -203,7 +213,7 @@ export interface FamilyStats {
 export interface CreateStudentData {
   firstName: string;
   lastName: string;
-  dateOfBirth: Date;
+  birthDate: Date;
   level: string;
   school: {
     name: string;

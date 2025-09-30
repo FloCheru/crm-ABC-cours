@@ -26,7 +26,7 @@ export interface StudentFormData {
   [key: string]: unknown;
   firstName: string;
   lastName: string;
-  dateOfBirth: string;
+  birthDate: string;
   "school.name": string;
   "school.level": "primaire" | "collège" | "lycée" | "supérieur";
   "school.grade": string;

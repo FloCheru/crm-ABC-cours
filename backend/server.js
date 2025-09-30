@@ -50,6 +50,7 @@ const subjectRoutes = require("./routes/subjects");
 // const couponRoutes = require("./routes/coupons"); // Supprimé
 // const settlementNotesRoutes = require("./routes/settlementNotes"); // Supprimé
 // const pdfRoutes = require("./routes/pdf"); // Supprimé
+const ndrRoutes = require("./routes/ndr");
 const rdvRoutes = require("./routes/rdv");
 // const debugRoutes = require("./routes/debug"); // Supprimé
 
@@ -174,6 +175,7 @@ app.use("/api/subjects", subjectRoutes);
 // app.use("/api/coupons", couponRoutes); // Supprimé
 // app.use("/api/settlement-notes", settlementNotesRoutes); // Supprimé
 // app.use("/api", pdfRoutes); // Supprimé
+app.use("/api/ndrs", ndrRoutes);
 app.use("/api/rdv", rdvRoutes);
 // app.use("/debug", debugRoutes); // Supprimé
 

@@ -18,7 +18,6 @@ import {
   getBeneficiariesDisplay,
 } from "../../../utils/familyNameUtils";
 import type { CouponSeries, Coupon } from "../../../types/coupon";
-import { useCouponSeriesGlobal } from "../../../hooks/useCouponSeriesGlobal";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Coupon & { id: string };

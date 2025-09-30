@@ -3,8 +3,7 @@ export { UnderDevelopment } from "./UnderDevelopment";
 export { CouponSeriesCreate } from "./admin/coupons/CouponSeriesCreate";
 export { Admin } from "./admin/coupons/Admin";
 export { CouponsList } from "./admin/coupons/CouponsList";
-export { SettlementDashboard } from "./admin/dashboard/SettlementDashboard";
-export { SettlementDetails } from "./admin/dashboard/SettlementDetails";
+// Anciens exports supprimés - maintenant dans ./admin/ndrs/
 export { default as PdfPreview } from "./admin/PdfPreview";
 export { Prospects } from "./prospects/Prospects";
 export { ProspectDetails } from "./prospects/ProspectDetails";

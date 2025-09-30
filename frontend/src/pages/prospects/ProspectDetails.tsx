@@ -12,11 +12,11 @@ import {
   StatusDot,
   ReminderSubjectDropdown,
   DatePicker,
+  Container,
 } from "../../components";
 import { familyService } from "../../services/familyService";
 import rdvService from "../../services/rdvService";
 import { subjectService } from "../../services/subjectService";
-import ActionCacheService from "../../services/actionCacheService";
 import { getAllLevels } from "../../constants/schoolLevels";
 import type { Family, Student } from "../../types/family";
 import type { ProspectStatus } from "../../components/StatusDot";
@@ -39,13 +39,13 @@ type FieldType =
   | "select";
 
 export const ProspectDetails: React.FC = () => {
-  const { familyId } = useParams<{ familyId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  // Les données du prospect doivent être passées obligatoirement via state
-  const [prospect, setProspect] = useState<Family | null>(
-    location.state?.prospect || null
-  );
+
+  // Récupérer l'ID depuis localStorage
+  const prospectId = localStorage.getItem("prospectId");
+  const [prospect, setProspect] = useState<Family | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
 
   // RDV depuis le store global
@@ -55,17 +55,24 @@ export const ProspectDetails: React.FC = () => {
   // rdvFormData supprimé car non utilisé
 
   // Utilisation du hook factorisé pour la gestion des élèves
-  const { showAddStudentModal, selectedFamilyForStudent, handleAddStudent, handleStudentSuccess } = useStudentModal();
+  const {
+    showAddStudentModal,
+    selectedFamilyForStudent,
+    handleAddStudent,
+    handleStudentSuccess,
+  } = useStudentModal();
 
   // Créer un élève de test avec données fixes
-  const handleAddStudentTest = async (familyId: string) => {
+  const handleAddStudentTest = async () => {
+    if (!prospectId) return;
+
     const refreshData = async () => {
-      const updatedFamily = await familyService.getFamily(familyId);
+      const updatedFamily = await familyService.getFamily(prospectId);
       setProspect(updatedFamily);
     };
 
     await createTestStudent(
-      familyId,
+      prospectId,
       handleStudentSuccess,
       handleAddStudent,
       refreshData
@@ -82,12 +89,30 @@ export const ProspectDetails: React.FC = () => {
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
 
-  // Charger les matières au montage du composant
+  // Charger le prospect et les matières au montage du composant
   useEffect(() => {
-    if (familyId) {
+    if (prospectId) {
+      loadProspectData();
       loadSubjects();
+    } else {
+      setError("ID de prospect manquant");
+      setIsLoading(false);
     }
-  }, [familyId]);
+  }, [prospectId]);
+
+  // Charger les données du prospect
+  const loadProspectData = async () => {
+    try {
+      setIsLoading(true);
+      const prospectData = await familyService.getFamily(prospectId!);
+      setProspect(prospectData);
+    } catch (err) {
+      console.error("Erreur lors du chargement du prospect:", err);
+      setError("Impossible de charger les détails du prospect");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Charger les matières disponibles
   const loadSubjects = async () => {
@@ -108,11 +133,6 @@ export const ProspectDetails: React.FC = () => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce RDV ?")) return;
 
     try {
-      await ActionCacheService.executeAction(
-        "DELETE_RDV",
-        () => rdvService.deleteRdv(rdvId),
-        { rdvId, familyId: familyId! }
-      );
     } catch (err) {
       console.error(`❌ [RDV DELETE] Erreur:`, err);
     }
@@ -130,7 +150,7 @@ export const ProspectDetails: React.FC = () => {
 
   // Handlers avec mise à jour optimiste locale
   const handleStatusChange = async (
-    familyId: string,
+    _familyId: string,
     newStatus: ProspectStatus | null
   ) => {
     if (!prospect) return;
@@ -141,8 +161,8 @@ export const ProspectDetails: React.FC = () => {
     );
 
     try {
-      await updateProspectStatus(familyId, newStatus);
-      console.log(`✅ Statut du prospect ${familyId} mis à jour`);
+      await updateProspectStatus(prospectId!, newStatus);
+      console.log(`✅ Statut du prospect ${prospectId} mis à jour`);
     } catch (error) {
       console.error("Erreur lors de la mise à jour du statut:", error);
       // En cas d'erreur, restaurer l'état précédent
@@ -153,7 +173,7 @@ export const ProspectDetails: React.FC = () => {
   };
 
   const handleNextActionUpdate = async (
-    familyId: string,
+    _familyId: string,
     newAction: string
   ) => {
     if (!prospect) return;
@@ -162,8 +182,8 @@ export const ProspectDetails: React.FC = () => {
     setProspect((prev) => (prev ? { ...prev, nextAction: newAction } : prev));
 
     try {
-      await updateNextAction(familyId, newAction);
-      console.log(`✅ Prochaine action du prospect ${familyId} mise à jour`);
+      await updateNextAction(prospectId!, newAction);
+      console.log(`✅ Prochaine action du prospect ${prospectId} mise à jour`);
     } catch (error) {
       console.error("Erreur lors de la mise à jour de l'action:", error);
       // En cas d'erreur, restaurer l'état précédent
@@ -174,7 +194,7 @@ export const ProspectDetails: React.FC = () => {
   };
 
   const handleNextActionDateUpdate = async (
-    familyId: string,
+    _familyId: string,
     newDate: Date | null
   ) => {
     if (!prospect) return;
@@ -183,9 +203,9 @@ export const ProspectDetails: React.FC = () => {
     setProspect((prev) => (prev ? { ...prev, nextActionDate: newDate } : prev));
 
     try {
-      await updateNextActionDate(familyId, newDate);
+      await updateNextActionDate(prospectId!, newDate);
       console.log(
-        `✅ Date de la prochaine action du prospect ${familyId} mise à jour`
+        `✅ Date de la prochaine action du prospect ${prospectId} mise à jour`
       );
     } catch (error) {
       console.error("Erreur lors de la mise à jour de la date:", error);
@@ -211,13 +231,13 @@ export const ProspectDetails: React.FC = () => {
   ) => {
     // Capturer les IDs avant optimistic update pour éviter les race conditions
     const capturedStudentId = studentId;
-    const capturedFamilyId = familyId!;
+    const capturedProspectId = prospectId!;
     const capturedStudentName = studentName;
 
     try {
       // ✨ NOUVEAU: Utiliser familyService avec ActionCache intégré
       await familyService.removeStudentFromFamily(
-        capturedFamilyId,
+        capturedProspectId,
         capturedStudentId
       );
     } catch (error: unknown) {
@@ -238,10 +258,39 @@ export const ProspectDetails: React.FC = () => {
     }
   };
 
-  // Redirection si pas de données prospect (accès direct à l'URL sans state)
-  if (!prospect) {
-    navigate("/prospects", { replace: true });
-    return null;
+  // Redirection si pas d'ID de prospect dans localStorage
+  React.useEffect(() => {
+    if (!prospectId) {
+      navigate("/prospects", { replace: true });
+    }
+  }, [prospectId, navigate]);
+
+  // Affichage de chargement
+  if (isLoading) {
+    return (
+      <div>
+        <Navbar activePath={location.pathname} />
+        <PageHeader
+          title="Chargement..."
+          breadcrumb={[
+            { label: "Prospects", href: "/prospects" },
+            { label: "Chargement..." },
+          ]}
+        />
+        <Container layout="flex-col">
+          <div className="text-center py-8">
+            <div className="text-gray-500">
+              Chargement des détails du prospect...
+            </div>
+          </div>
+        </Container>
+      </div>
+    );
+  }
+
+  // Redirection si pas de prospect après chargement
+  if (!prospectId || !prospect) {
+    return null; // Le useEffect va gérer la redirection
   }
 
   const students = prospect.students || [];
@@ -356,7 +405,7 @@ export const ProspectDetails: React.FC = () => {
         customRender: () => (
           <ReminderSubjectDropdown
             value={prospect.nextAction || "Actions à définir"}
-            familyId={prospect._id}
+            familyId={prospectId!}
             onUpdate={handleNextActionUpdate}
           />
         ),
@@ -369,7 +418,7 @@ export const ProspectDetails: React.FC = () => {
         customRender: () => (
           <DatePicker
             value={prospect.nextActionDate || null}
-            familyId={prospect._id}
+            familyId={prospectId!}
             onUpdate={handleNextActionDateUpdate}
           />
         ),
@@ -471,16 +520,20 @@ export const ProspectDetails: React.FC = () => {
               primaryPhone: data.primaryPhone as string,
               email: data.email as string,
               gender: prospect.primaryContact.gender,
-              secondaryPhone: data.secondaryPhone as string || null,
+              secondaryPhone: (data.secondaryPhone as string) || null,
               address: {
                 street: data.street as string,
                 city: data.city as string,
                 postalCode: data.postalCode as string,
-              }
+              },
             };
 
             // Un seul appel maintenant que l'adresse est dans primaryContact
-            await familyService.updatePrimaryContact(familyId!, contactData);
+            await familyService.updatePrimaryContact(prospectId!, contactData);
+
+            // Recharger les données depuis la base
+            const updated = await familyService.getFamily(prospectId!);
+            setProspect(updated);
           }}
           className="mb-8"
         />
@@ -585,7 +638,11 @@ export const ProspectDetails: React.FC = () => {
               subjects: prospect.demande?.subjects || [],
             };
 
-            await familyService.updateDemande(familyId!, demandeData);
+            await familyService.updateDemande(prospectId!, demandeData);
+
+            // Recharger les données depuis la base
+            const updated = await familyService.getFamily(prospectId!);
+            setProspect(updated);
           }}
           className="mb-8"
         />
@@ -607,7 +664,7 @@ export const ProspectDetails: React.FC = () => {
                     render: (value) => value,
                   },
                   {
-                    key: "dateOfBirth",
+                    key: "birthDate",
                     label: "Né(e) le",
                     render: (value) =>
                       value ? new Date(value).toLocaleDateString("fr-FR") : "-",
@@ -759,7 +816,7 @@ export const ProspectDetails: React.FC = () => {
                 customRender: () => (
                   <ReminderSubjectDropdown
                     value={prospect.nextAction || "Actions à définir"}
-                    familyId={prospect._id}
+                    familyId={prospectId!}
                     onUpdate={handleNextActionUpdate}
                   />
                 ),
@@ -777,7 +834,7 @@ export const ProspectDetails: React.FC = () => {
                 customRender: () => (
                   <DatePicker
                     value={prospect.nextActionDate || null}
-                    familyId={prospect._id}
+                    familyId={prospectId!}
                     onUpdate={handleNextActionDateUpdate}
                   />
                 ),
@@ -807,14 +864,14 @@ export const ProspectDetails: React.FC = () => {
             // Traiter le statut prospect avec UPDATE_PROSPECT_STATUS
             if (prospectStatus !== undefined) {
               await familyService.updateProspectStatus(
-                familyId!,
+                prospectId!,
                 prospectStatus || null
               );
             }
 
             // Traiter les champs de rappel avec UPDATE_REMINDER
             if (nextAction !== undefined) {
-              await familyService.updateFamily(familyId!, {
+              await familyService.updateFamily(prospectId!, {
                 nextAction: nextAction as string,
               });
             }
@@ -823,7 +880,7 @@ export const ProspectDetails: React.FC = () => {
               const dateValue = nextActionDate
                 ? new Date(nextActionDate as string)
                 : null;
-              await familyService.updateFamily(familyId!, {
+              await familyService.updateFamily(prospectId!, {
                 nextActionDate: dateValue,
               });
             }
@@ -849,9 +906,13 @@ export const ProspectDetails: React.FC = () => {
               });
 
               if (Object.keys(updateData).length > 0) {
-                await familyService.updateFamily(familyId!, updateData);
+                await familyService.updateFamily(prospectId!, updateData);
               }
             }
+
+            // Recharger les données depuis la base
+            const updated = await familyService.getFamily(prospectId!);
+            setProspect(updated);
           }}
           className="mb-8"
         />
@@ -979,7 +1040,7 @@ export const ProspectDetails: React.FC = () => {
           setShowRdvModal(false);
           setEditingRdv(null);
         }}
-        data={editingRdv || { familyId: prospect?._id || "" }}
+        data={editingRdv || { familyId: prospectId || "" }}
         onSuccess={() => {
           setShowRdvModal(false);
           setEditingRdv(null);
@@ -993,7 +1054,7 @@ export const ProspectDetails: React.FC = () => {
         onClose={() => {
           handleStudentSuccess();
         }}
-        data={{ familyId: selectedFamilyForStudent || prospect?._id || "" }}
+        data={{ familyId: selectedFamilyForStudent || prospectId || "" }}
         onSuccess={() => {
           // Les données du prospect sont automatiquement mises à jour par l'ActionCache
           handleStudentSuccess();
@@ -1131,7 +1192,12 @@ export const ProspectDetails: React.FC = () => {
                         subjects: selectedSubjects,
                       },
                     };
-                    await familyService.updateFamily(familyId!, updateData);
+                    await familyService.updateFamily(prospectId!, updateData);
+
+                    // Recharger les données depuis la base
+                    const updated = await familyService.getFamily(prospectId!);
+                    setProspect(updated);
+
                     setShowSubjectModal(false);
                   }}
                 >

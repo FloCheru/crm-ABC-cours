@@ -4,6 +4,7 @@ const RendezVous = require("../models/RDV");
 const Ndr = require("../models/NDR");
 const Subject = require("../models/Subject");
 const CacheManager = require("../cache/cacheManager");
+const mongoose = require("mongoose");
 
 class FamilyService {
   static async getFamilies(limit = 10000) {
@@ -88,6 +89,8 @@ class FamilyService {
         },
         rdvs: formattedRdvs, // Remplacer rdvs
         students: family.students ?? [], // Sécuriser students
+        address: family.address || { street: '', city: '', postalCode: '' }, // Sécuriser address
+        billingAddress: family.billingAddress || { street: '', city: '', postalCode: '' }, // Sécuriser billingAddress
         demande: family.demande
           ? {
               ...family.demande,
@@ -103,6 +106,11 @@ class FamilyService {
 
   static async getFamilyById(id) {
     try {
+      // Valider l'ObjectId
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return null; // ID invalide = famille non trouvée
+      }
+
       // 1. Check cache first
       const cached = CacheManager.getFamily(id);
       if (cached) {
