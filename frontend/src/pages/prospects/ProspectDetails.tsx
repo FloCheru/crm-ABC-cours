@@ -424,6 +424,59 @@ export const ProspectDetails: React.FC = () => {
         ),
       },
     ],
+    secondaryContact: [
+      {
+        key: "firstName",
+        label: "Prénom",
+        field: "secondaryContact.firstName",
+        type: "text",
+        placeholder: "Prénom",
+        required: false,
+      },
+      {
+        key: "lastName",
+        label: "Nom",
+        field: "secondaryContact.lastName",
+        type: "text",
+        placeholder: "Nom",
+        required: false,
+      },
+      {
+        key: "email",
+        label: "Email",
+        field: "secondaryContact.email",
+        type: "email",
+        placeholder: "email@exemple.com",
+        required: false,
+      },
+      {
+        key: "phone",
+        label: "Téléphone",
+        field: "secondaryContact.phone",
+        type: "tel",
+        placeholder: "06 12 34 56 78",
+        required: false,
+      },
+      {
+        key: "relation",
+        label: "Lien de parenté",
+        field: "secondaryContact.relation",
+        type: "select",
+        required: false,
+        options: [
+          { value: "père", label: "Père" },
+          { value: "mère", label: "Mère" },
+          { value: "tuteur", label: "Tuteur légal" },
+        ],
+      },
+      {
+        key: "birthDate",
+        label: "Date de naissance",
+        field: "secondaryContact.birthDate",
+        type: "date",
+        required: false,
+      },
+    ],
   };
 
   const getDisplayValue = (prospect: Family, path: string) => {
@@ -439,12 +492,12 @@ export const ProspectDetails: React.FC = () => {
 
     // Gestion spéciale pour les tableaux (comme subjects)
     if (path === "demande.subjects" && Array.isArray(value)) {
-      return value.length > 0 ? value.join(", ") : "Non renseignées";
+      return value.length > 0 ? value.join(", ") : "";
     }
 
     // Gestion spéciale pour plannedTeacher - peut être string ou objet
     if (path === "plannedTeacher") {
-      if (!value) return "Non assigné";
+      if (!value) return "";
       if (typeof value === "string") return value;
       if (
         typeof value === "object" &&
@@ -453,7 +506,7 @@ export const ProspectDetails: React.FC = () => {
       ) {
         return `${(value as any).firstName} ${(value as any).lastName}`;
       }
-      return "Non assigné";
+      return "";
     }
 
     // Gestion spéciale pour nextAction - doit être string
@@ -463,7 +516,7 @@ export const ProspectDetails: React.FC = () => {
       return "Actions à définir";
     }
 
-    return value || "Non renseigné";
+    return value || "";
   };
 
   return (
@@ -496,7 +549,7 @@ export const ProspectDetails: React.FC = () => {
       <main className="space-y-8">
         {/* Informations personnelles */}
         <DataCard
-          title="Informations personnelles"
+          title="Contact principal"
           fields={fieldConfig.personal.map((field) => ({
             key: field.key,
             label: field.label,
@@ -519,7 +572,7 @@ export const ProspectDetails: React.FC = () => {
               lastName: data.lastName as string,
               primaryPhone: data.primaryPhone as string,
               email: data.email as string,
-              gender: prospect.primaryContact.gender,
+              relation: prospect.primaryContact.relation,
               secondaryPhone: (data.secondaryPhone as string) || null,
               address: {
                 street: data.street as string,
@@ -530,6 +583,50 @@ export const ProspectDetails: React.FC = () => {
 
             // Un seul appel maintenant que l'adresse est dans primaryContact
             await familyService.updatePrimaryContact(prospectId!, contactData);
+
+            // Recharger les données depuis la base
+            const updated = await familyService.getFamily(prospectId!);
+            setProspect(updated);
+          }}
+          className="mb-8"
+        />
+
+        {/* Contact secondaire */}
+        <DataCard
+          title="Contact secondaire"
+          fields={fieldConfig.secondaryContact.map((field) => ({
+            key: field.key,
+            label: field.label,
+            value: getDisplayValue(prospect, field.field),
+            type: field.type as
+              | "text"
+              | "email"
+              | "tel"
+              | "number"
+              | "date"
+              | "textarea"
+              | "select",
+            required: field.required || false,
+            placeholder: field.placeholder,
+          }))}
+          onSave={async (data) => {
+            // Structure explicite pour secondaryContact
+            const contactData = {
+              firstName: data.firstName as string,
+              lastName: data.lastName as string,
+              phone: data.phone as string,
+              email: data.email as string,
+              relation: data.relation as string,
+              birthDate: data.birthDate
+                ? new Date(data.birthDate as string)
+                : null,
+            };
+
+            // Appel à updateSecondaryContact
+            await familyService.updateSecondaryContact(
+              prospectId!,
+              contactData
+            );
 
             // Recharger les données depuis la base
             const updated = await familyService.getFamily(prospectId!);

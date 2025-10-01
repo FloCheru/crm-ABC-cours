@@ -261,7 +261,9 @@ export const Prospects: React.FC = () => {
       key: "phone",
       label: "Téléphone",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.primaryContact.primaryPhone}</div>
+        <div className="text-sm">
+          {`${row.primaryContact.primaryPhone}${row.primaryContact.relation ? ` (${row.primaryContact.relation})` : ''}${row.secondaryContact?.phone ? ` ${row.secondaryContact.phone}${row.secondaryContact.relation ? ` (${row.secondaryContact.relation})` : ''}` : ''}`}
+        </div>
       ),
     },
     {
@@ -458,7 +460,7 @@ export const Prospects: React.FC = () => {
           lastName: "Dupont",
           primaryPhone: "0123456789",
           email: "jean.dupont@email.com",
-          gender: "M." as const,
+          relation: "père" as const,
           relationship: "père",
         },
         address: {

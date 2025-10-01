@@ -4,6 +4,7 @@ const ndrSchema = new mongoose.Schema(
   {
     familyId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: 'Family',
       required: [true, "ID de la famille requis"],
     },
     beneficiaries: {
@@ -54,6 +55,7 @@ const ndrSchema = new mongoose.Schema(
         {
           id: {
             type: mongoose.Schema.Types.ObjectId,
+            ref: 'Subject',
             required: [true, "ID de la matière requis"],
           },
         },

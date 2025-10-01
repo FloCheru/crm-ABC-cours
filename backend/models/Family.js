@@ -31,12 +31,12 @@ const familySchema = new mongoose.Schema(
       birthDate: {
         type: Date,
       },
-      gender: {
+      relation: {
         type: String,
-        required: [true, "Civilité requise"],
+        required: [true, "Relation requise"],
         enum: {
-          values: ["M.", "Mme"],
-          message: "Civilité invalide. Valeurs autorisées: M., Mme",
+          values: ["père", "mère", "tuteur"],
+          message: "Relation invalide. Valeurs autorisées: père, mère, tuteur",
         },
         trim: true,
       },
@@ -80,6 +80,16 @@ const familySchema = new mongoose.Schema(
         },
         birthDate: {
           type: Date,
+        },
+        relation: {
+          type: String,
+          required: [true, "Relation requise"],
+          enum: {
+            values: ["père", "mère", "tuteur"],
+            message:
+              "Relation invalide. Valeurs autorisées: père, mère, tuteur",
+          },
+          trim: true,
         },
       },
     },

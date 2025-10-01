@@ -586,7 +586,9 @@ export const Clients: React.FC = () => {
       key: "phone",
       label: "Téléphone",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.primaryContact.primaryPhone}</div>
+        <div className="text-sm">
+          {`${row.primaryContact.primaryPhone}${row.primaryContact.relation ? ` (${row.primaryContact.relation})` : ''}${row.secondaryContact?.phone ? ` ${row.secondaryContact.phone}${row.secondaryContact.relation ? ` (${row.secondaryContact.relation})` : ''}` : ''}`}
+        </div>
       ),
     },
     {

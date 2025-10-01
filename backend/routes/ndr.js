@@ -159,7 +159,7 @@ router.put("/:id", authorize(["admin"]), async (req, res) => {
       new: true,
       runValidators: true,
     })
-      .populate("subjects.subjectId", "name category")
+      .populate("subjects.id", "name category")
       .populate("createdBy", "firstName lastName")
       .populate("studentIds", "firstName lastName")
       .lean();
@@ -290,7 +290,7 @@ router.patch("/:id", authorize(["admin"]), async (req, res) => {
       { $set: allowedUpdates },
       { new: true, runValidators: true }
     )
-      .populate("subjects.subjectId", "name category")
+      .populate("subjects.id", "name category")
       .populate("createdBy", "firstName lastName")
       .populate("studentIds", "firstName lastName")
       .lean();
@@ -320,7 +320,7 @@ router.patch("/:id/mark-paid", authorize(["admin"]), async (req, res) => {
     await note.markAsPaid();
 
     const updatedNote = await SettlementNote.findById(id)
-      .populate("subjects.subjectId", "name category")
+      .populate("subjects.id", "name category")
       .populate("createdBy", "firstName lastName")
       .populate("studentIds", "firstName lastName")
       .lean();
@@ -356,7 +356,7 @@ router.get("/", authorize(["admin"]), async (req, res) => {
 
     const [notes, total] = await Promise.all([
       SettlementNote.find(filter)
-        .populate("subjects.subjectId", "name category")
+        .populate("subjects.id", "name category")
         .populate("createdBy", "firstName lastName")
         .populate("studentIds", "firstName lastName")
         .sort({ createdAt: -1 })
@@ -463,7 +463,7 @@ router.get("/:id", authorize(["admin"]), async (req, res) => {
     }
 
     const note = await SettlementNote.findById(id)
-      .populate("subjects.subjectId", "name category")
+      .populate("subjects.id", "name category")
       .populate("createdBy", "firstName lastName")
       .populate("studentIds", "firstName lastName")
       .populate("couponSeriesId", "totalCoupons usedCoupons status")
@@ -491,7 +491,7 @@ router.get("/:id/deletion-preview", authorize(["admin"]), async (req, res) => {
 
     // Récupérer la note de règlement
     const note = await SettlementNote.findById(id)
-      .populate("subjects.subjectId", "name category")
+      .populate("subjects.id", "name category")
       .populate("createdBy", "firstName lastName")
       .populate("studentIds", "firstName lastName")
       .populate("familyId", "primaryContact")

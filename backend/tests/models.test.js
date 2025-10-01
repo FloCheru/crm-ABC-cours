@@ -18,7 +18,10 @@ const TestDataHelpers = {
 
   // Créer une famille de test
   async createFamily(admin, overrides = {}) {
-    const familyData = testDataFactory.createTestFamilyBase(admin._id, overrides);
+    const familyData = testDataFactory.createTestFamilyBase(
+      admin._id,
+      overrides
+    );
     return Family.create(familyData);
   },
 
@@ -64,7 +67,7 @@ describe("Models Tests", () => {
             lastName: "Dupont",
             primaryPhone: "0123456789",
             email: "marie.dupont@email.com",
-            gender: "Mme",
+            relation: "mère",
           },
         });
 
@@ -101,7 +104,7 @@ describe("Models Tests", () => {
             lastName: "Martin",
             primaryPhone: "0987654321",
             email: "sophie.martin@email.com",
-            gender: "Mme",
+            relation: "mère",
           },
           address: {
             city: "Lyon",
@@ -153,7 +156,7 @@ describe("Models Tests", () => {
           primaryContact: {
             firstName: "Test",
             lastName: "User",
-            gender: "M.",
+            relation: "père",
           },
           address: {
             city: "Marseille",

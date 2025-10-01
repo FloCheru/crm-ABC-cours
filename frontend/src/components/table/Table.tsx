@@ -162,6 +162,36 @@ export const Table: React.FC<TableProps> = ({
     return value;
   };
 
+  // Mapping des couleurs de statut (synchronisé avec StatusDot.css)
+  const statusColors: Record<string, string> = {
+    'en_reflexion': '#a855f7',
+    'interesse_prof_a_trouver': '#dc2626',
+    'injoignable': '#2563eb',
+    'ndr_editee': '#fbbf24',
+    'premier_cours_effectue': '#16a34a',
+    'rdv_prospect': '#ec4899',
+    'ne_va_pas_convertir': '#000000',
+  };
+
+  // Fonction pour obtenir le style de ligne basé sur le statut
+  const getRowStyle = (row: TableData): React.CSSProperties => {
+    // Ne pas appliquer de couleur si c'est un client (a des NDRs)
+    if (row.ndr && row.ndr.length > 0) {
+      return {};
+    }
+
+    const status = row.prospectStatus;
+    if (!status || !statusColors[status]) {
+      return {};
+    }
+
+    const color = statusColors[status];
+    return {
+      borderLeft: `3px solid ${color}`,
+      backgroundColor: `${color}20`, // 20 en hex = ~12.5% opacity
+    };
+  };
+
   const wrapperClasses = ["table-wrapper", className].filter(Boolean).join(" ");
 
   if (data.length === 0) {
@@ -197,9 +227,10 @@ export const Table: React.FC<TableProps> = ({
 
         <tbody>
           {currentData.map((row) => (
-            <tr 
-              key={row.id} 
+            <tr
+              key={row.id}
               className={`table__row ${onRowClick ? 'table__row--clickable' : ''}`}
+              style={getRowStyle(row)}
               onClick={(e) => {
                 // Vérifier si le clic provient d'un élément interactif
                 const target = e.target as HTMLElement;
@@ -208,7 +239,7 @@ export const Table: React.FC<TableProps> = ({
                   '.dropdown, .date-picker, .status-dot-container, ' +
                   '.reminder-subject-dropdown, .status-dropdown'
                 );
-                
+
                 if (!isInteractive && onRowClick) {
                   onRowClick(row);
                 }

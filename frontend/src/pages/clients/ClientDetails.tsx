@@ -142,12 +142,12 @@ export const ClientDetails: React.FC = () => {
 
     // Gestion spéciale pour les tableaux (comme subjects)
     if (path === "demande.subjects" && Array.isArray(value)) {
-      return value.length > 0 ? value.join(", ") : "Non renseignées";
+      return value.length > 0 ? value.join(", ") : "";
     }
 
     // Gestion spéciale pour plannedTeacher
     if (path === "plannedTeacher") {
-      if (!value) return "Non assigné";
+      if (!value) return "";
       if (typeof value === "string") return value;
       if (
         typeof value === "object" &&
@@ -156,7 +156,7 @@ export const ClientDetails: React.FC = () => {
       ) {
         return `${(value as any).firstName} ${(value as any).lastName}`;
       }
-      return "Non assigné";
+      return "";
     }
 
     // Gestion des dates - retourner format ISO pour input type="date"
@@ -168,7 +168,7 @@ export const ClientDetails: React.FC = () => {
       return value.split("T")[0]; // Format yyyy-MM-dd pour input date
     }
 
-    return value || "Non renseigné";
+    return value || "";
   };
 
   if (isLoading) {
@@ -266,13 +266,14 @@ export const ClientDetails: React.FC = () => {
         required: true,
       },
       {
-        key: "gender",
+        key: "relation",
         label: "Civilité",
-        field: "primaryContact.gender",
+        field: "primaryContact.relation",
         type: "select",
         options: [
-          { value: "M.", label: "Monsieur" },
-          { value: "Mme", label: "Madame" },
+          { value: "père", label: "Père" },
+          { value: "mère", label: "Mère" },
+          { value: "tuteur", label: "Tuteur" },
         ],
         required: true,
       },
@@ -311,7 +312,7 @@ export const ClientDetails: React.FC = () => {
       {
         key: "relationship",
         label: "Relation",
-        field: "primaryContact.relationship",
+        field: "primaryContact.relation",
         type: "text",
         placeholder: "Père, Mère, etc.",
         required: false,
@@ -396,6 +397,18 @@ export const ClientDetails: React.FC = () => {
         type: "tel",
         placeholder: "06 12 34 56 78",
         required: false,
+      },
+      {
+        key: "relation",
+        label: "Lien de parenté",
+        field: "secondaryContact.relation",
+        type: "select",
+        required: false,
+        options: [
+          { value: "père", label: "Père" },
+          { value: "mère", label: "Mère" },
+          { value: "tuteur", label: "Tuteur légal" },
+        ],
       },
       {
         key: "birthDate",
@@ -510,7 +523,7 @@ export const ClientDetails: React.FC = () => {
                 lastName: data.lastName as string,
                 primaryPhone: data.primaryPhone as string,
                 email: data.email as string,
-                gender: data.gender as string,
+                relation: data.relation as string,
                 secondaryPhone: (data.secondaryPhone as string) || null,
                 address: {
                   street: data.street as string,
@@ -557,6 +570,7 @@ export const ClientDetails: React.FC = () => {
                 lastName: data.lastName as string,
                 phone: data.phone as string,
                 email: data.email as string,
+                relation: data.relation as string,
                 birthDate: data.birthDate
                   ? new Date(data.birthDate as string)
                   : null,
@@ -649,7 +663,7 @@ export const ClientDetails: React.FC = () => {
                 label: "Date de création",
                 value: client.createdAt
                   ? new Date(client.createdAt).toLocaleDateString("fr-FR")
-                  : "Non renseignée",
+                  : "",
                 type: "text" as const,
                 required: false,
               },
@@ -658,7 +672,7 @@ export const ClientDetails: React.FC = () => {
                 label: "Dernière modification",
                 value: client.updatedAt
                   ? new Date(client.updatedAt).toLocaleDateString("fr-FR")
-                  : "Non renseignée",
+                  : "",
                 type: "text" as const,
                 required: false,
               },

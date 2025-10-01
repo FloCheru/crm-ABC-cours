@@ -51,11 +51,12 @@
      ========================================================================== */
 
 .table__row {
-  transition: background-color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .table__row:hover {
   background-color: var(--surface-tertiary);
+  filter: brightness(0.95);
 }
 
 .table__row--clickable {
@@ -63,7 +64,7 @@
 }
 
 .table__row--clickable:hover {
-  background-color: var(--primary-light-hover);
+  filter: brightness(0.90);
 }
 
 .table__row:not(:last-child) {

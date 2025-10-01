@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Navbar,
@@ -12,26 +12,45 @@ import {
   StatusBadge,
 } from "../../../components";
 import { ndrService } from "../../../services/ndrService";
+import type { NDR } from "../../../services/ndrService";
 import {
   getFamilyDisplayName,
   generateCouponSeriesName,
   getBeneficiariesDisplay,
 } from "../../../utils/familyNameUtils";
-import type { CouponSeries } from "../../../types/coupon";
 
 // Type pour les données du tableau avec l'id requis
-type TableRowData = CouponSeries & { id: string };
+type TableRowData = NDR & { id: string };
 
 export const Admin: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Utilisation du nouveau store global pour les séries
-  const { series, isLoading, error: storeError } = useCouponSeriesGlobal();
-
   const [error, setError] = useState<string>("");
-  const couponsData = series;
+  const [ndrs, setNdrs] = useState<NDR[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Charger les NDRs au montage du composant
+  useEffect(() => {
+    const loadNdrs = async () => {
+      try {
+        setIsLoading(true);
+        const data = await ndrService.getAllNdrs();
+        console.log("📦 NDRs reçues:", data.ndrs);
+        console.log("📦 Première NDR familyId:", data.ndrs?.[0]?.familyId);
+        setNdrs(data.ndrs || []);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Erreur lors du chargement"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadNdrs();
+  }, []);
 
   // Les données sont maintenant gérées par le store global
 
@@ -43,15 +62,17 @@ export const Admin: React.FC = () => {
     navigate(`/admin/coupons/${row._id}/coupons`);
   };
 
-  const handleDeleteSeries = async (seriesId: string) => {
+  const handleDeleteSeries = async (ndrId: string) => {
     if (
       window.confirm(
-        "Êtes-vous sûr de vouloir supprimer cette série de coupons ?"
+        "Êtes-vous sûr de vouloir supprimer cette NDR ?"
       )
     ) {
       try {
-        await couponSeriesService.deleteCouponSeries(seriesId);
-        // Les données seront automatiquement rafraîchies par le système de cache
+        await ndrService.deleteNdr(ndrId);
+        // Recharger les données
+        const data = await ndrService.getAllNdrs();
+        setNdrs(data.ndrs || []);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Erreur lors de la suppression"
@@ -77,11 +98,13 @@ export const Admin: React.FC = () => {
   };
 
   // Filtrer les données selon le terme de recherche
-  const filteredData = couponsData.filter((series) => {
-    const familyName = getFamilyDisplayName(series.familyId, "");
-    const subjectName = series.subject?.name || "";
+  const filteredData = ndrs.filter((ndr) => {
+    const familyName = getFamilyDisplayName(ndr.familyId, "");
+    const subjectName = ndr.subjects?.[0]?.name || "";
     const creatorName =
-      series.createdBy?.firstName + " " + series.createdBy?.lastName || "";
+      typeof ndr.createdBy?.userId === "object"
+        ? `${ndr.createdBy.userId.firstName} ${ndr.createdBy.userId.lastName}`
+        : "";
 
     return (
       familyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,25 +114,25 @@ export const Admin: React.FC = () => {
   });
 
   // Transformer les données pour le tableau (ajouter l'id requis)
-  const tableData: TableRowData[] = filteredData.map((series) => ({
-    ...series,
-    id: series._id, // Ajouter l'id requis par le composant Table
+  const tableData: TableRowData[] = filteredData.map((ndr) => ({
+    ...ndr,
+    id: ndr._id, // Ajouter l'id requis par le composant Table
   }));
 
-  // Calculer les statistiques des séries
-  const totalSeries = couponsData.length;
-  const activeSeries = couponsData.filter(
-    (series) => series.status === "active"
+  // Calculer les statistiques des NDRs
+  const totalSeries = ndrs.length;
+  const activeSeries = ndrs.filter(
+    (ndr) => ndr.status === "pending"
   ).length;
-  const completedSeries = couponsData.filter(
-    (series) => series.status === "completed"
+  const completedSeries = ndrs.filter(
+    (ndr) => ndr.status === "paid"
   ).length;
-  const totalCoupons = couponsData.reduce(
-    (sum, series) => sum + series.totalCoupons,
+  const totalCoupons = ndrs.reduce(
+    (sum, ndr) => sum + ndr.quantity,
     0
   );
-  const usedCoupons = couponsData.reduce(
-    (sum, series) => sum + series.usedCoupons,
+  const usedCoupons = ndrs.reduce(
+    (sum, ndr) => sum + (ndr.coupons?.filter(c => c.status === "used").length || 0),
     0
   );
   const remainingCoupons = totalCoupons - usedCoupons;
@@ -170,31 +193,32 @@ export const Admin: React.FC = () => {
       label: "Matière",
       render: (_: unknown, row: TableRowData) => (
         <div className="font-medium">
-          {row.subject?.name || "Matière inconnue"}
+          {row.subjects?.[0]?.name || "Matière inconnue"}
         </div>
       ),
     },
     {
       key: "totalCoupons",
       label: "Total coupons",
-      render: (_: unknown, row: TableRowData) => row.totalCoupons,
+      render: (_: unknown, row: TableRowData) => row.quantity,
     },
     {
       key: "utilises",
       label: "Utilisés",
-      render: (_: unknown, row: TableRowData) => row.usedCoupons,
+      render: (_: unknown, row: TableRowData) =>
+        row.coupons?.filter(c => c.status === "used").length || 0,
     },
     {
       key: "restants",
       label: "Restants",
       render: (_: unknown, row: TableRowData) =>
-        row.totalCoupons - row.usedCoupons,
+        row.quantity - (row.coupons?.filter(c => c.status === "used").length || 0),
     },
     {
       key: "montantTotal",
       label: "Montant total",
       render: (_: unknown, row: TableRowData) =>
-        `${(row.hourlyRate * row.totalCoupons).toFixed(2)} €`,
+        `${(row.hourlyRate * row.quantity).toFixed(2)} €`,
     },
 
     {
@@ -203,21 +227,21 @@ export const Admin: React.FC = () => {
       render: (_: unknown, row: TableRowData) => (
         <StatusBadge
           variant={
-            row.status === "active"
+            row.status === "pending"
               ? "active"
-              : row.status === "completed"
+              : row.status === "paid"
               ? "terminee"
-              : row.status === "expired"
+              : row.status === "overdue"
               ? "bloquee"
               : "disponible"
           }
         >
-          {row.status === "active"
-            ? "Actif"
-            : row.status === "completed"
-            ? "Terminé"
-            : row.status === "expired"
-            ? "Expiré"
+          {row.status === "pending"
+            ? "En attente"
+            : row.status === "paid"
+            ? "Payé"
+            : row.status === "overdue"
+            ? "En retard"
             : row.status}
         </StatusBadge>
       ),
@@ -251,12 +275,12 @@ export const Admin: React.FC = () => {
         backButton={{ label: "Retour admin", href: "/admin" }}
       />
       <Container layout="flex-col">
-        {(error || storeError) && (
+        {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             <div className="font-medium">
-              Erreur de chargement des séries de coupons:
+              Erreur de chargement des NDRs:
             </div>
-            <div className="text-sm mt-1">{storeError || error}</div>
+            <div className="text-sm mt-1">{error}</div>
           </div>
         )}
 
@@ -345,13 +369,13 @@ export const Admin: React.FC = () => {
           {isLoading ? (
             <div className="text-center py-8">
               <div className="text-gray-500">
-                Chargement des séries de coupons...
+                Chargement des NDRs...
               </div>
             </div>
           ) : filteredData.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-gray-500">
-                {storeError ? (
+                {error ? (
                   <div>
                     <div className="text-red-600 font-medium">
                       Erreur de chargement
@@ -361,10 +385,10 @@ export const Admin: React.FC = () => {
                     </div>
                   </div>
                 ) : searchTerm ? (
-                  "Aucune série trouvée pour cette recherche"
+                  "Aucune NDR trouvée pour cette recherche"
                 ) : (
                   <div>
-                    <div>Aucune série de coupons disponible</div>
+                    <div>Aucune NDR disponible</div>
                   </div>
                 )}
               </div>

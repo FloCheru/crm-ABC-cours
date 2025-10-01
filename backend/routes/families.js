@@ -69,7 +69,9 @@ router.post("/", authorize(["admin"]), async (req, res) => {
     };
 
     const savedFamily = await FamilyService.createFamily(familyData);
-    const formattedFamily = await FamilyService.formatFamilyForCache(savedFamily.toObject());
+    const formattedFamily = await FamilyService.formatFamilyForCache(
+      savedFamily.toObject()
+    );
 
     res.status(201).json({
       message: "Famille créée avec succès",
@@ -131,7 +133,7 @@ router.patch("/:id/primary-contact", authorize(["admin"]), async (req, res) => {
       secondaryPhone: req.body.secondaryPhone,
       email: req.body.email,
       birthDate: req.body.birthDate,
-      gender: req.body.gender,
+      relation: req.body.relation,
     };
 
     // Ajouter les champs optionnels s'ils sont fournis
@@ -189,6 +191,7 @@ router.patch(
         phone: req.body.phone,
         email: req.body.email,
         birthDate: req.body.birthDate,
+        relation: req.body.relation,
       };
 
       console.log("📋 secondaryContactData reçu:", secondaryContactData);
@@ -257,7 +260,6 @@ router.patch("/:id/demande", authorize(["admin"]), async (req, res) => {
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
-
 
 // @route   PATCH /api/families/:id/billing-address
 // @desc    Mettre à jour l'adresse de facturation

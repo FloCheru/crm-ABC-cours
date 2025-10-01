@@ -181,7 +181,7 @@ export const DataCard: React.FC<DataCardProps> = ({
         const option = options.find(opt => opt.value === displayValue);
         readDisplayValue = option ? option.label : displayValue;
       } else if (!displayValue) {
-        readDisplayValue = "Non renseigné";
+        readDisplayValue = type === "date" ? null : "";
       }
 
       return (

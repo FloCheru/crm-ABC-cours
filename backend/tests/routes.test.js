@@ -28,7 +28,7 @@ describe("Routes API - Families", () => {
     testDataFactory.reset();
 
     // Clear cache before each test
-    CacheManager.clear('families');
+    CacheManager.clear("families");
 
     // Créer un utilisateur admin de test
     const adminData = testDataFactory.createTestAdmin();
@@ -76,7 +76,7 @@ describe("Routes API - Families", () => {
       expect(family.primaryContact).toHaveProperty("lastName");
       expect(family.primaryContact).toHaveProperty("primaryPhone");
       expect(family.primaryContact).toHaveProperty("email");
-      expect(family.primaryContact).toHaveProperty("gender");
+      expect(family.primaryContact).toHaveProperty("relation");
 
       // Structure address
       expect(family.address).toHaveProperty("street");
@@ -143,7 +143,7 @@ describe("Routes API - Families", () => {
         lastName: "Martin-Updated",
         primaryPhone: "0987654321",
         email: "jean.updated@test.com",
-        gender: "M.",
+        relation: "père",
         secondaryPhone: "0123456789",
         birthDate: "1980-05-15",
       };
@@ -155,13 +155,16 @@ describe("Routes API - Families", () => {
         .expect(200);
 
       // Vérifications de la réponse
-      expect(response.body).toHaveProperty("message", "Contact principal mis à jour avec succès");
+      expect(response.body).toHaveProperty(
+        "message",
+        "Contact principal mis à jour avec succès"
+      );
       expect(response.body).toHaveProperty("primaryContact");
       expect(response.body.primaryContact.firstName).toBe("Jean-Updated");
       expect(response.body.primaryContact.lastName).toBe("Martin-Updated");
       expect(response.body.primaryContact.primaryPhone).toBe("0987654321");
       expect(response.body.primaryContact.email).toBe("jean.updated@test.com");
-      expect(response.body.primaryContact.gender).toBe("M.");
+      expect(response.body.primaryContact.relation).toBe("père");
     });
   });
 
@@ -175,7 +178,7 @@ describe("Routes API - Families", () => {
         level: "Seconde",
         subjects: [
           { id: "60f7b3b3b3b3b3b3b3b3b3b3" },
-          { id: "60f7b3b3b3b3b3b3b3b3b3b4" }
+          { id: "60f7b3b3b3b3b3b3b3b3b3b4" },
         ],
       };
 
@@ -186,11 +189,16 @@ describe("Routes API - Families", () => {
         .expect(200);
 
       // Vérifications de la réponse
-      expect(response.body).toHaveProperty("message", "Demande mise à jour avec succès");
+      expect(response.body).toHaveProperty(
+        "message",
+        "Demande mise à jour avec succès"
+      );
       expect(response.body).toHaveProperty("demande");
       expect(response.body.demande.level).toBe("Seconde");
       expect(response.body.demande.subjects).toHaveLength(2);
-      expect(response.body.demande.subjects[0].id).toBe("60f7b3b3b3b3b3b3b3b3b3b3");
+      expect(response.body.demande.subjects[0].id).toBe(
+        "60f7b3b3b3b3b3b3b3b3b3b3"
+      );
     });
   });
 
@@ -213,7 +221,10 @@ describe("Routes API - Families", () => {
         .expect(200);
 
       // Vérifications de la réponse
-      expect(response.body).toHaveProperty("message", "Adresse mise à jour avec succès");
+      expect(response.body).toHaveProperty(
+        "message",
+        "Adresse mise à jour avec succès"
+      );
       expect(response.body).toHaveProperty("address");
       expect(response.body.address.street).toBe("456 Avenue des Champs");
       expect(response.body.address.city).toBe("Lyon");
@@ -240,9 +251,14 @@ describe("Routes API - Families", () => {
         .expect(200);
 
       // Vérifications de la réponse
-      expect(response.body).toHaveProperty("message", "Adresse de facturation mise à jour avec succès");
+      expect(response.body).toHaveProperty(
+        "message",
+        "Adresse de facturation mise à jour avec succès"
+      );
       expect(response.body).toHaveProperty("billingAddress");
-      expect(response.body.billingAddress.street).toBe("789 Rue de la Facturation");
+      expect(response.body.billingAddress.street).toBe(
+        "789 Rue de la Facturation"
+      );
       expect(response.body.billingAddress.city).toBe("Marseille");
       expect(response.body.billingAddress.postalCode).toBe("13001");
     });
@@ -268,12 +284,17 @@ describe("Routes API - Families", () => {
         .expect(200);
 
       // Vérifications de la réponse
-      expect(response.body).toHaveProperty("message", "Contact secondaire mis à jour avec succès");
+      expect(response.body).toHaveProperty(
+        "message",
+        "Contact secondaire mis à jour avec succès"
+      );
       expect(response.body).toHaveProperty("secondaryContact");
       expect(response.body.secondaryContact.firstName).toBe("Sophie");
       expect(response.body.secondaryContact.lastName).toBe("Dubois");
       expect(response.body.secondaryContact.phone).toBe("0145678901");
-      expect(response.body.secondaryContact.email).toBe("sophie.dubois@test.com");
+      expect(response.body.secondaryContact.email).toBe(
+        "sophie.dubois@test.com"
+      );
     });
   });
 
@@ -294,7 +315,10 @@ describe("Routes API - Families", () => {
         .expect(200);
 
       // Vérifications de la réponse
-      expect(response.body).toHaveProperty("message", "Informations entreprise mises à jour avec succès");
+      expect(response.body).toHaveProperty(
+        "message",
+        "Informations entreprise mises à jour avec succès"
+      );
       expect(response.body).toHaveProperty("companyInfo");
       expect(response.body.companyInfo.urssafNumber).toBe("98765432101");
     });
@@ -320,8 +344,8 @@ describe("Routes API - NDR", () => {
     testDataFactory.reset();
 
     // Clear cache before each test
-    CacheManager.clear('families');
-    CacheManager.clear('ndrs');
+    CacheManager.clear("families");
+    CacheManager.clear("ndrs");
 
     // Créer un utilisateur admin de test
     const adminData = testDataFactory.createTestAdmin();
@@ -417,7 +441,7 @@ describe("Routes API - NDR", () => {
       });
 
       // Vérifier l'unicité des codes de coupons
-      const codes = savedNDR.coupons.map(c => c.code);
+      const codes = savedNDR.coupons.map((c) => c.code);
       const uniqueCodes = [...new Set(codes)];
       expect(uniqueCodes).toHaveLength(codes.length); // Tous les codes doivent être uniques
     });
@@ -438,10 +462,7 @@ describe("Routes API - NDR", () => {
         status: "brouillon",
       };
 
-      await request(app)
-        .post("/api/ndrs")
-        .send(ndrData)
-        .expect(401);
+      await request(app).post("/api/ndrs").send(ndrData).expect(401);
     });
 
     it("should return 400 when required fields are missing", async () => {

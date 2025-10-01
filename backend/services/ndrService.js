@@ -114,12 +114,26 @@ class NdrService {
     try {
       const ndrs = await NDR.find()
         .populate("familyId", "primaryContact address")
-        .populate("subjects.id", "name")
+        .populate("subjects.id", "name category")
         .populate("createdBy.userId", "firstName lastName")
         .sort({ createdAt: -1 })
         .lean();
 
-      return ndrs;
+      // Aplatir la structure subjects pour chaque NDR et renommer _id en id
+      return ndrs.map(ndr => ({
+        ...ndr,
+        subjects: ndr.subjects?.map(subject => {
+          const subjectData = subject.id;
+          if (subjectData && typeof subjectData === 'object') {
+            return {
+              id: subjectData._id,
+              name: subjectData.name,
+              category: subjectData.category
+            };
+          }
+          return subjectData;
+        }) || []
+      }));
     } catch (error) {
       console.error("Erreur lors de la récupération des NDRs:", error);
       throw error;
@@ -135,13 +149,28 @@ class NdrService {
     try {
       const ndr = await NDR.findById(ndrId)
         .populate("familyId", "primaryContact address students")
-        .populate("subjects.id", "name")
+        .populate("subjects.id", "name category")
         .populate("createdBy.userId", "firstName lastName")
         .populate("professor.id", "firstName lastName")
         .lean();
 
       if (!ndr) {
         throw new Error("NDR non trouvée");
+      }
+
+      // Aplatir la structure subjects et renommer _id en id
+      if (ndr.subjects) {
+        ndr.subjects = ndr.subjects.map(subject => {
+          const subjectData = subject.id;
+          if (subjectData && typeof subjectData === 'object') {
+            return {
+              id: subjectData._id,
+              name: subjectData.name,
+              category: subjectData.category
+            };
+          }
+          return subjectData;
+        });
       }
 
       return ndr;

@@ -191,7 +191,7 @@ class FamilyService {
       lastName: string;
       primaryPhone: string;
       email: string;
-      gender: string;
+      relation: string;
       secondaryPhone?: string | null;
       birthDate?: Date | null;
       address?: {

@@ -26,15 +26,14 @@ export interface Family {
     secondaryPhone?: string;
     email: string;
     birthDate?: Date;
-    relationship?: string; // Lien de parenté
-    gender: "M." | "Mme";
+    relation: "père" | "mère";
   };
   secondaryContact?: {
     firstName?: string;
     lastName?: string;
     phone?: string;
     email?: string;
-    relationship?: string; // Lien de parenté
+    relation?: "père" | "mère" | "tuteur";
     birthDate?: Date;
   };
   ndr: Array<{ id: string }>; // NDR ObjectId refs
@@ -180,15 +179,15 @@ export interface CreateFamilyData {
     secondaryPhone?: string;
     email: string;
     birthDate?: Date;
-    relationship?: string; // Lien de parenté
-    gender: "M." | "Mme";
+
+    relation: "père" | "mère";
   };
   secondaryContact?: {
     firstName?: string;
     lastName?: string;
     phone?: string;
     email?: string;
-    relationship?: string; // Lien de parenté
+    relation?: "père" | "mère" | "tuteur";
     birthDate?: Date;
   };
   // Section demande de cours (obligatoire) - INPUT TYPE (pour création)
