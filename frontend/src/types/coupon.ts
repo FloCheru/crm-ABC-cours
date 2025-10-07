@@ -1,65 +1,9 @@
 export interface Coupon {
   _id: string;
-  couponSeriesId: {
-    _id: string;
-    familyId: {
-      _id: string;
-      primaryContact: {
-        firstName: string;
-        lastName: string;
-        email: string;
-      };
-    };
-    studentId: {
-      _id: string;
-      firstName: string;
-      lastName: string;
-      grade?: string;
-    };
-    subject: {
-      _id: string;
-      name: string;
-      category: string;
-    };
-    hourlyRate: number;
-    totalCoupons: number;
-    usedCoupons: number;
-    status: "active" | "completed" | "expired";
-  };
-  familyId: string;
-  code: string; // Code unique du coupon (ex: "689DBB-001")
-  status: "available" | "used" | "expired" | "cancelled";
-  usedDate?: Date;
-  sessionDate?: Date;
-  sessionDuration?: number; // en minutes
-  sessionLocation?: "home" | "professor" | "online";
-  usedBy?: {
-    _id: string;
-    firstName: string;
-    lastName: string;
-  };
-  rating?: {
-    student?: {
-      score: number;
-      comment?: string;
-      ratedBy: string;
-      ratedAt: Date;
-    };
-    professor?: {
-      score: number;
-      comment?: string;
-      ratedBy: string;
-      ratedAt: Date;
-    };
-  };
-  notes?: string;
-  billingInfo?: {
-    invoiceNumber?: string;
-    invoiceDate?: Date;
-    amount?: number;
-  };
-  createdAt: Date;
-  updatedAt: Date;
+  couponSeriesId?: string;
+  code: string;
+  status: "available" | "used" | "deleted";
+  updatedAt: string;
 }
 
 export interface CouponSeries {

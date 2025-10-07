@@ -26,14 +26,14 @@ const getSubjectValue = (
   field: "hourlyRate" | "quantity" | "professorSalary"
 ): number => {
   if (!note.subjects || note.subjects.length === 0) return 0;
-  return note.subjects[0][field] || 0;
+  return (note as any).subjects[0][field] || 0;
 };
 
 const getSubjectName = (note: NDR): string => {
   if (!note.subjects || note.subjects.length === 0) return "N/A";
   const firstSubject = note.subjects[0];
-  if (typeof firstSubject.subjectId === "object") {
-    return firstSubject.subjectId.name;
+  if (typeof firstSubject.id === "object") {
+    return firstSubject.id.name;
   }
   return "Matière";
 };
@@ -204,23 +204,6 @@ export const Ndrs: React.FC = () => {
     navigate("/family-selection");
   };
 
-  const handleViewNote = (noteId: string) => {
-    console.log(`🔍 [SETTLEMENT-DASHBOARD] Navigation attempt to: ${noteId}`);
-
-    // Bloquer navigation si ID temporaire
-    if (noteId.startsWith("temp-")) {
-      console.log(
-        `🚫 [SETTLEMENT-DASHBOARD] Navigation blocked - temporary ID: ${noteId}`
-      );
-      return; // Pas de navigation
-    }
-
-    console.log(
-      `✅ [SETTLEMENT-DASHBOARD] Navigation allowed - valid ID: ${noteId}`
-    );
-    navigate(`/admin/dashboard/${noteId}`);
-  };
-
   const handleDeleteNote = async (noteId: string) => {
     try {
       setNoteToDelete(noteId);
@@ -247,7 +230,7 @@ export const Ndrs: React.FC = () => {
       const noteNumber = noteToDelete
         .substring(noteToDelete.length - 8)
         .toUpperCase();
-      const clientName = noteDetails?.clientName || "Inconnue";
+      const clientName = (noteDetails as any)?.clientName || "Inconnue";
 
       // Extraire familyId de la preview data
       const familyId =
@@ -260,7 +243,7 @@ export const Ndrs: React.FC = () => {
         familyId
       );
 
-      await ndrService.deleteSettlementNote(noteToDelete, familyId);
+      await ndrService.deleteNdr(noteToDelete, familyId);
 
       // TODO: Recharger les données après suppression
       // clearCache();
@@ -295,8 +278,8 @@ export const Ndrs: React.FC = () => {
   // Filtrer les données selon le terme de recherche
   const filteredData = ndrs.filter((note) => {
     const searchLower = searchTerm.toLowerCase();
-    const clientName = note.clientName?.toLowerCase() || "";
-    const department = note.department?.toLowerCase() || "";
+    const clientName = (note as any).clientName?.toLowerCase() || "";
+    const department = (note as any).department?.toLowerCase() || "";
     const paymentMethod = note.paymentMethod?.toLowerCase() || "";
     const subject = getSubjectName(note).toLowerCase();
 
@@ -372,7 +355,7 @@ export const Ndrs: React.FC = () => {
       key: "client",
       label: "Client",
       render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium text-sm">{row.clientName}</div>
+        <div className="font-medium text-sm">{(row as any).clientName}</div>
       ),
     },
     {
@@ -386,12 +369,12 @@ export const Ndrs: React.FC = () => {
           row.subjects.length > 0
         ) {
           // Extraire tous les noms de matières
-          const subjectNames = row.subjects.map((subject) => {
+          const subjectNames = row.subjects.map((subject: any) => {
             if (
-              typeof subject.subjectId === "object" &&
-              subject.subjectId.name
+              typeof subject.id === "object" &&
+              subject.id.name
             ) {
-              return subject.subjectId.name;
+              return subject.id.name;
             }
             return "Matière";
           });
@@ -408,16 +391,16 @@ export const Ndrs: React.FC = () => {
       label: "DPT",
       render: (_: unknown, row: TableRowData) => {
         // Utiliser d'abord le département extrait, puis le département existant, sinon extraire du code postal
-        let displayDepartment = row.extractedDepartment || row.department;
+        let displayDepartment = row.extractedDepartment || (row as any).department;
 
         // Si aucun département n'est disponible, essayer d'extraire à partir des données de famille
         if (
           !displayDepartment &&
           typeof row.familyId === "object" &&
-          row.familyId?.address?.postalCode
+          (row.familyId as any)?.address?.postalCode
         ) {
           displayDepartment = extractDepartmentFromPostalCode(
-            row.familyId.address.postalCode
+            (row.familyId as any).address.postalCode
           );
         }
 
@@ -454,16 +437,16 @@ export const Ndrs: React.FC = () => {
       label: "A/S",
       render: (_: unknown, row: TableRowData) => {
         // Utiliser d'abord le département extrait, puis le département existant, sinon extraire du code postal
-        let department = row.extractedDepartment || row.department;
+        let department = row.extractedDepartment || (row as any).department;
 
         // Si aucun département n'est disponible, essayer d'extraire à partir des données de famille
         if (
           !department &&
           typeof row.familyId === "object" &&
-          row.familyId?.address?.postalCode
+          (row.familyId as any)?.address?.postalCode
         ) {
           department = extractDepartmentFromPostalCode(
-            row.familyId.address.postalCode
+            (row.familyId as any).address.postalCode
           );
         }
 
@@ -484,16 +467,16 @@ export const Ndrs: React.FC = () => {
       label: "TVA",
       render: (_: unknown, row: TableRowData) => {
         // Utiliser d'abord le département extrait, puis le département existant, sinon extraire du code postal
-        let department = row.extractedDepartment || row.department;
+        let department = row.extractedDepartment || (row as any).department;
 
         // Si aucun département n'est disponible, essayer d'extraire à partir des données de famille
         if (
           !department &&
           typeof row.familyId === "object" &&
-          row.familyId?.address?.postalCode
+          (row.familyId as any)?.address?.postalCode
         ) {
           department = extractDepartmentFromPostalCode(
-            row.familyId.address.postalCode
+            (row.familyId as any).address.postalCode
           );
         }
 

@@ -1,22 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Navbar,
   PageHeader,
   Container,
-  ButtonGroup,
   SummaryCard,
 } from "../../../components";
 import {
   EditableCard,
   EditableField,
 } from "../../../components/ui/EditableCard";
-import { PDFGenerator } from "../../../components/pdf/PDFGenerator";
 import { ndrService } from "../../../services/ndrService";
-import type { Ndr } from "../../../services/ndrService";
+import type { NDR } from "../../../services/ndrService";
 import { familyService } from "../../../services/familyService";
 import type { Family } from "../../../types/family";
-import { subjectService } from "../../../services/subjectService";
 import type { Subject } from "../../../types/subject";
 
 // Constantes de traduction
@@ -57,7 +54,7 @@ export const NdrDetails: React.FC = () => {
   // Récupérer l'ID depuis localStorage
   const ndrId = localStorage.getItem("ndrId");
 
-  const [ndr, setNdr] = useState<Ndr | null>(null);
+  const [ndr, setNdr] = useState<NDR | null>(null);
   const [family, setFamily] = useState<Family | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,7 +79,7 @@ export const NdrDetails: React.FC = () => {
 
       // Charger la famille associée
       const familyId =
-        typeof note.familyId === "object" ? note.familyId._id : note.familyId;
+        typeof note.familyId === "object" ? (note.familyId as any)._id : note.familyId;
 
       if (familyId) {
         const familyData = await familyService.getFamily(familyId);
@@ -127,10 +124,6 @@ export const NdrDetails: React.FC = () => {
       navigate("/ndrs", { replace: true });
     }
   }, [ndrId, navigate]);
-
-  const handleBack = () => {
-    navigate("/ndrs");
-  };
 
   const getAsCode = (department: string): string => {
     if (!department) return "S";
@@ -259,7 +252,7 @@ export const NdrDetails: React.FC = () => {
                     variant: "secondary",
                   },
                   {
-                    value: getAsCode(ndr.department),
+                    value: getAsCode((ndr as any).department),
                     label: "A/S",
                     variant: "primary",
                   },
@@ -274,7 +267,7 @@ export const NdrDetails: React.FC = () => {
                 onSave={async (data) => {
                   await ndrService.updateNdr(ndr._id, {
                     status: data.status as string,
-                    paymentMethod: data.paymentMethod as string,
+                    paymentMethod: data.paymentMethod as "card" | "CESU" | "check" | "transfer" | "cash" | "PRLV",
                   });
                   await loadNdrDetails();
                 }}
@@ -404,7 +397,7 @@ export const NdrDetails: React.FC = () => {
               </EditableCard>
 
               {/* Échéancier */}
-              {ndr.paymentSchedule && (
+              {(ndr as any).paymentSchedule && (
                 <section className="settlement-details__section settlement-details__section--payment-schedule">
                   <h2>Échéancier de paiement</h2>
                   <div
@@ -414,27 +407,27 @@ export const NdrDetails: React.FC = () => {
                     <div className="settlement-details__field">
                       <label>Mode de règlement</label>
                       <p>
-                        {ndr.paymentSchedule.paymentMethod === "PRLV"
+                        {(ndr as any).paymentSchedule.paymentMethod === "PRLV"
                           ? "Prélèvement"
                           : "Chèque"}
                       </p>
                     </div>
                     <div className="settlement-details__field">
                       <label>Nombre d'échéances</label>
-                      <p>{ndr.paymentSchedule.numberOfInstallments}</p>
+                      <p>{(ndr as any).paymentSchedule.numberOfInstallments}</p>
                     </div>
                     <div className="settlement-details__field">
                       <label>
                         Jour de{" "}
-                        {ndr.paymentSchedule.paymentMethod === "PRLV"
+                        {(ndr as any).paymentSchedule.paymentMethod === "PRLV"
                           ? "prélèvement"
                           : "remise"}
                       </label>
-                      <p>Le {ndr.paymentSchedule.dayOfMonth} de chaque mois</p>
+                      <p>Le {(ndr as any).paymentSchedule.dayOfMonth} de chaque mois</p>
                     </div>
                   </div>
 
-                  {ndr.paymentSchedule.installments && (
+                  {(ndr as any).paymentSchedule.installments && (
                     <div>
                       <h3
                         style={{
@@ -457,8 +450,8 @@ export const NdrDetails: React.FC = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {ndr.paymentSchedule.installments.map(
-                              (installment, index) => (
+                            {(ndr as any).paymentSchedule.installments.map(
+                              (installment: any, index: number) => (
                                 <tr key={index}>
                                   <td>{index + 1}</td>
                                   <td>{installment.amount.toFixed(2)} €</td>

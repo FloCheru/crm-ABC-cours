@@ -79,10 +79,6 @@ export const ClientDetails: React.FC = () => {
     loadClientDetails();
   }, [clientId]);
 
-  // Fonction pour recharger les données du client (pour les DataCard autonomes)
-  const refetchClient = async () => {
-    await loadClientDetails();
-  };
 
   // Fonctions utilitaires pour les NDRs
   const getStatusBadge = (status: NDR["status"]) => {
@@ -104,7 +100,7 @@ export const ClientDetails: React.FC = () => {
       },
     };
 
-    const config = statusConfig[status];
+    const config = statusConfig[status as keyof typeof statusConfig];
     return <span className={config.className}>{config.label}</span>;
   };
 
@@ -120,7 +116,7 @@ export const ClientDetails: React.FC = () => {
         const subjectName =
           typeof subject.id === "string"
             ? subject.id
-            : subject.name || "Matière inconnue";
+            : subject.id.name || "Matière inconnue";
         return subjectName;
       })
       .join(", ");
@@ -887,7 +883,7 @@ export const ClientDetails: React.FC = () => {
                         }
                       : {
                           ...student,
-                          id: student._id || `student-${index}`,
+                          id: student.id || `student-${index}`,
                         }),
                   }))}
                   itemsPerPage={10}
@@ -938,7 +934,7 @@ export const ClientDetails: React.FC = () => {
                     {
                       key: "totalAmount",
                       label: "Montant total",
-                      render: (_, row: SettlementNote) =>
+                      render: (_, row: NDR) =>
                         `${calculateTotalAmount(row).toFixed(2)} €`,
                     },
                     {

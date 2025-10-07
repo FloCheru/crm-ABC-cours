@@ -18,20 +18,6 @@ import type { FamilyStats } from "../../services/familyService";
 import type { NDR } from "../../services/ndrService";
 import "./Clients.css";
 
-// Types pour les sujets avec typage sûr
-interface SubjectWithName {
-  _id: string;
-  name: string;
-}
-
-interface SubjectData {
-  subjectId: string | SubjectWithName;
-  subjectName?: string;
-  name?: string;
-  hourlyRate?: number;
-  quantity?: number;
-  professorSalary?: number;
-}
 
 // Type pour étudiant avec garantie de structure
 interface StudentData {
@@ -57,7 +43,7 @@ const getSubjectValue = (
 const getAllSubjectNames = (note: NDR): string => {
   if (!note.subjects || note.subjects.length === 0) return "Aucune matière";
   return note.subjects
-    .map((subject) => subject.name || "Matière")
+    .map((subject) => (typeof subject.id === "object" ? subject.id.name : "Matière"))
     .join(", ");
 };
 
@@ -93,7 +79,7 @@ export const Clients: React.FC = () => {
   // State for data management
   const [isLoading, setIsLoading] = useState(true);
   const [clients, setClients] = useState<Family[]>([]);
-  const [stats, setStats] = useState<FamilyStats | null>(null);
+  const [, setStats] = useState<FamilyStats | null>(null);
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isNDRModalOpen, setIsNDRModalOpen] = useState(false);
@@ -242,7 +228,7 @@ export const Clients: React.FC = () => {
     // Trouver la note pour afficher des détails dans la confirmation
     const noteToDelete = selectedFamilyNDRs.find((note) => note._id === noteId);
     const noteNumber = noteId.substring(noteId.length - 8).toUpperCase();
-    const clientName = noteToDelete?.clientName || "Inconnue";
+    const clientName = (noteToDelete as any)?.clientName || "Inconnue";
 
     if (
       window.confirm(
@@ -265,7 +251,7 @@ export const Clients: React.FC = () => {
         if (updatedNDRs.length === 0) {
           try {
             await familyService.updateFamily(selectedFamilyId, {
-              status: "prospect"
+              prospectStatus: "prospect"
             });
             console.log(`✅ Client reclassifié en prospect (0 NDR restantes)`);
           } catch (error) {
@@ -342,7 +328,7 @@ export const Clients: React.FC = () => {
       key: "clientName",
       label: "Client",
       render: (_: unknown, row: NDR & { id: string }) => (
-        <div className="text-sm font-medium">{row.clientName}</div>
+        <div className="text-sm font-medium">{(row as any).clientName}</div>
       ),
     },
     {
@@ -383,25 +369,27 @@ export const Clients: React.FC = () => {
       key: "department",
       label: "Dpt",
       render: (_: unknown, row: NDR & { id: string }) => (
-        <div className="text-sm">{row.department}</div>
+        <div className="text-sm">{(row as any).department}</div>
       ),
     },
     {
       key: "paymentMethod",
       label: "Paiement",
-      render: (_: unknown, row: NDR & { id: string }) => (
-        <div className="text-sm">
-          {row.paymentMethod === "card"
-            ? "CB"
-            : row.paymentMethod === "check"
-            ? "Chèque"
-            : row.paymentMethod === "transfer"
-            ? "Virement"
-            : row.paymentMethod === "cash"
-            ? "Espèces"
-            : row.paymentMethod}
-        </div>
-      ),
+      render: (_: unknown, row: NDR & { id: string }) => {
+        return (
+          <div className="text-sm">
+            {row.paymentMethod === "card"
+              ? "CB"
+              : row.paymentMethod === "check"
+              ? "Chèque"
+              : row.paymentMethod === "transfer"
+              ? "Virement"
+              : row.paymentMethod === "cash"
+              ? "Espèces"
+              : row.paymentMethod}
+          </div>
+        );
+      },
     },
     {
       key: "subjects",
@@ -443,10 +431,10 @@ export const Clients: React.FC = () => {
       render: (_: unknown, row: NDR & { id: string }) => (
         <div className="text-sm">
           <div className="font-medium">
-            {row.marginAmount?.toFixed(2) || "0.00"} €
+            {(row as any).marginAmount?.toFixed(2) || "0.00"} €
           </div>
           <div className="text-xs text-gray-500">
-            ({row.marginPercentage?.toFixed(1) || "0.0"}%)
+            ({(row as any).marginPercentage?.toFixed(1) || "0.0"}%)
           </div>
         </div>
       ),
@@ -468,10 +456,10 @@ export const Clients: React.FC = () => {
         return (
           <div
             className={`px-2 py-1 rounded border text-xs ${
-              statusColors[row.status]
+              statusColors[row.status as keyof typeof statusColors]
             }`}
           >
-            {statusLabels[row.status]}
+            {statusLabels[row.status as keyof typeof statusLabels]}
           </div>
         );
       },

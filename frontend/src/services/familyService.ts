@@ -132,7 +132,7 @@ class FamilyService {
   }
 
   async updateStudent(
-    familyId: string,
+    _familyId: string,
     studentId: string,
     studentData: AddStudentData
   ): Promise<Student> {

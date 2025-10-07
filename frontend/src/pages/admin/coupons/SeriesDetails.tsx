@@ -27,8 +27,8 @@ export const SeriesDetails: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [series, setSeries] = useState<CouponSeries | null>(null);
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [series] = useState<CouponSeries | null>(null);
+  const [coupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -154,21 +154,15 @@ export const SeriesDetails: React.FC = () => {
               ? "disponible"
               : _row.status === "used"
               ? "active"
-              : _row.status === "expired"
-              ? "bloquee"
-              : _row.status === "cancelled"
-              ? "terminee"
-              : "disponible"
+              : "terminee"
           }
         >
           {_row.status === "available"
             ? "Disponible"
             : _row.status === "used"
             ? "Utilisé"
-            : _row.status === "expired"
-            ? "Expiré"
-            : _row.status === "cancelled"
-            ? "Annulé"
+            : _row.status === "deleted"
+            ? "Supprimé"
             : _row.status}
         </StatusBadge>
       ),

@@ -37,9 +37,11 @@ export const CouponsList: React.FC = () => {
         // Extraire tous les coupons de toutes les NDRs
         const allCoupons: Coupon[] = ndrs.flatMap((ndr) =>
           (ndr.coupons || []).map((coupon) => ({
-            ...coupon,
             _id: coupon.id,
             couponSeriesId: ndr._id,
+            code: coupon.code,
+            status: coupon.status,
+            updatedAt: coupon.updatedAt,
           }))
         );
 
@@ -49,8 +51,8 @@ export const CouponsList: React.FC = () => {
         const newStats = {
           available: allCoupons.filter(c => c.status === "available").length,
           used: allCoupons.filter(c => c.status === "used").length,
-          expired: allCoupons.filter(c => c.status === "expired").length,
-          cancelled: allCoupons.filter(c => c.status === "cancelled").length,
+          expired: 0,
+          cancelled: allCoupons.filter(c => c.status === "deleted").length,
         };
         setStats(newStats);
       } catch (err) {
@@ -77,18 +79,10 @@ export const CouponsList: React.FC = () => {
 
   // Filtrer les données selon le terme de recherche et le statut
   const filteredData = coupons.filter((coupon) => {
-    const familyName = coupon.couponSeriesId?.familyId?.primaryContact
-      ? `${coupon.couponSeriesId.familyId.primaryContact.firstName} ${coupon.couponSeriesId.familyId.primaryContact.lastName}`
-      : "";
-    const studentName = coupon.couponSeriesId?.studentId
-      ? `${coupon.couponSeriesId.studentId.firstName} ${coupon.couponSeriesId.studentId.lastName}`
-      : "";
     const couponCode = coupon.code || "";
 
     const matchesSearch =
       searchTerm === "" ||
-      familyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       couponCode.includes(searchTerm);
 
     const matchesStatus = statusFilter === "" || coupon.status === statusFilter;
@@ -118,73 +112,10 @@ export const CouponsList: React.FC = () => {
       ),
     },
     {
-      key: "series",
-      label: "Série",
-      render: (_: unknown, row: TableRowData) => {
-        if (!row.couponSeriesId?.familyId?.primaryContact)
-          return "Série inconnue";
-
-        const familyName = `${row.couponSeriesId.familyId.primaryContact.firstName} ${row.couponSeriesId.familyId.primaryContact.lastName}`;
-        const createdAt = new Date(row.createdAt);
-        const month = (createdAt.getMonth() + 1).toString().padStart(2, "0");
-        const year = createdAt.getFullYear();
-        const seriesName = `${familyName}_${month}_${year}`;
-
-        return <div className="font-medium">{seriesName}</div>;
-      },
-    },
-    {
-      key: "family",
-      label: "Famille",
+      key: "seriesId",
+      label: "ID Série",
       render: (_: unknown, row: TableRowData) => (
-        <div>
-          <div className="font-medium">
-            {row.couponSeriesId?.familyId &&
-            typeof row.couponSeriesId.familyId === "object" &&
-            row.couponSeriesId.familyId.primaryContact
-              ? `${row.couponSeriesId.familyId.primaryContact.firstName} ${row.couponSeriesId.familyId.primaryContact.lastName}`
-              : "Famille inconnue"}
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "student",
-      label: "Élève",
-      render: (_: unknown, row: TableRowData) => (
-        <div>
-          <div className="font-medium">
-            {row.couponSeriesId?.studentId
-              ? `${row.couponSeriesId.studentId.firstName} ${row.couponSeriesId.studentId.lastName}`
-              : "Élève inconnu"}
-          </div>
-          <div className="text-sm text-gray-500">
-            {row.couponSeriesId?.studentId?.grade || ""}
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "subject",
-      label: "Matière",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">
-          {row.couponSeriesId?.subject?.name || "Matière inconnue"}
-        </div>
-      ),
-    },
-    {
-      key: "professor",
-      label: "Professeur",
-      render: () => <div className="text-sm text-gray-500">À implémenter</div>,
-    },
-    {
-      key: "unitPrice",
-      label: "PU (€)",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium">
-          {row.couponSeriesId?.hourlyRate?.toFixed(2) || "0.00"} €
-        </div>
+        <div className="text-sm">{row.couponSeriesId || "-"}</div>
       ),
     },
     {
@@ -197,8 +128,6 @@ export const CouponsList: React.FC = () => {
               ? "disponible"
               : row.status === "used"
               ? "active"
-              : row.status === "expired"
-              ? "bloquee"
               : "terminee"
           }
         >
@@ -206,21 +135,19 @@ export const CouponsList: React.FC = () => {
             ? "Disponible"
             : row.status === "used"
             ? "Utilisé"
-            : row.status === "expired"
-            ? "Expiré"
-            : row.status === "cancelled"
-            ? "Annulé"
+            : row.status === "deleted"
+            ? "Supprimé"
             : row.status}
         </StatusBadge>
       ),
     },
     {
-      key: "usedDate",
-      label: "Date d'utilisation",
+      key: "updatedDate",
+      label: "Dernière mise à jour",
       render: (_: unknown, row: TableRowData) => (
         <div className="text-sm">
-          {row.usedDate
-            ? new Date(row.usedDate).toLocaleDateString("fr-FR")
+          {row.updatedAt
+            ? new Date(row.updatedAt).toLocaleDateString("fr-FR")
             : "-"}
         </div>
       ),
@@ -307,8 +234,7 @@ export const CouponsList: React.FC = () => {
                 <option value="">Tous les statuts</option>
                 <option value="available">Disponible</option>
                 <option value="used">Utilisé</option>
-                <option value="expired">Expiré</option>
-                <option value="cancelled">Annulé</option>
+                <option value="deleted">Supprimé</option>
               </select>
             </div>
             <Button variant="outline" onClick={handleReset}>

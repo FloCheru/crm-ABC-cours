@@ -209,7 +209,7 @@ export const BeneficiariesSubjects: React.FC = () => {
             </Card>
 
             {/* Students */}
-            {family.students?.map((student, index) => (
+            {family.students?.map((student) => (
               <Card
                 key={student.id}
                 className={`cursor-pointer hover:bg-accent transition-colors ${

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Navbar,
   Button,
@@ -15,7 +15,6 @@ import {
   Container,
 } from "../../components";
 import { familyService } from "../../services/familyService";
-import rdvService from "../../services/rdvService";
 import { subjectService } from "../../services/subjectService";
 import { getAllGrades } from "../../constants/schoolLevels";
 import type { Family, Student } from "../../types/family";
@@ -46,7 +45,7 @@ export const ProspectDetails: React.FC = () => {
   const prospectId = localStorage.getItem("prospectId");
   const [prospect, setProspect] = useState<Family | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string>("");
+  const [, setError] = useState<string>("");
 
   // RDV depuis le store global
   const prospectRdvs = prospect?.rdvs || [];
@@ -129,7 +128,7 @@ export const ProspectDetails: React.FC = () => {
 
   // Fonctions RDV supprimées - gérées via Modal component
 
-  const handleDeleteRdv = async (rdvId: string) => {
+  const handleDeleteRdv = async (_rdvId: string) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce RDV ?")) return;
 
     try {
@@ -236,7 +235,7 @@ export const ProspectDetails: React.FC = () => {
 
     try {
       // ✨ NOUVEAU: Utiliser familyService avec ActionCache intégré
-      await familyService.removeStudentFromFamily(
+      await familyService.removeStudent(
         capturedProspectId,
         capturedStudentId
       );
@@ -732,7 +731,7 @@ export const ProspectDetails: React.FC = () => {
             // Utiliser la fonction spécialisée pour demande
             const demandeData = {
               grade: data.beneficiaryGrade as string,
-              subjects: prospect.demande?.subjects || [],
+              subjects: (prospect.demande?.subjects || []).map((s: any) => typeof s === "string" ? s : s.id),
             };
 
             await familyService.updateDemande(prospectId!, demandeData);
@@ -855,7 +854,7 @@ export const ProspectDetails: React.FC = () => {
                 ]}
                 data={students.map((student) => ({
                   ...student,
-                  id: student._id || `student-${students.indexOf(student)}`,
+                  id: student.id || `student-${students.indexOf(student)}`,
                 }))}
                 onRowClick={(student) => handleViewData(student, "student")}
                 itemsPerPage={10}
@@ -960,9 +959,9 @@ export const ProspectDetails: React.FC = () => {
 
             // Traiter le statut prospect avec UPDATE_PROSPECT_STATUS
             if (prospectStatus !== undefined) {
-              await familyService.updateProspectStatus(
+              await familyService.updateFamily(
                 prospectId!,
-                prospectStatus || null
+                { prospectStatus: prospectStatus || null }
               );
             }
 

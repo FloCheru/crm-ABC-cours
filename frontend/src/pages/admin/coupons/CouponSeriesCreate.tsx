@@ -132,7 +132,7 @@ export function CouponSeriesCreate() {
     {
       label: "Élève :",
       value: selectedStudent
-        ? `${selectedStudent.firstName} ${selectedStudent.lastName} (${selectedStudent.school.level})`
+        ? `${selectedStudent.firstName} ${selectedStudent.lastName} (${selectedStudent.school.grade})`
         : "À sélectionner",
     },
     {
@@ -217,7 +217,7 @@ export function CouponSeriesCreate() {
                       { value: "", label: "Sélectionner un élève" },
                       ...(students || []).map((student) => ({
                         value: student._id,
-                        label: `${student.firstName} ${student.lastName} (${student.school.level})`,
+                        label: `${student.firstName} ${student.lastName} (${student.school.grade})`,
                       })),
                     ]}
                   />

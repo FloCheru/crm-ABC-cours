@@ -761,36 +761,6 @@ export const EntityForm = <T extends EntityType>(
     return Object.keys(newErrors).length === 0;
   };
 
-  // Données de test pour remplissage automatique
-  const getTestData = (): Record<string, unknown> => {
-    if (entityType === "family") {
-      return {
-        "primaryContact.firstName": "Martin",
-        "primaryContact.lastName": "Dubois",
-        "primaryContact.email": "martin.dubois@email.com",
-        "primaryContact.primaryPhone": "0123456789",
-        "primaryContact.relation": "père",
-        "primaryContact.secondaryPhone": "0987654321",
-        "primaryContact.birthDate": "1980-05-15",
-        "address.street": "123 Rue de la Paix",
-        "address.city": "Paris",
-        "address.postalCode": "75001",
-        "secondaryContact.firstName": "Sophie",
-        "secondaryContact.lastName": "Dubois",
-        "secondaryContact.email": "sophie.dubois@email.com",
-        "secondaryContact.phone": "0145678901",
-        "secondaryContact.relation": "mère",
-        sameAddress: true,
-        "companyInfo.urssafNumber": "12345678901",
-        "demande.beneficiaryType": "eleves",
-        "demande.beneficiaryGrade": "3ème",
-        "demande.subjects": "Mathématiques, Français, Anglais",
-        notes:
-          "Famille de test - créée automatiquement pour les tests de développement",
-      };
-    }
-    return {};
-  };
 
   // Vérifier si on est en environnement de développement
   const isDevelopment = import.meta.env.VITE_ENVIRONMENT === "development";

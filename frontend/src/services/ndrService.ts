@@ -24,7 +24,7 @@ interface CreateNDRData {
 
 interface NDR {
   _id: string;
-  familyId: string | { _id: string; address: { postalCode: string } };
+  familyId: string;
   beneficiaries: {
     students: Array<{
       id: string;
@@ -38,7 +38,7 @@ interface NDR {
     deadlinesDay: number;
   };
   subjects: Array<{
-    id: string | { _id: string; name: string; category: string };
+    id: { _id: string; name: string; category: string };
   }>;
   hourlyRate: number;
   quantity: number;

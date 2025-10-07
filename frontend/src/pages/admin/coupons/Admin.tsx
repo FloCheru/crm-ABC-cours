@@ -100,7 +100,7 @@ export const Admin: React.FC = () => {
   // Filtrer les données selon le terme de recherche
   const filteredData = ndrs.filter((ndr) => {
     const familyName = getFamilyDisplayName(ndr.familyId, "");
-    const subjectName = ndr.subjects?.[0]?.name || "";
+    const subjectName = ndr.subjects?.[0]?.id?.name || "";
     const creatorName =
       typeof ndr.createdBy?.userId === "object"
         ? `${ndr.createdBy.userId.firstName} ${ndr.createdBy.userId.lastName}`
@@ -160,20 +160,11 @@ export const Admin: React.FC = () => {
       label: "Famille",
       render: (_: unknown, row: TableRowData) => {
         const familyName = getFamilyDisplayName(row.familyId);
-        const isGenerated =
-          !row.familyId ||
-          typeof row.familyId === "string" ||
-          !row.familyId.primaryContact ||
-          !row.familyId.primaryContact.firstName?.trim() ||
-          !row.familyId.primaryContact.lastName?.trim();
 
         return (
           <div>
             <div className="font-medium">
               {familyName}
-              {isGenerated && familyName !== "Famille inconnue" && (
-                <span className="text-xs text-gray-500 ml-1">(auto)</span>
-              )}
             </div>
           </div>
         );
@@ -193,7 +184,7 @@ export const Admin: React.FC = () => {
       label: "Matière",
       render: (_: unknown, row: TableRowData) => (
         <div className="font-medium">
-          {row.subjects?.[0]?.name || "Matière inconnue"}
+          {row.subjects?.[0]?.id?.name || "Matière inconnue"}
         </div>
       ),
     },
