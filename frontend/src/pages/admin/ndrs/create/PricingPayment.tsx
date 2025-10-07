@@ -24,7 +24,7 @@ import { cn } from "../../../../lib/utils";
 export const PricingPayment: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const from = searchParams.get("from") || "ndr";
+  searchParams.get("from");
 
   // Options pour les Combobox
   const paymentMethods = [
@@ -116,7 +116,7 @@ export const PricingPayment: React.FC = () => {
 
     // Récupérer les données NDR existantes
     const existingNdrData = localStorage.getItem("ndrData");
-    let ndrData = {};
+    let ndrData: any = {};
 
     if (existingNdrData) {
       ndrData = JSON.parse(existingNdrData);
@@ -339,7 +339,7 @@ export const PricingPayment: React.FC = () => {
             <Switch
               id="hasDeadlines"
               checked={formData.hasDeadlines}
-              onCheckedChange={(checked) =>
+              onCheckedChange={(checked: boolean) =>
                 updateFormData("hasDeadlines", checked)
               }
             />

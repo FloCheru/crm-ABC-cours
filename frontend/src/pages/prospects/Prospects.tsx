@@ -41,7 +41,7 @@ export const Prospects: React.FC = () => {
   // États locaux simples
   const [prospects, setProspects] = useState<Family[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({ prospects: 0 });
+  const [, setStats] = useState({ prospects: 0 });
 
   // Récupération des données au chargement
   useEffect(() => {
@@ -339,7 +339,7 @@ export const Prospects: React.FC = () => {
         }
 
         // Priorité 2: Niveau de la demande (logique actuelle)
-        const level = row.demande?.level;
+        const level = (row.demande as any)?.level || row.demande?.grade;
         return <div className="text-sm">{level || "-"}</div>;
       },
     },
@@ -470,8 +470,8 @@ export const Prospects: React.FC = () => {
         },
         demande: {
           beneficiaryType: "eleves" as const,
-          level: "5ème",
-          subjects: subjectIds, // Utilise les vrais IDs
+          grade: "5ème",
+          subjects: subjectIds, // Already in correct format: Array<{ id: string }>
           notes: "Prospect créé automatiquement pour les tests",
         },
         billingAddress: {
@@ -495,7 +495,6 @@ export const Prospects: React.FC = () => {
 
       // Ajouter à la liste locale
       setProspects((prev) => [...prev, newProspect]);
-      setStats((prev) => ({ prospects: prev.prospects + 1 }));
 
       console.log("🚀 Prospect de test créé avec succès avec vraies données:", {
         subjects: subjects.length,
