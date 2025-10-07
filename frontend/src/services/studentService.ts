@@ -1,4 +1,4 @@
-import { apiClient } from "../utils";
+// import { apiClient } from "../utils"; // Pas encore utilisé
 
 class StudentService {
   /**

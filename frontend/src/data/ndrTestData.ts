@@ -8,7 +8,7 @@ export const mockNDRData: NDRTemplateData = {
 
   // Information client
   clientName: "LAVAURY PRISCILLA",
-  clientRelation: "mère" as "mère" | "père" | "tuteur",
+  // clientRelation: "mère" as "mère" | "père" | "tuteur",
   clientAddress: "1 Rue JEANNE GALZY\n34670 BAILLARGUES",
   department: "34 - Hérault",
 

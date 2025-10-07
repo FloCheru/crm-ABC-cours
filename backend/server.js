@@ -15,27 +15,10 @@ const envFile =
 
 dotenv.config({ path: path.join(__dirname, envFile) });
 
-// Import du logger automatique
-const logger = require("./utils/autoLogger");
-
-// Redirection des console.error vers AutoLogger
-const originalConsoleError = console.error;
-console.error = (...args) => {
-  // Garder l'affichage console original
-  originalConsoleError(...args);
-  // Ajouter au fichier de log via AutoLogger
-  const message = args
-    .map((arg) =>
-      typeof arg === "object" ? JSON.stringify(arg, null, 2) : String(arg)
-    )
-    .join(" ");
-  logger.error(message, true); // forceSync = true for errors
-};
-
-// Debug avec logger
-logger.info(`🔍 Environnement chargé: ${envFile}`);
-logger.info(`🔍 NODE_ENV: ${process.env.NODE_ENV}`);
-logger.info(`🔍 MONGODB_URI défini: ${!!process.env.MONGODB_URI}`);
+// Debug avec console standard
+console.log(`🔍 Environnement chargé: ${envFile}`);
+console.log(`🔍 NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`🔍 MONGODB_URI défini: ${!!process.env.MONGODB_URI}`);
 
 // Import du cache manager
 const CacheManager = require("./cache/cacheManager");
@@ -76,8 +59,8 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 // Log des origines autorisées pour debug
-logger.info(`🔍 CORS Origins autorisées: ${JSON.stringify(allowedOrigins)}`);
-logger.info(`🔍 FRONTEND_URL: ${process.env.FRONTEND_URL}`);
+console.log(`🔍 CORS Origins autorisées: ${JSON.stringify(allowedOrigins)}`);
+console.log(`🔍 FRONTEND_URL: ${process.env.FRONTEND_URL}`);
 
 app.use(
   cors({
@@ -88,7 +71,7 @@ app.use(
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
-        logger.warn(`⚠️ CORS bloqué pour l'origine: ${origin}`);
+        console.warn(`⚠️ CORS bloqué pour l'origine: ${origin}`);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -102,7 +85,7 @@ app.use(
 // CRITIQUE: Nécessaire pour le bon fonctionnement du rate limiting en production
 if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", 1); // Trust premier proxy (Railway/Heroku)
-  logger.info("🔧 Trust proxy activé pour la production");
+  console.log("🔧 Trust proxy activé pour la production");
 }
 
 // Rate limiting - Configuration adaptée pour le développement
@@ -117,30 +100,14 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-// Middleware de logging Morgan intégré avec AutoLogger
-const customMorganStream = {
-  write: (message) => {
-    // Retirer le \n final de Morgan pour éviter les doubles retours à la ligne
-    const cleanMessage = message.replace(/\n$/, "");
-    logger.info(cleanMessage);
-  },
-};
-
-// Morgan avec écriture via AutoLogger
+// Morgan logging
 app.use(morgan("combined")); // Console
-app.use(morgan("combined", { stream: customMorganStream })); // Fichier via AutoLogger
 
 // Middleware pour parser le JSON avec UTF-8
 app.use(express.json({ limit: "10mb", charset: "utf-8" }));
 app.use(express.urlencoded({ extended: true, charset: "utf-8" }));
 app.use(cookieParser());
 
-// Middleware de logging automatique des requêtes
-app.use((req, res, next) => {
-  const isTestRequest = req.headers["x-test-mode"] === "true";
-  logger.info(`${req.method} ${req.path}`, isTestRequest);
-  next();
-});
 
 // Middleware pour servir les fichiers uploadés
 app.use("/uploads", express.static("uploads"));
@@ -181,8 +148,7 @@ app.use("/api/rdv", rdvRoutes);
 
 // Middleware de gestion d'erreurs
 app.use((err, req, res, next) => {
-  const isTestRequest = req.headers["x-test-mode"] === "true";
-  logger.error(`${req.method} ${req.path} - ${err.message}`, isTestRequest);
+  console.error(`${req.method} ${req.path} - ${err.message}`);
 
   res.status(500).json({
     message: "Erreur interne du serveur",
@@ -192,11 +158,7 @@ app.use((err, req, res, next) => {
 
 // Route 404
 app.use("*", (req, res) => {
-  const isTestRequest = req.headers["x-test-mode"] === "true";
-  logger.warn(
-    `404 - Route non trouvée: ${req.method} ${req.path}`,
-    isTestRequest
-  );
+  console.warn(`404 - Route non trouvée: ${req.method} ${req.path}`);
   res.status(404).json({ message: "Route non trouvée" });
 });
 
@@ -209,39 +171,37 @@ const startServer = async () => {
   try {
     await connectDB();
     server = app.listen(PORT, () => {
-      logger.info(`🚀 Serveur démarré sur le port ${PORT}`);
-      logger.info(`📊 Mode: ${process.env.NODE_ENV || "development"}`);
-      logger.info(`🌐 URL: http://localhost:${PORT}`);
-      logger.info(`✅ Backend prêt pour les tests`);
-      logger.info(`🎯 Environnement: ${envFile}`);
-      logger.info(`📝 Logs automatiques activés: backend/logs/server.log`);
-
+      console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+      console.log(`📊 Mode: ${process.env.NODE_ENV || "development"}`);
+      console.log(`🌐 URL: http://localhost:${PORT}`);
+      console.log(`✅ Backend prêt pour les tests`);
+      console.log(`🎯 Environnement: ${envFile}`);
     });
   } catch (error) {
-    logger.error(`Erreur lors du démarrage du serveur: ${error.message}`);
+    console.error(`Erreur lors du démarrage du serveur: ${error.message}`);
     process.exit(1);
   }
 };
 
 // Graceful shutdown
 const gracefulShutdown = async (signal) => {
-  logger.info(`\n🛑 Signal ${signal} reçu. Arrêt propre du serveur...`);
+  console.log(`\n🛑 Signal ${signal} reçu. Arrêt propre du serveur...`);
 
   if (server) {
     server.close(() => {
-      logger.info("✅ Serveur HTTP fermé");
+      console.log("✅ Serveur HTTP fermé");
 
       // Fermer la connexion MongoDB
       mongoose.connection.close(false, () => {
-        logger.info("✅ Connexion MongoDB fermée");
-        logger.info("👋 Processus terminé proprement");
+        console.log("✅ Connexion MongoDB fermée");
+        console.log("👋 Processus terminé proprement");
         process.exit(0);
       });
     });
 
     // Forcer la fermeture après 10 secondes
     setTimeout(() => {
-      logger.error("⚠️ Fermeture forcée après timeout");
+      console.error("⚠️ Fermeture forcée après timeout");
       process.exit(1);
     }, 10000);
   }

@@ -14,7 +14,7 @@ export interface Coupon {
       _id: string;
       firstName: string;
       lastName: string;
-      level?: string;
+      grade?: string;
     };
     subject: {
       _id: string;
@@ -80,13 +80,13 @@ export interface CouponSeries {
     _id: string;
     firstName: string;
     lastName: string;
-    level?: string;
+    grade?: string;
   };
   studentIds?: Array<{
     _id: string;
     firstName: string;
     lastName: string;
-    level?: string;
+    grade?: string;
   }>;
   beneficiaryType?: "student" | "adult" | "mixed";
   totalCoupons: number;

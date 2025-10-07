@@ -1,21 +1,10 @@
 import { apiClient } from "../utils";
 import type { Family, Student, CreateFamilyData } from "../types/family";
-import type { ProspectStatus } from "../components/StatusDot";
 
 export interface FamilyStats {
   total: number;
   prospects: number;
   clients: number;
-}
-
-interface FamiliesResponse {
-  families: Family[];
-  pagination: {
-    current: number;
-    total: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
 }
 
 interface FamilyResponse {
@@ -32,7 +21,6 @@ export interface AddStudentData {
   birthDate: string; // ISO string format
   school: {
     name: string;
-    level: "primaire" | "collège" | "lycée" | "supérieur";
     grade: string;
   };
   contact?: {
@@ -155,9 +143,9 @@ class FamilyService {
     return response.student;
   }
 
-  async removeStudent(familyId: string, studentId: string): Promise<void> {
-    await apiClient.delete(`/api/families/${familyId}/students/${studentId}`);
-    console.log(`✅ Étudiant ${studentId} retiré de la famille ${familyId}`);
+  async removeStudent(_familyId: string, studentId: string): Promise<void> {
+    await apiClient.delete(`/api/families/${_familyId}/students/${studentId}`);
+    console.log(`✅ Étudiant ${studentId} retiré de la famille ${_familyId}`);
   }
 
   async updateFamily(
@@ -248,7 +236,7 @@ class FamilyService {
   async updateDemande(
     familyId: string,
     demandeData: {
-      level: string;
+      grade: string;
       subjects: string[];
     }
   ): Promise<Family> {

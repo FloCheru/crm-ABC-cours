@@ -15,7 +15,7 @@ import { familyService } from "../../services/familyService";
 import { ndrService } from "../../services/ndrService";
 import type { Family } from "../../types/family";
 import type { FamilyStats } from "../../services/familyService";
-import type { SettlementNote } from "../../types/settlement";
+import type { NDR } from "../../services/ndrService";
 import "./Clients.css";
 
 // Types pour les sujets avec typage sûr
@@ -44,62 +44,39 @@ interface StudentData {
 type TableRowData = Family & { id: string };
 // type CreateFamilyData = Omit<Family, "_id" | "createdAt" | "updatedAt">; // Non utilisé - clients créés via NDR
 
-// Fonctions utilitaires pour extraire les valeurs des subjects (copiées du tableau de bord)
+// Fonctions utilitaires pour extraire les valeurs (adaptées pour NDR)
 const getSubjectValue = (
-  note: SettlementNote,
-  field: "hourlyRate" | "quantity" | "professorSalary"
+  note: NDR,
+  field: "hourlyRate" | "quantity"
 ): number => {
-  if (!note.subjects || note.subjects.length === 0) return 0;
-  // Pour l'instant, on prend la première matière. Plus tard on pourra gérer plusieurs matières
-  return note.subjects[0][field] || 0;
+  if (field === "hourlyRate") return note.hourlyRate || 0;
+  if (field === "quantity") return note.quantity || 0;
+  return 0;
 };
 
-// getTotalSubjectValue and getSubjectName removed as they were unused
-
-const getAllSubjectNames = (note: SettlementNote): string => {
+const getAllSubjectNames = (note: NDR): string => {
   if (!note.subjects || note.subjects.length === 0) return "Aucune matière";
   return note.subjects
-    .map((subject) => {
-      const subjectData = subject as SubjectData;
-
-      // Si subjectId est un objet avec un nom
-      if (
-        typeof subjectData.subjectId === "object" &&
-        subjectData.subjectId &&
-        "name" in subjectData.subjectId
-      ) {
-        return (subjectData.subjectId as SubjectWithName).name;
-      }
-
-      // Sinon, essayer subjectName ou name directement
-      return subjectData.subjectName || subjectData.name || "Matière";
-    })
+    .map((subject) => subject.name || "Matière")
     .join(", ");
 };
 
 const getStudentName = (
-  note: SettlementNote,
+  note: NDR,
   familyStudents?: Array<{ _id: string; firstName: string; lastName: string }>
 ): string => {
-  // 🔍 DÉBOGAGE - Analyser les données d'entrée
-
-  // Les NDR stockent les IDs des étudiants, pas les noms
-  if (!note.studentIds || !note.studentIds.length) return "Non spécifié";
+  // Les NDR stockent les bénéficiaires
+  if (!note.beneficiaries?.students || !note.beneficiaries.students.length) {
+    return note.beneficiaries?.adult ? "Adulte" : "Non spécifié";
+  }
 
   // Si on n'a pas les données de famille, on ne peut pas résoudre les noms
   if (!familyStudents || !familyStudents.length) return "Non spécifié";
 
-  // Cross-référencer les studentIds avec les étudiants de la famille
-  const studentNames = note.studentIds
-    .map((studentId) => {
-      const student = familyStudents.find((s) => s._id === studentId);
-      console.log("🔍 Match search:", {
-        searchingFor:
-          typeof studentId === "string"
-            ? studentId.substring(studentId.length - 8)
-            : studentId,
-        found: student ? `${student.firstName} ${student.lastName}` : null,
-      });
+  // Cross-référencer les student IDs avec les étudiants de la famille
+  const studentNames = note.beneficiaries.students
+    .map((beneficiary) => {
+      const student = familyStudents.find((s) => s._id === beneficiary.id);
       return student ? `${student.firstName} ${student.lastName}` : null;
     })
     .filter((name) => name !== null);
@@ -121,9 +98,7 @@ export const Clients: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isNDRModalOpen, setIsNDRModalOpen] = useState(false);
   const [selectedFamilyId, setSelectedFamilyId] = useState<string>("");
-  const [selectedFamilyNDRs, setSelectedFamilyNDRs] = useState<
-    SettlementNote[]
-  >([]);
+  const [selectedFamilyNDRs, setSelectedFamilyNDRs] = useState<NDR[]>([]);
   const [isLoadingNDRs, setIsLoadingNDRs] = useState(false);
 
   // Load families and stats data
@@ -157,17 +132,13 @@ export const Clients: React.FC = () => {
   // Function to get first NDR date for a family
   const getFirstNDRDate = (familyId: string): string => {
     const family = clients.find((f) => f._id === familyId);
-    if (!family?.settlementNotes || family.settlementNotes.length === 0) {
+    if (!family?.ndr || family.ndr.length === 0) {
       return "";
     }
 
-    // Find the earliest NDR date
-    const earliestDate = family.settlementNotes.reduce((earliest, note) => {
-      const noteDate = new Date(note.createdAt);
-      return noteDate < earliest ? noteDate : earliest;
-    }, new Date(family.settlementNotes[0].createdAt));
-
-    return earliestDate.toLocaleDateString("fr-FR");
+    // La famille contient seulement les IDs des NDRs, pas les dates
+    // Il faudrait charger les NDRs pour avoir les dates
+    return "N/A";
   };
 
   const handleViewSettlementNotes = async (familyId: string) => {
@@ -293,10 +264,9 @@ export const Clients: React.FC = () => {
         // Si plus de NDR, reclasser la famille en prospect
         if (updatedNDRs.length === 0) {
           try {
-            await familyService.updateFamilyStatus(
-              selectedFamilyId,
-              "prospect"
-            );
+            await familyService.updateFamily(selectedFamilyId, {
+              status: "prospect"
+            });
             console.log(`✅ Client reclassifié en prospect (0 NDR restantes)`);
           } catch (error) {
             console.error("Erreur lors du reclassement:", error);
@@ -348,7 +318,7 @@ export const Clients: React.FC = () => {
       label: "N°",
       render: (
         _: unknown,
-        row: SettlementNote & { id: string },
+        row: NDR & { id: string },
         index?: number
       ) => (
         <div className="text-sm font-medium">
@@ -362,7 +332,7 @@ export const Clients: React.FC = () => {
     {
       key: "createdAt",
       label: "Date",
-      render: (_: unknown, row: SettlementNote & { id: string }) => (
+      render: (_: unknown, row: NDR & { id: string }) => (
         <div className="text-sm">
           {new Date(row.createdAt).toLocaleDateString("fr-FR")}
         </div>
@@ -371,14 +341,14 @@ export const Clients: React.FC = () => {
     {
       key: "clientName",
       label: "Client",
-      render: (_: unknown, row: SettlementNote & { id: string }) => (
+      render: (_: unknown, row: NDR & { id: string }) => (
         <div className="text-sm font-medium">{row.clientName}</div>
       ),
     },
     {
       key: "studentName",
       label: "Bénéficiaires",
-      render: (_: unknown, row: SettlementNote & { id: string }) => {
+      render: (_: unknown, row: NDR & { id: string }) => {
         // Récupérer les étudiants de la famille sélectionnée
         const selectedFamily = clients.find((f) => f._id === selectedFamilyId);
         const familyStudents = selectedFamily?.students || [];
@@ -412,14 +382,14 @@ export const Clients: React.FC = () => {
     {
       key: "department",
       label: "Dpt",
-      render: (_: unknown, row: SettlementNote & { id: string }) => (
+      render: (_: unknown, row: NDR & { id: string }) => (
         <div className="text-sm">{row.department}</div>
       ),
     },
     {
       key: "paymentMethod",
       label: "Paiement",
-      render: (_: unknown, row: SettlementNote & { id: string }) => (
+      render: (_: unknown, row: NDR & { id: string }) => (
         <div className="text-sm">
           {row.paymentMethod === "card"
             ? "CB"
@@ -436,14 +406,14 @@ export const Clients: React.FC = () => {
     {
       key: "subjects",
       label: "Matières",
-      render: (_: unknown, row: SettlementNote & { id: string }) => (
+      render: (_: unknown, row: NDR & { id: string }) => (
         <div className="text-sm">{getAllSubjectNames(row)}</div>
       ),
     },
     {
       key: "quantity",
       label: "QTé",
-      render: (_: unknown, row: SettlementNote & { id: string }) => (
+      render: (_: unknown, row: NDR & { id: string }) => (
         <div className="text-sm text-center">
           {getSubjectValue(row, "quantity")}
         </div>
@@ -452,7 +422,7 @@ export const Clients: React.FC = () => {
     {
       key: "pu",
       label: "PU",
-      render: (_: unknown, row: SettlementNote & { id: string }) => (
+      render: (_: unknown, row: NDR & { id: string }) => (
         <div className="text-sm">
           {getSubjectValue(row, "hourlyRate").toFixed(2)} €
         </div>
@@ -461,7 +431,7 @@ export const Clients: React.FC = () => {
     {
       key: "totalAmount",
       label: "Total",
-      render: (_: unknown, row: SettlementNote & { id: string }) => {
+      render: (_: unknown, row: NDR & { id: string }) => {
         const total =
           getSubjectValue(row, "hourlyRate") * getSubjectValue(row, "quantity");
         return <div className="text-sm font-medium">{total.toFixed(2)} €</div>;
@@ -470,7 +440,7 @@ export const Clients: React.FC = () => {
     {
       key: "margin",
       label: "Marge",
-      render: (_: unknown, row: SettlementNote & { id: string }) => (
+      render: (_: unknown, row: NDR & { id: string }) => (
         <div className="text-sm">
           <div className="font-medium">
             {row.marginAmount?.toFixed(2) || "0.00"} €
@@ -484,7 +454,7 @@ export const Clients: React.FC = () => {
     {
       key: "status",
       label: "Statut",
-      render: (_: unknown, row: SettlementNote & { id: string }) => {
+      render: (_: unknown, row: NDR & { id: string }) => {
         const statusColors = {
           pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
           paid: "bg-green-100 text-green-800 border-green-200",
@@ -509,7 +479,7 @@ export const Clients: React.FC = () => {
     {
       key: "actions",
       label: "Actions",
-      render: (_: unknown, row: SettlementNote & { id: string }) => (
+      render: (_: unknown, row: NDR & { id: string }) => (
         <div className="table__actions">
           <Button
             size="sm"
@@ -676,7 +646,7 @@ export const Clients: React.FC = () => {
             title="CLIENTS"
             metrics={[
               {
-                value: stats?.clients || 0,
+                value: clients.length,
                 label: "Total clients",
                 variant: "primary",
               },

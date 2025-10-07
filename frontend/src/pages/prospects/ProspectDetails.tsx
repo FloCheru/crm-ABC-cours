@@ -17,7 +17,7 @@ import {
 import { familyService } from "../../services/familyService";
 import rdvService from "../../services/rdvService";
 import { subjectService } from "../../services/subjectService";
-import { getAllLevels } from "../../constants/schoolLevels";
+import { getAllGrades } from "../../constants/schoolLevels";
 import type { Family, Student } from "../../types/family";
 import type { ProspectStatus } from "../../components/StatusDot";
 import type { RendezVous } from "../../types/rdv";
@@ -372,13 +372,13 @@ export const ProspectDetails: React.FC = () => {
         readOnly: false,
       },
       {
-        key: "beneficiaryLevel",
+        key: "beneficiaryGrade",
         label: "Niveau",
-        field: "demande.beneficiaryLevel",
+        field: "demande.beneficiaryGrade",
         type: "select",
         options: [
           { value: "", label: "Sélectionner un niveau" },
-          ...getAllLevels(),
+          ...getAllGrades(),
         ],
       },
       {
@@ -731,7 +731,7 @@ export const ProspectDetails: React.FC = () => {
           onSave={async (data) => {
             // Utiliser la fonction spécialisée pour demande
             const demandeData = {
-              level: data.beneficiaryLevel as string,
+              grade: data.beneficiaryGrade as string,
               subjects: prospect.demande?.subjects || [],
             };
 

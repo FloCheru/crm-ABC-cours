@@ -90,10 +90,10 @@ select {
 
 :root {
   /* Couleurs */
-  --primary: oklch(0.205 0 0);
+  --primary: #2354a2;
   --primary-hover: #1e40af;
 
-  --secondary: oklch(0.97 0 0);
+  --secondary: #60a5fa;
   --secondary-hover: #3b82f6;
   --success: #059669;
   --error: #dc2626;

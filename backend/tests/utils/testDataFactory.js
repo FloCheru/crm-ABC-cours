@@ -77,10 +77,10 @@ class TestDataFactory {
         postalCode: "69001",
       },
       demande: {
-        level: "3ème",
+        grade: "3ème",
         subjects: [{ id: new mongoose.Types.ObjectId() }],
         beneficiaryType: "eleves",
-        beneficiaryLevel: "3ème",
+        beneficiaryGrade: "3ème",
       },
       status: "prospect",
       prospectStatus: "en_reflexion",

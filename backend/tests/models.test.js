@@ -111,7 +111,7 @@ describe("Models Tests", () => {
             postalCode: "69000",
           },
           demande: {
-            beneficiaryLevel: "6ème",
+            beneficiaryGrade: "6ème",
           },
         });
 
@@ -164,7 +164,7 @@ describe("Models Tests", () => {
           },
           demande: {
             beneficiaryType: "adulte",
-            beneficiaryLevel: "Terminale",
+            beneficiaryGrade: "Terminale",
           },
         });
 
@@ -198,7 +198,7 @@ describe("Models Tests", () => {
         const admin = await TestDataHelpers.createAdmin();
         const family = await TestDataHelpers.createFamily(admin, {
           demande: {
-            beneficiaryLevel: "CM2",
+            beneficiaryGrade: "CM2",
           },
         });
 
@@ -219,7 +219,7 @@ describe("Models Tests", () => {
         const admin = await TestDataHelpers.createAdmin();
         const family = await TestDataHelpers.createFamily(admin, {
           demande: {
-            beneficiaryLevel: "3ème",
+            beneficiaryGrade: "3ème",
           },
         });
 
@@ -238,7 +238,7 @@ describe("Models Tests", () => {
         const admin = await TestDataHelpers.createAdmin();
         const family = await TestDataHelpers.createFamily(admin, {
           demande: {
-            beneficiaryLevel: "Première",
+            beneficiaryGrade: "Première",
           },
         });
 
@@ -257,7 +257,7 @@ describe("Models Tests", () => {
         const admin = await TestDataHelpers.createAdmin();
         const family = await TestDataHelpers.createFamily(admin, {
           demande: {
-            beneficiaryLevel: "Seconde",
+            beneficiaryGrade: "Seconde",
           },
         });
 

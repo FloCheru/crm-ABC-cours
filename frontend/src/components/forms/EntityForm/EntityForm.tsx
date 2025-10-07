@@ -3,8 +3,8 @@ import { Button } from "../../button/Button";
 import { Input } from "../input/Input";
 import { logger } from "../../../utils/logger";
 import {
-  getAllLevels,
-  getLevelsByCategory,
+  getAllGrades,
+  getGradesByCategory,
   type SchoolCategory,
 } from "../../../constants/schoolLevels";
 import type { CreateFamilyData } from "../../../types/family";
@@ -235,14 +235,14 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         ],
       },
       {
-        key: "demande.beneficiaryLevel",
+        key: "demande.beneficiaryGrade",
         label: "Niveau du bénéficiaire",
         type: "select",
         required: true,
         group: "demande",
         options: [
           { value: "", label: "Sélectionner un niveau" },
-          ...getAllLevels(),
+          ...getAllGrades(),
         ],
       },
       {
@@ -312,7 +312,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         group: "school",
       },
       {
-        key: "school.level",
+        key: "school.Grade",
         label: "Niveau scolaire",
         type: "select",
         required: true,
@@ -330,8 +330,8 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         type: "select",
         required: true,
         group: "school",
-        conditional: { field: "school.level", value: "any" }, // S'affiche si un niveau est sélectionné
-        options: [], // Options dynamiques basées sur school.level
+        conditional: { field: "school.grade", value: "any" }, // S'affiche si un niveau est sélectionné
+        options: [], // Options dynamiques basées sur school.grade
       },
 
       // Notes
@@ -418,7 +418,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         group: "general",
       },
       {
-        key: "level",
+        key: "grade",
         label: "Niveau",
         type: "select",
         required: true,
@@ -596,10 +596,10 @@ export const EntityForm = <T extends EntityType>(
 
   // Obtenir les options dynamiques pour le champ classe
   const getClassOptions = (
-    schoolLevel: string
+    schoolGrade: string
   ): { value: string; label: string }[] => {
     // Utilise les constants centralisées
-    return getLevelsByCategory(schoolLevel as SchoolCategory);
+    return getGradesByCategory(schoolGrade as SchoolCategory);
   };
 
   // Gérer les changements de champs
@@ -649,7 +649,7 @@ export const EntityForm = <T extends EntityType>(
       }
 
       // Logique spéciale pour le niveau scolaire - réinitialiser la classe
-      if (fieldKey === "school.level") {
+      if (fieldKey === "school.grade") {
         newData = setNestedValue(newData, "school.grade", "");
         logger.debug(
           "CHANGEMENT - Classe réinitialisée suite au changement de niveau"
@@ -783,30 +783,13 @@ export const EntityForm = <T extends EntityType>(
         sameAddress: true,
         "companyInfo.urssafNumber": "12345678901",
         "demande.beneficiaryType": "eleves",
-        "demande.beneficiaryLevel": "3ème",
+        "demande.beneficiaryGrade": "3ème",
         "demande.subjects": "Mathématiques, Français, Anglais",
         notes:
           "Famille de test - créée automatiquement pour les tests de développement",
       };
     }
     return {};
-  };
-
-  // Fonction pour remplir automatiquement le formulaire avec des données de test
-  const fillTestData = () => {
-    const testData = getTestData();
-
-    // Utiliser handleFieldChange pour chaque champ pour déclencher les mises à jour
-    Object.entries(testData).forEach(([key, value]) => {
-      handleFieldChange(key, value);
-    });
-
-    // Effacer les erreurs existantes
-    setErrors({});
-    setSubmitError("");
-
-    logger.info("🧪 Données de test appliquées au formulaire");
-    console.log("🧪 Données appliquées:", testData);
   };
 
   // Vérifier si on est en environnement de développement
@@ -903,7 +886,7 @@ export const EntityForm = <T extends EntityType>(
           conditionValueExpected: field.conditional.value,
           conditionValueActual: conditionValue,
           shouldShow,
-          schoolLevel: getNestedValue(formData, "school.level"),
+          schoolGrade: getNestedValue(formData, "school.grade"),
         });
       }
 
@@ -952,9 +935,9 @@ export const EntityForm = <T extends EntityType>(
         // Options dynamiques pour le champ classe basées sur le niveau scolaire
         let selectOptions = field.options || [];
         if (field.key === "school.grade") {
-          const schoolLevel =
-            getNestedValue(formData, "school.level")?.toString() || "";
-          selectOptions = getClassOptions(schoolLevel);
+          const schoolGrade =
+            getNestedValue(formData, "school.grade")?.toString() || "";
+          selectOptions = getClassOptions(schoolGrade);
         }
 
         return (

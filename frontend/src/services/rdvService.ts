@@ -120,9 +120,21 @@ class RdvService {
   }
 
   /**
-   * Mettre à jour un rendez-vous avec ActionCache
+   * Mettre à jour un rendez-vous par ID
    */
-  // async updateRdv()
+  async updateRdvById(rdvId: string, rdvData: UpdateRdvData & { familyId?: string }): Promise<RendezVous> {
+    try {
+      // Validation côté client
+      this.validateRdvData(rdvData);
+
+      const data = (await apiClient.put(`${this.baseUrl}/${rdvId}`, rdvData)) as any;
+
+      return this.formatRdvDates(data.rdv);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du RDV:", error);
+      throw this.handleError(error, "Impossible de mettre à jour le rendez-vous");
+    }
+  }
 
   /**
    * Supprimer/Annuler un rendez-vous

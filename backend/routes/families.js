@@ -234,7 +234,7 @@ router.patch(
 router.patch("/:id/demande", authorize(["admin"]), async (req, res) => {
   try {
     const demandeData = {
-      level: req.body.level,
+      grade: req.body.grade,
       subjects: req.body.subjects,
     };
 

@@ -74,10 +74,10 @@ export const EditableCard: React.FC<EditableCardProps> = ({
 
   return (
     <EditableCardContext.Provider value={{ isEditing, formData, updateField }}>
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>{title}</CardTitle>
+      <Card className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+        <CardHeader className="px-6 pt-6 pb-0 border-b-2 border-blue-500 mb-6">
+          <div className="flex justify-between items-center pb-4">
+            <CardTitle className="text-xl font-semibold text-gray-800">{title}</CardTitle>
             {onSave && (
               <div className="flex gap-2">
                 {isEditing ? (
@@ -103,6 +103,7 @@ export const EditableCard: React.FC<EditableCardProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={handleEdit}
+                    title="Modifier"
                   >
                     ✏️
                   </Button>
@@ -111,8 +112,8 @@ export const EditableCard: React.FC<EditableCardProps> = ({
             )}
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
+        <CardContent className="px-6 pb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6">
             {children}
           </div>
         </CardContent>
@@ -152,8 +153,8 @@ export const EditableField: React.FC<EditableFieldProps> = ({
   // Custom render (toujours en lecture seule)
   if (customRender) {
     return (
-      <div className="space-y-2">
-        <Label>{label}</Label>
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-medium text-gray-700">{label}</Label>
         {customRender()}
       </div>
     );
@@ -162,9 +163,9 @@ export const EditableField: React.FC<EditableFieldProps> = ({
   // Mode lecture ou champ readOnly
   if (!isEditing || readOnly) {
     return (
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-muted-foreground">{label}</Label>
-        <p className="text-sm">{displayText}</p>
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-medium text-gray-700">{label}</Label>
+        <p className="text-sm text-gray-900 py-3 border-b border-gray-200 min-h-[1.5em]">{displayText}</p>
       </div>
     );
   }
@@ -172,9 +173,9 @@ export const EditableField: React.FC<EditableFieldProps> = ({
   // Mode édition
   if (!name) {
     return (
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-muted-foreground">{label}</Label>
-        <p className="text-sm">{displayText}</p>
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-medium text-gray-700">{label}</Label>
+        <p className="text-sm text-gray-900">{displayText}</p>
       </div>
     );
   }
@@ -182,14 +183,15 @@ export const EditableField: React.FC<EditableFieldProps> = ({
   // Textarea
   if (type === "textarea") {
     return (
-      <div className="space-y-2">
-        <Label htmlFor={name}>{label}</Label>
+      <div className="flex flex-col gap-2 col-span-full">
+        <Label htmlFor={name} className="text-sm font-medium text-gray-700">{label}</Label>
         <Textarea
           id={name}
           value={currentValue || ""}
           onChange={(e) => updateField(name, e.target.value)}
           placeholder={placeholder}
           rows={4}
+          className="min-h-[100px]"
         />
       </div>
     );
@@ -198,8 +200,8 @@ export const EditableField: React.FC<EditableFieldProps> = ({
   // Select
   if (type === "select" && options) {
     return (
-      <div className="space-y-2">
-        <Label htmlFor={name}>{label}</Label>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={name} className="text-sm font-medium text-gray-700">{label}</Label>
         <Select
           value={currentValue || ""}
           onValueChange={(val: string) => updateField(name, val)}
@@ -221,8 +223,8 @@ export const EditableField: React.FC<EditableFieldProps> = ({
 
   // Input standard
   return (
-    <div className="space-y-2">
-      <Label htmlFor={name}>{label}</Label>
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={name} className="text-sm font-medium text-gray-700">{label}</Label>
       <Input
         id={name}
         type={type}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Navbar,
   PageHeader,
@@ -12,7 +12,7 @@ import {
 import { familyService } from "../../services/familyService";
 import { ndrService } from "../../services/ndrService";
 import type { Family } from "../../types/family";
-import type { SettlementNote } from "../../services/ndrService";
+import type { NDR } from "../../services/ndrService";
 
 export const ClientDetails: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export const ClientDetails: React.FC = () => {
   const [error, setError] = useState<string>("");
 
   // États pour les NDRs
-  const [settlementNotes, setSettlementNotes] = useState<SettlementNote[]>([]);
+  const [settlementNotes, setSettlementNotes] = useState<NDR[]>([]);
   const [isLoadingNDRs, setIsLoadingNDRs] = useState(false);
 
   // État pour la modal d'ajout d'élève
@@ -85,7 +85,7 @@ export const ClientDetails: React.FC = () => {
   };
 
   // Fonctions utilitaires pour les NDRs
-  const getStatusBadge = (status: SettlementNote["status"]) => {
+  const getStatusBadge = (status: NDR["status"]) => {
     const statusConfig = {
       pending: {
         label: "En attente",
@@ -108,27 +108,20 @@ export const ClientDetails: React.FC = () => {
     return <span className={config.className}>{config.label}</span>;
   };
 
-  const calculateTotalAmount = (note: SettlementNote): number => {
-    // Utiliser d'abord le montant calculé s'il existe, sinon calculer depuis les matières
-    if (note.totalHourlyRate && note.totalQuantity) {
-      return note.totalHourlyRate * note.totalQuantity;
-    }
-    return note.subjects.reduce(
-      (total, subject) => total + subject.hourlyRate * subject.quantity,
-      0
-    );
+  const calculateTotalAmount = (note: NDR): number => {
+    return note.hourlyRate * note.quantity;
   };
 
   const formatSubjectsDisplay = (
-    subjects: SettlementNote["subjects"]
+    subjects: NDR["subjects"]
   ): string => {
     return subjects
       .map((subject) => {
         const subjectName =
-          typeof subject.subjectId === "string"
-            ? subject.subjectId
-            : subject.subjectId?.name || "Matière inconnue";
-        return `${subjectName} (${subject.quantity}h)`;
+          typeof subject.id === "string"
+            ? subject.id
+            : subject.name || "Matière inconnue";
+        return subjectName;
       })
       .join(", ");
   };
@@ -961,7 +954,7 @@ export const ClientDetails: React.FC = () => {
                     {
                       key: "actions",
                       label: "Actions",
-                      render: (_, row: SettlementNote) => (
+                      render: (_, row: NDR) => (
                         <div className="table__actions">
                           <Button
                             size="sm"

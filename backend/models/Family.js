@@ -185,7 +185,7 @@ const familySchema = new mongoose.Schema(
       trim: true,
     },
     demande: {
-      level: {
+      grade: {
         type: String,
         enum: {
           values: [

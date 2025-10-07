@@ -206,9 +206,11 @@ class NdrService {
   }
 
   async deleteNdr(
-    id: string,
-    familyId?: string
-  ): Promise<{ message: string }> {}
+    _id: string,
+    _familyId?: string
+  ): Promise<{ message: string }> {
+    return await apiClient.delete(`/api/ndr/${_id}`);
+  }
 
   // Méthodes pour la gestion des PDFs
   async generatePDF(

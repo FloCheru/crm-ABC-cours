@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Navbar,
@@ -11,15 +11,57 @@ import {
   StatusBadge,
 } from "../../../components";
 import type { Coupon } from "../../../types/coupon";
+import { ndrService } from "../../../services/ndrService";
+import type { NDR } from "../../../services/ndrService";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Coupon & { id: string };
 
 export const CouponsList: React.FC = () => {
   const location = useLocation();
-  // const { coupons, stats, isLoading, error } = [];
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [stats, setStats] = useState({ available: 0, used: 0, expired: 0, cancelled: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+
+  // Charger les NDRs et extraire les coupons
+  useEffect(() => {
+    const loadCoupons = async () => {
+      try {
+        setIsLoading(true);
+        const data = await ndrService.getAllNdrs();
+        const ndrs: NDR[] = data.ndrs || [];
+
+        // Extraire tous les coupons de toutes les NDRs
+        const allCoupons: Coupon[] = ndrs.flatMap((ndr) =>
+          (ndr.coupons || []).map((coupon) => ({
+            ...coupon,
+            _id: coupon.id,
+            couponSeriesId: ndr._id,
+          }))
+        );
+
+        setCoupons(allCoupons);
+
+        // Calculer les statistiques
+        const newStats = {
+          available: allCoupons.filter(c => c.status === "available").length,
+          used: allCoupons.filter(c => c.status === "used").length,
+          expired: allCoupons.filter(c => c.status === "expired").length,
+          cancelled: allCoupons.filter(c => c.status === "cancelled").length,
+        };
+        setStats(newStats);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erreur lors du chargement");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCoupons();
+  }, []);
 
   const handleSearch = () => {
     // La recherche sera implémentée via les filtres
@@ -117,7 +159,7 @@ export const CouponsList: React.FC = () => {
               : "Élève inconnu"}
           </div>
           <div className="text-sm text-gray-500">
-            {row.couponSeriesId?.studentId?.level || ""}
+            {row.couponSeriesId?.studentId?.grade || ""}
           </div>
         </div>
       ),

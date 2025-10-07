@@ -40,7 +40,6 @@ const ENTITY_HANDLERS = {
         birthDate: formData.birthDate,
         school: {
           name: formData.schoolName.trim(),
-          level: data?.school?.level || "collège",
           grade: formData.grade,
         },
         contact: {
@@ -93,14 +92,14 @@ const ENTITY_HANDLERS = {
         familyId: data.familyId,
       };
     },
-    update: async (rdvId: string, preparedData: any, familyId: string) => {
+    update: async (rdvId: string, preparedData: any, _familyId: string) => {
       return await rdvService.updateRdvById(rdvId, {
         ...preparedData,
-        familyId: familyId,
+        familyId: _familyId,
       });
     },
     create: async (
-      familyId: string,
+      _familyId: string,
       preparedData: any,
       _adminsData?: any[]
     ) => {

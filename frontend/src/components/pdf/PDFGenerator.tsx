@@ -145,7 +145,7 @@ export const PDFGenerator: React.FC<PDFGeneratorProps> = ({
             </div>
           </div>
 
-          {settlementNote.couponSeriesId && (
+          {settlementNote.coupons && settlementNote.coupons.length > 0 && (
             <div>
               <Button
                 variant="secondary"
@@ -166,7 +166,7 @@ export const PDFGenerator: React.FC<PDFGeneratorProps> = ({
               variant="primary"
               size="sm"
               onClick={() => handleGeneratePDF("both")}
-              disabled={isGenerating || !settlementNote.couponSeriesId}
+              disabled={isGenerating || !settlementNote.coupons || settlementNote.coupons.length === 0}
             >
               {isGenerating ? "Génération..." : "NDR + Coupons"}
             </Button>

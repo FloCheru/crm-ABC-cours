@@ -283,7 +283,7 @@ describe("FamilyService", () => {
       it("should update demande successfully with valid data", async () => {
         // Arrange
         const updateData = {
-          level: "Seconde",
+          grade: "Seconde",
           subjects: [
             { id: "60f7b3b3b3b3b3b3b3b3b3b3" },
             { id: "60f7b3b3b3b3b3b3b3b3b3b4" },
@@ -298,7 +298,7 @@ describe("FamilyService", () => {
 
         // Assert
         expect(result).toBeDefined();
-        expect(result.demande.level).toBe("Seconde");
+        expect(result.demande.grade).toBe("Seconde");
         expect(result.demande.subjects).toHaveLength(2);
         expect(result.demande.subjects[0].id).toBe("60f7b3b3b3b3b3b3b3b3b3b3");
       });
@@ -306,7 +306,7 @@ describe("FamilyService", () => {
       it("should return null if family not found", async () => {
         // Arrange
         const nonExistentId = new mongoose.Types.ObjectId();
-        const updateData = { level: "Terminale" };
+        const updateData = { grade: "Terminale" };
 
         // Act
         const result = await FamilyService.updateDemande(
@@ -318,10 +318,10 @@ describe("FamilyService", () => {
         expect(result).toBeNull();
       });
 
-      it("should throw ValidationError for invalid level", async () => {
+      it("should throw ValidationError for invalid grade", async () => {
         // Arrange
         const updateData = {
-          level: "InvalidLevel", // Niveau invalide
+          grade: "InvalidGrade", // Niveau invalide
           subjects: [{ id: "60f7b3b3b3b3b3b3b3b3b3b3" }],
         };
 
@@ -336,7 +336,7 @@ describe("FamilyService", () => {
       it("should throw ValidationError for missing subject id", async () => {
         // Arrange
         const updateData = {
-          level: "Terminale",
+          grade: "Terminale",
           subjects: [{ id: "" }], // ID vide
         };
 
@@ -351,7 +351,7 @@ describe("FamilyService", () => {
       it("should throw CastError for invalid family ID", async () => {
         // Arrange
         const invalidId = "invalid-id";
-        const updateData = { level: "Terminale" };
+        const updateData = { grade: "Terminale" };
 
         // Act & Assert
         await expect(
@@ -658,7 +658,9 @@ describe("FamilyService", () => {
     describe("createFamily()", () => {
       it("should create family successfully and invalidate cache", async () => {
         // Arrange
-        const familyData = testDataFactory.createTestFamilyComplete(testUser._id);
+        const familyData = testDataFactory.createTestFamilyComplete(
+          testUser._id
+        );
 
         // Act
         const result = await FamilyService.createFamily(familyData);
@@ -666,9 +668,15 @@ describe("FamilyService", () => {
         // Assert
         expect(result).toBeDefined();
         expect(result._id).toBeDefined();
-        expect(result.primaryContact.firstName).toBe(familyData.primaryContact.firstName);
-        expect(result.primaryContact.lastName).toBe(familyData.primaryContact.lastName);
-        expect(result.createdBy.userId.toString()).toBe(testUser._id.toString());
+        expect(result.primaryContact.firstName).toBe(
+          familyData.primaryContact.firstName
+        );
+        expect(result.primaryContact.lastName).toBe(
+          familyData.primaryContact.lastName
+        );
+        expect(result.createdBy.userId.toString()).toBe(
+          testUser._id.toString()
+        );
 
         // Verify family exists in DB
         const dbFamily = await Family.findById(result._id);
@@ -680,9 +688,9 @@ describe("FamilyService", () => {
         const invalidFamilyData = {
           // Missing required fields
           primaryContact: {
-            firstName: "Test"
+            firstName: "Test",
             // lastName missing
-          }
+          },
         };
 
         // Act & Assert
@@ -697,7 +705,9 @@ describe("FamilyService", () => {
 
       beforeEach(async () => {
         // Créer une famille de test
-        const familyData = testDataFactory.createTestFamilyComplete(testUser._id);
+        const familyData = testDataFactory.createTestFamilyComplete(
+          testUser._id
+        );
         testFamily = await Family.create(familyData);
       });
 
@@ -707,7 +717,9 @@ describe("FamilyService", () => {
 
         // Assert
         expect(result).toBeDefined();
-        expect(result.message).toBe("Famille et tous les éléments liés supprimés avec succès");
+        expect(result.message).toBe(
+          "Famille et tous les éléments liés supprimés avec succès"
+        );
         expect(result.deletedItems).toBeDefined();
         expect(result.deletedItems.students).toBeGreaterThanOrEqual(0);
         expect(result.deletedItems.settlementNotes).toBeGreaterThanOrEqual(0);
@@ -734,9 +746,7 @@ describe("FamilyService", () => {
         const invalidId = "invalid-id";
 
         // Act & Assert
-        await expect(
-          FamilyService.deleteFamily(invalidId)
-        ).rejects.toThrow();
+        await expect(FamilyService.deleteFamily(invalidId)).rejects.toThrow();
       });
     });
   });

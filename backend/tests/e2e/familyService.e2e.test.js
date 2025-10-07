@@ -201,7 +201,7 @@ describe("E2E Integration: FamilyService Complete Workflow", () => {
         },
         demande: {
           beneficiaryType: "eleves",
-          level: "4ème",
+          grade: "4ème",
           subjects: [{ id: new mongoose.Types.ObjectId() }],
         },
         billingAddress: {
@@ -287,7 +287,7 @@ describe("E2E Integration: FamilyService Complete Workflow", () => {
         },
         demande: {
           beneficiaryType: "eleves",
-          level: "5ème",
+          grade: "5ème",
           subjects: subjectIds,
           notes: "Prospect créé automatiquement pour les tests",
         },
@@ -316,7 +316,7 @@ describe("E2E Integration: FamilyService Complete Workflow", () => {
       expect(result.address.city).toBe("Paris");
       expect(result.address.postalCode).toBe("75001");
       expect(result.billingAddress.street).toBe("123 Rue de la Paix");
-      expect(result.demande.level).toBe("5ème");
+      expect(result.demande.grade).toBe("5ème");
       expect(result.demande.beneficiaryType).toBe("eleves");
       expect(result.status).toBe("prospect");
       expect(result.prospectStatus).toBe("en_reflexion");

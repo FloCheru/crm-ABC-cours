@@ -89,7 +89,7 @@ describe("Routes API - Families", () => {
       expect(family.billingAddress).toHaveProperty("postalCode");
 
       // Structure demande
-      expect(family.demande).toHaveProperty("level");
+      expect(family.demande).toHaveProperty("Grade");
       expect(family.demande).toHaveProperty("subjects");
       expect(Array.isArray(family.demande.subjects)).toBe(true);
 
@@ -175,7 +175,7 @@ describe("Routes API - Families", () => {
       const family = await Family.create(familyData);
 
       const updateData = {
-        level: "Seconde",
+        Grade: "Seconde",
         subjects: [
           { id: "60f7b3b3b3b3b3b3b3b3b3b3" },
           { id: "60f7b3b3b3b3b3b3b3b3b3b4" },
@@ -194,7 +194,7 @@ describe("Routes API - Families", () => {
         "Demande mise à jour avec succès"
       );
       expect(response.body).toHaveProperty("demande");
-      expect(response.body.demande.level).toBe("Seconde");
+      expect(response.body.demande.Grade).toBe("Seconde");
       expect(response.body.demande.subjects).toHaveLength(2);
       expect(response.body.demande.subjects[0].id).toBe(
         "60f7b3b3b3b3b3b3b3b3b3b3"

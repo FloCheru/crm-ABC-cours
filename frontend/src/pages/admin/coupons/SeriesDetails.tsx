@@ -27,9 +27,6 @@ export const SeriesDetails: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Utilisation du nouveau store global pour les séries
-  const { loadSeriesDetails, getSeriesDetails } = useCouponSeriesGlobal();
-
   const [series, setSeries] = useState<CouponSeries | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,21 +41,11 @@ export const SeriesDetails: React.FC = () => {
         setIsLoading(true);
         setError("");
 
-        // Vérifier d'abord le cache
-        const cachedDetails = getSeriesDetails(seriesId);
-        if (cachedDetails) {
-          console.log("🚀 [SERIES-DETAILS] Using cached data");
-          setSeries(cachedDetails.series);
-          setCoupons(cachedDetails.coupons);
-          setIsLoading(false);
-          return;
-        }
+        // TODO: Implémenter le chargement des détails de la série
+        console.log("🚀 [SERIES-DETAILS] Loading series:", seriesId);
 
-        // Charger depuis l'API via le store
-        console.log("🚀 [SERIES-DETAILS] Loading from API...");
-        const details = await loadSeriesDetails(seriesId);
-        setSeries(details.series);
-        setCoupons(details.coupons);
+        // Placeholder - à implémenter
+        setError("Fonctionnalité en cours de développement");
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Erreur lors du chargement"
@@ -70,7 +57,7 @@ export const SeriesDetails: React.FC = () => {
     };
 
     loadDetails();
-  }, [seriesId, loadSeriesDetails, getSeriesDetails]);
+  }, [seriesId]);
 
   const handleResendCoupons = () => {
     // TODO: Implémenter l'envoi des coupons

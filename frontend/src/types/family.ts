@@ -55,7 +55,7 @@ export interface Family {
   // Section demande de cours (obligatoire)
   demande: {
     beneficiaryType: "adulte" | "eleves";
-    level: string; // Changé de beneficiaryLevel à level pour correspondre au modèle MongoDB
+    grade: string; // Changé de beneficiaryLevel à grade pour correspondre au modèle MongoDB
     subjects: Array<{ id: string; name: string }>; // Objets avec id et name populé depuis le backend
     notes?: string;
   };
@@ -71,7 +71,6 @@ export interface Family {
     birthDate?: Date;
     school?: {
       name?: string;
-      level?: string;
       grade?: string;
     };
     contact?: {
@@ -113,7 +112,6 @@ export interface Student {
   birthDate: Date;
   school: {
     name: string;
-    level: "primaire" | "collège" | "lycée" | "supérieur";
     grade: string;
   };
   contact?: {
@@ -193,7 +191,7 @@ export interface CreateFamilyData {
   // Section demande de cours (obligatoire) - INPUT TYPE (pour création)
   demande: {
     beneficiaryType: "adulte" | "eleves";
-    level: string; // Changé de beneficiaryLevel à level pour correspondre au modèle MongoDB
+    grade: string; // Changé de beneficiaryLevel à grade pour correspondre au modèle MongoDB
     subjects: Array<{ id: string }>; // Input API - seulement l'id, name sera populé par le backend
     notes?: string;
   };
@@ -213,7 +211,7 @@ export interface CreateStudentData {
   firstName: string;
   lastName: string;
   birthDate: Date;
-  level: string;
+  grade: string;
   school: {
     name: string;
     address: string;
@@ -235,7 +233,7 @@ export interface CreateStudentData {
   comments?: string;
   subjects: {
     [key: string]: {
-      level: string;
+      grade: string;
       notes?: string;
     };
   };
