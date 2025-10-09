@@ -14,11 +14,6 @@ export interface Family {
     postalCode: string;
   };
   // Informations entreprise
-  companyInfo?: {
-    urssafNumber?: string;
-    siretNumber?: string;
-    ceNumber?: string;
-  };
   primaryContact: {
     firstName: string;
     lastName: string;
@@ -165,11 +160,6 @@ export interface CreateFamilyData {
     postalCode: string;
   };
   // Informations entreprise
-  companyInfo?: {
-    urssafNumber?: string;
-    siretNumber?: string;
-    ceNumber?: string;
-  };
   primaryContact: {
     firstName: string;
     lastName: string;

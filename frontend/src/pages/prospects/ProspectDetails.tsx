@@ -104,6 +104,7 @@ export const ProspectDetails: React.FC = () => {
     try {
       setIsLoading(true);
       const prospectData = await familyService.getFamily(prospectId!);
+      console.log("Prospect chargé:", prospectData);
       setProspect(prospectData);
     } catch (err) {
       console.error("Erreur lors du chargement du prospect:", err);
@@ -235,10 +236,7 @@ export const ProspectDetails: React.FC = () => {
 
     try {
       // ✨ NOUVEAU: Utiliser familyService avec ActionCache intégré
-      await familyService.removeStudent(
-        capturedProspectId,
-        capturedStudentId
-      );
+      await familyService.removeStudent(capturedProspectId, capturedStudentId);
     } catch (error: unknown) {
       console.error("Erreur lors de la suppression de l'étudiant:", error);
 
@@ -340,7 +338,7 @@ export const ProspectDetails: React.FC = () => {
       {
         key: "street",
         label: "Rue",
-        field: "address.street",
+        field: "primaryContact.address.street",
         type: "text",
         placeholder: "Adresse",
         required: true,
@@ -348,7 +346,7 @@ export const ProspectDetails: React.FC = () => {
       {
         key: "city",
         label: "Ville",
-        field: "address.city",
+        field: "primaryContact.address.city",
         type: "text",
         placeholder: "Ville",
         required: true,
@@ -356,7 +354,7 @@ export const ProspectDetails: React.FC = () => {
       {
         key: "postalCode",
         label: "Code postal",
-        field: "address.postalCode",
+        field: "primaryContact.address.postalCode",
         type: "text",
         placeholder: "Code postal",
         required: true,
@@ -383,7 +381,7 @@ export const ProspectDetails: React.FC = () => {
       {
         key: "notes",
         label: "Notes sur la demande",
-        field: "demande.notes",
+        field: "*notes",
         type: "textarea",
         placeholder: "Précisions sur la demande de cours",
       },
@@ -480,10 +478,16 @@ export const ProspectDetails: React.FC = () => {
 
   const getDisplayValue = (prospect: Family, path: string) => {
     const keys = path.split(".");
-    let value: string | undefined =
-      keys.length === 1
-        ? (prospect as any)[path]
-        : (prospect as any)[keys[0]]?.[keys[1]];
+    let value: any = prospect;
+
+    // Naviguer dans l'objet selon le chemin (supporte n niveaux)
+    for (const key of keys) {
+      value = value?.[key];
+      if (value === undefined || value === null) {
+        value = "";
+        break;
+      }
+    }
 
     if (path === "nextActionDate" && value) {
       return new Date(value).toLocaleDateString("fr-FR");
@@ -546,6 +550,30 @@ export const ProspectDetails: React.FC = () => {
       <StatusBanner status={prospect.prospectStatus as ProspectStatus} />
 
       <main className="space-y-8">
+        {/* Notes */}
+        <DataCard
+          title="Notes"
+          fields={[
+            {
+              key: "notes",
+              label: "Notes sur la demande",
+              value: prospect.notes || "",
+              type: "textarea",
+              placeholder: "Ajouter des notes sur la demande",
+            },
+          ]}
+          onSave={async (data) => {
+            await familyService.updateFamily(prospectId!, {
+              notes: data.notes as string,
+            });
+
+            // Recharger les données depuis la base
+            const updated = await familyService.getFamily(prospectId!);
+            setProspect(updated);
+          }}
+          className="mb-8"
+        />
+
         {/* Informations personnelles */}
         <DataCard
           title="Contact principal"
@@ -571,7 +599,7 @@ export const ProspectDetails: React.FC = () => {
               lastName: data.lastName as string,
               primaryPhone: data.primaryPhone as string,
               email: data.email as string,
-              relation: prospect.primaryContact.relation,
+              relation: prospect.primaryContact?.relation,
               secondaryPhone: (data.secondaryPhone as string) || null,
               address: {
                 street: data.street as string,
@@ -731,7 +759,9 @@ export const ProspectDetails: React.FC = () => {
             // Utiliser la fonction spécialisée pour demande
             const demandeData = {
               grade: data.beneficiaryGrade as string,
-              subjects: (prospect.demande?.subjects || []).map((s: any) => typeof s === "string" ? s : s.id),
+              subjects: (prospect.demande?.subjects || []).map((s: any) =>
+                typeof s === "string" ? s : s.id
+              ),
             };
 
             await familyService.updateDemande(prospectId!, demandeData);
@@ -959,10 +989,9 @@ export const ProspectDetails: React.FC = () => {
 
             // Traiter le statut prospect avec UPDATE_PROSPECT_STATUS
             if (prospectStatus !== undefined) {
-              await familyService.updateFamily(
-                prospectId!,
-                { prospectStatus: prospectStatus || null }
-              );
+              await familyService.updateFamily(prospectId!, {
+                prospectStatus: prospectStatus || null,
+              });
             }
 
             // Traiter les champs de rappel avec UPDATE_REMINDER

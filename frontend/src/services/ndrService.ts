@@ -38,7 +38,9 @@ interface NDR {
     deadlinesDay: number;
   };
   subjects: Array<{
-    id: { _id: string; name: string; category: string };
+    id: string | { _id: string; name: string; category: string };
+    name?: string;
+    category?: string;
   }>;
   hourlyRate: number;
   quantity: number;

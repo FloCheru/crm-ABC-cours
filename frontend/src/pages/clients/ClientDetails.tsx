@@ -79,7 +79,6 @@ export const ClientDetails: React.FC = () => {
     loadClientDetails();
   }, [clientId]);
 
-
   // Fonctions utilitaires pour les NDRs
   const getStatusBadge = (status: NDR["status"]) => {
     const statusConfig = {
@@ -108,9 +107,7 @@ export const ClientDetails: React.FC = () => {
     return note.hourlyRate * note.quantity;
   };
 
-  const formatSubjectsDisplay = (
-    subjects: NDR["subjects"]
-  ): string => {
+  const formatSubjectsDisplay = (subjects: NDR["subjects"]): string => {
     return subjects
       .map((subject) => {
         const subjectName =
@@ -124,10 +121,16 @@ export const ClientDetails: React.FC = () => {
 
   const getDisplayValue = (client: Family, path: string) => {
     const keys = path.split(".");
-    let value: any =
-      keys.length === 1
-        ? client[path as keyof Family]
-        : (client as any)[keys[0]]?.[keys[1]];
+    let value: any = client;
+
+    // Naviguer dans l'objet selon le chemin (supporte n niveaux)
+    for (const key of keys) {
+      value = value?.[key];
+      if (value === undefined || value === null) {
+        value = "";
+        break;
+      }
+    }
 
     // Gestion spéciale pour les tableaux (comme subjects)
     if (path === "demande.subjects" && Array.isArray(value)) {
@@ -269,7 +272,7 @@ export const ClientDetails: React.FC = () => {
       {
         key: "street",
         label: "Rue",
-        field: "address.street",
+        field: "primaryContact.address.street",
         type: "text",
         placeholder: "Adresse",
         required: true,
@@ -277,7 +280,7 @@ export const ClientDetails: React.FC = () => {
       {
         key: "city",
         label: "Ville",
-        field: "address.city",
+        field: "primaryContact.address.city",
         type: "text",
         placeholder: "Ville",
         required: true,
@@ -285,7 +288,7 @@ export const ClientDetails: React.FC = () => {
       {
         key: "postalCode",
         label: "Code postal",
-        field: "address.postalCode",
+        field: "primaryContact.address.postalCode",
         type: "text",
         placeholder: "Code postal",
         required: true,
@@ -448,14 +451,6 @@ export const ClientDetails: React.FC = () => {
         field: "companyInfo.siretNumber",
         type: "text",
         placeholder: "Numéro SIRET",
-        required: false,
-      },
-      {
-        key: "ceNumber",
-        label: "Numéro CE",
-        field: "companyInfo.ceNumber",
-        type: "text",
-        placeholder: "Numéro CE",
         required: false,
       },
     ],

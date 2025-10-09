@@ -226,8 +226,9 @@ export const Prospects: React.FC = () => {
   const filteredData = prospects.filter((family) => {
     const searchLower = searchTerm.toLowerCase();
     const fullName =
-      `${family.primaryContact.firstName} ${family.primaryContact.lastName}`.toLowerCase();
-    const phone = family.primaryContact.primaryPhone || "";
+      `${family.primaryContact?.firstName} ${family.primaryContact?.lastName}`.toLowerCase();
+    const phone = family.primaryContact?.primaryPhone || "";
+    const email = (family.primaryContact?.email || "").toLowerCase();
     const address = `${family.address?.street || ""} ${
       family.address?.city || ""
     } ${family.address?.postalCode || ""}`.toLowerCase();
@@ -235,6 +236,7 @@ export const Prospects: React.FC = () => {
     return (
       fullName.includes(searchLower) ||
       phone.includes(searchLower) ||
+      email.includes(searchLower) ||
       address.includes(searchLower)
     );
   });
@@ -245,7 +247,9 @@ export const Prospects: React.FC = () => {
       key: "lastName",
       label: "Nom",
       render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium text-sm">{row.primaryContact.lastName}</div>
+        <div className="font-medium text-sm">
+          {row.primaryContact?.lastName}
+        </div>
       ),
     },
     {
@@ -253,18 +257,36 @@ export const Prospects: React.FC = () => {
       label: "Prénom",
       render: (_: unknown, row: TableRowData) => (
         <div className="font-medium text-sm">
-          {row.primaryContact.firstName}
+          {row.primaryContact?.firstName}
         </div>
       ),
     },
     {
       key: "phone",
       label: "Téléphone",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">
-          {`${row.primaryContact.primaryPhone}${row.primaryContact.relation ? ` (${row.primaryContact.relation})` : ''}${row.secondaryContact?.phone ? ` ${row.secondaryContact.phone}${row.secondaryContact.relation ? ` (${row.secondaryContact.relation})` : ''}` : ''}`}
-        </div>
-      ),
+      render: (_: unknown, row: TableRowData) => {
+        const primary = row.primaryContact?.primaryPhone;
+        const secondary = row.secondaryContact?.phone;
+
+        if (!primary && !secondary) {
+          return <div className="text-sm text-gray-400">non renseigné</div>;
+        }
+
+        return (
+          <div className="text-sm">
+            {primary && `${primary}${
+              row.primaryContact?.relation
+                ? ` (${row.primaryContact?.relation})`
+                : ""
+            }`}
+            {secondary && ` ${secondary}${
+              row.secondaryContact?.relation
+                ? ` (${row.secondaryContact?.relation})`
+                : ""
+            }`}
+          </div>
+        );
+      },
     },
     {
       key: "postalCode",

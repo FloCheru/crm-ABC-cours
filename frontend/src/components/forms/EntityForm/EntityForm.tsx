@@ -48,38 +48,39 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
     submitButtonText: "Ajouter le prospect",
     fields: [
       {
+        key: "notes",
+        label: "Notes générales",
+        type: "textarea",
+        group: "notes",
+      },
+      {
         key: "primaryContact.lastName",
         label: "Nom de famille",
         type: "text",
-        required: true,
         group: "primaryContact",
       },
       {
         key: "primaryContact.firstName",
         label: "Prénom du contact principal",
         type: "text",
-        required: true,
         group: "primaryContact",
       },
       {
         key: "primaryContact.primaryPhone",
         label: "Tél",
         type: "tel",
-        required: true,
         group: "primaryContact",
       },
       {
         key: "primaryContact.email",
         label: "Email",
         type: "email",
-        required: true,
         group: "primaryContact",
       },
       {
         key: "primaryContact.relation",
         label: "Civilité",
         type: "select",
-        required: true,
         group: "primaryContact",
         options: [
           { value: "M.", label: "M." },
@@ -111,23 +112,21 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         key: "address.street",
         label: "Adresse",
         type: "text",
-        required: true,
-        group: "primaryContact",
-      },
-      {
-        key: "address.city",
-        label: "Ville",
-        type: "text",
-        required: true,
         group: "primaryContact",
       },
       {
         key: "address.postalCode",
         label: "Code postal",
         type: "text",
-        required: true,
         group: "primaryContact",
       },
+      {
+        key: "address.city",
+        label: "Ville",
+        type: "text",
+        group: "primaryContact",
+      },
+
       {
         key: "secondaryContact.firstName",
         label: "Prénom",
@@ -203,31 +202,11 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         group: "billing",
         conditional: { field: "sameAddress", value: false },
       },
-      // Informations entreprise
-      {
-        key: "companyInfo.urssafNumber",
-        label: "N° URSSAF",
-        type: "text",
-        group: "company",
-      },
-      {
-        key: "companyInfo.siretNumber",
-        label: "N° SIRET",
-        type: "text",
-        group: "company",
-      },
-      {
-        key: "companyInfo.ceNumber",
-        label: "N° CE",
-        type: "text",
-        group: "company",
-      },
       // Demande de cours
       {
         key: "demande.beneficiaryType",
         label: "Type de bénéficiaire",
         type: "select",
-        required: true,
         group: "demande",
         options: [
           { value: "adulte", label: "Adulte" },
@@ -238,7 +217,6 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         key: "demande.beneficiaryGrade",
         label: "Niveau du bénéficiaire",
         type: "select",
-        required: true,
         group: "demande",
         options: [
           { value: "", label: "Sélectionner un niveau" },
@@ -249,7 +227,6 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         key: "demande.subjects",
         label: "Matières souhaitées",
         type: "text",
-        required: true,
         group: "demande",
         placeholder: "Ex: Mathématiques, Français (séparées par des virgules)",
       },
@@ -267,12 +244,6 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         group: "demande",
         placeholder: "Nom du professeur prévu (optionnel)",
       },
-      {
-        key: "notes",
-        label: "Notes générales",
-        type: "textarea",
-        group: "notes",
-      },
     ],
   },
 
@@ -285,21 +256,21 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         key: "firstName",
         label: "Prénom",
         type: "text",
-        required: true,
+
         group: "personal",
       },
       {
         key: "lastName",
         label: "Nom",
         type: "text",
-        required: true,
+
         group: "personal",
       },
       {
         key: "birthDate",
         label: "Date de naissance",
         type: "date",
-        required: true,
+
         group: "personal",
       },
 
@@ -308,14 +279,14 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         key: "school.name",
         label: "Établissement",
         type: "text",
-        required: true,
+
         group: "school",
       },
       {
         key: "school.Grade",
         label: "Niveau scolaire",
         type: "select",
-        required: true,
+
         group: "school",
         options: [
           { value: "primaire", label: "Primaire" },
@@ -328,7 +299,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         key: "school.grade",
         label: "Classe",
         type: "select",
-        required: true,
+
         group: "school",
         conditional: { field: "school.grade", value: "any" }, // S'affiche si un niveau est sélectionné
         options: [], // Options dynamiques basées sur school.grade
@@ -348,28 +319,28 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         key: "firstName",
         label: "Prénom",
         type: "text",
-        required: true,
+
         group: "personal",
       },
       {
         key: "lastName",
         label: "Nom",
         type: "text",
-        required: true,
+
         group: "personal",
       },
       {
         key: "email",
         label: "Email",
         type: "email",
-        required: true,
+
         group: "personal",
       },
       {
         key: "phone",
         label: "Téléphone",
         type: "tel",
-        required: true,
+
         group: "personal",
       },
 
@@ -378,7 +349,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         key: "status",
         label: "Statut",
         type: "select",
-        required: true,
+
         group: "professional",
         options: [
           { value: "employee", label: "Salarié" },
@@ -391,7 +362,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         key: "hourlyRate",
         label: "Tarif horaire (€)",
         type: "text",
-        required: true,
+
         group: "financial",
       },
 
@@ -408,7 +379,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         key: "name",
         label: "Nom de la matière",
         type: "text",
-        required: true,
+
         group: "general",
       },
       {
@@ -421,7 +392,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         key: "grade",
         label: "Niveau",
         type: "select",
-        required: true,
+
         group: "general",
         options: [
           { value: "débutant", label: "Débutant" },
@@ -696,71 +667,12 @@ export const EntityForm = <T extends EntityType>(
     }
   };
 
-  // Valider un champ
-  const validateField = (
-    field: FieldConfig,
-    value: unknown
-  ): string | undefined => {
-    if (field.required && (!value || value.toString().trim() === "")) {
-      return `${field.label} est requis`;
-    }
-
-    if (
-      field.type === "email" &&
-      value &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.toString())
-    ) {
-      return "Format d'email invalide";
-    }
-
-    if (field.validation) {
-      return field.validation(value as string | number | boolean);
-    }
-
-    return undefined;
-  };
-
-  // Valider tout le formulaire
+  // Valider tout le formulaire - VALIDATION DÉSACTIVÉE
   const validateForm = (): boolean => {
-    logger.debug("VALIDATION - Début de la validation du formulaire");
-    logger.debug(
-      "VALIDATION - Données du formulaire:",
-      JSON.stringify(formData, null, 2)
-    );
-    logger.debug("VALIDATION - Configuration des champs:", config.fields);
-
-    const newErrors: Record<string, string> = {};
-
-    config.fields.forEach((field: FieldConfig) => {
-      const value = getNestedValue(formData, field.key);
-      logger.debug(`VALIDATION - Champ "${field.key}":`, {
-        label: field.label,
-        type: field.type,
-        required: field.required,
-        value: value,
-        valueType: typeof value,
-        isEmpty: !value || value.toString().trim() === "",
-      });
-
-      const error = validateField(field, value);
-      if (error) {
-        logger.warn(`VALIDATION - Erreur pour "${field.key}": ${error}`);
-        newErrors[field.key] = error;
-      } else {
-        logger.debug(`VALIDATION - Champ "${field.key}" valide`);
-      }
-    });
-
-    logger.debug("VALIDATION - Résumé des erreurs:", newErrors);
-    logger.debug(
-      "VALIDATION - Formulaire valide:",
-      Object.keys(newErrors).length === 0
-    );
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    logger.debug("VALIDATION - Validation désactivée");
+    // Toujours retourner true (formulaire toujours valide)
+    return true;
   };
-
 
   // Vérifier si on est en environnement de développement
   const isDevelopment = import.meta.env.VITE_ENVIRONMENT === "development";

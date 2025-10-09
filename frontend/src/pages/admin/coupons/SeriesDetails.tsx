@@ -11,7 +11,7 @@ import {
   ButtonGroup,
   DataCard,
 } from "../../../components";
-// import { couponSeriesService } from "../../../services/couponSeriesService";
+import { ndrService } from "../../../services/ndrService";
 import {
   getFamilyDisplayName,
   generateCouponSeriesName,
@@ -27,25 +27,64 @@ export const SeriesDetails: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [series] = useState<CouponSeries | null>(null);
-  const [coupons] = useState<Coupon[]>([]);
+  const [series, setSeries] = useState<CouponSeries | null>(null);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const loadDetails = async () => {
-      if (!seriesId) return;
+      if (!seriesId) {
+        setError("ID de série manquant");
+        setIsLoading(false);
+        return;
+      }
 
       try {
         setIsLoading(true);
         setError("");
 
-        // TODO: Implémenter le chargement des détails de la série
-        console.log("🚀 [SERIES-DETAILS] Loading series:", seriesId);
+        // Récupérer la NDR via le service
+        const ndr = await ndrService.getNdrById(seriesId);
 
-        // Placeholder - à implémenter
-        setError("Fonctionnalité en cours de développement");
+        // Construire l'objet CouponSeries à partir de la NDR
+        const couponSeries: CouponSeries = {
+          _id: ndr._id,
+          settlementNoteId: ndr._id,
+          familyId: ndr.familyId as any, // Sera populé par le backend
+          beneficiaryType: ndr.beneficiaries.adult
+            ? "adult"
+            : ndr.beneficiaries.students.length > 1
+            ? "mixed"
+            : "student",
+          totalCoupons: ndr.quantity,
+          usedCoupons: ndr.coupons.filter(c => c.status === "used").length,
+          status: ndr.status === "completed" ? "completed" : "active",
+          coupons: ndr.coupons.map(c => c.id),
+          subject: ndr.subjects[0]
+            ? typeof ndr.subjects[0].id === "object"
+              ? { _id: ndr.subjects[0].id._id, name: ndr.subjects[0].id.name, category: ndr.subjects[0].id.category }
+              : { _id: ndr.subjects[0].id, name: ndr.subjects[0].name || "", category: ndr.subjects[0].category || "" }
+            : { _id: "", name: "Non renseignée", category: "" },
+          hourlyRate: ndr.hourlyRate,
+          professorSalary: ndr.professor?.salary || 0,
+          createdBy: ndr.createdBy.userId as any,
+          createdAt: new Date(ndr.createdAt),
+          updatedAt: new Date(ndr.updatedAt),
+        };
+
+        // Extraire les coupons de la NDR
+        const couponsList: Coupon[] = ndr.coupons.map(c => ({
+          _id: c.id,
+          couponSeriesId: ndr._id,
+          code: c.code,
+          status: c.status,
+          updatedAt: c.updatedAt,
+        }));
+
+        setSeries(couponSeries);
+        setCoupons(couponsList);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Erreur lors du chargement"

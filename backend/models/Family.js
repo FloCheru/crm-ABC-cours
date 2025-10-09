@@ -5,17 +5,14 @@ const familySchema = new mongoose.Schema(
     primaryContact: {
       firstName: {
         type: String,
-        required: [true, "Prénom du contact principal requis"],
         trim: true,
       },
       lastName: {
         type: String,
-        required: [true, "Nom du contact principal requis"],
         trim: true,
       },
       primaryPhone: {
         type: String,
-        required: [true, "Téléphone principal requis"],
         trim: true,
       },
       secondaryPhone: {
@@ -24,7 +21,6 @@ const familySchema = new mongoose.Schema(
       },
       email: {
         type: String,
-        required: [true, "Email requis"],
         lowercase: true,
         trim: true,
       },
@@ -33,7 +29,6 @@ const familySchema = new mongoose.Schema(
       },
       relation: {
         type: String,
-        required: [true, "Relation requise"],
         enum: {
           values: ["père", "mère", "tuteur"],
           message: "Relation invalide. Valeurs autorisées: père, mère, tuteur",
@@ -59,23 +54,19 @@ const familySchema = new mongoose.Schema(
       type: {
         firstName: {
           type: String,
-          required: [true, "Prénom du contact secondaire requis"],
           trim: true,
         },
         lastName: {
           type: String,
-          required: [true, "Nom du contact secondaire requis"],
           trim: true,
         },
         phone: {
           type: String,
-          required: [true, "Téléphone du contact secondaire requis"],
           trim: true,
         },
         email: {
           type: String,
           lowercase: true,
-          required: [true, "Email du contact secondaire requis"],
           trim: true,
         },
         birthDate: {
@@ -83,7 +74,6 @@ const familySchema = new mongoose.Schema(
         },
         relation: {
           type: String,
-          required: [true, "Relation requise"],
           enum: {
             values: ["père", "mère", "tuteur"],
             message:
@@ -99,7 +89,7 @@ const familySchema = new mongoose.Schema(
         _id: false, // Désactiver l'auto-génération d'_id pour ce sous-document
         id: {
           type: mongoose.Schema.Types.ObjectId,
-          required: [true, "ID de la NDR requis"],
+          required: [true, "id NDR requis"],
         },
       },
     ],
@@ -107,17 +97,14 @@ const familySchema = new mongoose.Schema(
     billingAddress: {
       street: {
         type: String,
-        required: [true, "Rue de l'adresse de facturation requise"],
         trim: true,
       },
       city: {
         type: String,
-        required: [true, "Ville de l'adresse de facturation requise"],
         trim: true,
       },
       postalCode: {
         type: String,
-        required: [true, "Code postal de l'adresse de facturation requise"],
         trim: true,
       },
     },
@@ -128,10 +115,6 @@ const familySchema = new mongoose.Schema(
         trim: true,
       },
       siretNumber: {
-        type: String,
-        trim: true,
-      },
-      ceNumber: {
         type: String,
         trim: true,
       },
@@ -151,7 +134,6 @@ const familySchema = new mongoose.Schema(
         message:
           "Statut prospect invalide. Valeurs autorisées: en_reflexion, interesse_prof_a_trouver, injoignable, ndr_editee, premier_cours_effectue, rdv_prospect, ne_va_pas_convertir",
       },
-      required: [true, "Le statut du prospect est requis"],
     },
     nextAction: {
       type: String,
@@ -189,6 +171,7 @@ const familySchema = new mongoose.Schema(
         type: String,
         enum: {
           values: [
+            "",
             "CP",
             "CE1",
             "CE2",
@@ -205,22 +188,19 @@ const familySchema = new mongoose.Schema(
           message:
             "Niveau invalide. Valeurs autorisées: CP, CE1, CE2, CM1, CM2, 6ème, 5ème, 4ème, 3ème, Seconde, Première, Terminale",
         },
-        required: [true, "Niveau requis"],
       },
       subjects: [
         {
           _id: false, // Désactiver l'auto-génération d'_id pour ce sous-document
           id: {
             type: mongoose.Schema.Types.ObjectId,
-            required: [true, "ID de la matière requis dans la demande"],
+            required: [true, "Id Matière requis"],
           },
         },
       ],
     },
     plannedTeacher: {
       type: mongoose.Schema.Types.ObjectId,
-      required: false, // Optionnel
-      trim: true,
     },
     createdBy: {
       userId: {
@@ -237,27 +217,22 @@ const familySchema = new mongoose.Schema(
         },
         firstName: {
           type: String,
-          required: [true, "Prénom de l'étudiant requis"],
           trim: true,
         },
         lastName: {
           type: String,
-          required: [true, "Nom de l'étudiant requis"],
           trim: true,
         },
         birthDate: {
           type: Date,
-          required: [true, "Date de naissance requise"],
         },
         school: {
           name: {
             type: String,
-            required: [true, "Nom de l'école requis"],
             trim: true,
           },
           grade: {
             type: String,
-            required: [true, "Classe requise"],
             trim: true,
           },
         },

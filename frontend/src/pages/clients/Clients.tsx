@@ -18,7 +18,6 @@ import type { FamilyStats } from "../../services/familyService";
 import type { NDR } from "../../services/ndrService";
 import "./Clients.css";
 
-
 // Type pour étudiant avec garantie de structure
 interface StudentData {
   _id: string;
@@ -43,7 +42,9 @@ const getSubjectValue = (
 const getAllSubjectNames = (note: NDR): string => {
   if (!note.subjects || note.subjects.length === 0) return "Aucune matière";
   return note.subjects
-    .map((subject) => (typeof subject.id === "object" ? subject.id.name : "Matière"))
+    .map((subject) =>
+      typeof subject.id === "object" ? subject.id.name : "Matière"
+    )
     .join(", ");
 };
 
@@ -251,7 +252,7 @@ export const Clients: React.FC = () => {
         if (updatedNDRs.length === 0) {
           try {
             await familyService.updateFamily(selectedFamilyId, {
-              prospectStatus: "prospect"
+              prospectStatus: "prospect",
             });
             console.log(`✅ Client reclassifié en prospect (0 NDR restantes)`);
           } catch (error) {
@@ -281,12 +282,14 @@ export const Clients: React.FC = () => {
     const fullName =
       `${family.primaryContact.firstName} ${family.primaryContact.lastName}`.toLowerCase();
     const phone = family.primaryContact.primaryPhone || "";
+    const email = (family.primaryContact?.email || "").toLowerCase();
     const address =
       `${family.address.street} ${family.address.city}`.toLowerCase();
 
     return (
       fullName.includes(searchLower) ||
       phone.includes(searchLower) ||
+      email.includes(searchLower) ||
       address.includes(searchLower)
     );
   });
@@ -302,11 +305,7 @@ export const Clients: React.FC = () => {
     {
       key: "id",
       label: "N°",
-      render: (
-        _: unknown,
-        row: NDR & { id: string },
-        index?: number
-      ) => (
+      render: (_: unknown, row: NDR & { id: string }, index?: number) => (
         <div className="text-sm font-medium">
           #
           {typeof index === "number"
@@ -545,7 +544,19 @@ export const Clients: React.FC = () => {
       label: "Téléphone",
       render: (_: unknown, row: TableRowData) => (
         <div className="text-sm">
-          {`${row.primaryContact.primaryPhone}${row.primaryContact.relation ? ` (${row.primaryContact.relation})` : ''}${row.secondaryContact?.phone ? ` ${row.secondaryContact.phone}${row.secondaryContact.relation ? ` (${row.secondaryContact.relation})` : ''}` : ''}`}
+          {`${row.primaryContact.primaryPhone}${
+            row.primaryContact.relation
+              ? ` (${row.primaryContact.relation})`
+              : ""
+          }${
+            row.secondaryContact?.phone
+              ? ` ${row.secondaryContact.phone}${
+                  row.secondaryContact.relation
+                    ? ` (${row.secondaryContact.relation})`
+                    : ""
+                }`
+              : ""
+          }`}
         </div>
       ),
     },

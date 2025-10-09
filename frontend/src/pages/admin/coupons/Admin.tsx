@@ -59,6 +59,7 @@ export const Admin: React.FC = () => {
   };
 
   const handleRowClick = (row: TableRowData) => {
+    localStorage.setItem('currentNdrId', row._id);
     navigate(`/admin/coupons/${row._id}/coupons`);
   };
 
@@ -100,7 +101,7 @@ export const Admin: React.FC = () => {
   // Filtrer les données selon le terme de recherche
   const filteredData = ndrs.filter((ndr) => {
     const familyName = getFamilyDisplayName(ndr.familyId, "");
-    const subjectName = ndr.subjects?.[0]?.id?.name || "";
+    const subjectName = ndr.subjects?.[0]?.name || "";
     const creatorName =
       typeof ndr.createdBy?.userId === "object"
         ? `${ndr.createdBy.userId.firstName} ${ndr.createdBy.userId.lastName}`
@@ -184,7 +185,7 @@ export const Admin: React.FC = () => {
       label: "Matière",
       render: (_: unknown, row: TableRowData) => (
         <div className="font-medium">
-          {row.subjects?.[0]?.id?.name || "Matière inconnue"}
+          {row.subjects?.[0]?.name || "Matière inconnue"}
         </div>
       ),
     },

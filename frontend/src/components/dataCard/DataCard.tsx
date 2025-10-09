@@ -9,7 +9,7 @@ export interface FieldConfig {
   type: "text" | "email" | "tel" | "number" | "date" | "textarea" | "select";
   required?: boolean;
   placeholder?: string;
-  options?: Array<{value: string; label: string}>;
+  options?: Array<{ value: string; label: string }>;
   readOnly?: boolean;
   customRender?: () => React.ReactNode;
 }
@@ -81,11 +81,13 @@ export const DataCard: React.FC<DataCardProps> = ({
   fields,
   onSave,
   className = "",
-  children
+  children,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localData, setLocalData] = useState<Record<string, any>>({});
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
   const [isSaving, setIsSaving] = useState(false);
   const cardClasses = ["data-card", className].filter(Boolean).join(" ");
 
@@ -98,7 +100,7 @@ export const DataCard: React.FC<DataCardProps> = ({
     } else {
       // Démarrer l'édition : initialiser avec les valeurs actuelles
       const initialData: Record<string, any> = {};
-      fields.forEach(field => {
+      fields.forEach((field) => {
         initialData[field.key] = field.value;
       });
       setLocalData(initialData);
@@ -108,14 +110,14 @@ export const DataCard: React.FC<DataCardProps> = ({
   };
 
   const handleFieldChange = (key: string, value: any) => {
-    setLocalData(prev => ({
+    setLocalData((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
-    
+
     // Effacer l'erreur de validation pour ce champ
     if (validationErrors[key]) {
-      setValidationErrors(prev => {
+      setValidationErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[key];
         return newErrors;
@@ -125,30 +127,30 @@ export const DataCard: React.FC<DataCardProps> = ({
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
-    
-    fields.forEach(field => {
-      if (field.required) {
-        const value = localData[field.key];
-        if (!value || (typeof value === 'string' && !value.trim())) {
-          errors[field.key] = `${field.label} est requis`;
-        }
-      }
-    });
-    
+
+    // fields.forEach(field => {
+    //   if (field.required) {
+    //     const value = localData[field.key];
+    //     if (!value || (typeof value === 'string' && !value.trim())) {
+    //       errors[field.key] = `${field.label} est requis`;
+    //     }
+    //   }
+    // });
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSave = async () => {
     if (!validateForm() || !onSave) return;
-    
+
     setIsSaving(true);
     try {
       await onSave(localData);
       setIsEditing(false);
       setValidationErrors({});
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+      console.error("Erreur lors de la sauvegarde:", error);
       // On pourrait ajouter une notification d'erreur ici
     } finally {
       setIsSaving(false);
@@ -156,10 +158,20 @@ export const DataCard: React.FC<DataCardProps> = ({
   };
 
   const renderField = (field: FieldConfig) => {
-    const { key, label, value, type, required, placeholder, options, customRender, readOnly } = field;
-    const displayValue = isEditing ? (localData[key] ?? value) : value;
+    const {
+      key,
+      label,
+      value,
+      type,
+      required,
+      placeholder,
+      options,
+      customRender,
+      readOnly,
+    } = field;
+    const displayValue = isEditing ? localData[key] ?? value : value;
     const error = validationErrors[key];
-    
+
     // Si un rendu custom est défini et qu'on n'est pas en mode édition ou que c'est readOnly
     if (customRender && (!isEditing || readOnly)) {
       return (
@@ -173,12 +185,12 @@ export const DataCard: React.FC<DataCardProps> = ({
     if (!isEditing) {
       // Mode lecture
       let readDisplayValue = displayValue;
-      
+
       // Formatage spécial pour certains types
       if (type === "date" && displayValue) {
         readDisplayValue = new Date(displayValue).toLocaleDateString("fr-FR");
       } else if (type === "select" && displayValue && options) {
-        const option = options.find(opt => opt.value === displayValue);
+        const option = options.find((opt) => opt.value === displayValue);
         readDisplayValue = option ? option.label : displayValue;
       } else if (!displayValue) {
         readDisplayValue = type === "date" ? null : "";
@@ -205,11 +217,17 @@ export const DataCard: React.FC<DataCardProps> = ({
             value={displayValue || ""}
             onChange={(e) => handleFieldChange(key, e.target.value)}
             placeholder={placeholder}
-            className={`data-card__textarea ${error ? "data-card__textarea--error" : ""}`}
+            className={`data-card__textarea ${
+              error ? "data-card__textarea--error" : ""
+            }`}
             rows={4}
             disabled={isSaving}
           />
-          {error && <div className="data-card__error" role="alert">{error}</div>}
+          {error && (
+            <div className="data-card__error" role="alert">
+              {error}
+            </div>
+          )}
         </div>
       );
     }
@@ -288,15 +306,9 @@ export const DataCard: React.FC<DataCardProps> = ({
       </div>
       <div className="data-card__content">
         {fields.length > 0 && (
-          <div className="data-card__grid">
-            {fields.map(renderField)}
-          </div>
+          <div className="data-card__grid">{fields.map(renderField)}</div>
         )}
-        {children && (
-          <div className="data-card__children">
-            {children}
-          </div>
-        )}
+        {children && <div className="data-card__children">{children}</div>}
       </div>
     </section>
   );
