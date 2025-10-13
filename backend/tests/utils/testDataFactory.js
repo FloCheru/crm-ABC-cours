@@ -42,8 +42,7 @@ class TestDataFactory {
         userId: user._id,
         role: user.role,
       },
-      process.env.JWT_SECRET || "test-secret",
-      { expiresIn: "1h" }
+      process.env.JWT_SECRET || "test-secret"
     );
   }
 

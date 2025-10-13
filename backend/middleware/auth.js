@@ -28,9 +28,6 @@ const authenticateToken = async (req, res, next) => {
     if (error.name === "JsonWebTokenError") {
       return res.status(401).json({ message: "Token invalide" });
     }
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ message: "Token expiré" });
-    }
     res.status(500).json({ message: "Erreur d'authentification" });
   }
 };

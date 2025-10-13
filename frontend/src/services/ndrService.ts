@@ -2,8 +2,10 @@ import { apiClient } from "../utils";
 // Interface temporaire pour CreateNDRData (à créer dans ../types/ndr.ts plus tard)
 interface CreateNDRData {
   familyId: string;
-  studentIds?: string[];
-  adult?: boolean;
+  beneficiaries: {
+    students: Array<{ id: string }>;
+    adult: boolean;
+  };
   paymentMethod: "card" | "CESU" | "check" | "transfer" | "cash" | "PRLV";
   paymentType?: "avance" | "credit";
   deadlines?: {
@@ -86,10 +88,7 @@ class NdrService {
       // Construire les données selon le modèle NDR
       const ndrData = {
         familyId: data.familyId,
-        beneficiaries: {
-          students: data.studentIds?.map((id: string) => ({ id })) || [],
-          adult: data.adult || false,
-        },
+        beneficiaries: data.beneficiaries,
         paymentMethod: data.paymentMethod,
         paymentType: data.paymentType || "avance",
         deadlines: data.deadlines

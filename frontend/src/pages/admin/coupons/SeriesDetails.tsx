@@ -12,11 +12,7 @@ import {
   DataCard,
 } from "../../../components";
 import { ndrService } from "../../../services/ndrService";
-import {
-  getFamilyDisplayName,
-  generateCouponSeriesName,
-  getBeneficiariesDisplay,
-} from "../../../utils/familyNameUtils";
+import type { NDR } from "../../../services/ndrService";
 import type { CouponSeries, Coupon } from "../../../types/coupon";
 
 // Type pour les données du tableau avec l'id requis
@@ -32,6 +28,7 @@ export const SeriesDetails: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [ndr, setNdr] = useState<NDR | null>(null);
 
   useEffect(() => {
     const loadDetails = async () => {
@@ -45,39 +42,60 @@ export const SeriesDetails: React.FC = () => {
         setIsLoading(true);
         setError("");
 
-        // Récupérer la NDR via le service
-        const ndr = await ndrService.getNdrById(seriesId);
+        // Récupérer la NDR depuis localStorage en priorité
+        const storedNdr = localStorage.getItem("currentNdr");
+        let ndrData: NDR;
+
+        if (storedNdr) {
+          // Utiliser la NDR depuis localStorage
+          ndrData = JSON.parse(storedNdr);
+        } else {
+          // Fallback : appel API si pas dans localStorage
+          ndrData = await ndrService.getNdrById(seriesId);
+        }
+
+        setNdr(ndrData);
+        console.log("📦 NDR récupérée dans SeriesDetails:", ndrData);
 
         // Construire l'objet CouponSeries à partir de la NDR
         const couponSeries: CouponSeries = {
-          _id: ndr._id,
-          settlementNoteId: ndr._id,
-          familyId: ndr.familyId as any, // Sera populé par le backend
-          beneficiaryType: ndr.beneficiaries.adult
+          _id: ndrData._id,
+          settlementNoteId: ndrData._id,
+          familyId: ndrData.familyId as any, // Sera populé par le backend
+          beneficiaryType: ndrData.beneficiaries.adult
             ? "adult"
-            : ndr.beneficiaries.students.length > 1
+            : ndrData.beneficiaries.students.length > 1
             ? "mixed"
             : "student",
-          totalCoupons: ndr.quantity,
-          usedCoupons: ndr.coupons.filter(c => c.status === "used").length,
-          status: ndr.status === "completed" ? "completed" : "active",
-          coupons: ndr.coupons.map(c => c.id),
-          subject: ndr.subjects[0]
-            ? typeof ndr.subjects[0].id === "object"
-              ? { _id: ndr.subjects[0].id._id, name: ndr.subjects[0].id.name, category: ndr.subjects[0].id.category }
-              : { _id: ndr.subjects[0].id, name: ndr.subjects[0].name || "", category: ndr.subjects[0].category || "" }
+          totalCoupons: ndrData.quantity,
+          usedCoupons: ndrData.coupons.filter((c) => c.status === "used")
+            .length,
+          status: ndrData.status === "completed" ? "completed" : "active",
+          coupons: ndrData.coupons.map((c) => c.id),
+          subject: ndrData.subjects[0]
+            ? typeof ndrData.subjects[0].id === "object"
+              ? {
+                  _id: ndrData.subjects[0].id._id,
+                  name: ndrData.subjects[0].id.name,
+                  category: ndrData.subjects[0].id.category,
+                }
+              : {
+                  _id: ndrData.subjects[0].id,
+                  name: ndrData.subjects[0].name || "",
+                  category: ndrData.subjects[0].category || "",
+                }
             : { _id: "", name: "Non renseignée", category: "" },
-          hourlyRate: ndr.hourlyRate,
-          professorSalary: ndr.professor?.salary || 0,
-          createdBy: ndr.createdBy.userId as any,
-          createdAt: new Date(ndr.createdAt),
-          updatedAt: new Date(ndr.updatedAt),
+          hourlyRate: ndrData.hourlyRate,
+          professorSalary: ndrData.professor?.salary || 0,
+          createdBy: ndrData.createdBy.userId as any,
+          createdAt: new Date(ndrData.createdAt),
+          updatedAt: new Date(ndrData.updatedAt),
         };
 
         // Extraire les coupons de la NDR
-        const couponsList: Coupon[] = ndr.coupons.map(c => ({
+        const couponsList: Coupon[] = ndrData.coupons.map((c) => ({
           _id: c.id,
-          couponSeriesId: ndr._id,
+          couponSeriesId: ndrData._id,
           code: c.code,
           status: c.status,
           updatedAt: c.updatedAt,
@@ -114,14 +132,18 @@ export const SeriesDetails: React.FC = () => {
 
   // Filtrer les coupons selon le terme de recherche
   const filteredCoupons = coupons.filter((coupon) => {
-    // Utiliser les données de la série pour la famille et les bénéficiaires
+    // Utiliser les données de la NDR pour la famille et les bénéficiaires
+    const familyData = ndr?.familyId as any;
     const familyName =
-      series?.familyId &&
-      typeof series.familyId === "object" &&
-      series.familyId.primaryContact
-        ? `${series.familyId.primaryContact.firstName} ${series.familyId.primaryContact.lastName}`
+      familyData && typeof familyData === "object" && familyData.primaryContact
+        ? `${familyData.primaryContact.firstName} ${familyData.primaryContact.lastName}`
         : "";
-    const beneficiariesName = getBeneficiariesDisplay(series);
+
+    const beneficiariesName = ndr?.beneficiaries?.adult
+      ? familyName
+      : ndr?.beneficiaries?.students
+          ?.map((s: any) => `${s.firstName} ${s.lastName}`)
+          .join(", ") || "";
 
     return (
       coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -149,23 +171,48 @@ export const SeriesDetails: React.FC = () => {
       key: "series",
       label: "Série",
       render: (_: unknown, _row: TableRowData) => {
-        if (!series) return "Chargement...";
-        return generateCouponSeriesName(series.familyId, series.createdAt);
+        if (!ndr) return "Chargement...";
+        const familyData = ndr.familyId as any;
+        const familyName =
+          familyData &&
+          typeof familyData === "object" &&
+          familyData.primaryContact
+            ? `${familyData.primaryContact.firstName}${familyData.primaryContact.lastName}`
+            : "FamilleInconnue";
+        const date = new Date(ndr.createdAt);
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const year = date.getFullYear();
+        return `${familyName}_${month}_${year}`;
       },
     },
     {
       key: "family",
       label: "Famille",
       render: (_: unknown, _row: TableRowData) => {
-        if (!series) return "Chargement...";
-        return getFamilyDisplayName(series.familyId);
+        if (!ndr) return "Chargement...";
+        const familyData = ndr.familyId as any;
+        return familyData &&
+          typeof familyData === "object" &&
+          familyData.primaryContact
+          ? `${familyData.primaryContact.firstName} ${familyData.primaryContact.lastName}`
+          : "Famille inconnue";
       },
     },
     {
       key: "beneficiaries",
       label: "Bénéficiaires",
       render: (_: unknown, _row: TableRowData) => {
-        return getBeneficiariesDisplay(series);
+        if (!ndr) return "Chargement...";
+        const familyData = ndr.familyId as any;
+        return ndr.beneficiaries?.adult
+          ? familyData &&
+            typeof familyData === "object" &&
+            familyData.primaryContact
+            ? `${familyData.primaryContact.firstName} ${familyData.primaryContact.lastName}`
+            : "Adulte"
+          : ndr.beneficiaries?.students
+              ?.map((s: any) => `${s.firstName} ${s.lastName}`)
+              .join(", ") || "Aucun Bénéficiaire";
       },
     },
     {
@@ -242,10 +289,15 @@ export const SeriesDetails: React.FC = () => {
   }
 
   // Calculer le nom de la série
-  const seriesName = generateCouponSeriesName(
-    series.familyId,
-    series.createdAt
-  );
+  const familyData = ndr?.familyId as any;
+  const familyName =
+    familyData && typeof familyData === "object" && familyData.primaryContact
+      ? `${familyData.primaryContact.firstName}${familyData.primaryContact.lastName}`
+      : "FamilleInconnue";
+  const date = ndr ? new Date(ndr.createdAt) : new Date();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  const seriesName = `${familyName}_${month}_${year}`;
 
   // Calculer les statistiques basées sur les coupons réels
   const availableCoupons = coupons.filter(

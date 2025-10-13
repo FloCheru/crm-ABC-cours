@@ -124,7 +124,7 @@ class AuthService {
       }
 
       const data = await response.json();
-      console.log("Session étendue jusqu'à:", data.expiresAt);
+      console.log("Session étendue avec succès:", data.message);
     } catch (error) {
       console.warn("Erreur lors de l'extension de session:", error);
     }

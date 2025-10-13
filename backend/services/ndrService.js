@@ -25,6 +25,12 @@ class CouponService {
         },
       ]);
 
+      console.log(`🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: ${result.length}`);
+      if (result.length > 0) {
+        const existingCodes = result.map(r => r.coupon.code).sort();
+        console.log(`🔍 [COUPON-DEBUG] Codes existants: [${existingCodes.join(', ')}]`);
+      }
+
       return result;
     } catch (error) {
       console.error("Erreur lors de la récupération des coupons:", error);
@@ -39,8 +45,23 @@ class CouponService {
    */
   static async generateCouponCode(index) {
     const allCoupons = await this.getAllCoupons();
-    const number = allCoupons.length + index + 1;
-    return number.toString(16).toUpperCase();
+
+    // Trouver le code maximum existant (en convertissant hex -> decimal)
+    let maxCode = 0;
+    if (allCoupons.length > 0) {
+      maxCode = Math.max(...allCoupons.map(c => parseInt(c.coupon.code, 16) || 0));
+    }
+
+    const number = maxCode + index + 1;
+    const code = number.toString(16).toUpperCase();
+
+    console.log(`🔍 [COUPON-DEBUG] generateCouponCode(index=${index})`);
+    console.log(`   - Coupons existants: ${allCoupons.length}`);
+    console.log(`   - Code max existant (hex->dec): ${maxCode}`);
+    console.log(`   - Calcul: ${maxCode} + ${index} + 1 = ${number}`);
+    console.log(`   - Code généré: "${code}"`);
+
+    return code;
   }
 
   /**
@@ -188,9 +209,13 @@ class NdrService {
   static async createNDR(ndrData) {
     //1) Format NDR : ajout des coupons
     try {
+      console.log(`\n🔍 [COUPON-DEBUG] ===== DÉBUT createNDR() =====`);
+      console.log(`🔍 [COUPON-DEBUG] Quantité de coupons à générer: ${ndrData.quantity}`);
+
       // Générer les coupons
       const coupons = [];
       for (let i = 0; i < ndrData.quantity; i++) {
+        console.log(`\n🔍 [COUPON-DEBUG] --- Génération coupon ${i + 1}/${ndrData.quantity} (index=${i}) ---`);
         const couponCode = await CouponService.generateCouponCode(i);
         coupons.push({
           id: new mongoose.Types.ObjectId(),
@@ -198,7 +223,11 @@ class NdrService {
           status: "available",
           updatedAt: new Date(),
         });
+        console.log(`🔍 [COUPON-DEBUG] Coupon ajouté à la liste: code="${couponCode}"`);
       }
+
+      console.log(`\n🔍 [COUPON-DEBUG] Tous les coupons générés pour cette NDR: [${coupons.map(c => c.code).join(', ')}]`);
+
       const ndrWithCoupons = {
         ...ndrData,
         coupons,

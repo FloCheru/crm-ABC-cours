@@ -13,11 +13,6 @@ import {
 } from "../../../components";
 import { ndrService } from "../../../services/ndrService";
 import type { NDR } from "../../../services/ndrService";
-import {
-  getFamilyDisplayName,
-  generateCouponSeriesName,
-  getBeneficiariesDisplay,
-} from "../../../utils/familyNameUtils";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = NDR & { id: string };
@@ -59,7 +54,7 @@ export const Admin: React.FC = () => {
   };
 
   const handleRowClick = (row: TableRowData) => {
-    localStorage.setItem('currentNdrId', row._id);
+    localStorage.setItem('currentNdr', JSON.stringify(row));
     navigate(`/admin/coupons/${row._id}/coupons`);
   };
 
@@ -100,7 +95,10 @@ export const Admin: React.FC = () => {
 
   // Filtrer les données selon le terme de recherche
   const filteredData = ndrs.filter((ndr) => {
-    const familyName = getFamilyDisplayName(ndr.familyId, "");
+    const familyName =
+      ndr.familyId && typeof ndr.familyId === "object" && ndr.familyId.primaryContact
+        ? `${ndr.familyId.primaryContact.firstName} ${ndr.familyId.primaryContact.lastName}`
+        : "";
     const subjectName = ndr.subjects?.[0]?.name || "";
     const creatorName =
       typeof ndr.createdBy?.userId === "object"
@@ -143,11 +141,17 @@ export const Admin: React.FC = () => {
       key: "name",
       label: "Nom de la série",
       render: (_: unknown, row: TableRowData) => {
-        // Utiliser l'utilitaire pour générer le nom de série
-        const seriesName = generateCouponSeriesName(
-          row.familyId,
-          row.createdAt
-        );
+        const familyData = row.familyId as any;
+        const familyName =
+          familyData &&
+          typeof familyData === "object" &&
+          familyData.primaryContact
+            ? `${familyData.primaryContact.firstName}${familyData.primaryContact.lastName}`
+            : "FamilleInconnue";
+        const date = new Date(row.createdAt);
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const year = date.getFullYear();
+        const seriesName = `${familyName}_${month}_${year}`;
 
         return (
           <div>
@@ -160,7 +164,10 @@ export const Admin: React.FC = () => {
       key: "family",
       label: "Famille",
       render: (_: unknown, row: TableRowData) => {
-        const familyName = getFamilyDisplayName(row.familyId);
+        const familyName =
+          row.familyId && typeof row.familyId === "object" && row.familyId.primaryContact
+            ? `${row.familyId.primaryContact.firstName} ${row.familyId.primaryContact.lastName}`
+            : "Famille inconnue";
 
         return (
           <div>
@@ -174,11 +181,21 @@ export const Admin: React.FC = () => {
     {
       key: "beneficiaries",
       label: "Bénéficiaires",
-      render: (_: unknown, row: TableRowData) => (
-        <div>
-          <div className="font-medium">{getBeneficiariesDisplay(row)}</div>
-        </div>
-      ),
+      render: (_: unknown, row: TableRowData) => {
+        const beneficiaries = row.beneficiaries?.adult
+          ? row.familyId && typeof row.familyId === "object" && row.familyId.primaryContact
+            ? `${row.familyId.primaryContact.firstName} ${row.familyId.primaryContact.lastName}`
+            : "Adulte"
+          : row.beneficiaries?.students
+            ?.map(s => `${s.firstName} ${s.lastName}`)
+            .join(", ") || "Bénéficiaire inconnu";
+
+        return (
+          <div>
+            <div className="font-medium">{beneficiaries}</div>
+          </div>
+        );
+      },
     },
     {
       key: "subject",

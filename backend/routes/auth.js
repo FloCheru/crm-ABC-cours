@@ -16,9 +16,7 @@ const generateAccessToken = (userId) => {
     throw new Error('Configuration JWT_SECRET manquante - impossible de générer les tokens d\'authentification');
   }
   
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '24h', // Défaut 24h si pas défini
-  });
+  return jwt.sign({ userId }, process.env.JWT_SECRET);
 };
 
 // Générer un refresh token JWT
@@ -31,11 +29,8 @@ const generateRefreshToken = (userId) => {
   }
   
   return jwt.sign(
-    { userId, type: 'refresh' }, 
-    refreshSecret, 
-    {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRE || '1h', // Défaut 1h si pas défini
-    }
+    { userId, type: 'refresh' },
+    refreshSecret
   );
 };
 
@@ -93,8 +88,7 @@ router.post(
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-        maxAge: 60 * 60 * 1000 // 1 heure
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
       });
 
       res.status(201).json({
@@ -171,8 +165,7 @@ router.post(
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-        maxAge: 60 * 60 * 1000 // 1 heure
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
       });
 
       res.json({
@@ -317,8 +310,8 @@ router.post("/refresh", async (req, res) => {
       },
     });
   } catch (error) {
-    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
-      return res.status(401).json({ message: "Refresh token invalide ou expiré" });
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: "Refresh token invalide" });
     }
     console.error("Erreur lors du renouvellement du token:", error);
     res.status(500).json({ message: "Erreur serveur" });
@@ -347,17 +340,15 @@ router.post("/extend-session", authenticate, async (req, res) => {
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-      maxAge: 60 * 60 * 1000 // Nouvelle heure complète
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
     });
     
     // Mettre à jour la dernière activité
     req.user.lastLogin = new Date();
     await req.user.save();
     
-    res.json({ 
-      message: "Session étendue avec succès",
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
+    res.json({
+      message: "Session étendue avec succès"
     });
   } catch (error) {
     console.error("Erreur lors de l'extension de session:", error);

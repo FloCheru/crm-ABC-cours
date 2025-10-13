@@ -25,8 +25,8 @@ const getSubjectValue = (
   note: NDR,
   field: "hourlyRate" | "quantity" | "professorSalary"
 ): number => {
-  if (!note.subjects || note.subjects.length === 0) return 0;
-  return (note as any).subjects[0][field] || 0;
+  // Ces champs sont directement à la racine de l'objet NDR, pas dans subjects
+  return (note as any)[field] || 0;
 };
 
 const getSubjectName = (note: NDR): string => {
@@ -56,10 +56,14 @@ export const Ndrs: React.FC = () => {
       try {
         setIsLoading(true);
         setError("");
+        console.log("🔄 [NDR-PAGE] Chargement des NDRs...");
         const response = await ndrService.getAllNdrs();
+        console.log("✅ [NDR-PAGE] Réponse API reçue:", response);
+        console.log("📊 [NDR-PAGE] Nombre de NDRs:", response.ndrs?.length || 0);
+        console.log("📋 [NDR-PAGE] Détails des NDRs:", response.ndrs);
         setNdrs(response.ndrs || []);
       } catch (err) {
-        console.error("Erreur lors du chargement des NDRs:", err);
+        console.error("❌ [NDR-PAGE] Erreur lors du chargement des NDRs:", err);
         setError("Erreur lors du chargement des notes de règlement");
       } finally {
         setIsLoading(false);
@@ -291,6 +295,9 @@ export const Ndrs: React.FC = () => {
       subject.includes(searchLower)
     );
   });
+
+  console.log("🔍 [NDR-PAGE] NDRs totales:", ndrs.length);
+  console.log("🔍 [NDR-PAGE] NDRs filtrées:", filteredData.length);
 
   // Transformer les données pour le tableau
   const tableData: TableRowData[] = filteredData.map((note) => ({
