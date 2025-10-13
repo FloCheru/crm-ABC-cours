@@ -22,8 +22,8 @@ interface NavbarProps {
 
 // Items de navigation fixes
 const NAV_ITEMS = [
-  { 
-    label: "Admin", 
+  {
+    label: "Admin",
     path: "/admin/coupons",
     submenu: [
       { label: "Séries de coupons", path: "/admin/coupons" },
@@ -31,7 +31,7 @@ const NAV_ITEMS = [
       { label: "Aperçu Template", path: "/admin/template-preview" },
     ]
   },
-  { label: "Professeurs", path: "/under-development" },
+  { label: "Professeurs", path: "/professeurs" },
   { label: "Prospects", path: "/prospects" },
   { label: "Clients", path: "/clients" },
   { label: "NDR", path: "/ndrs" },

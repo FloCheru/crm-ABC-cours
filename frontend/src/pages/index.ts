@@ -9,3 +9,5 @@ export { Prospects } from "./prospects/Prospects";
 export { ProspectDetails } from "./prospects/ProspectDetails";
 export { Clients } from "./clients/Clients";
 export { ClientDetails } from "./clients/ClientDetails";
+export { Professeurs } from "./professeurs/Professeurs";
+export { ProfesseurDetails } from "./professeurs/ProfesseurDetails";

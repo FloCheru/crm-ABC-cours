@@ -16,7 +16,7 @@ import "./Modal.css";
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: "student" | "rdv";
+  type: "student" | "rdv" | "teacher";
   data?: any;
   onSuccess?: () => void;
   mode?: "edit" | "view";
@@ -111,6 +111,39 @@ const ENTITY_HANDLERS = {
       createStart: "➕ AJOUT NOUVEAU RDV",
     },
   },
+  teacher: {
+    prepareData: (formData: any, _data: any) => {
+      return {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        birthDate: formData.birthDate,
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        postalCode: formData.postalCode.trim(),
+        identifier: formData.identifier,
+        notifyEmail: formData.notifyEmail?.trim() || "",
+      };
+    },
+    update: async (teacherId: string, preparedData: any) => {
+      // TODO: Implémenter teacherService.updateTeacher quand le backend sera prêt
+      console.log("Update teacher:", teacherId, preparedData);
+      return Promise.resolve(preparedData);
+    },
+    create: async (_: string, preparedData: any) => {
+      // TODO: Implémenter teacherService.createTeacher quand le backend sera prêt
+      console.log("Create teacher:", preparedData);
+      return Promise.resolve({
+        _id: Date.now().toString(),
+        ...preparedData,
+        createdAt: new Date().toISOString()
+      });
+    },
+    logs: {
+      entityName: "PROFESSEUR",
+      updateStart: "🔄 DÉBUT MODIFICATION PROFESSEUR",
+      createStart: "➕ AJOUT NOUVEAU PROFESSEUR",
+    },
+  },
 };
 
 // Mapping des titres selon type, data et mode
@@ -125,16 +158,21 @@ const TITLE_MAP = {
     view: "Détails RDV", // data + view mode
     edit: "Modifier RDV", // data + edit mode
   },
+  teacher: {
+    create: "Nouveau professeur",
+    view: "Détails professeur",
+    edit: "Modifier professeur",
+  },
 } as const;
 
 // Fonction de génération du titre
 const getModalTitle = (
-  type: "student" | "rdv",
+  type: "student" | "rdv" | "teacher",
   data?: any,
   currentMode?: "view" | "edit"
 ): string => {
   // Cas 1 : Pas d'entityId = création (forcément edit)
-  const entityId = data?.studentId || data?.rdvId;
+  const entityId = data?.studentId || data?.rdvId || data?.teacherId;
   if (!entityId) {
     return TITLE_MAP[type].create;
   }
@@ -157,7 +195,7 @@ export const Modal: React.FC<ModalProps> = ({
   const { studentTestData, rdvTestData } = usePrefillTest();
 
   // Nouvelle logique de détection création vs modification
-  const entityId = data.studentId || data.rdvId;
+  const entityId = data.studentId || data.rdvId || data.teacherId;
   const familyId = data.familyId;
   // Configuration des champs par type
   const MODAL_CONFIG = {
@@ -316,6 +354,28 @@ export const Modal: React.FC<ModalProps> = ({
         },
       ],
     },
+    teacher: {
+      sections: [
+        {
+          title: "Informations personnelles",
+          fields: [
+            { key: "firstName", label: "Prénom", type: "text", required: true },
+            { key: "lastName", label: "Nom", type: "text", required: true },
+            { key: "birthDate", label: "Date de naissance", type: "date", required: true },
+            { key: "phone", label: "Téléphone", type: "tel", required: true },
+            { key: "email", label: "Email", type: "email", required: true },
+            { key: "postalCode", label: "Code postal", type: "text", required: true },
+            { key: "identifier", label: "Identifiant", type: "text" },
+          ],
+        },
+        {
+          title: "Notification",
+          fields: [
+            { key: "notifyEmail", label: "Notifier à", type: "email" },
+          ],
+        },
+      ],
+    },
   };
 
   const [isLoading, setIsLoading] = useState(false);
@@ -356,7 +416,7 @@ export const Modal: React.FC<ModalProps> = ({
     }
   }, [isOpen, type]);
 
-  // États du formulaire (support élève + RDV)
+  // États du formulaire (support élève + RDV + teacher)
   const [formData, setFormData] = useState({
     // Champs élève
     firstName: "",
@@ -380,6 +440,9 @@ export const Modal: React.FC<ModalProps> = ({
     time: "",
     type: "physique",
     assignedAdminId: "",
+    // Champs teacher
+    identifier: "",
+    notifyEmail: "",
   });
 
   // Effect pour pré-remplir les données quand data change
@@ -427,6 +490,22 @@ export const Modal: React.FC<ModalProps> = ({
   }, [type, data]);
 
   const handleFieldChange = (field: string, value: string) => {
+    // Calcul automatique de l'identifiant pour les professeurs
+    if (type === "teacher" && (field === "firstName" || field === "lastName")) {
+      setFormData((prev) => {
+        const firstName = field === "firstName" ? value : prev.firstName || "";
+        const lastName = field === "lastName" ? value : prev.lastName || "";
+        const identifier = firstName && lastName ? `${firstName}${lastName}`.replace(/\s+/g, "") : "";
+
+        return {
+          ...prev,
+          [field]: value,
+          identifier: identifier,
+        };
+      });
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -443,6 +522,15 @@ export const Modal: React.FC<ModalProps> = ({
         formData.date.trim() !== "" &&
         formData.time.trim() !== "" &&
         formData.type.trim() !== ""
+      );
+    } else if (type === "teacher") {
+      return (
+        formData.firstName.trim() !== "" &&
+        formData.lastName.trim() !== "" &&
+        formData.birthDate.trim() !== "" &&
+        formData.phone.trim() !== "" &&
+        formData.email.trim() !== "" &&
+        formData.postalCode.trim() !== ""
       );
     }
     return false;
@@ -686,6 +774,9 @@ export const Modal: React.FC<ModalProps> = ({
       );
     }
 
+    // Champ identifiant en lecture seule pour teacher
+    const isReadOnly = key === "identifier" && type === "teacher";
+
     return (
       <div key={key} className="data-card__field">
         <label className="data-card__label">
@@ -698,7 +789,7 @@ export const Modal: React.FC<ModalProps> = ({
           onChange={(e) => handleFieldChange(key, e.target.value)}
           placeholder={placeholder}
           required={required}
-          disabled={isDisabled}
+          disabled={isDisabled || isReadOnly}
           data-testid={`input-${key}`}
         />
       </div>
@@ -729,6 +820,9 @@ export const Modal: React.FC<ModalProps> = ({
       time: "",
       type: "physique",
       assignedAdminId: "",
+      // Champs teacher
+      identifier: "",
+      notifyEmail: "",
     });
     setSameAsFamily(true);
     onClose();
@@ -808,6 +902,8 @@ export const Modal: React.FC<ModalProps> = ({
                       ? "Enregistrer"
                       : type === "student"
                       ? "Créer l'élève"
+                      : type === "teacher"
+                      ? "Créer le professeur"
                       : "Créer RDV"}
                   </Button>
                 </>
@@ -891,6 +987,8 @@ export const Modal: React.FC<ModalProps> = ({
                     ? "Enregistrer"
                     : type === "student"
                     ? "Créer l'élève"
+                    : type === "teacher"
+                    ? "Créer le professeur"
                     : "Créer RDV"}
                 </Button>
               </>

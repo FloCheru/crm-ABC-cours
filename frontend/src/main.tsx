@@ -13,6 +13,8 @@ import {
   ProspectDetails,
   Clients,
   ClientDetails,
+  Professeurs,
+  ProfesseurDetails,
 } from "./pages";
 import {
   Ndrs,
@@ -103,6 +105,22 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <ClientDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/professeurs"
+            element={
+              <ProtectedRoute>
+                <Professeurs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/professeurDetails"
+            element={
+              <ProtectedRoute>
+                <ProfesseurDetails />
               </ProtectedRoute>
             }
           />

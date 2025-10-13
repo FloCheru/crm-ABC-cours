@@ -11,13 +11,12 @@ import type { CreateFamilyData } from "../../../types/family";
 import "./EntityForm.css";
 
 // Types de configuration pour différentes entités
-export type EntityType = "family" | "student" | "professor" | "subject";
+export type EntityType = "family" | "student" | "subject";
 
 // Mapping des types d'entité vers leurs types de données
 type EntityDataMap = {
   family: CreateFamilyData;
   student: Record<string, unknown>; // À typer plus tard si nécessaire
-  professor: Record<string, unknown>; // À typer plus tard si nécessaire
   subject: Record<string, unknown>; // À typer plus tard si nécessaire
 };
 
@@ -303,67 +302,6 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         group: "school",
         conditional: { field: "school.grade", value: "any" }, // S'affiche si un niveau est sélectionné
         options: [], // Options dynamiques basées sur school.grade
-      },
-
-      // Notes
-      { key: "notes", label: "Notes", type: "textarea", group: "notes" },
-    ],
-  },
-
-  professor: {
-    title: "Créer un nouveau professeur",
-    submitButtonText: "Créer le professeur",
-    fields: [
-      // Informations personnelles
-      {
-        key: "firstName",
-        label: "Prénom",
-        type: "text",
-
-        group: "personal",
-      },
-      {
-        key: "lastName",
-        label: "Nom",
-        type: "text",
-
-        group: "personal",
-      },
-      {
-        key: "email",
-        label: "Email",
-        type: "email",
-
-        group: "personal",
-      },
-      {
-        key: "phone",
-        label: "Téléphone",
-        type: "tel",
-
-        group: "personal",
-      },
-
-      // Statut professionnel
-      {
-        key: "status",
-        label: "Statut",
-        type: "select",
-
-        group: "professional",
-        options: [
-          { value: "employee", label: "Salarié" },
-          { value: "freelance", label: "Auto-entrepreneur" },
-        ],
-      },
-
-      // Informations financières
-      {
-        key: "hourlyRate",
-        label: "Tarif horaire (€)",
-        type: "text",
-
-        group: "financial",
       },
 
       // Notes
