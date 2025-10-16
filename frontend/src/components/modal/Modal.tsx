@@ -83,19 +83,56 @@ const ENTITY_HANDLERS = {
   },
   rdv: {
     prepareData: (formData: any, data: any) => {
-      return {
+      // Déterminer le type de RDV et préparer les données en conséquence
+      const baseData = {
         date: formData.date,
         time: formData.time,
         type: formData.type as "physique" | "virtuel",
         notes: formData.notes,
-        assignedAdminId: formData.assignedAdminId,
+      };
+
+      // Contexte famille (existant)
+      if (data.familyId) {
+        return {
+          ...baseData,
+          familyId: data.familyId,
+          assignedAdminId: formData.assignedAdminId,
+          entityType: "admin-family" as const,
+        };
+      }
+
+      // Contexte professeur (admin <-> professeur)
+      if (data.professorId && formData.assignedAdminId) {
+        return {
+          ...baseData,
+          professorId: data.professorId,
+          assignedAdminId: formData.assignedAdminId,
+          entityType: "admin-professor" as const,
+        };
+      }
+
+      // Contexte professeur-élève
+      if (data.professorId && formData.studentId) {
+        return {
+          ...baseData,
+          professorId: data.professorId,
+          studentId: formData.studentId,
+          entityType: "professor-student" as const,
+        };
+      }
+
+      // Fallback (ne devrait pas arriver)
+      return {
+        ...baseData,
         familyId: data.familyId,
+        assignedAdminId: formData.assignedAdminId,
+        entityType: "admin-family" as const,
       };
     },
     update: async (rdvId: string, preparedData: any, _familyId: string) => {
       return await rdvService.updateRdvById(rdvId, {
         ...preparedData,
-        familyId: _familyId,
+        familyId: preparedData.familyId || _familyId,
       });
     },
     create: async (
@@ -440,6 +477,7 @@ export const Modal: React.FC<ModalProps> = ({
     time: "",
     type: "physique",
     assignedAdminId: "",
+    studentId: "",
     // Champs teacher
     identifier: "",
     notifyEmail: "",
@@ -484,6 +522,7 @@ export const Modal: React.FC<ModalProps> = ({
         time: data.time || "",
         type: data.type || "physique",
         assignedAdminId: adminId,
+        studentId: data.studentId || "",
         notes: data.notes || "",
       }));
     }
@@ -820,6 +859,7 @@ export const Modal: React.FC<ModalProps> = ({
       time: "",
       type: "physique",
       assignedAdminId: "",
+      studentId: "",
       // Champs teacher
       identifier: "",
       notifyEmail: "",

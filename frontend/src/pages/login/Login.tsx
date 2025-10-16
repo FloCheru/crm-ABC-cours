@@ -53,6 +53,21 @@ export const Login: React.FC = () => {
     }
   };
 
+  const handleQuickProfessorLogin = async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      await login("prof@abc-cours.fr", "123456");
+      // Rediriger vers le dashboard professeur
+      navigate("/professeur/dashboard", { replace: true });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Erreur de connexion");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -138,6 +153,22 @@ export const Login: React.FC = () => {
           🚀 Connexion rapide Admin
         </Button>
 
+        {/* Bouton connexion rapide professeur */}
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isLoading}
+          onClick={handleQuickProfessorLogin}
+          style={{
+            width: "100%",
+            marginTop: "0.5rem",
+            fontSize: "0.875rem",
+            opacity: 0.8,
+          }}
+        >
+          📚 Connexion rapide Professeur
+        </Button>
+
         <div
           style={{
             marginTop: "2rem",
@@ -150,8 +181,7 @@ export const Login: React.FC = () => {
             <strong>Comptes de test :</strong>
           </p>
           <p>Admin: admin@abc-cours.fr / 123456</p>
-          {/* <p>Professeur: prof@abc-cours.com / prof123</p>
-          <p>Famille: famille@abc-cours.com / famille123</p> */}
+          <p>Professeur: prof@abc-cours.fr / 123456</p>
         </div>
       </div>
     </div>

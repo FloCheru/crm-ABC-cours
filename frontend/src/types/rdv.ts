@@ -1,12 +1,19 @@
 export interface RendezVous {
   _id: string;
-  familyId: string;
-  assignedAdminId: string; // ID de l'admin qui gère le RDV
+  // Context: famille, professeur ou admin
+  familyId?: string; // RDV avec une famille
+  professorId?: string; // RDV avec un professeur
+  studentId?: string; // RDV professeur avec un élève spécifique
+  assignedAdminId?: string; // ID de l'admin qui gère le RDV (pour RDV admin-famille ou admin-professeur)
+
+  // Type de RDV pour distinguer les contextes
+  entityType: "admin-family" | "admin-professor" | "professor-student";
+
   date: Date;
   time: string; // Format "HH:MM" (08:00 à 21:00)
   type: "physique" | "virtuel";
   notes?: string;
-  status: "planifie" | "realise" | "annule";
+  status: "planifie" | "realise" | "annule" | "demande";
   createdAt: Date;
   updatedAt: Date;
 }

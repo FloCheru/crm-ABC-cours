@@ -152,6 +152,32 @@ class NdrService {
     }
   }
 
+  /**
+   * Récupérer les NDRs actives du professeur connecté
+   */
+  async getMyActiveNdrs(): Promise<NDR[]> {
+    try {
+      // TODO: Adapter l'endpoint backend pour filtrer par professor.id
+      // Pour l'instant, récupérer toutes les NDRs et filtrer côté client
+      const response = await apiClient.get(`/api/ndrs?limit=1000`);
+      const allNdrs = (response as NDRsResponse).ndrs || [];
+
+      // Filtrer les NDRs actives du professeur
+      // Note: le backend devrait fournir l'ID du professeur connecté
+      const activeNdrs = allNdrs.filter(
+        (ndr) => ndr.status === "active" && ndr.professor?.id
+      );
+
+      return activeNdrs;
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des NDRs actives du professeur:",
+        error
+      );
+      return [];
+    }
+  }
+
   async getNdrById(id: string): Promise<NDR> {
     try {
       const response = await apiClient.get(`/api/ndrs/${id}`);

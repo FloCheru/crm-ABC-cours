@@ -2,6 +2,8 @@
  * Types pour les professeurs
  */
 
+import type { User } from './auth.types';
+
 export type Gender = "M." | "Mme";
 export type TransportMode = "voiture" | "vélo" | "transports" | "moto";
 export type CourseLocation = "domicile" | "visio";
@@ -69,3 +71,16 @@ export interface Teacher {
 }
 
 export type CreateTeacherData = Omit<Teacher, "_id" | "createdAt" | "updatedAt">;
+
+/**
+ * Type unifié combinant User (auth) et Teacher (données professeur)
+ * Utilisé quand un professeur est connecté et a accès à ses informations complètes
+ */
+export interface TeacherProfile extends Omit<Teacher, '_id' | 'email' | 'firstName' | 'lastName'> {
+  // Hérite de User pour les champs d'authentification
+  _id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'professor';
+}

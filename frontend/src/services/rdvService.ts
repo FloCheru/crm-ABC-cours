@@ -2,8 +2,15 @@ import { apiClient } from "../utils";
 import type { RendezVous } from "../types/rdv";
 
 export interface CreateRdvData {
-  familyId: string;
-  assignedAdminId: string;
+  // Context identifiers (au moins un requis)
+  familyId?: string;
+  professorId?: string;
+  studentId?: string;
+  assignedAdminId?: string;
+
+  // Type de RDV
+  entityType: "admin-family" | "admin-professor" | "professor-student";
+
   date: string;
   time: string;
   type: "physique" | "virtuel";
@@ -15,13 +22,15 @@ export interface UpdateRdvData {
   time?: string;
   type?: "physique" | "virtuel";
   notes?: string;
-  status?: "planifie" | "realise" | "annule";
+  status?: "planifie" | "realise" | "annule" | "demande";
 }
 
 export interface RdvFilters {
   familyId?: string;
+  professorId?: string;
   assignedAdminId?: string;
-  status?: "planifie" | "realise" | "annule";
+  entityType?: "admin-family" | "admin-professor" | "professor-student";
+  status?: "planifie" | "realise" | "annule" | "demande";
   dateFrom?: string;
   dateTo?: string;
   type?: "physique" | "virtuel";
@@ -122,7 +131,7 @@ class RdvService {
   /**
    * Mettre à jour un rendez-vous par ID
    */
-  async updateRdvById(rdvId: string, rdvData: UpdateRdvData & { familyId?: string }): Promise<RendezVous> {
+  async updateRdvById(rdvId: string, rdvData: UpdateRdvData & { familyId?: string; professorId?: string; studentId?: string }): Promise<RendezVous> {
     try {
       // Validation côté client
       this.validateRdvData(rdvData);
@@ -232,6 +241,25 @@ class RdvService {
       throw this.handleError(
         error,
         "Impossible de récupérer les rendez-vous de l'administrateur"
+      );
+    }
+  }
+
+  /**
+   * Récupérer les RDV d'un professeur
+   */
+  async getRdvsByProfessor(professorId: string): Promise<RendezVous[]> {
+    try {
+      const response = await this.getRdvs({ professorId, limit: 100 });
+      return response.rdvs;
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des RDV du professeur:",
+        error
+      );
+      throw this.handleError(
+        error,
+        "Impossible de récupérer les rendez-vous du professeur"
       );
     }
   }

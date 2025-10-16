@@ -15,6 +15,10 @@ import {
   ClientDetails,
   Professeurs,
   ProfesseurDetails,
+  ProfesseurDocuments,
+  ProfesseurDashboard,
+  MesRendezVous,
+  MesDocuments,
 } from "./pages";
 import {
   Ndrs,
@@ -27,6 +31,8 @@ import {
 import { TemplatePreview } from "./pages/admin/TemplatePreview";
 import { SeriesDetails } from "./pages/admin/coupons/SeriesDetails";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { RoleBasedProtectedRoute } from "./components/auth/ProtectedRoute";
+import { Navbar } from "./components/layout/Navbar";
 import { useAuthStore } from "./stores";
 import { useAuthInitialization } from "./hooks/useAuthInitialization";
 import { useActivityReset } from "./hooks/useActivityReset";
@@ -39,9 +45,11 @@ const basename = "";
 function AppRoutes() {
   // Étendre automatiquement la session à chaque navigation
   useActivityReset();
-  
+
   return (
-    <Routes>
+    <>
+      <Navbar />
+      <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route
@@ -125,6 +133,38 @@ function AppRoutes() {
             }
           />
           <Route
+            path="/professeurDocuments"
+            element={
+              <ProtectedRoute>
+                <ProfesseurDocuments />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/professeur/dashboard"
+            element={
+              <RoleBasedProtectedRoute allowedRoles={["professor"]}>
+                <ProfesseurDashboard />
+              </RoleBasedProtectedRoute>
+            }
+          />
+          <Route
+            path="/professor/rendez-vous"
+            element={
+              <RoleBasedProtectedRoute allowedRoles={["professor"]}>
+                <MesRendezVous />
+              </RoleBasedProtectedRoute>
+            }
+          />
+          <Route
+            path="/professor/documents"
+            element={
+              <RoleBasedProtectedRoute allowedRoles={["professor"]}>
+                <MesDocuments />
+              </RoleBasedProtectedRoute>
+            }
+          />
+          <Route
             path="/ndrs"
             element={
               <ProtectedRoute>
@@ -189,6 +229,7 @@ function AppRoutes() {
             }
           />
         </Routes>
+      </>
   );
 }
 

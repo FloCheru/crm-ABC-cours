@@ -54,16 +54,12 @@ export const Admin: React.FC = () => {
   };
 
   const handleRowClick = (row: TableRowData) => {
-    localStorage.setItem('currentNdr', JSON.stringify(row));
+    localStorage.setItem("currentNdr", JSON.stringify(row));
     navigate(`/admin/coupons/${row._id}/coupons`);
   };
 
   const handleDeleteSeries = async (ndrId: string) => {
-    if (
-      window.confirm(
-        "Êtes-vous sûr de vouloir supprimer cette NDR ?"
-      )
-    ) {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette NDR ?")) {
       try {
         await ndrService.deleteNdr(ndrId);
         // Recharger les données
@@ -96,7 +92,9 @@ export const Admin: React.FC = () => {
   // Filtrer les données selon le terme de recherche
   const filteredData = ndrs.filter((ndr) => {
     const familyName =
-      ndr.familyId && typeof ndr.familyId === "object" && ndr.familyId.primaryContact
+      ndr.familyId &&
+      typeof ndr.familyId === "object" &&
+      ndr.familyId.primaryContact
         ? `${ndr.familyId.primaryContact.firstName} ${ndr.familyId.primaryContact.lastName}`
         : "";
     const subjectName = ndr.subjects?.[0]?.name || "";
@@ -120,18 +118,12 @@ export const Admin: React.FC = () => {
 
   // Calculer les statistiques des NDRs
   const totalSeries = ndrs.length;
-  const activeSeries = ndrs.filter(
-    (ndr) => ndr.status === "pending"
-  ).length;
-  const completedSeries = ndrs.filter(
-    (ndr) => ndr.status === "paid"
-  ).length;
-  const totalCoupons = ndrs.reduce(
-    (sum, ndr) => sum + ndr.quantity,
-    0
-  );
+  const activeSeries = ndrs.filter((ndr) => ndr.status === "pending").length;
+  const completedSeries = ndrs.filter((ndr) => ndr.status === "paid").length;
+  const totalCoupons = ndrs.reduce((sum, ndr) => sum + ndr.quantity, 0);
   const usedCoupons = ndrs.reduce(
-    (sum, ndr) => sum + (ndr.coupons?.filter(c => c.status === "used").length || 0),
+    (sum, ndr) =>
+      sum + (ndr.coupons?.filter((c) => c.status === "used").length || 0),
     0
   );
   const remainingCoupons = totalCoupons - usedCoupons;
@@ -165,15 +157,15 @@ export const Admin: React.FC = () => {
       label: "Famille",
       render: (_: unknown, row: TableRowData) => {
         const familyName =
-          row.familyId && typeof row.familyId === "object" && row.familyId.primaryContact
+          row.familyId &&
+          typeof row.familyId === "object" &&
+          row.familyId.primaryContact
             ? `${row.familyId.primaryContact.firstName} ${row.familyId.primaryContact.lastName}`
             : "Famille inconnue";
 
         return (
           <div>
-            <div className="font-medium">
-              {familyName}
-            </div>
+            <div className="font-medium">{familyName}</div>
           </div>
         );
       },
@@ -183,12 +175,14 @@ export const Admin: React.FC = () => {
       label: "Bénéficiaires",
       render: (_: unknown, row: TableRowData) => {
         const beneficiaries = row.beneficiaries?.adult
-          ? row.familyId && typeof row.familyId === "object" && row.familyId.primaryContact
+          ? row.familyId &&
+            typeof row.familyId === "object" &&
+            row.familyId.primaryContact
             ? `${row.familyId.primaryContact.firstName} ${row.familyId.primaryContact.lastName}`
             : "Adulte"
           : row.beneficiaries?.students
-            ?.map(s => `${s.firstName} ${s.lastName}`)
-            .join(", ") || "Bénéficiaire inconnu";
+              ?.map((s) => `${s.firstName} ${s.lastName}`)
+              .join(", ") || "Bénéficiaire inconnu";
 
         return (
           <div>
@@ -215,13 +209,14 @@ export const Admin: React.FC = () => {
       key: "utilises",
       label: "Utilisés",
       render: (_: unknown, row: TableRowData) =>
-        row.coupons?.filter(c => c.status === "used").length || 0,
+        row.coupons?.filter((c) => c.status === "used").length || 0,
     },
     {
       key: "restants",
       label: "Restants",
       render: (_: unknown, row: TableRowData) =>
-        row.quantity - (row.coupons?.filter(c => c.status === "used").length || 0),
+        row.quantity -
+        (row.coupons?.filter((c) => c.status === "used").length || 0),
     },
     {
       key: "montantTotal",
@@ -274,7 +269,7 @@ export const Admin: React.FC = () => {
 
   return (
     <div>
-      <Navbar activePath={location.pathname} />
+      {/* <Navbar activePath={location.pathname} /> */}
       <PageHeader
         title="Gestion des séries de coupons"
         breadcrumb={[
@@ -286,9 +281,7 @@ export const Admin: React.FC = () => {
       <Container layout="flex-col">
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <div className="font-medium">
-              Erreur de chargement des NDRs:
-            </div>
+            <div className="font-medium">Erreur de chargement des NDRs:</div>
             <div className="text-sm mt-1">{error}</div>
           </div>
         )}
@@ -377,9 +370,7 @@ export const Admin: React.FC = () => {
 
           {isLoading ? (
             <div className="text-center py-8">
-              <div className="text-gray-500">
-                Chargement des NDRs...
-              </div>
+              <div className="text-gray-500">Chargement des NDRs...</div>
             </div>
           ) : filteredData.length === 0 ? (
             <div className="text-center py-8">

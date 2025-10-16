@@ -11,3 +11,7 @@ export { Clients } from "./clients/Clients";
 export { ClientDetails } from "./clients/ClientDetails";
 export { Professeurs } from "./professeurs/Professeurs";
 export { ProfesseurDetails } from "./professeurs/ProfesseurDetails";
+export { ProfesseurDocuments } from "./professeurs/ProfesseurDocuments";
+export { ProfesseurDashboard } from "./professeur/ProfesseurDashboard";
+export { MesRendezVous } from "./professeur/MesRendezVous";
+export { MesDocuments } from "./professeur/MesDocuments";
