@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { PageHeader } from '../../components';
 import { DocumentUpload } from '../../components/documents/DocumentUpload';
 import { Download, Trash2, FileIcon, Eye } from 'lucide-react';
@@ -18,7 +17,6 @@ interface Document {
 export const MesDocuments: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const professorId = user?._id;
-  const location = useLocation();
 
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,7 +26,6 @@ export const MesDocuments: React.FC = () => {
     if (professorId) {
       loadDocuments();
     }
-    // Ne pas rediriger immédiatement - laisser le store se charger
   }, [professorId]);
 
   const loadDocuments = async () => {
@@ -175,29 +172,25 @@ export const MesDocuments: React.FC = () => {
   // Afficher un loader si l'utilisateur n'est pas encore chargé
   if (!user) {
     return (
-      <main className="bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="text-gray-500">Chargement...</div>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="bg-gray-50 min-h-screen">
+    <>
       <PageHeader
         title="Mes documents"
         breadcrumb={[
-          { label: 'Mon profil', href: '/professor/profil' },
+          { label: 'Dashboard', href: '/professor/dashboard' },
           { label: 'Mes documents' }
         ]}
-        backButton={{
-          label: 'Retour au profil',
-          href: '/professor/profil'
-        }}
       />
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8">
+      <div className="container mx-auto px-4 max-w-6xl space-y-8">
         {/* Section Upload */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="mb-6">
@@ -331,6 +324,6 @@ export const MesDocuments: React.FC = () => {
           </p>
         </div>
       </div>
-    </main>
+    </>
   );
 };

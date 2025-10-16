@@ -153,7 +153,7 @@ export const couponService = {
     totalPages: number;
   }> {
     const params = new URLSearchParams();
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== "") {
         params.append(key, value.toString());
@@ -176,5 +176,51 @@ export const couponService = {
       totalPages: number;
     }>;
     return response.data;
+  },
+
+  /**
+   * Récupère les coupons disponibles pour le professeur connecté
+   * Filtre automatiquement par professor.id côté backend
+   */
+  async getMyAvailableCoupons(): Promise<Coupon[]> {
+    const response = await apiClient.get('/api/professors/me/coupons/available') as ApiResponse<Coupon[]>;
+    return response.data;
+  },
+
+  /**
+   * Récupère l'historique des coupons saisis par le professeur connecté
+   */
+  async getMyCouponsHistory(filters?: {
+    startDate?: string;
+    endDate?: string;
+    studentId?: string;
+    status?: "used" | "deleted";
+  }): Promise<Coupon[]> {
+    const params = new URLSearchParams();
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          params.append(key, value.toString());
+        }
+      });
+    }
+
+    const response = await apiClient.get(`/api/professors/me/coupons/history?${params.toString()}`) as ApiResponse<Coupon[]>;
+    return response.data;
+  },
+
+  /**
+   * Saisir un coupon (wrapper spécifique pour professeur)
+   */
+  async useMyCoupon(couponId: string, sessionData: UseCouponData): Promise<Coupon> {
+    return this.useCoupon(couponId, sessionData);
+  },
+
+  /**
+   * Annuler la saisie d'un coupon (wrapper spécifique pour professeur)
+   */
+  async cancelMyCouponUsage(couponId: string, reason: string): Promise<Coupon> {
+    return this.cancelCouponUsage(couponId, reason);
   },
 };

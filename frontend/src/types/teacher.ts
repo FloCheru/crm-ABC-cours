@@ -3,6 +3,7 @@
  */
 
 import type { User } from './auth.types';
+import type { SchoolCategory } from '../constants/schoolLevels';
 
 export type Gender = "M." | "Mme";
 export type TransportMode = "voiture" | "vélo" | "transports" | "moto";
@@ -26,6 +27,38 @@ export type CurrentSituation =
   | "enseignant_formation_professionnelle"
   | "etudiant"
   | "autre";
+
+export type EmploymentStatus = "salarie" | "auto-entrepreneur";
+
+export type TimeSlot = {
+  start: string; // Format: "HH:mm" (ex: "09:00")
+  end: string;   // Format: "HH:mm" (ex: "12:00")
+};
+
+export type DayAvailability = {
+  enabled: boolean;
+  timeSlots: TimeSlot[];
+};
+
+export type WeeklySchedule = {
+  lundi?: DayAvailability;
+  mardi?: DayAvailability;
+  mercredi?: DayAvailability;
+  jeudi?: DayAvailability;
+  vendredi?: DayAvailability;
+  samedi?: DayAvailability;
+  dimanche?: DayAvailability;
+};
+
+/**
+ * Matière enseignée par le professeur avec les niveaux associés
+ */
+export interface TeachingSubject {
+  subjectId: string;          // Référence à Subject._id
+  subjectName: string;        // Nom de la matière (ex: "Mathématiques")
+  grades: string[];           // Classes précises (ex: ["6ème", "5ème", "3ème"])
+  levels: SchoolCategory[];   // Catégories (ex: ["college", "lycee"])
+}
 
 export interface Teacher {
   _id: string;
@@ -63,6 +96,22 @@ export interface Teacher {
   // Section Situation actuelle
   currentSituation?: CurrentSituation[];
 
+  // Section Mon RIB
+  employmentStatus?: EmploymentStatus;
+  siret?: string; // Obligatoire si auto-entrepreneur
+  bankName?: string;
+  iban?: string;
+  bic?: string;
+
+  // Section Déplacements
+  availableDepartments?: string[]; // Codes département (ex: ["75", "92", "93"])
+
+  // Section Disponibilités
+  weeklyAvailability?: WeeklySchedule;
+
+  // Section Mes Choix (matières enseignées)
+  teachingSubjects?: TeachingSubject[];
+
   // Champs système
   identifier: string; // Calculé automatiquement : prénom+nom (ex: "MarieDupont")
   notifyEmail?: string; // Email de notification (optionnel)
@@ -83,4 +132,7 @@ export interface TeacherProfile extends Omit<Teacher, '_id' | 'email' | 'firstNa
   firstName: string;
   lastName: string;
   role: 'professor';
+
+  // Inclut les matières enseignées
+  teachingSubjects?: TeachingSubject[];
 }

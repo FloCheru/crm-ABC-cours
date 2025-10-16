@@ -1,3 +1,5 @@
+import type { TeachingSubject } from '../types/teacher';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export interface Professor {
@@ -277,6 +279,213 @@ class ProfessorService {
     } catch (error) {
       console.error('Erreur getDocumentMetadata:', error);
       throw error;
+    }
+  }
+
+  // ==================== GESTION DU PROFIL PROFESSEUR ====================
+
+  /**
+   * Récupère le profil du professeur connecté
+   * @returns Profil complet du professeur
+   */
+  async getMyProfile(): Promise<Professor> {
+    try {
+      const response = await fetch(`${API_URL}/professors/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération du profil');
+      }
+
+      const data = await response.json();
+      return data.professor;
+    } catch (error) {
+      console.error('Erreur getMyProfile:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Met à jour le profil du professeur connecté
+   * @param profileData - Données du profil à mettre à jour
+   * @returns Profil mis à jour
+   */
+  async updateMyProfile(profileData: Partial<Professor>): Promise<Professor> {
+    try {
+      const response = await fetch(`${API_URL}/professors/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(profileData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Erreur lors de la mise à jour du profil');
+      }
+
+      const data = await response.json();
+      return data.professor;
+    } catch (error) {
+      console.error('Erreur updateMyProfile:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Met à jour les informations RIB du professeur connecté
+   * @param ribData - Données bancaires (employmentStatus, siret, bankName, iban, bic)
+   * @returns Profil mis à jour
+   */
+  async updateMyRib(ribData: {
+    employmentStatus?: string;
+    siret?: string;
+    bankName?: string;
+    iban?: string;
+    bic?: string;
+  }): Promise<Professor> {
+    try {
+      const response = await fetch(`${API_URL}/professors/me/rib`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(ribData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Erreur lors de la mise à jour du RIB');
+      }
+
+      const data = await response.json();
+      return data.professor;
+    } catch (error) {
+      console.error('Erreur updateMyRib:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Met à jour les disponibilités du professeur connecté
+   * @param availability - Planning hebdomadaire de disponibilités
+   * @returns Profil mis à jour
+   */
+  async updateMyAvailability(availability: any): Promise<Professor> {
+    try {
+      const response = await fetch(`${API_URL}/professors/me/availability`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ weeklyAvailability: availability }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Erreur lors de la mise à jour des disponibilités');
+      }
+
+      const data = await response.json();
+      return data.professor;
+    } catch (error) {
+      console.error('Erreur updateMyAvailability:', error);
+      throw error;
+    }
+  }
+
+  // ==================== GESTION DES MATIÈRES ENSEIGNÉES ====================
+
+  /**
+   * Récupère les matières enseignées par le professeur connecté
+   * @returns Liste des matières avec niveaux associés
+   */
+  async getMySubjects(): Promise<TeachingSubject[]> {
+    try {
+      const response = await fetch(`${API_URL}/professors/me/subjects`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des matières');
+      }
+
+      const data = await response.json();
+      return data.subjects || [];
+    } catch (error) {
+      console.error('Erreur getMySubjects:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Met à jour les matières enseignées par le professeur connecté
+   * @param subjects - Liste des matières avec niveaux
+   * @returns Liste mise à jour
+   */
+  async updateMySubjects(subjects: TeachingSubject[]): Promise<TeachingSubject[]> {
+    try {
+      const response = await fetch(`${API_URL}/professors/me/subjects`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ subjects }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Erreur lors de la mise à jour des matières');
+      }
+
+      const data = await response.json();
+      return data.subjects || [];
+    } catch (error) {
+      console.error('Erreur updateMySubjects:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Vérifie si le professeur a un RIB valide et complet
+   * @returns true si le RIB est complet, false sinon
+   */
+  async hasValidRib(): Promise<boolean> {
+    try {
+      const profile = await this.getMyProfile();
+
+      // Vérifier que tous les champs essentiels du RIB sont présents
+      const hasEmploymentStatus = !!(profile as any).employmentStatus;
+      const hasBankDetails = !!(profile as any).bankDetails;
+      const hasIban = hasBankDetails && !!(profile as any).bankDetails.iban;
+      const hasBic = hasBankDetails && !!(profile as any).bankDetails.bic;
+
+      // Si auto-entrepreneur, le SIRET est obligatoire
+      const isAutoEntrepreneur = (profile as any).employmentStatus === 'auto-entrepreneur';
+      const hasSiret = hasBankDetails && !!(profile as any).bankDetails.siret;
+
+      // RIB valide si :
+      // - Statut professionnel renseigné
+      // - IBAN et BIC renseignés
+      // - Si auto-entrepreneur : SIRET renseigné
+      return hasEmploymentStatus && hasIban && hasBic && (!isAutoEntrepreneur || hasSiret);
+    } catch (error) {
+      console.error('Erreur hasValidRib:', error);
+      return false;
     }
   }
 }

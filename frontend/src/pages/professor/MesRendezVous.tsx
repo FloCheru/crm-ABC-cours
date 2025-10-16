@@ -246,13 +246,13 @@ export const MesRendezVous: React.FC = () => {
   };
 
   return (
-    <main className="bg-gray-50 min-h-screen">
+    <>
       <PageHeader
         title="Mes rendez-vous"
         description="Gérez tous vos rendez-vous (admin et élèves)"
       />
 
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="px-4 w-full">
         {/* Section Actions */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
           <div className="flex gap-3">
@@ -566,6 +566,6 @@ export const MesRendezVous: React.FC = () => {
           </div>
         </div>
       )}
-    </main>
+    </>
   );
 };

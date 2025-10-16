@@ -4,6 +4,31 @@ export interface Coupon {
   code: string;
   status: "available" | "used" | "deleted";
   updatedAt: string;
+
+  // Informations d'utilisation (pour coupons utilisés)
+  usedBy?: {
+    professorId: string;
+    professorName: string;
+  };
+  usedAt?: string; // Date de saisie du coupon
+
+  // Données de la séance
+  sessionData?: {
+    sessionDate: string; // Date du cours effectué
+    sessionDuration: number; // Durée en heures (toujours 1)
+    sessionLocation: "home" | "professor" | "online"; // Lieu du cours
+    notes?: string; // Notes optionnelles
+  };
+
+  // Informations enrichies (depuis la série/NDR)
+  familyName?: string;
+  studentName?: string;
+  subjectName?: string;
+  professorSalary?: number; // Montant à facturer pour ce coupon
+
+  // Annulation
+  cancellationReason?: string;
+  cancelledAt?: string;
 }
 
 export interface CouponSeries {
