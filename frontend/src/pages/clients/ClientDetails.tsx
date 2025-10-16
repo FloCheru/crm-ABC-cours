@@ -166,11 +166,10 @@ export const ClientDetails: React.FC = () => {
   if (isLoading) {
     return (
       <div>
-        <Navbar activePath={location.pathname} />
         <PageHeader
           title="Chargement..."
           breadcrumb={[
-            { label: "Clients", href: "/clients" },
+            { label: "Clients", href: "/admin/clients" },
             { label: "Chargement..." },
           ]}
         />
@@ -188,11 +187,10 @@ export const ClientDetails: React.FC = () => {
   if (error || !client) {
     return (
       <div>
-        <Navbar activePath={location.pathname} />
         <PageHeader
           title="Erreur"
           breadcrumb={[
-            { label: "Clients", href: "/clients" },
+            { label: "Clients", href: "/admin/clients" },
             { label: "Erreur" },
           ]}
         />
@@ -201,7 +199,7 @@ export const ClientDetails: React.FC = () => {
             <div className="text-red-500">{error || "Client non trouvé"}</div>
             <Button
               variant="primary"
-              onClick={() => navigate("/clients")}
+              onClick={() => navigate("/admin/clients")}
               className="mt-4"
             >
               Retour à la liste des clients
@@ -458,11 +456,10 @@ export const ClientDetails: React.FC = () => {
 
   return (
     <div>
-      <Navbar activePath={location.pathname} />
       <PageHeader
         title={`Détails du client ${clientName}`}
         breadcrumb={[
-          { label: "Clients", href: "/clients" },
+          { label: "Clients", href: "/admin/clients" },
           { label: "Détails" },
         ]}
         description={`Créé le ${new Date(client.createdAt).toLocaleDateString(
@@ -470,7 +467,7 @@ export const ClientDetails: React.FC = () => {
         )} • Dernière modification le ${new Date(
           client.updatedAt
         ).toLocaleDateString("fr-FR")}`}
-        backButton={{ label: "Retour aux clients", href: "/clients" }}
+        backButton={{ label: "Retour aux clients", href: "/admin/clients" }}
       />
       <Container layout="flex-col">
         {error && (

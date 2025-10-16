@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Navbar, PageHeader, Container, Button } from "../../../../components";
+import { PageHeader, Container, Button } from "../../../../components";
 import {
   Card,
   CardHeader,
@@ -39,17 +39,16 @@ export const FamilySelection: React.FC = () => {
 
   const handleNext = () => {
     if (selectedFamily) {
-      navigate("/beneficiaries-subjects");
+      navigate("/admin/beneficiaries-subjects");
     }
   };
 
   const handleCancel = () => {
-    navigate("/ndrs");
+    navigate("/admin/ndrs");
   };
 
   return (
     <div>
-      <Navbar activePath="/family-selection" />
       <PageHeader title="Sélection de la famille" />
       <Container layout="flex-col">
         <div className="mb-4">

@@ -157,7 +157,6 @@ export function CouponSeriesCreate() {
 
   return (
     <div>
-      <Navbar activePath={location.pathname} />
       <PageHeader 
         title="Créer une nouvelle série de coupons"
         breadcrumb={[

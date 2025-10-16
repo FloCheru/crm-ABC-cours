@@ -175,7 +175,7 @@ export const Clients: React.FC = () => {
       `🔍 Navigation vers détails client: ${row.primaryContact.firstName} ${row.primaryContact.lastName}`
     );
     localStorage.setItem("clientId", row._id);
-    navigate("/clientDetails");
+    navigate("/admin/client-details");
   };
 
   // Gérer la suppression d'un client
@@ -212,7 +212,7 @@ export const Clients: React.FC = () => {
       // Stocker la famille complète et l'origine
       localStorage.setItem("selectedFamily", JSON.stringify(selectedFamily));
       localStorage.setItem("from", "clients");
-      navigate(`/beneficiaries-subjects`);
+      navigate(`/admin/beneficiaries-subjects`);
     }
   };
 
@@ -631,7 +631,6 @@ export const Clients: React.FC = () => {
 
   return (
     <div>
-      <Navbar activePath={location.pathname} />
       <PageHeader title="Gestion des Clients" />
       <Container layout="flex-col">
         {error && (

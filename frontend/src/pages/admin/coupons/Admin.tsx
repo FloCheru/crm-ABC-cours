@@ -269,7 +269,6 @@ export const Admin: React.FC = () => {
 
   return (
     <div>
-      {/* <Navbar activePath={location.pathname} /> */}
       <PageHeader
         title="Gestion des séries de coupons"
         breadcrumb={[

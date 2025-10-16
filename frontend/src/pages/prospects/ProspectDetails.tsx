@@ -139,7 +139,7 @@ export const ProspectDetails: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate("/prospects");
+    navigate("/admin/prospects");
   };
 
   const handleCreateNDR = () => {
@@ -258,7 +258,7 @@ export const ProspectDetails: React.FC = () => {
   // Redirection si pas d'ID de prospect dans localStorage
   React.useEffect(() => {
     if (!prospectId) {
-      navigate("/prospects", { replace: true });
+      navigate("/admin/prospects", { replace: true });
     }
   }, [prospectId, navigate]);
 
@@ -266,11 +266,10 @@ export const ProspectDetails: React.FC = () => {
   if (isLoading) {
     return (
       <div>
-        <Navbar activePath={location.pathname} />
         <PageHeader
           title="Chargement..."
           breadcrumb={[
-            { label: "Prospects", href: "/prospects" },
+            { label: "Prospects", href: "/admin/prospects" },
             { label: "Chargement..." },
           ]}
         />
@@ -524,11 +523,10 @@ export const ProspectDetails: React.FC = () => {
 
   return (
     <main>
-      <Navbar activePath="/prospects" />
       <PageHeader
         title="Détails du Prospect"
         breadcrumb={[
-          { label: "Prospects", href: "/prospects" },
+          { label: "Prospects", href: "/admin/prospects" },
           { label: "Détails" },
         ]}
         description={
@@ -542,7 +540,7 @@ export const ProspectDetails: React.FC = () => {
         }
         backButton={{
           label: "Retour au tableau des prospects",
-          href: "/prospects",
+          href: "/admin/prospects",
         }}
       />
 

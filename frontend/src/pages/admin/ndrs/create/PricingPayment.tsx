@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { ndrService } from "../../../../services/ndrService";
-import { Navbar, PageHeader, Container, Button } from "../../../../components";
+import { PageHeader, Container, Button } from "../../../../components";
 import { Input } from "../../../../components/ui/input";
 import { Switch } from "../../../../components/ui/switch";
 import { Label } from "../../../../components/ui/label";
@@ -159,12 +159,11 @@ export const PricingPayment: React.FC = () => {
 
   const handleBack = () => {
     const from = localStorage.getItem("from") || "prospects";
-    navigate(`/beneficiaries-subjects?from=${from}`);
+    navigate(`/admin/beneficiaries-subjects?from=${from}`);
   };
 
   return (
     <div>
-      <Navbar activePath="/pricing-payment" />
       <PageHeader title="Tarification et mode de paiement" />
       <Container layout="flex-col">
         <div className="mb-4">

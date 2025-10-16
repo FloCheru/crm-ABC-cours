@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Navbar, PageHeader, Modal } from "../../components";
+import { PageHeader, Modal } from "../../components";
 import type {
   Teacher,
   DisabilityKnowledge,
@@ -100,7 +100,7 @@ export const ProfesseurDetails: React.FC = () => {
 
   React.useEffect(() => {
     if (!teacherId) {
-      navigate("/professeurs", { replace: true });
+      navigate("/admin/professeurs", { replace: true });
     }
   }, [teacherId, navigate]);
 
@@ -221,11 +221,10 @@ export const ProfesseurDetails: React.FC = () => {
   if (isLoading) {
     return (
       <div>
-        <Navbar activePath={location.pathname} />
         <PageHeader
           title="Chargement..."
           breadcrumb={[
-            { label: "Professeurs", href: "/professeurs" },
+            { label: "Professeurs", href: "/admin/professeurs" },
             { label: "Chargement..." },
           ]}
         />
@@ -330,11 +329,10 @@ export const ProfesseurDetails: React.FC = () => {
 
   return (
     <main className="bg-gray-50 min-h-screen">
-      <Navbar activePath="/professeurs" />
       <PageHeader
         title="Détails du Professeur"
         breadcrumb={[
-          { label: "Professeurs", href: "/professeurs" },
+          { label: "Professeurs", href: "/admin/professeurs" },
           { label: "Détails" },
         ]}
         description={
@@ -352,7 +350,7 @@ export const ProfesseurDetails: React.FC = () => {
         }
         backButton={{
           label: "Retour au tableau des professeurs",
-          href: "/professeurs",
+          href: "/admin/professeurs",
         }}
       />
 
@@ -365,7 +363,7 @@ export const ProfesseurDetails: React.FC = () => {
             </h3>
             <div className="flex gap-3">
               <button
-                onClick={() => navigate('/professeurDocuments')}
+                onClick={() => navigate('/admin/professeur-documents')}
                 className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 flex items-center gap-2"
               >
                 📄 Voir les documents

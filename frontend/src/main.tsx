@@ -19,6 +19,14 @@ import {
   ProfesseurDashboard,
   MesRendezVous,
   MesDocuments,
+  MonProfil,
+  MesChoix,
+  MesCoupons,
+  FichePaie,
+  MaDeclaration,
+  MesEleves,
+  ProfessorLayout,
+  AdminLayout,
 } from "./pages";
 import {
   Ndrs,
@@ -52,94 +60,38 @@ function AppRoutes() {
       <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
+
+          {/* Routes admin avec layout nested */}
           <Route
-            path="/admin/coupons"
+            path="/admin"
             element={
-              <ProtectedRoute>
-                <Admin />
-              </ProtectedRoute>
+              <RoleBasedProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout />
+              </RoleBasedProtectedRoute>
             }
-          />
-          <Route
-            path="/admin/coupons/create"
-            element={
-              <ProtectedRoute>
-                <CouponSeriesCreate />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/coupons/list"
-            element={
-              <ProtectedRoute>
-                <CouponsList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/coupons/:seriesId/coupons"
-            element={
-              <ProtectedRoute>
-                <SeriesDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/prospects"
-            element={
-              <ProtectedRoute>
-                <Prospects />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/prospectDetails"
-            element={
-              <ProtectedRoute>
-                <ProspectDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clients"
-            element={
-              <ProtectedRoute>
-                <Clients />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clientDetails"
-            element={
-              <ProtectedRoute>
-                <ClientDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/professeurs"
-            element={
-              <ProtectedRoute>
-                <Professeurs />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/professeurDetails"
-            element={
-              <ProtectedRoute>
-                <ProfesseurDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/professeurDocuments"
-            element={
-              <ProtectedRoute>
-                <ProfesseurDocuments />
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route path="coupons" element={<Admin />} />
+            <Route path="coupons/create" element={<CouponSeriesCreate />} />
+            <Route path="coupons/list" element={<CouponsList />} />
+            <Route path="coupons/:seriesId/coupons" element={<SeriesDetails />} />
+            <Route path="professeurs" element={<Professeurs />} />
+            <Route path="professeur-details" element={<ProfesseurDetails />} />
+            <Route path="professeur-documents" element={<ProfesseurDocuments />} />
+            <Route path="prospects" element={<Prospects />} />
+            <Route path="prospect-details" element={<ProspectDetails />} />
+            <Route path="clients" element={<Clients />} />
+            <Route path="client-details" element={<ClientDetails />} />
+            <Route path="ndrs" element={<Ndrs />} />
+            <Route path="ndr-details" element={<NdrDetails />} />
+            <Route path="family-selection" element={<FamilySelection />} />
+            <Route path="beneficiaries-subjects" element={<BeneficiariesSubjects />} />
+            <Route path="pricing-payment" element={<PricingPayment />} />
+            <Route path="pdf-preview" element={<PdfPreview />} />
+            <Route path="template-preview" element={<TemplatePreview />} />
+            <Route path="under-development" element={<UnderDevelopment />} />
+          </Route>
+
+          {/* Deprecated: Ancien dashboard professeur (à migrer) */}
           <Route
             path="/professeur/dashboard"
             element={
@@ -148,86 +100,25 @@ function AppRoutes() {
               </RoleBasedProtectedRoute>
             }
           />
+
+          {/* Routes professeur avec layout nested */}
           <Route
-            path="/professor/rendez-vous"
+            path="/professor"
             element={
               <RoleBasedProtectedRoute allowedRoles={["professor"]}>
-                <MesRendezVous />
+                <ProfessorLayout />
               </RoleBasedProtectedRoute>
             }
-          />
-          <Route
-            path="/professor/documents"
-            element={
-              <RoleBasedProtectedRoute allowedRoles={["professor"]}>
-                <MesDocuments />
-              </RoleBasedProtectedRoute>
-            }
-          />
-          <Route
-            path="/ndrs"
-            element={
-              <ProtectedRoute>
-                <Ndrs />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/ndrDetails"
-            element={
-              <ProtectedRoute>
-                <NdrDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/family-selection"
-            element={
-              <ProtectedRoute>
-                <FamilySelection />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/beneficiaries-subjects"
-            element={
-              <ProtectedRoute>
-                <BeneficiariesSubjects />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/pricing-payment"
-            element={
-              <ProtectedRoute>
-                <PricingPayment />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/pdf-preview"
-            element={
-              <ProtectedRoute>
-                <PdfPreview />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/template-preview"
-            element={
-              <ProtectedRoute>
-                <TemplatePreview />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/under-development"
-            element={
-              <ProtectedRoute>
-                <UnderDevelopment />
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route path="profil" element={<MonProfil />} />
+            <Route path="choix" element={<MesChoix />} />
+            <Route path="coupons" element={<MesCoupons />} />
+            <Route path="paie" element={<FichePaie />} />
+            <Route path="declaration" element={<MaDeclaration />} />
+            <Route path="eleves" element={<MesEleves />} />
+            <Route path="rendez-vous" element={<MesRendezVous />} />
+            <Route path="documents" element={<MesDocuments />} />
+          </Route>
         </Routes>
       </>
   );

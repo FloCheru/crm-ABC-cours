@@ -92,7 +92,7 @@ export const Prospects: React.FC = () => {
       // Stocker la famille complète et l'origine
       localStorage.setItem("selectedFamily", JSON.stringify(selectedFamily));
       localStorage.setItem("from", "prospects");
-      navigate(`/beneficiaries-subjects`);
+      navigate(`/admin/beneficiaries-subjects`);
     }
   };
 
@@ -551,7 +551,6 @@ export const Prospects: React.FC = () => {
 
   return (
     <main>
-      <Navbar activePath={location.pathname} />
       <Container layout="flex-col">
         <PageHeader title="Gestion des Prospects" />
         <Container layout="grid" padding="none">
@@ -628,7 +627,7 @@ export const Prospects: React.FC = () => {
               }))}
               onRowClick={(row) => {
                 localStorage.setItem("prospectId", row._id);
-                navigate("/prospectDetails");
+                navigate("/admin/prospect-details");
               }}
             />
           )}

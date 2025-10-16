@@ -156,7 +156,6 @@ export const CouponsList: React.FC = () => {
 
   return (
     <div>
-      <Navbar activePath={location.pathname} />
       <PageHeader
         title="Gestion des coupons individuels"
         breadcrumb={[

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Navbar, PageHeader } from "../../components";
+import { PageHeader } from "../../components";
 import { mockNDRData } from "../../data/ndrTestData";
 import type { NDRTemplateData } from "../../types/ndrTemplate";
 import "./TemplatePreview.css";
@@ -18,7 +18,6 @@ export const TemplatePreview: React.FC = () => {
 
   return (
     <div>
-      <Navbar activePath={location.pathname} />
       <PageHeader 
         title="Aperçu Template NDR"
         breadcrumb={[

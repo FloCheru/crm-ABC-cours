@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Navbar, PageHeader } from '../../components';
+import { PageHeader } from '../../components';
 import { DocumentUpload } from '../../components/documents/DocumentUpload';
 import { Download, Trash2, FileIcon, Eye } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -27,7 +27,7 @@ export const ProfesseurDocuments: React.FC = () => {
     if (teacherId) {
       loadDocuments();
     } else {
-      navigate('/professeurs', { replace: true });
+      navigate('/admin/professeurs', { replace: true });
     }
   }, [teacherId, navigate]);
 
@@ -178,17 +178,16 @@ export const ProfesseurDocuments: React.FC = () => {
 
   return (
     <main className="bg-gray-50 min-h-screen">
-      <Navbar activePath={location.pathname} />
       <PageHeader
         title="Documents du professeur"
         breadcrumb={[
-          { label: 'Professeurs', href: '/professeurs' },
-          { label: 'Détails', href: '/professeurDetails' },
+          { label: 'Professeurs', href: '/admin/professeurs' },
+          { label: 'Détails', href: '/admin/professeur-details' },
           { label: 'Documents' }
         ]}
         backButton={{
           label: 'Retour aux détails',
-          href: '/professeurDetails'
+          href: '/admin/professeur-details'
         }}
       />
 

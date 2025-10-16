@@ -205,7 +205,7 @@ export const Ndrs: React.FC = () => {
   };
 
   const handleCreateNote = () => {
-    navigate("/family-selection");
+    navigate("/admin/family-selection");
   };
 
   const handleDeleteNote = async (noteId: string) => {
@@ -583,7 +583,6 @@ export const Ndrs: React.FC = () => {
 
   return (
     <div>
-      <Navbar activePath={location.pathname} />
       <PageHeader title="Tableau de bord" />
       <Container layout="flex-col">
         {(error || localError) && (
@@ -683,7 +682,7 @@ export const Ndrs: React.FC = () => {
               data={tableData}
               onRowClick={(row) => {
                 localStorage.setItem("ndrId", row._id);
-                navigate("/ndrDetails");
+                navigate("/admin/ndr-details");
               }}
             />
           )}

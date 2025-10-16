@@ -194,7 +194,7 @@ export const Professeurs: React.FC = () => {
   // Handler pour cliquer sur une ligne du tableau
   const handleRowClick = (row: TableRowData) => {
     localStorage.setItem("teacherId", row._id);
-    navigate("/professeurDetails");
+    navigate("/admin/professeur-details");
   };
 
   // Gérer la suppression d'un professeur
@@ -353,7 +353,6 @@ export const Professeurs: React.FC = () => {
 
   return (
     <div>
-      <Navbar activePath={location.pathname} />
       <PageHeader title="Gestion des Professeurs" />
       <Container layout="flex-col">
         <Container layout="grid" padding="none">

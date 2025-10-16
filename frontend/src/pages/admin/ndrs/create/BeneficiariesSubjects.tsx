@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronsUpDown, X } from "lucide-react";
-import { Navbar, PageHeader, Container, Button } from "../../../../components";
+import { PageHeader, Container, Button } from "../../../../components";
 import {
   Card,
   CardHeader,
@@ -58,7 +58,7 @@ export const BeneficiariesSubjects: React.FC = () => {
       setfamily(family);
       setNdrData((prev) => ({ ...prev, familyId: family._id }));
     } else {
-      navigate("/family-selection");
+      navigate("/admin/family-selection");
     }
   }, [navigate]);
 
@@ -143,7 +143,7 @@ export const BeneficiariesSubjects: React.FC = () => {
   const handleNext = () => {
     if (selectedBeneficiaries.length > 0 && selectedSubjects.length > 0) {
       localStorage.setItem("ndrData", JSON.stringify(ndrData));
-      navigate("/pricing-payment");
+      navigate("/admin/pricing-payment");
     }
   };
 
@@ -152,14 +152,13 @@ export const BeneficiariesSubjects: React.FC = () => {
     if (from === "prospects") {
       navigate("/prospects");
     } else {
-      navigate("/family-selection");
+      navigate("/admin/family-selection");
     }
   };
 
   if (!family) {
     return (
       <div>
-        <Navbar activePath="/beneficiaries-subjects" />
         <PageHeader title="Bénéficiaires et matières" />
         <Container layout="flex-col">
           <div className="text-center py-8">
@@ -172,7 +171,6 @@ export const BeneficiariesSubjects: React.FC = () => {
 
   return (
     <div>
-      <Navbar activePath="/beneficiaries-subjects" />
       <PageHeader title="Bénéficiaires et matières" />
       <Container layout="flex-col">
         <div className="mb-6">

@@ -121,7 +121,7 @@ export const NdrDetails: React.FC = () => {
   // Redirection si pas d'ID de NDR dans localStorage
   useEffect(() => {
     if (!ndrId) {
-      navigate("/ndrs", { replace: true });
+      navigate("/admin/ndrs", { replace: true });
     }
   }, [ndrId, navigate]);
 
@@ -155,16 +155,15 @@ export const NdrDetails: React.FC = () => {
   if (isLoading) {
     return (
       <div>
-        <Navbar activePath={location.pathname} />
         <PageHeader
           title="Chargement..."
           breadcrumb={[
-            { label: "NDRs", href: "/ndrs" },
+            { label: "NDRs", href: "/admin/ndrs" },
             { label: "Chargement..." },
           ]}
           backButton={{
             label: "Retour aux NDRs",
-            href: "/ndrs",
+            href: "/admin/ndrs",
           }}
         />
         <Container layout="flex-col">
@@ -184,7 +183,6 @@ export const NdrDetails: React.FC = () => {
 
   return (
     <div>
-      <Navbar activePath={location.pathname} />
       <PageHeader
         title={`Note de règlement n°${
           ndr

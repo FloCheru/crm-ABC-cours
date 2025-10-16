@@ -258,7 +258,6 @@ export const SeriesDetails: React.FC = () => {
   if (isLoading) {
     return (
       <div>
-        <Navbar activePath={location.pathname} />
         <Container layout="flex-col">
           <div className="text-center py-8">
             <div className="text-gray-500">Chargement des détails...</div>
@@ -271,7 +270,6 @@ export const SeriesDetails: React.FC = () => {
   if (!series) {
     return (
       <div>
-        <Navbar activePath={location.pathname} />
         <Container layout="flex-col">
           <div className="text-center py-8">
             <div className="text-red-500">Série de coupons non trouvée</div>
@@ -309,7 +307,6 @@ export const SeriesDetails: React.FC = () => {
 
   return (
     <div>
-      <Navbar activePath={location.pathname} />
       <PageHeader
         title={`Détails de la série : ${seriesName}`}
         breadcrumb={[

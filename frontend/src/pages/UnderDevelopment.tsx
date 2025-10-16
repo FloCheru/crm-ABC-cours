@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
-import { Navbar, PageHeader, Container } from "../components";
+import { PageHeader, Container } from "../components";
 
 export const UnderDevelopment: React.FC = () => {
   const location = useLocation();
@@ -19,7 +19,6 @@ export const UnderDevelopment: React.FC = () => {
 
   return (
     <div>
-      <Navbar activePath={location.pathname} />
       <PageHeader 
         title="🚧 En cours de développement"
         breadcrumb={[
