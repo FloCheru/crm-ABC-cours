@@ -3,19 +3,17 @@ import { useState } from "react";
 import {
   Container,
   Button,
-  Navbar,
   PageHeader,
   Input,
   Select,
   ButtonGroup,
 } from "../../../components";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useCouponSeriesForm } from "../../../hooks/useCouponSeriesForm";
 import { couponSeriesService } from "../../../services/couponSeriesService";
 import { logger } from "../../../utils/logger";
 
 export function CouponSeriesCreate() {
-  const location = useLocation();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string>("");

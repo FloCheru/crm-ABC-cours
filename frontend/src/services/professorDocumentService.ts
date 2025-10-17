@@ -30,17 +30,25 @@ export const professorDocumentService = {
     formData.append("type", type);
     formData.append("file", file);
 
-    const response = await apiClient.post(
-      "/api/professors/me/documents/upload",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    ) as ApiResponse<{ document: ProfessorDocument }>;
+    // Note: FormData ne peut pas être passé directement via apiClient.post car il stringify
+    // On utilise fetch directement pour les uploads de fichiers
+    const token = localStorage.getItem("token");
+    const baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-    return response.data.document;
+    const response = await fetch(`${baseURL}/api/professors/me/documents/upload`, {
+      method: "POST",
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`);
+    }
+
+    const data = await response.json() as ApiResponse<{ document: ProfessorDocument }>;
+    return data.data.document;
   },
 
   /**
@@ -48,14 +56,22 @@ export const professorDocumentService = {
    * Retourne le blob du fichier pour téléchargement
    */
   async downloadDocument(documentId: string): Promise<Blob> {
-    const response = await apiClient.get(
-      `/api/professors/me/documents/${documentId}/download`,
-      {
-        responseType: "blob",
-      }
-    );
+    // Pour le téléchargement de blob, on utilise fetch directement
+    const token = localStorage.getItem("token");
+    const baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-    return response as unknown as Blob;
+    const response = await fetch(`${baseURL}/api/professors/me/documents/${documentId}/download`, {
+      method: "GET",
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.statusText}`);
+    }
+
+    return await response.blob();
   },
 
   /**

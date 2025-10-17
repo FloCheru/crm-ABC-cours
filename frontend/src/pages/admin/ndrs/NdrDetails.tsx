@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
-  Navbar,
+  
   PageHeader,
   Container,
   SummaryCard,
@@ -48,7 +48,6 @@ const paymentMethodOptions = [
 ];
 
 export const NdrDetails: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
 
   // Récupérer l'ID depuis localStorage
@@ -204,9 +203,9 @@ export const NdrDetails: React.FC = () => {
             ? `Créé le ${new Date(ndr.createdAt).toLocaleDateString(
                 "fr-FR"
               )} • Dernière modification le ${new Date(
-                ndr.updatedAt
+                ndr.updatedAt || ndr.createdAt
               ).toLocaleDateString("fr-FR")} à ${new Date(
-                ndr.updatedAt
+                ndr.updatedAt || ndr.createdAt
               ).toLocaleTimeString("fr-FR", {
                 hour: "2-digit",
                 minute: "2-digit",

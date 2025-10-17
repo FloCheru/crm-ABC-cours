@@ -26,10 +26,18 @@ interface CreateNDRData {
 
 interface NDR {
   _id: string;
-  familyId: string;
+  familyId: string | {
+    _id: string;
+    primaryContact: {
+      firstName: string;
+      lastName: string;
+    };
+  };
   beneficiaries: {
     students: Array<{
       id: string;
+      firstName?: string;
+      lastName?: string;
     }>;
     adult: boolean;
   };
@@ -56,15 +64,16 @@ interface NDR {
     id: string;
     salary?: number;
   };
-  coupons: Array<{
-    id: string;
-    code: string;
+  coupons?: Array<{
+    id?: string;
+    _id?: string;
+    code?: string;
     status: "available" | "used" | "deleted";
-    updatedAt: string;
+    updatedAt?: string;
   }>;
-  generatedPDFs: any[];
+  generatedPDFs?: any[];
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 interface NDRsResponse {

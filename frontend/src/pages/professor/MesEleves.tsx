@@ -20,7 +20,7 @@ import {
 import { Textarea } from "../../components/ui/textarea";
 import { Separator } from "../../components/ui/separator";
 import studentService from "../../services/studentService";
-import type { StudentWithStats, StudentSession } from "../../types/student";
+import type { StudentWithStats } from "../../types/student";
 
 export const MesEleves: React.FC = () => {
   const [students, setStudents] = useState<StudentWithStats[]>([]);

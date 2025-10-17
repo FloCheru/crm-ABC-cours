@@ -72,7 +72,7 @@ export const canAccessPage = (page: string): boolean => {
   const permissions = PERMISSIONS[role];
   if (!permissions) return false;
 
-  return permissions.pages.includes(page);
+  return (permissions.pages as readonly string[]).includes(page);
 };
 
 /**

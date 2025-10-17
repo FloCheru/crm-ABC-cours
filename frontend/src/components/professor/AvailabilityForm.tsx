@@ -1,5 +1,5 @@
 import React from 'react';
-import type { WeeklySchedule, DayAvailability, TimeSlot } from '../../types/teacher';
+import type { WeeklySchedule } from '../../types/teacher';
 import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
 

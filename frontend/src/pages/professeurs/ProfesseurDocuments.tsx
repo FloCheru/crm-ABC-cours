@@ -1,5 +1,5 @@
+import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { PageHeader } from '../../components';
 import { DocumentUpload } from '../../components/documents/DocumentUpload';
 import { Download, Trash2, FileIcon, Eye } from 'lucide-react';
@@ -17,7 +17,6 @@ interface Document {
 export const ProfesseurDocuments: React.FC = () => {
   const teacherId = localStorage.getItem('teacherId');
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);

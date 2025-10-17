@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import {
-  Navbar,
+  
   PageHeader,
   Container,
   SummaryCard,
@@ -18,7 +17,6 @@ import type { NDR } from "../../../services/ndrService";
 type TableRowData = Coupon & { id: string };
 
 export const CouponsList: React.FC = () => {
-  const location = useLocation();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [stats, setStats] = useState({ available: 0, used: 0, expired: 0, cancelled: 0 });
   const [isLoading, setIsLoading] = useState(true);
@@ -37,11 +35,11 @@ export const CouponsList: React.FC = () => {
         // Extraire tous les coupons de toutes les NDRs
         const allCoupons: Coupon[] = ndrs.flatMap((ndr) =>
           (ndr.coupons || []).map((coupon) => ({
-            _id: coupon.id,
+            _id: coupon.id || coupon._id || "",
             couponSeriesId: ndr._id,
-            code: coupon.code,
+            code: coupon.code || "",
             status: coupon.status,
-            updatedAt: coupon.updatedAt,
+            updatedAt: coupon.updatedAt || "",
           }))
         );
 

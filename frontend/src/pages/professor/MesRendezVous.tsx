@@ -36,7 +36,7 @@ export const MesRendezVous: React.FC = () => {
 
   // User connecté
   const user = useAuthStore((state) => state.user);
-  const professorId = user?.id || "";
+  const professorId = user?._id || "";
 
   // Charger les données au montage
   useEffect(() => {

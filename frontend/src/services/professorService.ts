@@ -11,6 +11,13 @@ export interface Professor {
   phone: string;
   postalCode: string;
   city: string;
+  employmentStatus?: string;
+  bankDetails?: {
+    siret?: string;
+    bankName?: string;
+    iban?: string;
+    bic?: string;
+  };
   // ... autres champs du professeur
 }
 

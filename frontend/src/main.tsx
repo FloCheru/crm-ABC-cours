@@ -38,7 +38,6 @@ import {
 // import { NDRCreationWizard } from "./pages/admin/dashboard/create/NDRCreationWizard"; // Supprimé
 import { TemplatePreview } from "./pages/admin/TemplatePreview";
 import { SeriesDetails } from "./pages/admin/coupons/SeriesDetails";
-import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RoleBasedProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Navbar } from "./components/layout/Navbar";
 import { useAuthStore } from "./stores";

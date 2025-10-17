@@ -1,5 +1,5 @@
+import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import { PageHeader, Modal } from "../../components";
 import type {
   Teacher,
@@ -21,7 +21,6 @@ import { useAuthStore } from "../../stores";
 
 export const ProfesseurDetails: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const teacherId = localStorage.getItem("teacherId");
   const [teacher, setTeacher] = useState<Teacher | null>(null);

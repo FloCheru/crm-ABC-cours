@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
-  Navbar,
   PageHeader,
   Container,
   SummaryCard,
@@ -18,7 +17,6 @@ import type { NDR } from "../../../services/ndrService";
 type TableRowData = NDR & { id: string };
 
 export const Admin: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
 
   const [error, setError] = useState<string>("");

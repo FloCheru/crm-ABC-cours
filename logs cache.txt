@@ -1,162 +1,39 @@
-0] ❌ [NDR-SERVICE] Stack trace: MongoServerError: E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }
-[0]     at InsertOneOperation.execute (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\insert.js:51:19)
-[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-[0]     at async tryOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:207:20)
-[0]     at async executeOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:75:16)
-[0]     at async Collection.insertOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\collection.js:157:16)
-[0] Erreur dans POST /api/ndrs: MongoServerError: E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }
-[0]     at InsertOneOperation.execute (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\insert.js:51:19)
-[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-[0]     at async tryOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:207:20)
-[0]     at async executeOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:75:16)
-[0]     at async Collection.insertOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\collection.js:157:16) {
-[0]   errorLabelSet: Set(0) {},
-[0]   errorResponse: {
-[0]     index: 0,
-[0]     code: 11000,
-[0]     errmsg: 'E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }',
-[0]     keyPattern: { 'coupons.code': 1 },
-[0]     keyValue: { 'coupons.code': '2' }
-[0]   },
-[0]   index: 0,
-[0]   code: 11000,
-[0]   keyPattern: { 'coupons.code': 1 },
-[0]   keyValue: { 'coupons.code': '2' }
-[0] }
-[0] ::1 - - [10/Oct/2025:16:33:39 +0000] "POST /api/ndrs HTTP/1.1" 500 33 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
-[0] 
-[0] 🔍 [COUPON-DEBUG] ===== DÉBUT createNDR() =====
-[0] 🔍 [COUPON-DEBUG] Quantité de coupons à générer: 2
-[0]
-[0] 🔍 [COUPON-DEBUG] --- Génération coupon 1/2 (index=0) ---
-[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 1
-[0] 🔍 [COUPON-DEBUG] Codes existants: [2]
-[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=0)
-[0]    - Coupons existants: 1
-[0]    - Calcul: 1 + 0 + 1 = 2
-[0]    - Code généré: "2"
-[0] 🔍 [COUPON-DEBUG] Coupon ajouté à la liste: code="2"
-[0]
-[0] 🔍 [COUPON-DEBUG] --- Génération coupon 2/2 (index=1) ---
-[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 1
-[0] 🔍 [COUPON-DEBUG] Codes existants: [2]
-[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=1)
-[0]    - Coupons existants: 1
-[0]    - Calcul: 1 + 1 + 1 = 3
-[0]    - Code généré: "3"
-[0] 🔍 [COUPON-DEBUG] Coupon ajouté à la liste: code="3"
-[0]
-[0] 🔍 [COUPON-DEBUG] Tous les coupons générés pour cette NDR: [2, 3]
-[0] ❌ [NDR-SERVICE] ERREUR lors de la création de la NDR: MongoServerError: E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }
-[0]     at InsertOneOperation.execute (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\insert.js:51:19)
-[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-[0]     at async tryOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:207:20)
-[0]     at async executeOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:75:16)
-[0]     at async Collection.insertOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\collection.js:157:16) {
-[0]   errorLabelSet: Set(0) {},
-[0]   errorResponse: {
-[0]     index: 0,
-[0]     code: 11000,
-[0]     errmsg: 'E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }',
-[0]     keyPattern: { 'coupons.code': 1 },
-[0]     keyValue: { 'coupons.code': '2' }
-[0]   },
-[0]   index: 0,
-[0]   code: 11000,
-[0]   keyPattern: { 'coupons.code': 1 },
-[0]   keyValue: { 'coupons.code': '2' }
-[0] }
-[0] ❌ [NDR-SERVICE] Stack trace: MongoServerError: E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }
-[0]     at InsertOneOperation.execute (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\insert.js:51:19)
-[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-[0]     at async tryOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:207:20)
-[0]     at async executeOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:75:16)
-[0]     at async Collection.insertOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\collection.js:157:16)
-[0] Erreur dans POST /api/ndrs: MongoServerError: E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }
-[0]     at InsertOneOperation.execute (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\insert.js:51:19)
-[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-[0]     at async tryOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:207:20)
-[0]     at async executeOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:75:16)
-[0]     at async Collection.insertOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\collection.js:157:16) {
-[0]   errorLabelSet: Set(0) {},
-[0]   errorResponse: {
-[0]     index: 0,
-[0]     code: 11000,
-[0]     errmsg: 'E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }',
-[0]     keyPattern: { 'coupons.code': 1 },
-[0]     keyValue: { 'coupons.code': '2' }
-[0]   },
-[0]   index: 0,
-[0]   code: 11000,
-[0]   keyPattern: { 'coupons.code': 1 },
-[0]   keyValue: { 'coupons.code': '2' }
-[0] }
-[0] ::1 - - [10/Oct/2025:16:33:42 +0000] "POST /api/ndrs HTTP/1.1" 500 33 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
-[0] 
-[0] 🔍 [COUPON-DEBUG] ===== DÉBUT createNDR() =====
-[0] 🔍 [COUPON-DEBUG] Quantité de coupons à générer: 2
-[0]
-[0] 🔍 [COUPON-DEBUG] --- Génération coupon 1/2 (index=0) ---
-[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 1
-[0] 🔍 [COUPON-DEBUG] Codes existants: [2]
-[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=0)
-[0]    - Coupons existants: 1
-[0]    - Calcul: 1 + 0 + 1 = 2
-[0]    - Code généré: "2"
-[0] 🔍 [COUPON-DEBUG] Coupon ajouté à la liste: code="2"
-[0]
-[0] 🔍 [COUPON-DEBUG] --- Génération coupon 2/2 (index=1) ---
-[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 1
-[0] 🔍 [COUPON-DEBUG] Codes existants: [2]
-[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=1)
-[0]    - Coupons existants: 1
-[0]    - Calcul: 1 + 1 + 1 = 3
-[0]    - Code généré: "3"
-[0] 🔍 [COUPON-DEBUG] Coupon ajouté à la liste: code="3"
-[0]
-[0] 🔍 [COUPON-DEBUG] Tous les coupons générés pour cette NDR: [2, 3]
-[0] ❌ [NDR-SERVICE] ERREUR lors de la création de la NDR: MongoServerError: E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }
-[0]     at InsertOneOperation.execute (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\insert.js:51:19)
-[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-[0]     at async tryOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:207:20)
-[0]     at async executeOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:75:16)
-[0]     at async Collection.insertOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\collection.js:157:16) {
-[0]   errorLabelSet: Set(0) {},
-[0]   errorResponse: {
-[0]     index: 0,
-[0]     code: 11000,
-[0]     errmsg: 'E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }',
-[0]     keyPattern: { 'coupons.code': 1 },
-[0]     keyValue: { 'coupons.code': '2' }
-[0]   },
-[0]   index: 0,
-[0]   code: 11000,
-[0]   keyPattern: { 'coupons.code': 1 },
-[0]   keyValue: { 'coupons.code': '2' }
-[0] }
-[0] ❌ [NDR-SERVICE] Stack trace: MongoServerError: E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }
-[0]     at InsertOneOperation.execute (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\insert.js:51:19)
-[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-[0]     at async tryOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:207:20)
-[0]     at async executeOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:75:16)
-[0]     at async Collection.insertOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\collection.js:157:16)
-[0] Erreur dans POST /api/ndrs: MongoServerError: E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }
-[0]     at InsertOneOperation.execute (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\insert.js:51:19)
-[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-[0]     at async tryOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:207:20)
-[0]     at async executeOperation (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\operations\execute_operation.js:75:16)
-[0]     at async Collection.insertOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\mongodb\lib\collection.js:157:16) {
-[0]   errorLabelSet: Set(0) {},
-[0]   errorResponse: {
-[0]     index: 0,
-[0]     code: 11000,
-[0]     errmsg: 'E11000 duplicate key error collection: test.ndrs index: coupons.code_1 dup key: { coupons.code: "2" }',
-[0]     keyPattern: { 'coupons.code': 1 },
-[0]     keyValue: { 'coupons.code': '2' }
-[0]   },
-[0]   index: 0,
-[0]   code: 11000,
-[0]   keyPattern: { 'coupons.code': 1 },
-[0]   keyValue: { 'coupons.code': '2' }
-[0] }
-[0] ::1 - - [10/Oct/2025:16:33:46 +0000] "POST /api/ndrs HTTP/1.1" 500 33 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+14:34:25 [vite] (client) hmr update /src/main.tsx, /src/index.css
+[1] 14:34:25 [vite] (client) Pre-transform error: Failed to resolve import "./professor/MesRendezVous" from "src/pages/index.ts". Does the file exist?
+[1]   Plugin: vite:import-analysis
+[1]   File: C:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/index.ts:16:30
+[1]   13 |  export { ProfesseurDocuments } from "./professeurs/ProfesseurDocuments";
+[1]   14 |  export { ProfesseurDashboard } from "./professeur/ProfesseurDashboard";
+[1]   15 |  export { MesRendezVous } from "./professor/MesRendezVous";
+[1]      |                                 ^
+[1]   16 |  export { MesDocuments } from "./professor/MesDocuments";
+[1]   17 |  export { MonProfil } from "./professor/MonProfil";
+[1] 14:34:38 [vite] (client) hmr update /src/main.tsx, /src/index.css
+[1] 14:34:38 [vite] (client) Pre-transform error: Failed to resolve import "./professor/MesRendezVous" from "src/pages/index.ts". Does the file exist?
+[1]   Plugin: vite:import-analysis
+[1]   File: C:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/index.ts:16:30
+[1]   13 |  export { ProfesseurDocuments } from "./professeurs/ProfesseurDocuments";
+[1]   14 |  export { ProfesseurDashboard } from "./professeur/ProfesseurDashboard";
+[1]   15 |  export { MesRendezVous } from "./professor/MesRendezVous";
+[1]      |                                 ^
+[1]   16 |  export { MesDocuments } from "./professor/MesDocuments";
+[1]   17 |  export { MonProfil } from "./professor/MonProfil";
+[1] 14:36:38 [vite] Internal server error: Failed to resolve import "./professor/MesRendezVous" from "src/pages/index.ts". Does the file exist?
+[1]   Plugin: vite:import-analysis
+[1]   File: C:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/index.ts:16:30
+[1]   13 |  export { ProfesseurDocuments } from "./professeurs/ProfesseurDocuments";
+[1]   14 |  export { ProfesseurDashboard } from "./professeur/ProfesseurDashboard";
+[1]   15 |  export { MesRendezVous } from "./professor/MesRendezVous";
+[1]      |                                 ^
+[1]   16 |  export { MesDocuments } from "./professor/MesDocuments";
+[1]   17 |  export { MonProfil } from "./professor/MonProfil";
+[1]       at TransformPluginContext._formatLog (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:31219:43)
+[1]       at TransformPluginContext.error (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:31216:14)
+[1]       at normalizeUrl (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:29699:18)
+[1]       at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[1]       at async file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:29757:32
+[1]       at async Promise.all (index 14)
+[1]       at async TransformPluginContext.transform (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:29725:4)
+[1]       at async EnvironmentPluginContainer.transform (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:31018:14)
+[1]       at async loadAndTransform (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:26143:26)
+[1]       at async viteTransformMiddleware (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:27221:20)

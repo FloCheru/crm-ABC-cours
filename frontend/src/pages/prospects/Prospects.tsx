@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
-  Navbar,
+  
   Container,
   SummaryCard,
   ButtonGroup,
@@ -35,7 +35,6 @@ import "./Prospects.css";
 type TableRowData = Family & { id: string };
 
 export const Prospects: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
 
   // États locaux simples

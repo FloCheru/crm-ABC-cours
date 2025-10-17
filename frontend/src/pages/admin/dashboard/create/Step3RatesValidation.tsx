@@ -65,8 +65,10 @@ export const Step3RatesValidation: React.FC<Props> = ({
       // Préparer les données pour ndrService
       const ndrPayload = {
         familyId: ndrData.familyId,
-        studentIds: ndrData.studentIds || [],
-        adult: ndrData.adult || false,
+        beneficiaries: {
+          students: (ndrData.studentIds || []).map((id: string) => ({ id })),
+          adult: ndrData.adult || false,
+        },
         paymentMethod: ndrData.paymentMethod as
           | "card"
           | "CESU"

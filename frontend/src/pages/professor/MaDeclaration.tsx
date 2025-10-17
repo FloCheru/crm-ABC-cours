@@ -25,14 +25,9 @@ import type { EmploymentStatus } from "../../types/teacher";
 import type {
   ProfessorDocument,
   DocumentType,
-  DOCUMENT_TYPE_LABELS,
 } from "../../types/professor-document";
+import { DOCUMENT_TYPE_LABELS } from "../../types/professor-document";
 import { AlertCircle, Download, Upload, FileText, Archive } from "lucide-react";
-
-const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
-  attestation_france_travail: "Attestation France Travail",
-  certificat_travail: "Certificat de travail",
-};
 
 export const MaDeclaration: React.FC = () => {
   const [employmentStatus, setEmploymentStatus] = useState<EmploymentStatus | null>(null);
@@ -51,7 +46,7 @@ export const MaDeclaration: React.FC = () => {
 
         // Charger le profil pour vérifier le statut d'emploi
         const profile = await professorService.getMyProfile();
-        setEmploymentStatus(profile.employmentStatus || null);
+        setEmploymentStatus((profile.employmentStatus as EmploymentStatus) || null);
 
         // Charger les documents
         const docs = await professorDocumentService.getMyDocuments();
@@ -126,16 +121,16 @@ export const MaDeclaration: React.FC = () => {
   };
 
   // Télécharger un document
-  const handleDownload = async (document: ProfessorDocument) => {
+  const handleDownload = async (doc: ProfessorDocument) => {
     try {
-      const blob = await professorDocumentService.downloadDocument(document._id);
+      const blob = await professorDocumentService.downloadDocument(doc._id);
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      const link = window.document.createElement("a");
       link.href = url;
-      link.download = document.fileName;
-      document.body.appendChild(link);
+      link.download = doc.fileName;
+      window.document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      window.document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Erreur lors du téléchargement:", error);

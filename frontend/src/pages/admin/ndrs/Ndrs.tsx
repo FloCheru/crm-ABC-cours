@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
-  Navbar,
+  
   PageHeader,
   Container,
   SummaryCard,
@@ -39,7 +39,6 @@ const getSubjectName = (note: NDR): string => {
 };
 
 export const Ndrs: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
 
   // Nettoyage des données de session NDR au chargement

@@ -1,7 +1,7 @@
+import { useNavigate, useParams } from "react-router-dom";
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
-  Navbar,
+  
   PageHeader,
   Container,
   Button,
@@ -21,7 +21,6 @@ type TableRowData = Coupon & { id: string };
 export const SeriesDetails: React.FC = () => {
   const { seriesId } = useParams<{ seriesId: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [series, setSeries] = useState<CouponSeries | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -68,10 +67,10 @@ export const SeriesDetails: React.FC = () => {
             ? "mixed"
             : "student",
           totalCoupons: ndrData.quantity,
-          usedCoupons: ndrData.coupons.filter((c) => c.status === "used")
-            .length,
+          usedCoupons: ndrData.coupons?.filter((c) => c.status === "used")
+            .length || 0,
           status: ndrData.status === "completed" ? "completed" : "active",
-          coupons: ndrData.coupons.map((c) => c.id),
+          coupons: ndrData.coupons?.map((c) => c.id || c._id || "").filter(Boolean) || [],
           subject: ndrData.subjects[0]
             ? typeof ndrData.subjects[0].id === "object"
               ? {
@@ -89,16 +88,16 @@ export const SeriesDetails: React.FC = () => {
           professorSalary: ndrData.professor?.salary || 0,
           createdBy: ndrData.createdBy.userId as any,
           createdAt: new Date(ndrData.createdAt),
-          updatedAt: new Date(ndrData.updatedAt),
+          updatedAt: new Date(ndrData.updatedAt || ndrData.createdAt),
         };
 
         // Extraire les coupons de la NDR
-        const couponsList: Coupon[] = ndrData.coupons.map((c) => ({
-          _id: c.id,
+        const couponsList: Coupon[] = (ndrData.coupons || []).map((c) => ({
+          _id: c.id || c._id || "",
           couponSeriesId: ndrData._id,
-          code: c.code,
+          code: c.code || "",
           status: c.status,
-          updatedAt: c.updatedAt,
+          updatedAt: c.updatedAt || ndrData.createdAt,
         }));
 
         setSeries(couponSeries);

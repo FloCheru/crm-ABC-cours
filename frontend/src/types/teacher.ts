@@ -2,7 +2,6 @@
  * Types pour les professeurs
  */
 
-import type { User } from './auth.types';
 import type { SchoolCategory } from '../constants/schoolLevels';
 
 export type Gender = "M." | "Mme";

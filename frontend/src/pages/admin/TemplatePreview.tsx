@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
 import { PageHeader } from "../../components";
 import { mockNDRData } from "../../data/ndrTestData";
 import type { NDRTemplateData } from "../../types/ndrTemplate";
 import "./TemplatePreview.css";
 
 export const TemplatePreview: React.FC = () => {
-  const location = useLocation();
   const [showNDR, setShowNDR] = useState(true);
   const [showCoupons, setShowCoupons] = useState(true);
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
-  Navbar,
+  
   PageHeader,
   Container,
   SummaryCard,
@@ -113,7 +113,6 @@ const MOCK_TEACHERS: Teacher[] = [
 ];
 
 export const Professeurs: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
 
   // State for data management

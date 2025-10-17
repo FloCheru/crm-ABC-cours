@@ -1,7 +1,7 @@
+import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Navbar,
+  
   PageHeader,
   Container,
   Button,
@@ -16,7 +16,6 @@ import type { NDR } from "../../services/ndrService";
 
 export const ClientDetails: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Récupérer l'ID depuis localStorage
   const clientId = localStorage.getItem("clientId");
