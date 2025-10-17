@@ -219,13 +219,13 @@ export const MesCoupons: React.FC = () => {
     <>
       <PageHeader title="Mes coupons" />
 
-      <div className="px-4 w-full">
+      <div className="px-4 py-8 w-full space-y-8">
 
         {/* ⚠️ ALERTE RIB MANQUANT */}
         {isLoadingRib ? (
-          <div className="mb-6">Vérification du RIB...</div>
+          <div>Vérification du RIB...</div>
         ) : !hasValidRib ? (
-          <Alert variant="destructive" className="mb-6">
+          <Alert variant="destructive">
             <AlertDescription>
               <strong>⚠️ RIB manquant</strong> : Vous devez renseigner votre RIB
               avant de pouvoir saisir des coupons.{" "}
@@ -240,7 +240,7 @@ export const MesCoupons: React.FC = () => {
         ) : null}
 
         {/* 📊 STATISTIQUES */}
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold">Statistiques</h2>
           </CardHeader>
@@ -271,7 +271,7 @@ export const MesCoupons: React.FC = () => {
         </Card>
 
         {/* 🎟️ SECTION SAISIE */}
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold">Saisir un coupon</h2>
           </CardHeader>

@@ -252,9 +252,9 @@ export const MesRendezVous: React.FC = () => {
         description="Gérez tous vos rendez-vous (admin et élèves)"
       />
 
-      <div className="px-4 w-full">
+      <div className="px-4 py-8 w-full space-y-8">
         {/* Section Actions */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="flex gap-3">
             <button
               onClick={() => handleOpenRdvModal()}
@@ -272,7 +272,7 @@ export const MesRendezVous: React.FC = () => {
         </div>
 
         {/* Section Filtres */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Filtres</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

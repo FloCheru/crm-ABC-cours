@@ -131,9 +131,9 @@ export const MesEleves: React.FC = () => {
   return (
     <>
       <PageHeader title="Mes Élèves" />
-      <div className="px-4 w-full">
+      <div className="px-4 py-8 w-full space-y-8">
         {/* Statistiques */}
-        <Card className="mb-6">
+        <Card>
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
               <div>

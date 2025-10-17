@@ -300,13 +300,13 @@ export const MaDeclaration: React.FC = () => {
   return (
     <>
       <PageHeader title="Ma Déclaration" />
-      <div className="px-4 w-full">
+      <div className="px-4 py-8 w-full">
         {isLoading ? (
           <p className="text-center text-muted-foreground py-8">
             Chargement des documents...
           </p>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Alerte si statut non défini */}
             {!employmentStatus && (
               <Alert variant="destructive">

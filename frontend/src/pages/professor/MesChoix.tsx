@@ -231,7 +231,7 @@ export default function MesChoix() {
                     isSelected ? 'border-primary bg-accent/50' : 'border-border'
                   }`}
                 >
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-4">
                     <Checkbox
                       id={`subject-${subject._id}`}
                       checked={isSelected}

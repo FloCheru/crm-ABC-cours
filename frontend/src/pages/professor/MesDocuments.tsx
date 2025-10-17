@@ -190,7 +190,7 @@ export const MesDocuments: React.FC = () => {
         ]}
       />
 
-      <div className="container mx-auto px-4 max-w-6xl space-y-8">
+      <div className="container mx-auto px-4 max-w-6xl space-y-10">
         {/* Section Upload */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="mb-6">
