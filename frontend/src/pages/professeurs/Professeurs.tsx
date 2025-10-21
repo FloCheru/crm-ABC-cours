@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  
   PageHeader,
   Container,
   SummaryCard,
@@ -98,7 +97,7 @@ const MOCK_TEACHERS: Teacher[] = [
   {
     _id: "5",
     firstName: "Julie",
-    lastName: "Dubois",
+    lastName: "D'Arèle",
     email: "julie.dubois@email.com",
     phone: "0567890123",
     address: {

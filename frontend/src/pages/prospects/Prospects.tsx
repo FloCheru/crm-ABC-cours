@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  
+
   Container,
   SummaryCard,
   ButtonGroup,
@@ -13,15 +13,10 @@ import {
   PageHeader,
   Modal,
 } from "../../components";
-import { ModalWrapper } from "../../components/ui/ModalWrapper/ModalWrapper";
-import { EntityForm } from "../../components/forms/EntityForm";
 import { familyService } from "../../services/familyService";
 import { subjectService } from "../../services/subjectService";
 import { userService } from "../../services/userService";
-import type {
-  Family,
-  CreateFamilyData as CreateFamilyDataType,
-} from "../../types/family";
+import type { Family } from "../../types/family";
 import { StatusDot, type ProspectStatus } from "../../components/StatusDot";
 import {
   updateProspectStatus,
@@ -435,28 +430,21 @@ export const Prospects: React.FC = () => {
     },
   ];
 
-  const handleCreateProspectSubmit = async (data: CreateFamilyDataType) => {
+  const handleProspectCreationSuccess = async () => {
     try {
-      // Ajouter le statut prospect aux données
-      const prospectData = {
-        ...data,
-        status: "prospect" as const,
-      };
-
-      // Fermer le modal immédiatement
+      // Fermer le modal
       setIsCreateProspectModalOpen(false);
 
-      // Créer le prospect via l'API
-      const newProspect = await familyService.createFamily(prospectData);
-
-      // Ajouter à la liste locale
-      setProspects((prev) => [...prev, newProspect]);
-      setStats((prev) => ({ prospects: prev.prospects + 1 }));
+      // Rafraîchir la liste des prospects
+      const families = await familyService.getFamilies();
+      setProspects(
+        families.filter((family) => !family.ndr || family.ndr.length === 0)
+      );
+      setStats({ prospects: families.length });
 
       console.log("✅ Prospect créé avec succès");
     } catch (err) {
-      console.error("Erreur lors de la création du prospect:", err);
-      throw err;
+      console.error("Erreur lors du rafraîchissement des prospects:", err);
     }
   };
 
@@ -634,20 +622,13 @@ export const Prospects: React.FC = () => {
       </Container>
 
       {/* Modal de création d'un prospect */}
-      {isCreateProspectModalOpen && (
-        <ModalWrapper
-          isOpen={isCreateProspectModalOpen}
-          onClose={() => setIsCreateProspectModalOpen(false)}
-        >
-          <EntityForm<"family">
-            entityType="family"
-            familyMode="prospect"
-            onSubmit={async (data) => await handleCreateProspectSubmit(data)}
-            onCancel={() => setIsCreateProspectModalOpen(false)}
-            onCreateTestProspect={handleCreateTestProspect}
-          />
-        </ModalWrapper>
-      )}
+      <Modal
+        type="family"
+        isOpen={isCreateProspectModalOpen}
+        onClose={() => setIsCreateProspectModalOpen(false)}
+        onSuccess={handleProspectCreationSuccess}
+        onCreateTestProspect={handleCreateTestProspect}
+      />
 
       {/* Modal d'ajout d'élève */}
       <Modal

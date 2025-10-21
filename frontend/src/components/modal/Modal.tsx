@@ -16,7 +16,7 @@ import "./Modal.css";
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: "student" | "rdv" | "teacher";
+  type: "student" | "rdv" | "teacher" | "family";
   data?: any;
   onSuccess?: () => void;
   mode?: "edit" | "view";
@@ -26,6 +26,8 @@ interface ModalProps {
   loading?: boolean;
   // Props Student
   onAddStudentTest?: (familyId: string) => Promise<void>;
+  // Props Family
+  onCreateTestProspect?: () => Promise<void>;
 }
 
 // Configuration des handlers par type d'entité
@@ -167,7 +169,7 @@ const ENTITY_HANDLERS = {
       return Promise.resolve(preparedData);
     },
     create: async (_: string, preparedData: any) => {
-      // TODO: Implémenter teacherService.createTeacher quand le backend sera prêt
+      // TODO: Implémenter teacherService.createTeacher quand le backend será prêt
       console.log("Create teacher:", preparedData);
       return Promise.resolve({
         _id: Date.now().toString(),
@@ -179,6 +181,77 @@ const ENTITY_HANDLERS = {
       entityName: "PROFESSEUR",
       updateStart: "🔄 DÉBUT MODIFICATION PROFESSEUR",
       createStart: "➕ AJOUT NOUVEAU PROFESSEUR",
+    },
+  },
+  family: {
+    prepareData: (formData: any, _data: any) => {
+      // Parser les matières (texte → Array<{ id: string }>)
+      let subjects: Array<{ id: string }> = [];
+      if (formData.demandeSubjects && typeof formData.demandeSubjects === "string") {
+        subjects = formData.demandeSubjects
+          .split(",")
+          .map((subject: string) => subject.trim())
+          .filter((subject: string) => subject.length > 0)
+          .map((subject: string) => ({ id: subject }));
+      }
+
+      const preparedData = {
+        notes: formData.familyNotes?.trim() || "",
+        primaryContact: {
+          firstName: formData.primaryFirstName?.trim() || "",
+          lastName: formData.primaryLastName?.trim() || "",
+          primaryPhone: formData.primaryPhone?.trim() || "",
+          secondaryPhone: formData.primarySecondaryPhone?.trim() || "",
+          email: formData.primaryEmail?.trim() || "",
+          birthDate: formData.primaryBirthDate || undefined,
+          relation: formData.primaryRelation || "père",
+        },
+        address: {
+          street: formData.addressStreet?.trim() || "",
+          city: formData.addressCity?.trim() || "",
+          postalCode: formData.addressPostalCode?.trim() || "",
+        },
+        ...(formData.secondaryFirstName || formData.secondaryLastName ? {
+          secondaryContact: {
+            firstName: formData.secondaryFirstName?.trim() || "",
+            lastName: formData.secondaryLastName?.trim() || "",
+            phone: formData.secondaryPhone?.trim() || "",
+            email: formData.secondaryEmail?.trim() || "",
+            relation: formData.secondaryRelation || "père",
+            birthDate: formData.secondaryBirthDate || undefined,
+          },
+        } : {}),
+        ...(!formData.sameAsPrimaryAddress ? {
+          billingAddress: {
+            street: formData.billingStreet?.trim() || "",
+            city: formData.billingCity?.trim() || "",
+            postalCode: formData.billingPostalCode?.trim() || "",
+          },
+        } : {}),
+        demande: {
+          beneficiaryType: formData.beneficiaryType as "adulte" | "eleves",
+          grade: formData.beneficiaryGrade || "",
+          subjects: subjects,
+          notes: formData.demandeNotes?.trim() || "",
+        },
+        plannedTeacher: formData.plannedTeacher?.trim() || "",
+        status: "prospect" as const,
+      };
+
+      return preparedData;
+    },
+    update: async (familyId: string, preparedData: any) => {
+      // Les prospects ne sont pas modifiés via ce modal
+      console.log("Update family (not implemented):", familyId, preparedData);
+      return Promise.resolve(preparedData);
+    },
+    create: async (_familyId: string, preparedData: any) => {
+      return await familyService.createFamily(preparedData);
+    },
+    logs: {
+      entityName: "PROSPECT",
+      updateStart: "🔄 DÉBUT MODIFICATION PROSPECT",
+      createStart: "➕ AJOUT NOUVEAU PROSPECT",
     },
   },
 };
@@ -200,11 +273,16 @@ const TITLE_MAP = {
     view: "Détails professeur",
     edit: "Modifier professeur",
   },
+  family: {
+    create: "Nouveau prospect",
+    view: "Détails prospect",
+    edit: "Modifier prospect",
+  },
 } as const;
 
 // Fonction de génération du titre
 const getModalTitle = (
-  type: "student" | "rdv" | "teacher",
+  type: "student" | "rdv" | "teacher" | "family",
   data?: any,
   currentMode?: "view" | "edit"
 ): string => {
@@ -227,6 +305,7 @@ export const Modal: React.FC<ModalProps> = ({
   onSuccess,
   mode = "edit",
   onAddStudentTest,
+  onCreateTestProspect,
 }) => {
   // Hook pour les données de test de préremplissage
   const { studentTestData, rdvTestData } = usePrefillTest();
@@ -413,6 +492,163 @@ export const Modal: React.FC<ModalProps> = ({
         },
       ],
     },
+    family: {
+      sections: [
+        {
+          title: "Notes générales",
+          fields: [
+            {
+              key: "familyNotes",
+              label: "Notes",
+              type: "textarea",
+              placeholder: "Notes générales sur la famille...",
+              rows: 3,
+            },
+          ],
+        },
+        {
+          title: "Contact principal",
+          fields: [
+            { key: "primaryFirstName", label: "Prénom", type: "text", required: true },
+            { key: "primaryLastName", label: "Nom", type: "text", required: true },
+            { key: "primaryPhone", label: "Téléphone principal", type: "tel", required: true },
+            { key: "primarySecondaryPhone", label: "Téléphone secondaire", type: "tel" },
+            { key: "primaryEmail", label: "Email", type: "email", required: true },
+            { key: "primaryBirthDate", label: "Date de naissance", type: "date" },
+            {
+              key: "primaryRelation",
+              label: "Relation",
+              type: "select",
+              required: true,
+              options: [
+                { value: "père", label: "Père" },
+                { value: "mère", label: "Mère" },
+                { value: "tuteur", label: "Tuteur légal" },
+              ],
+            },
+          ],
+        },
+        {
+          title: "Adresse principale",
+          fields: [
+            { key: "addressStreet", label: "Rue", type: "text", required: true },
+            { key: "addressPostalCode", label: "Code postal", type: "text", required: true },
+            { key: "addressCity", label: "Ville", type: "text", required: true },
+          ],
+        },
+        {
+          title: "Contact secondaire (optionnel)",
+          fields: [
+            { key: "secondaryFirstName", label: "Prénom", type: "text" },
+            { key: "secondaryLastName", label: "Nom", type: "text" },
+            { key: "secondaryPhone", label: "Téléphone", type: "tel" },
+            { key: "secondaryEmail", label: "Email", type: "email" },
+            {
+              key: "secondaryRelation",
+              label: "Relation",
+              type: "select",
+              options: [
+                { value: "", label: "Aucune" },
+                { value: "père", label: "Père" },
+                { value: "mère", label: "Mère" },
+                { value: "tuteur", label: "Tuteur légal" },
+              ],
+            },
+          ],
+        },
+        {
+          title: "Adresse de facturation",
+          fields: [
+            {
+              key: "sameAsPrimaryAddress",
+              label: "Même adresse que principale",
+              type: "checkbox",
+            },
+            {
+              key: "billingStreet",
+              label: "Rue",
+              type: "text",
+              conditional: "sameAsPrimaryAddress",
+              conditionValue: true,
+            },
+            {
+              key: "billingPostalCode",
+              label: "Code postal",
+              type: "text",
+              conditional: "sameAsPrimaryAddress",
+              conditionValue: true,
+            },
+            {
+              key: "billingCity",
+              label: "Ville",
+              type: "text",
+              conditional: "sameAsPrimaryAddress",
+              conditionValue: true,
+            },
+          ],
+        },
+        {
+          title: "Demande de cours",
+          fields: [
+            {
+              key: "beneficiaryType",
+              label: "Type de bénéficiaire",
+              type: "select",
+              required: true,
+              options: [
+                { value: "eleves", label: "Élèves" },
+                { value: "adulte", label: "Adulte" },
+              ],
+            },
+            {
+              key: "beneficiaryGrade",
+              label: "Niveau",
+              type: "select",
+              options: [
+                { value: "", label: "Sélectionner un niveau" },
+                { value: "CP", label: "CP" },
+                { value: "CE1", label: "CE1" },
+                { value: "CE2", label: "CE2" },
+                { value: "CM1", label: "CM1" },
+                { value: "CM2", label: "CM2" },
+                { value: "6ème", label: "6ème" },
+                { value: "5ème", label: "5ème" },
+                { value: "4ème", label: "4ème" },
+                { value: "3ème", label: "3ème" },
+                { value: "Seconde", label: "Seconde" },
+                { value: "Première", label: "Première" },
+                { value: "Terminale", label: "Terminale" },
+              ],
+            },
+            {
+              key: "demandeSubjects",
+              label: "Matières souhaitées",
+              type: "textarea",
+              placeholder: "Ex: Mathématiques, Français (séparées par des virgules)",
+              rows: 2,
+            },
+            {
+              key: "demandeNotes",
+              label: "Notes sur la demande",
+              type: "textarea",
+              placeholder: "Précisions sur la demande de cours...",
+              rows: 3,
+            },
+          ],
+        },
+        {
+          title: "Professeur prévu",
+          fields: [
+            {
+              key: "plannedTeacher",
+              label: "Nom du professeur",
+              type: "text",
+              placeholder: "Nom du professeur prévu (optionnel)",
+            },
+          ],
+        },
+      ],
+    },
   };
 
   const [isLoading, setIsLoading] = useState(false);
@@ -453,7 +689,7 @@ export const Modal: React.FC<ModalProps> = ({
     }
   }, [isOpen, type]);
 
-  // États du formulaire (support élève + RDV + teacher)
+  // États du formulaire (support élève + RDV + teacher + family)
   const [formData, setFormData] = useState({
     // Champs élève
     firstName: "",
@@ -481,6 +717,33 @@ export const Modal: React.FC<ModalProps> = ({
     // Champs teacher
     identifier: "",
     notifyEmail: "",
+    // Champs family
+    familyNotes: "",
+    primaryFirstName: "",
+    primaryLastName: "",
+    primaryPhone: "",
+    primarySecondaryPhone: "",
+    primaryEmail: "",
+    primaryBirthDate: "",
+    primaryRelation: "père",
+    addressStreet: "",
+    addressPostalCode: "",
+    addressCity: "",
+    secondaryFirstName: "",
+    secondaryLastName: "",
+    secondaryPhone: "",
+    secondaryEmail: "",
+    secondaryRelation: "",
+    secondaryBirthDate: "",
+    sameAsPrimaryAddress: true,
+    billingStreet: "",
+    billingPostalCode: "",
+    billingCity: "",
+    beneficiaryType: "eleves",
+    beneficiaryGrade: "",
+    demandeSubjects: "",
+    demandeNotes: "",
+    plannedTeacher: "",
   });
 
   // Effect pour pré-remplir les données quand data change
@@ -570,6 +833,17 @@ export const Modal: React.FC<ModalProps> = ({
         formData.phone.trim() !== "" &&
         formData.email.trim() !== "" &&
         formData.postalCode.trim() !== ""
+      );
+    } else if (type === "family") {
+      return (
+        formData.primaryFirstName.trim() !== "" &&
+        formData.primaryLastName.trim() !== "" &&
+        formData.primaryPhone.trim() !== "" &&
+        formData.primaryEmail.trim() !== "" &&
+        formData.addressStreet.trim() !== "" &&
+        formData.addressPostalCode.trim() !== "" &&
+        formData.addressCity.trim() !== "" &&
+        formData.beneficiaryType.trim() !== ""
       );
     }
     return false;
@@ -684,6 +958,8 @@ export const Modal: React.FC<ModalProps> = ({
         ...rdvTestData,
         assignedAdminId: adminId,
       }));
+    } else if (type === "family" && onCreateTestProspect) {
+      await onCreateTestProspect();
     }
   };
 
@@ -708,6 +984,11 @@ export const Modal: React.FC<ModalProps> = ({
       return null;
     }
 
+    // Gestion des champs conditionnels pour "sameAsPrimaryAddress"
+    if (conditional === "sameAsPrimaryAddress" && formData.sameAsPrimaryAddress === conditionValue) {
+      return null;
+    }
+
     if (type === "checkbox") {
       return (
         <div key={key} className="data-card__field data-card__field--full">
@@ -725,6 +1006,13 @@ export const Modal: React.FC<ModalProps> = ({
                     handleFieldChange("studentStreet", "");
                     handleFieldChange("studentPostalCode", "");
                     handleFieldChange("studentCity", "");
+                  }
+                } else if (key === "sameAsPrimaryAddress") {
+                  handleFieldChange(key, e.target.checked.toString());
+                  if (e.target.checked) {
+                    handleFieldChange("billingStreet", "");
+                    handleFieldChange("billingPostalCode", "");
+                    handleFieldChange("billingCity", "");
                   }
                 } else {
                   handleFieldChange(key, e.target.checked.toString());
@@ -747,7 +1035,7 @@ export const Modal: React.FC<ModalProps> = ({
             {required && <span className="data-card__required">*</span>}
           </label>
           <textarea
-            value={value}
+            value={value?.toString() || ""}
             onChange={(e) => handleFieldChange(key, e.target.value)}
             placeholder={placeholder}
             className="data-card__textarea"
@@ -802,7 +1090,7 @@ export const Modal: React.FC<ModalProps> = ({
         <div key={key} className="data-card__field">
           <Select
             label={label}
-            value={value}
+            value={value?.toString() || ""}
             onChange={(e) => handleFieldChange(key, e.target.value)}
             options={selectOptions}
             required={required}
@@ -823,8 +1111,8 @@ export const Modal: React.FC<ModalProps> = ({
           {required && <span className="data-card__required">*</span>}
         </label>
         <Input
-          type={type}
-          value={value}
+          type={type as any}
+          value={value?.toString() || ""}
           onChange={(e) => handleFieldChange(key, e.target.value)}
           placeholder={placeholder}
           required={required}
@@ -838,6 +1126,7 @@ export const Modal: React.FC<ModalProps> = ({
   const handleCancel = () => {
     setError(null);
     setFormData({
+      // Champs élève
       firstName: "",
       lastName: "",
       level: "",
@@ -863,6 +1152,33 @@ export const Modal: React.FC<ModalProps> = ({
       // Champs teacher
       identifier: "",
       notifyEmail: "",
+      // Champs family
+      familyNotes: "",
+      primaryFirstName: "",
+      primaryLastName: "",
+      primaryPhone: "",
+      primarySecondaryPhone: "",
+      primaryEmail: "",
+      primaryBirthDate: "",
+      primaryRelation: "père",
+      addressStreet: "",
+      addressPostalCode: "",
+      addressCity: "",
+      secondaryFirstName: "",
+      secondaryLastName: "",
+      secondaryPhone: "",
+      secondaryEmail: "",
+      secondaryRelation: "",
+      secondaryBirthDate: "",
+      sameAsPrimaryAddress: true,
+      billingStreet: "",
+      billingPostalCode: "",
+      billingCity: "",
+      beneficiaryType: "eleves",
+      beneficiaryGrade: "",
+      demandeSubjects: "",
+      demandeNotes: "",
+      plannedTeacher: "",
     });
     setSameAsFamily(true);
     onClose();
@@ -916,7 +1232,7 @@ export const Modal: React.FC<ModalProps> = ({
                   >
                     Annuler
                   </Button>
-                  {(!data || !data.firstName) && (
+                  {(!data || !data.firstName) && (type === "student" || type === "rdv" || (type === "family" && onCreateTestProspect)) && (
                     <Button
                       type="button"
                       variant="primary"
