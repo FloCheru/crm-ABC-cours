@@ -15,10 +15,10 @@
 - [x] **Phase 5** : Service PDF principal (1h) ✅
 - [x] **Phase 6** : Routes API (45 min) ✅
 - [x] **Phase 7** : Service frontend (30 min) ✅
-- [ ] **Phase 8** : Migration ancien système NDR (1h)
+- [x] **Phase 8** : Migration ancien système NDR (2h) ✅
 - [ ] **Phase 9** : Tests & Validation (1h)
 
-**Progression totale** : 7/9 phases complétées
+**Progression totale** : 8/9 phases complétées (89%)
 
 ---
 
@@ -215,19 +215,45 @@
 
 ---
 
-## 🔄 Phase 8 : Migration ancien système NDR (1h)
+## 🔄 Phase 8 : Migration ancien système NDR (2h)
 
-### Choix de stratégie
-- [ ] **Option A (recommandé)** : Garder ancien système tel quel
-  - [ ] Aucune modification nécessaire
-  - [ ] Ancien système pour NDR, nouveau pour fiche_paie
+### 8.1 Créer template NDR
+- [x] Créer `backend/services/pdf/templates/ndr.hbs`
+- [x] Sections : en-tête ABC Cours, informations client, bénéficiaires
+- [x] Tableau des prestations (matières, tarifs, quantités)
+- [x] Section coupons avec grille 4 colonnes
+- [x] Modalités de paiement et échéances
+- [x] Notes et signatures
 
-- [ ] **Option B** : Adapter ancien système pour cohabitation
-  - [ ] Modifier `backend/routes/pdf.js` : renommer routes avec préfixe `/ndr`
-  - [ ] Modifier `backend/server.js` : enregistrer `app.use('/api/ndr', oldPdfRoutes)`
-  - [ ] Mettre à jour `frontend/src/services/ndrService.ts` (si existe)
+### 8.2 Adapter pdfService pour NDR
+- [x] Modifier `extractMetadata()` pour type 'NDR'
+- [x] Ajouter métadonnées : ndrId, familyId, totalAmount, couponCount
 
-**✅ Phase 8 terminée le : ___________**
+### 8.3 Modifier modèle NDR
+- [x] Ajouter champ `pdfId` dans `backend/models/NDR.js`
+- [x] Référence vers collection `PDF`
+
+### 8.4 Intégrer génération PDF dans NdrService
+- [x] Importer `pdfService` dans `ndrService.js`
+- [x] Générer automatiquement PDF lors de création NDR
+- [x] Préparer données template (company, client, subjects, coupons)
+- [x] Appeler `pdfService.generatePDF('NDR', ...)`
+- [x] Mettre à jour NDR avec `pdfId`
+- [x] Ajouter helper `getPaymentMethodLabel()`
+
+### 8.5 Supprimer ancien système
+- [x] Supprimer `backend/services/pdfGenerationService.js` (669 lignes)
+- [x] Supprimer `backend/routes/pdf.js` (515 lignes)
+- [x] Supprimer `backend/templates/ndr-template.html`
+- [x] Supprimer dossier `backend/uploads/pdfs/`
+
+### 8.6 Commit et push
+- [x] Commit avec message détaillé
+- [x] Push sur develop
+
+**✅ Phase 8 terminée le : 30 octobre 2025**
+
+**Résultat** : -852 lignes de code, système unifié et sécurisé
 
 ---
 
@@ -261,6 +287,14 @@
 - [ ] Tester téléchargement avec mauvais userId (doit échouer 403)
 - [ ] Tester génération sans token (doit échouer 401)
 - [ ] Tester téléchargement en tant qu'admin (doit fonctionner)
+
+#### Test 6 : Génération NDR (nouveau système migré)
+- [ ] Créer une nouvelle NDR via `POST /api/ndrs`
+- [ ] Vérifier que le PDF est généré automatiquement
+- [ ] Vérifier que `pdfId` est présent dans la réponse NDR
+- [ ] Télécharger le PDF via `GET /api/pdfs/:pdfId`
+- [ ] Vérifier le rendu : logo ABC Cours, sections complètes, coupons en grille
+- [ ] Vérifier dans MongoDB que le PDF est chiffré dans GridFS
 
 ### 9.2 Tests unitaires (optionnel)
 - [ ] Créer `backend/tests/unit/pdf.encryption.test.js`
