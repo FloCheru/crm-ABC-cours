@@ -124,6 +124,11 @@ const ndrSchema = new mongoose.Schema(
       },
     ],
     generatedPDFs: [],
+    pdfId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'PDF',
+      required: false,
+    },
     professor: {
       type: {
         id: {

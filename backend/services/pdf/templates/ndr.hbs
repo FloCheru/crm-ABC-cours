@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Note de Règlement - {{noteNumber}}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      font-size: 10pt;
+      line-height: 1.4;
+      color: #333;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 3px solid #2563eb;
+    }
+
+    .logo {
+      max-width: 200px;
+      height: auto;
+    }
+
+    .company-info {
+      text-align: right;
+    }
+
+    .company-info h1 {
+      font-size: 20pt;
+      color: #2563eb;
+      margin-bottom: 5px;
+    }
+
+    .company-info p {
+      font-size: 9pt;
+      color: #6b7280;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 16pt;
+      font-weight: bold;
+      margin: 30px 0 20px 0;
+      color: #2563eb;
+      text-transform: uppercase;
+    }
+
+    .note-number {
+      text-align: center;
+      font-size: 11pt;
+      color: #6b7280;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      margin-bottom: 25px;
+      padding: 15px;
+      background-color: #f9fafb;
+      border-left: 4px solid #2563eb;
+    }
+
+    .section-title {
+      font-size: 12pt;
+      font-weight: bold;
+      color: #1e40af;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .info-row {
+      display: flex;
+      margin: 5px 0;
+      font-size: 9pt;
+    }
+
+    .info-label {
+      font-weight: bold;
+      min-width: 150px;
+      color: #4b5563;
+    }
+
+    .info-value {
+      color: #111827;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 9pt;
+    }
+
+    th {
+      background-color: #2563eb;
+      color: white;
+      padding: 10px 8px;
+      text-align: left;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    td {
+      padding: 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+
+    .amount-col {
+      text-align: right;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+    }
+
+    .total-row {
+      background-color: #dbeafe !important;
+      font-weight: bold;
+      font-size: 10pt;
+    }
+
+    .total-row td {
+      padding: 12px 8px;
+      border-top: 2px solid #2563eb;
+      color: #1e40af;
+    }
+
+    .grand-total {
+      background-color: #2563eb !important;
+      color: white !important;
+      font-size: 12pt;
+      font-weight: bold;
+    }
+
+    .grand-total td {
+      padding: 15px 8px;
+      color: white;
+    }
+
+    .coupons-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .coupon-box {
+      border: 2px dashed #2563eb;
+      padding: 10px;
+      text-align: center;
+      background-color: #eff6ff;
+      border-radius: 4px;
+    }
+
+    .coupon-code {
+      font-size: 11pt;
+      font-weight: bold;
+      color: #1e40af;
+      font-family: 'Courier New', monospace;
+    }
+
+    .payment-schedule {
+      margin: 20px 0;
+    }
+
+    .notes-section {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #fef3c7;
+      border-left: 4px solid #f59e0b;
+    }
+
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      font-size: 8pt;
+      color: #6b7280;
+    }
+
+    .signature-section {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 50px;
+    }
+
+    .signature-box {
+      width: 45%;
+    }
+
+    .signature-box p {
+      font-weight: bold;
+      margin-bottom: 40px;
+      font-size: 9pt;
+    }
+
+    .signature-line {
+      border-top: 1px solid #333;
+      padding-top: 5px;
+      font-size: 8pt;
+      color: #6b7280;
+    }
+
+    @media print {
+      body {
+        padding: 10px;
+      }
+      .section {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- En-tête -->
+  <div class="header">
+    <div>
+      <h1 style="color: #2563eb; font-size: 24pt; margin-bottom: 5px;">ABC COURS</h1>
+      <p style="font-size: 9pt; color: #6b7280;">Organisme de soutien scolaire</p>
+    </div>
+    <div class="company-info">
+      <p>{{company.address}}</p>
+      <p>SIRET: {{company.siret}}</p>
+      <p>contact@abc-cours.fr</p>
+    </div>
+  </div>
+
+  <!-- Titre -->
+  <div class="title">Note de Règlement</div>
+  <div class="note-number">N° {{noteNumber}}</div>
+  <div style="text-align: center; font-size: 9pt; color: #6b7280; margin-bottom: 30px;">
+    Établie le {{formattedDate}}
+  </div>
+
+  <!-- Informations Client -->
+  <div class="section">
+    <div class="section-title">📋 Informations Client</div>
+    <div class="info-row">
+      <span class="info-label">Nom du client :</span>
+      <span class="info-value">{{clientName}}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Adresse :</span>
+      <span class="info-value">{{clientAddress}}</span>
+    </div>
+    {{#if department}}
+    <div class="info-row">
+      <span class="info-label">Département :</span>
+      <span class="info-value">{{department}}</span>
+    </div>
+    {{/if}}
+    <div class="info-row">
+      <span class="info-label">ID Client :</span>
+      <span class="info-value">{{clientId}}</span>
+    </div>
+  </div>
+
+  <!-- Bénéficiaires -->
+  <div class="section">
+    <div class="section-title">👤 Bénéficiaires</div>
+    {{#if beneficiaries.students}}
+      {{#each beneficiaries.students}}
+      <div class="info-row">
+        <span class="info-label">Élève {{@index}} :</span>
+        <span class="info-value">{{this.firstName}} {{this.lastName}}</span>
+      </div>
+      {{/each}}
+    {{/if}}
+    {{#if beneficiaries.adult}}
+    <div class="info-row">
+      <span class="info-label">Adulte :</span>
+      <span class="info-value">Oui</span>
+    </div>
+    {{/if}}
+  </div>
+
+  <!-- Prestations -->
+  <div class="section">
+    <div class="section-title">📚 Détail des Prestations</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 40%;">Matière</th>
+          <th style="width: 20%;">Tarif Horaire</th>
+          <th style="width: 15%;">Quantité (h)</th>
+          <th style="width: 25%;">Montant Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each subjects}}
+        <tr>
+          <td>{{this.name}}</td>
+          <td class="amount-col">{{this.hourlyRate}}€</td>
+          <td class="amount-col">{{this.quantity}}h</td>
+          <td class="amount-col">{{this.total}}€</td>
+        </tr>
+        {{/each}}
+
+        <tr class="total-row">
+          <td colspan="2"><strong>SOUS-TOTAL</strong></td>
+          <td class="amount-col"><strong>{{totalQuantity}}h</strong></td>
+          <td class="amount-col"><strong>{{totalRevenue}}€</strong></td>
+        </tr>
+
+        {{#if charges}}
+        <tr>
+          <td colspan="3">Frais de dossier</td>
+          <td class="amount-col">{{charges}}€</td>
+        </tr>
+        {{/if}}
+
+        <tr class="grand-total">
+          <td colspan="3"><strong>MONTANT TOTAL À RÉGLER</strong></td>
+          <td class="amount-col"><strong>{{totalAmount}}€</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Méthode de Paiement -->
+  <div class="section">
+    <div class="section-title">💳 Modalités de Paiement</div>
+    <div class="info-row">
+      <span class="info-label">Mode de paiement :</span>
+      <span class="info-value">{{paymentMethodLabel}}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Type de paiement :</span>
+      <span class="info-value">{{paymentTypeLabel}}</span>
+    </div>
+    {{#if deadlines}}
+    <div class="info-row">
+      <span class="info-label">Nombre d'échéances :</span>
+      <span class="info-value">{{deadlines.deadlinesNumber}}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Jour d'échéance :</span>
+      <span class="info-value">Le {{deadlines.deadlinesDay}} de chaque mois</span>
+    </div>
+    {{/if}}
+  </div>
+
+  <!-- Coupons -->
+  {{#if coupons}}
+  <div class="section">
+    <div class="section-title">🎫 Coupons Générés ({{coupons.length}})</div>
+    <div class="coupons-grid">
+      {{#each coupons}}
+      <div class="coupon-box">
+        <div class="coupon-code">{{this.code}}</div>
+      </div>
+      {{/each}}
+    </div>
+    <p style="font-size: 8pt; color: #6b7280; margin-top: 10px; font-style: italic;">
+      Ces coupons sont à utiliser pour les séances de cours. Chaque coupon correspond à une heure de cours.
+    </p>
+  </div>
+  {{/if}}
+
+  <!-- Notes -->
+  {{#if notes}}
+  <div class="notes-section">
+    <div class="section-title" style="color: #92400e;">📝 Notes et Remarques</div>
+    <p style="font-size: 9pt; margin-top: 10px;">{{notes}}</p>
+  </div>
+  {{/if}}
+
+  <!-- Signatures -->
+  <div class="signature-section">
+    <div class="signature-box">
+      <p>Signature du représentant ABC COURS</p>
+      <div class="signature-line">Date et signature</div>
+    </div>
+    <div class="signature-box">
+      <p>Signature du client</p>
+      <div class="signature-line">Bon pour accord - Date et signature</div>
+    </div>
+  </div>
+
+  <!-- Pied de page -->
+  <div class="footer">
+    <p>Document généré automatiquement le {{generationDate}}</p>
+    <p style="margin-top: 5px;">ABC COURS - Organisme de soutien scolaire à domicile</p>
+    <p style="margin-top: 5px; font-style: italic;">
+      Ce document est à conserver pour vos archives. En cas de question, contactez-nous à contact@abc-cours.fr
+    </p>
+  </div>
+</body>
+</html>

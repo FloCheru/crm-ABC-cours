@@ -2,6 +2,7 @@ const NDR = require("../models/NDR");
 const Family = require("../models/Family");
 const CacheManager = require("../cache/cacheManager");
 const mongoose = require("mongoose");
+const pdfService = require("./pdf/pdfService");
 
 class CouponService {
   /**
@@ -246,7 +247,83 @@ class NdrService {
         { $push: { ndr: { id: savedNDR._id } } }
       );
 
-      //5) Invalider les caches après création de la NDR
+      //5) Générer automatiquement le PDF de la NDR
+      try {
+        console.log(`📄 Génération automatique du PDF pour NDR ${savedNDR._id}...`);
+
+        // Préparer les données pour le template
+        const templateData = {
+          company: {
+            address: "123 Rue de la République, 75001 Paris",
+            siret: "123 456 789 00012"
+          },
+          noteNumber: savedNDR._id.toString().slice(-8).toUpperCase(),
+          formattedDate: new Date().toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          }),
+          generationDate: new Date().toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
+          clientName: finalNDR.familyId?.primaryContact
+            ? `${finalNDR.familyId.primaryContact.firstName} ${finalNDR.familyId.primaryContact.lastName}`
+            : 'Client',
+          clientAddress: finalNDR.familyId?.address?.street
+            ? `${finalNDR.familyId.address.street}, ${finalNDR.familyId.address.postalCode} ${finalNDR.familyId.address.city}`
+            : 'Adresse non renseignée',
+          department: finalNDR.familyId?.address?.postalCode?.substring(0, 2) || '',
+          clientId: savedNDR._id.toString().slice(-6),
+          beneficiaries: {
+            students: finalNDR.familyId?.students?.map(s => ({
+              firstName: s.firstName || '',
+              lastName: s.lastName || ''
+            })) || [],
+            adult: finalNDR.beneficiaries?.adult || false
+          },
+          subjects: finalNDR.subjects?.map(subject => ({
+            name: subject.name || 'Matière',
+            hourlyRate: ndrData.hourlyRate || 0,
+            quantity: Math.ceil(ndrData.quantity / (finalNDR.subjects?.length || 1)),
+            total: ((ndrData.hourlyRate || 0) * Math.ceil(ndrData.quantity / (finalNDR.subjects?.length || 1))).toFixed(2)
+          })) || [],
+          totalQuantity: ndrData.quantity || 0,
+          totalRevenue: ((ndrData.hourlyRate || 0) * (ndrData.quantity || 0)).toFixed(2),
+          charges: ndrData.charges || 0,
+          totalAmount: (((ndrData.hourlyRate || 0) * (ndrData.quantity || 0)) + (ndrData.charges || 0)).toFixed(2),
+          paymentMethodLabel: this.getPaymentMethodLabel(ndrData.paymentMethod),
+          paymentTypeLabel: ndrData.paymentType === 'avance' ? 'Paiement à l\'avance' : 'Paiement à crédit',
+          deadlines: ndrData.deadlines,
+          coupons: finalNDR.coupons || [],
+          notes: ndrData.notes || '',
+          ndrId: savedNDR._id,
+          familyId: finalNDR.familyId?._id || finalNDR.familyId
+        };
+
+        // Générer le PDF
+        const pdfResult = await pdfService.generatePDF(
+          'NDR',
+          templateData,
+          finalNDR.familyId?._id || finalNDR.familyId,
+          'Admin',
+          1
+        );
+
+        // Mettre à jour la NDR avec le pdfId
+        await NDR.findByIdAndUpdate(savedNDR._id, { pdfId: pdfResult.pdfId });
+        finalNDR.pdfId = pdfResult.pdfId;
+
+        console.log(`✅ PDF généré avec succès pour NDR ${savedNDR._id}: ${pdfResult.pdfId}`);
+      } catch (pdfError) {
+        console.error(`⚠️ Erreur lors de la génération du PDF pour NDR ${savedNDR._id}:`, pdfError);
+        // On continue même si le PDF échoue, la NDR est créée
+      }
+
+      //6) Invalider les caches après création de la NDR
       CacheManager.invalidate("families", "families_list*");
       CacheManager.invalidate("families", "families_stats");
       CacheManager.invalidate("ndrs", "ndrs_list*");
@@ -260,6 +337,23 @@ class NdrService {
       console.error("❌ [NDR-SERVICE] Stack trace:", error.stack);
       throw error;
     }
+  }
+
+  /**
+   * Convertit le code du mode de paiement en libellé lisible
+   * @param {string} paymentMethod - Code du mode de paiement
+   * @returns {string} - Libellé du mode de paiement
+   */
+  static getPaymentMethodLabel(paymentMethod) {
+    const labels = {
+      'card': 'Carte bancaire',
+      'CESU': 'Chèque Emploi Service Universel (CESU)',
+      'check': 'Chèque',
+      'transfer': 'Virement bancaire',
+      'cash': 'Espèces',
+      'PRLV': 'Prélèvement automatique'
+    };
+    return labels[paymentMethod] || paymentMethod;
   }
 }
 

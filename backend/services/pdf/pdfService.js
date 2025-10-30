@@ -277,7 +277,10 @@ function extractMetadata(type, data) {
       break;
 
     case 'NDR':
-      metadata.settlementNoteId = data.settlementNoteId;
+      metadata.ndrId = data.ndrId;
+      metadata.familyId = data.familyId;
+      metadata.totalAmount = data.totalAmount;
+      metadata.couponCount = data.coupons?.length || 0;
       break;
 
     case 'convention':
