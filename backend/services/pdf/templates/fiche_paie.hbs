@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fiche de Paie - {{period}}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      font-size: 10pt;
+      line-height: 1.4;
+      color: #333;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #2563eb;
+    }
+
+    .company-info, .employee-info {
+      flex: 1;
+    }
+
+    .company-info h1 {
+      font-size: 18pt;
+      color: #2563eb;
+      margin-bottom: 10px;
+    }
+
+    .company-info p, .employee-info p {
+      margin: 3px 0;
+      font-size: 9pt;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 14pt;
+      font-weight: bold;
+      margin: 20px 0;
+      color: #2563eb;
+    }
+
+    .period-info {
+      background-color: #f3f4f6;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-left: 4px solid #2563eb;
+    }
+
+    .period-info p {
+      font-size: 9pt;
+      margin: 2px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 9pt;
+    }
+
+    th {
+      background-color: #2563eb;
+      color: white;
+      padding: 8px;
+      text-align: left;
+      font-weight: bold;
+    }
+
+    td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+
+    .section-title {
+      background-color: #dbeafe;
+      font-weight: bold;
+      color: #1e40af;
+      padding: 8px !important;
+    }
+
+    .amount-col {
+      text-align: right;
+      font-family: 'Courier New', monospace;
+    }
+
+    .total-row {
+      background-color: #2563eb !important;
+      color: white;
+      font-weight: bold;
+      font-size: 10pt;
+    }
+
+    .total-row td {
+      padding: 10px 8px;
+    }
+
+    .net-pay {
+      background-color: #059669 !important;
+      color: white;
+      font-size: 12pt;
+      font-weight: bold;
+    }
+
+    .net-pay td {
+      padding: 12px 8px;
+    }
+
+    .footer {
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 8pt;
+      color: #6b7280;
+    }
+
+    .signature-section {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
+
+    .signature-box {
+      width: 45%;
+      text-align: center;
+    }
+
+    .signature-box p {
+      margin-bottom: 50px;
+      font-size: 9pt;
+      font-weight: bold;
+    }
+
+    .signature-line {
+      border-top: 1px solid #333;
+      margin-top: 10px;
+      font-size: 8pt;
+      color: #6b7280;
+    }
+
+    @media print {
+      body {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- En-tête -->
+  <div class="header">
+    <div class="company-info">
+      <h1>ABC COURS</h1>
+      <p><strong>Adresse:</strong> {{company.address}}</p>
+      <p><strong>SIRET:</strong> {{company.siret}}</p>
+      <p><strong>Code NAF:</strong> {{company.naf}}</p>
+      <p><strong>URSSAF:</strong> {{company.urssaf}}</p>
+    </div>
+    <div class="employee-info">
+      <p><strong>{{employee.firstName}} {{employee.lastName}}</strong></p>
+      <p>{{employee.address}}</p>
+      <p>{{employee.postalCode}} {{employee.city}}</p>
+      <p><strong>Numéro SS:</strong> {{employee.socialSecurityNumber}}</p>
+      <p><strong>Matricule:</strong> {{employee.employeeId}}</p>
+    </div>
+  </div>
+
+  <!-- Titre -->
+  <div class="title">BULLETIN DE PAIE</div>
+
+  <!-- Informations période -->
+  <div class="period-info">
+    <p><strong>Période:</strong> {{periodLabel}}</p>
+    <p><strong>Date de paiement:</strong> {{paymentDate}}</p>
+    <p><strong>Heures travaillées:</strong> {{hoursWorked}}h</p>
+    <p><strong>Taux horaire:</strong> {{hourlyRate}}€/h</p>
+  </div>
+
+  <!-- Tableau de paie -->
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 50%;">Libellé</th>
+        <th style="width: 15%;">Base</th>
+        <th style="width: 10%;">Taux</th>
+        <th style="width: 12%;">Part salariale</th>
+        <th style="width: 13%;">Part patronale</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- SALAIRE BRUT -->
+      <tr class="section-title">
+        <td colspan="5">RÉMUNÉRATION BRUTE</td>
+      </tr>
+      <tr>
+        <td>Salaire de base</td>
+        <td class="amount-col">{{hoursWorked}}h</td>
+        <td class="amount-col">{{hourlyRate}}€</td>
+        <td class="amount-col">{{salary.base}}€</td>
+        <td class="amount-col">-</td>
+      </tr>
+      {{#if salary.bonus}}
+      <tr>
+        <td>Prime</td>
+        <td class="amount-col">-</td>
+        <td class="amount-col">-</td>
+        <td class="amount-col">{{salary.bonus}}€</td>
+        <td class="amount-col">-</td>
+      </tr>
+      {{/if}}
+
+      <!-- COTISATIONS SOCIALES -->
+      <tr class="section-title">
+        <td colspan="5">COTISATIONS SOCIALES</td>
+      </tr>
+
+      <!-- Sécurité sociale -->
+      <tr>
+        <td>CSG déductible</td>
+        <td class="amount-col">{{salary.gross}}€</td>
+        <td class="amount-col">6.80%</td>
+        <td class="amount-col">{{contributions.csg.employee}}€</td>
+        <td class="amount-col">-</td>
+      </tr>
+      <tr>
+        <td>CSG/CRDS non déductible</td>
+        <td class="amount-col">{{salary.gross}}€</td>
+        <td class="amount-col">2.90%</td>
+        <td class="amount-col">{{contributions.crds.employee}}€</td>
+        <td class="amount-col">-</td>
+      </tr>
+
+      <!-- Assurance maladie -->
+      <tr>
+        <td>Assurance maladie</td>
+        <td class="amount-col">{{salary.gross}}€</td>
+        <td class="amount-col">-</td>
+        <td class="amount-col">-</td>
+        <td class="amount-col">{{contributions.health.employer}}€</td>
+      </tr>
+
+      <!-- Retraite -->
+      <tr>
+        <td>Retraite de base</td>
+        <td class="amount-col">{{salary.gross}}€</td>
+        <td class="amount-col">6.90%</td>
+        <td class="amount-col">{{contributions.retirement.employee}}€</td>
+        <td class="amount-col">{{contributions.retirement.employer}}€</td>
+      </tr>
+
+      <!-- Chômage -->
+      <tr>
+        <td>Assurance chômage</td>
+        <td class="amount-col">{{salary.gross}}€</td>
+        <td class="amount-col">4.05%</td>
+        <td class="amount-col">-</td>
+        <td class="amount-col">{{contributions.unemployment.employer}}€</td>
+      </tr>
+
+      <!-- TOTAUX -->
+      <tr class="total-row">
+        <td><strong>TOTAL BRUT</strong></td>
+        <td class="amount-col"></td>
+        <td class="amount-col"></td>
+        <td class="amount-col"><strong>{{salary.gross}}€</strong></td>
+        <td class="amount-col"></td>
+      </tr>
+      <tr class="total-row">
+        <td><strong>TOTAL COTISATIONS SALARIALES</strong></td>
+        <td class="amount-col"></td>
+        <td class="amount-col"></td>
+        <td class="amount-col"><strong>-{{totals.employeeContributions}}€</strong></td>
+        <td class="amount-col"></td>
+      </tr>
+      <tr class="total-row">
+        <td><strong>TOTAL COTISATIONS PATRONALES</strong></td>
+        <td class="amount-col"></td>
+        <td class="amount-col"></td>
+        <td class="amount-col"></td>
+        <td class="amount-col"><strong>{{totals.employerContributions}}€</strong></td>
+      </tr>
+
+      <!-- NET À PAYER -->
+      <tr class="net-pay">
+        <td colspan="3"><strong>NET À PAYER</strong></td>
+        <td colspan="2" class="amount-col"><strong>{{salary.net}}€</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Informations complémentaires -->
+  <div class="period-info">
+    <p><strong>Net imposable:</strong> {{salary.netTaxable}}€</p>
+    <p><strong>Cumul net imposable année:</strong> {{cumulative.netTaxable}}€</p>
+    <p><strong>Mode de paiement:</strong> Virement bancaire</p>
+  </div>
+
+  <!-- Signatures -->
+  <div class="signature-section">
+    <div class="signature-box">
+      <p>Signature de l'employeur</p>
+      <div class="signature-line">ABC COURS</div>
+    </div>
+    <div class="signature-box">
+      <p>Signature du salarié</p>
+      <div class="signature-line">{{employee.firstName}} {{employee.lastName}}</div>
+    </div>
+  </div>
+
+  <!-- Pied de page -->
+  <div class="footer">
+    <p>Ce bulletin de paie est généré automatiquement et ne nécessite pas de signature manuscrite.</p>
+    <p>En cas de question, veuillez contacter le service RH: contact@abc-cours.fr</p>
+    <p style="margin-top: 10px; text-align: center; font-style: italic;">
+      Document confidentiel - Conservation obligatoire sans limitation de durée
+    </p>
+  </div>
+</body>
+</html>

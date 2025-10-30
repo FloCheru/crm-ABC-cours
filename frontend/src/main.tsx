@@ -2,10 +2,13 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "./components/ui/sonner";
+import "sonner/dist/styles.css";
 import {
   Admin,
   Login,
   UnderDevelopment,
+  Dashboard,
   CouponSeriesCreate,
   CouponsList,
   PdfPreview,
@@ -44,6 +47,7 @@ import { useAuthStore } from "./stores";
 import { useAuthInitialization } from "./hooks/useAuthInitialization";
 import { useActivityReset } from "./hooks/useActivityReset";
 import { useEffect } from "react";
+import { SimulationBanner } from "./components/layout/SimulationBanner";
 
 // Basename vide pour Vercel (domaine dédié)
 const basename = "";
@@ -55,6 +59,7 @@ function AppRoutes() {
 
   return (
     <>
+      <SimulationBanner />
       <Navbar />
       <Routes>
           <Route path="/" element={<Login />} />
@@ -69,6 +74,8 @@ function AppRoutes() {
               </RoleBasedProtectedRoute>
             }
           >
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="coupons" element={<Admin />} />
             <Route path="coupons/create" element={<CouponSeriesCreate />} />
             <Route path="coupons/list" element={<CouponsList />} />
@@ -137,6 +144,7 @@ function App() {
   return (
     <BrowserRouter basename={basename}>
       <AppRoutes />
+      <Toaster position="top-right" duration={5000} />
     </BrowserRouter>
   );
 }

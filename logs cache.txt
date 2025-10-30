@@ -1,39 +1,258 @@
-14:34:25 [vite] (client) hmr update /src/main.tsx, /src/index.css
-[1] 14:34:25 [vite] (client) Pre-transform error: Failed to resolve import "./professor/MesRendezVous" from "src/pages/index.ts". Does the file exist?
-[1]   Plugin: vite:import-analysis
-[1]   File: C:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/index.ts:16:30
-[1]   13 |  export { ProfesseurDocuments } from "./professeurs/ProfesseurDocuments";
-[1]   14 |  export { ProfesseurDashboard } from "./professeur/ProfesseurDashboard";
-[1]   15 |  export { MesRendezVous } from "./professor/MesRendezVous";
-[1]      |                                 ^
-[1]   16 |  export { MesDocuments } from "./professor/MesDocuments";
-[1]   17 |  export { MonProfil } from "./professor/MonProfil";
-[1] 14:34:38 [vite] (client) hmr update /src/main.tsx, /src/index.css
-[1] 14:34:38 [vite] (client) Pre-transform error: Failed to resolve import "./professor/MesRendezVous" from "src/pages/index.ts". Does the file exist?
-[1]   Plugin: vite:import-analysis
-[1]   File: C:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/index.ts:16:30
-[1]   13 |  export { ProfesseurDocuments } from "./professeurs/ProfesseurDocuments";
-[1]   14 |  export { ProfesseurDashboard } from "./professeur/ProfesseurDashboard";
-[1]   15 |  export { MesRendezVous } from "./professor/MesRendezVous";
-[1]      |                                 ^
-[1]   16 |  export { MesDocuments } from "./professor/MesDocuments";
-[1]   17 |  export { MonProfil } from "./professor/MonProfil";
-[1] 14:36:38 [vite] Internal server error: Failed to resolve import "./professor/MesRendezVous" from "src/pages/index.ts". Does the file exist?
-[1]   Plugin: vite:import-analysis
-[1]   File: C:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/index.ts:16:30
-[1]   13 |  export { ProfesseurDocuments } from "./professeurs/ProfesseurDocuments";
-[1]   14 |  export { ProfesseurDashboard } from "./professeur/ProfesseurDashboard";
-[1]   15 |  export { MesRendezVous } from "./professor/MesRendezVous";
-[1]      |                                 ^
-[1]   16 |  export { MesDocuments } from "./professor/MesDocuments";
-[1]   17 |  export { MonProfil } from "./professor/MonProfil";
-[1]       at TransformPluginContext._formatLog (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:31219:43)
-[1]       at TransformPluginContext.error (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:31216:14)
-[1]       at normalizeUrl (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:29699:18)
-[1]       at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-[1]       at async file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:29757:32
-[1]       at async Promise.all (index 14)
-[1]       at async TransformPluginContext.transform (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:29725:4)
-[1]       at async EnvironmentPluginContainer.transform (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:31018:14)
-[1]       at async loadAndTransform (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:26143:26)
-[1]       at async viteTransformMiddleware (file:///C:/Users/flori/OneDrive/Bureau/ABC%20cours/Application/abc-cours-crm/frontend/node_modules/.pnpm/vite@7.1.9_@types+node@24.7.2_jiti@2.6.1_lightningcss@1.30.1/node_modules/vite/dist/node/chunks/dep-Chhhsdoe.js:27221:20)
+authService.ts:107  POST http://localhost:3000/api/api/auth/extend-session 404 (Not Found)
+extendSession @ authService.ts:107
+(anonymous) @ useActivityReset.ts:23
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18567
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+commitHookEffectListMount @ react-dom_client.js?v=edb7fdf0:9411
+commitHookPassiveMountEffects @ react-dom_client.js?v=edb7fdf0:9465
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11040
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11066
+flushPassiveEffects @ react-dom_client.js?v=edb7fdf0:13150
+(anonymous) @ react-dom_client.js?v=edb7fdf0:12776
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<AppRoutes>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+App @ main.tsx:146
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
+renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
+renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
+updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
+beginWork @ react-dom_client.js?v=edb7fdf0:8525
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
+workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
+renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
+performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+(anonymous) @ main.tsx:154Understand this error
+authService.ts:122 Impossible d'étendre la session: 404
+extendSession @ authService.ts:122
+await in extendSession
+(anonymous) @ useActivityReset.ts:23
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18567
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+commitHookEffectListMount @ react-dom_client.js?v=edb7fdf0:9411
+commitHookPassiveMountEffects @ react-dom_client.js?v=edb7fdf0:9465
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11040
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
+recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
+commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11066
+flushPassiveEffects @ react-dom_client.js?v=edb7fdf0:13150
+(anonymous) @ react-dom_client.js?v=edb7fdf0:12776
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<AppRoutes>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+App @ main.tsx:146
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
+renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
+renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
+updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
+beginWork @ react-dom_client.js?v=edb7fdf0:8525
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
+workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
+renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
+performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+(anonymous) @ main.tsx:154Understand this warning
+authService.ts:107  POST http://localhost:3000/api/api/auth/extend-session 404 (Not Found)
+extendSession @ authService.ts:107
+(anonymous) @ useActivityReset.ts:23
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18567
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+commitHookEffectListMount @ react-dom_client.js?v=edb7fdf0:9411
+commitHookPassiveMountEffects @ react-dom_client.js?v=edb7fdf0:9465
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11273
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
+doubleInvokeEffectsOnFiber @ react-dom_client.js?v=edb7fdf0:13339
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=edb7fdf0:13312
+commitDoubleInvokeEffectsInDEV @ react-dom_client.js?v=edb7fdf0:13347
+flushPassiveEffects @ react-dom_client.js?v=edb7fdf0:13157
+(anonymous) @ react-dom_client.js?v=edb7fdf0:12776
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<AppRoutes>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+App @ main.tsx:146
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
+renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
+renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
+updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
+beginWork @ react-dom_client.js?v=edb7fdf0:8525
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
+workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
+renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
+performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+(anonymous) @ main.tsx:154Understand this error
+authService.ts:122 Impossible d'étendre la session: 404
+extendSession @ authService.ts:122
+await in extendSession
+(anonymous) @ useActivityReset.ts:23
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18567
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+commitHookEffectListMount @ react-dom_client.js?v=edb7fdf0:9411
+commitHookPassiveMountEffects @ react-dom_client.js?v=edb7fdf0:9465
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11273
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
+recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
+reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
+doubleInvokeEffectsOnFiber @ react-dom_client.js?v=edb7fdf0:13339
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=edb7fdf0:13312
+commitDoubleInvokeEffectsInDEV @ react-dom_client.js?v=edb7fdf0:13347
+flushPassiveEffects @ react-dom_client.js?v=edb7fdf0:13157
+(anonymous) @ react-dom_client.js?v=edb7fdf0:12776
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<AppRoutes>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+App @ main.tsx:146
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
+renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
+renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
+updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
+beginWork @ react-dom_client.js?v=edb7fdf0:8525
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
+workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
+renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
+performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+(anonymous) @ main.tsx:154Understand this warning
+authService.ts:24 {email: 'admin@abc-cours.fr', password: '123456'}
+authService.ts:25  POST http://localhost:3000/api/api/auth/login 404 (Not Found)
+login @ authService.ts:25
+login @ useAuthStore.ts:32
+handleQuickAdminLogin @ Login.tsx:46
+executeDispatch @ react-dom_client.js?v=edb7fdf0:13622
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+processDispatchQueue @ react-dom_client.js?v=edb7fdf0:13658
+(anonymous) @ react-dom_client.js?v=edb7fdf0:14071
+batchedUpdates$1 @ react-dom_client.js?v=edb7fdf0:2626
+dispatchEventForPluginEventSystem @ react-dom_client.js?v=edb7fdf0:13763
+dispatchEvent @ react-dom_client.js?v=edb7fdf0:16784
+dispatchDiscreteEvent @ react-dom_client.js?v=edb7fdf0:16765
+<button>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+Button @ Button.tsx:69
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
+renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
+renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
+updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
+beginWork @ react-dom_client.js?v=edb7fdf0:8525
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
+workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
+renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
+performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<Button>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+Login @ Login.tsx:141
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
+renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
+renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
+updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
+beginWork @ react-dom_client.js?v=edb7fdf0:8525
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
+workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
+renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
+performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<Login>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+AppRoutes @ main.tsx:66
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
+renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
+renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
+updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
+beginWork @ react-dom_client.js?v=edb7fdf0:8525
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
+workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
+renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
+performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<AppRoutes>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+App @ main.tsx:146
+react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
+renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
+renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
+updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
+beginWork @ react-dom_client.js?v=edb7fdf0:8525
+runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
+performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
+workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
+renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
+performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
+performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
+performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
+<App>
+exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
+(anonymous) @ main.tsx:154Understand this error
+useAuthStore.ts:39 Login error: Error: Route non trouvée
+    at AuthService.login (authService.ts:35:13)
+    at async login (useAuthStore.ts:32:30)
+    at async handleQuickAdminLogin (Login.tsx:46:7)

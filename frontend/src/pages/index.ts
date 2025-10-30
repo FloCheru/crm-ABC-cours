@@ -1,5 +1,6 @@
 export { Login } from "./login/Login";
 export { UnderDevelopment } from "./UnderDevelopment";
+export { Dashboard } from "./admin/Dashboard";
 export { CouponSeriesCreate } from "./admin/coupons/CouponSeriesCreate";
 export { Admin } from "./admin/coupons/Admin";
 export { CouponsList } from "./admin/coupons/CouponsList";

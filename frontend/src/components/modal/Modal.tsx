@@ -11,6 +11,7 @@ import { familyService } from "../../services/familyService";
 import rdvService from "../../services/rdvService";
 import { adminService, type Admin } from "../../services/adminService";
 import { usePrefillTest } from "../../hooks/usePrefillTest";
+import { toast } from "sonner";
 import "./Modal.css";
 
 interface ModalProps {
@@ -93,43 +94,50 @@ const ENTITY_HANDLERS = {
         notes: formData.notes,
       };
 
+      // Sécuriser l'accès à data (peut être undefined)
+      const safeData = data || {};
+
       // Contexte famille (existant)
-      if (data.familyId) {
+      // Vérifier que familyId existe ET n'est pas une chaîne vide
+      if (safeData.familyId && safeData.familyId.trim() !== "") {
         return {
           ...baseData,
-          familyId: data.familyId,
+          familyId: safeData.familyId,
           assignedAdminId: formData.assignedAdminId,
           entityType: "admin-family" as const,
         };
       }
 
       // Contexte professeur (admin <-> professeur)
-      if (data.professorId && formData.assignedAdminId) {
+      if (safeData.professorId && formData.assignedAdminId) {
         return {
           ...baseData,
-          professorId: data.professorId,
+          professorId: safeData.professorId,
           assignedAdminId: formData.assignedAdminId,
           entityType: "admin-professor" as const,
         };
       }
 
       // Contexte professeur-élève
-      if (data.professorId && formData.studentId) {
+      if (safeData.professorId && formData.studentId) {
         return {
           ...baseData,
-          professorId: data.professorId,
+          professorId: safeData.professorId,
           studentId: formData.studentId,
           entityType: "professor-student" as const,
         };
       }
 
-      // Fallback (ne devrait pas arriver)
-      return {
-        ...baseData,
-        familyId: data.familyId,
-        assignedAdminId: formData.assignedAdminId,
-        entityType: "admin-family" as const,
-      };
+      // Fallback : valider qu'on a au moins un ID
+      console.error("❌ [RDV prepareData] Aucun contexte valide détecté", {
+        data: safeData,
+        formData,
+      });
+
+      // Si on arrive ici, c'est qu'il manque des données critiques
+      throw new Error(
+        "Impossible de créer le RDV : informations de contexte manquantes (familyId, professorId ou studentId requis)"
+      );
     },
     update: async (rdvId: string, preparedData: any, _familyId: string) => {
       return await rdvService.updateRdvById(rdvId, {
@@ -142,6 +150,10 @@ const ENTITY_HANDLERS = {
       preparedData: any,
       _adminsData?: any[]
     ) => {
+      // S'assurer que familyId est présent si c'est un RDV admin-family
+      if (preparedData.entityType === "admin-family" && !preparedData.familyId && _familyId) {
+        preparedData.familyId = _familyId;
+      }
       return await rdvService.createRdv(preparedData);
     },
     logs: {
@@ -163,9 +175,9 @@ const ENTITY_HANDLERS = {
         notifyEmail: formData.notifyEmail?.trim() || "",
       };
     },
-    update: async (teacherId: string, preparedData: any) => {
+    update: async (professorId: string, preparedData: any) => {
       // TODO: Implémenter teacherService.updateTeacher quand le backend sera prêt
-      console.log("Update teacher:", teacherId, preparedData);
+      console.log("Update teacher:", professorId, preparedData);
       return Promise.resolve(preparedData);
     },
     create: async (_: string, preparedData: any) => {
@@ -287,7 +299,7 @@ const getModalTitle = (
   currentMode?: "view" | "edit"
 ): string => {
   // Cas 1 : Pas d'entityId = création (forcément edit)
-  const entityId = data?.studentId || data?.rdvId || data?.teacherId;
+  const entityId = data?.studentId || data?.rdvId || data?.professorId;
   if (!entityId) {
     return TITLE_MAP[type].create;
   }
@@ -311,8 +323,8 @@ export const Modal: React.FC<ModalProps> = ({
   const { studentTestData, rdvTestData } = usePrefillTest();
 
   // Nouvelle logique de détection création vs modification
-  const entityId = data.studentId || data.rdvId || data.teacherId;
-  const familyId = data.familyId;
+  const entityId = data?.studentId || data?.rdvId || data?.professorId;
+  const familyId = data?.familyId;
   // Configuration des champs par type
   const MODAL_CONFIG = {
     student: {
@@ -898,20 +910,28 @@ export const Modal: React.FC<ModalProps> = ({
       }
     } catch (error) {
       console.error("❌ [HANDLESAVE] Erreur lors de la sauvegarde:", error);
-      // Extraire et adapter le message d'erreur pour une meilleure UX
-      let errorMessage = "Erreur lors de la sauvegarde. Veuillez réessayer.";
 
       if (error instanceof Error) {
-        // Messages d'erreur plus conviviaux - ordre important (plus spécifique d'abord)
+        // Gestion spécifique pour RDV en double (erreur 409)
+        console.log("🔍 [TOAST DEBUG] Error message:", error.message);
         if (
-          error.message.includes(
-            "déjà un rendez-vous prévu à cette date et heure"
-          ) ||
+          error.message.includes("rendez-vous existe déjà") ||
+          error.message.includes("déjà un rendez-vous prévu à cette date et heure") ||
           error.message.includes("Cet administrateur a déjà un rendez-vous")
         ) {
-          errorMessage =
-            "Ce créneau est déjà pris. Veuillez choisir une autre date ou heure.";
-        } else if (
+          console.log("🎯 [TOAST DEBUG] Condition matched! Calling toast.warning()...");
+          toast.warning("Créneau déjà pris", {
+            description: "Un rendez-vous existe déjà pour cet administrateur à cette date et heure. Veuillez choisir un autre créneau.",
+            duration: 5000,
+          });
+          console.log("✅ [TOAST DEBUG] toast.warning() called");
+          return; // Ne pas fermer la modal
+        }
+
+        // Autres erreurs - gestion classique
+        let errorMessage = "Erreur lors de la sauvegarde. Veuillez réessayer.";
+
+        if (
           error.message.includes("ValidationError") ||
           error.message.includes("Données invalides")
         ) {
@@ -924,10 +944,11 @@ export const Modal: React.FC<ModalProps> = ({
           // Utiliser le message détaillé directement s'il est compréhensible
           errorMessage = error.message;
         }
+
+        // Afficher l'erreur dans la modal
+        setError(errorMessage);
       }
 
-      // Préserver l'état de la modal pour afficher l'erreur
-      setError(errorMessage);
       // NE PAS fermer la modal ou changer de mode en cas d'erreur
       return;
     } finally {

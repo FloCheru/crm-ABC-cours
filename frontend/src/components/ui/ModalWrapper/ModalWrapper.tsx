@@ -29,11 +29,14 @@ interface ModalWrapperProps {
  *   onClose={() => setShowModal(false)}
  *   size="lg"
  * >
- *   <EntityForm
- *     entityType="family"
- *     onSubmit={handleSubmit}
- *     onCancel={() => setShowModal(false)}
- *   />
+ *   <div>
+ *     <h2>Modal Content</h2>
+ *     <form onSubmit={handleSubmit}>
+ *       <input type="text" placeholder="Enter text..." />
+ *       <button type="submit">Submit</button>
+ *       <button type="button" onClick={() => setShowModal(false)}>Cancel</button>
+ *     </form>
+ *   </div>
  * </ModalWrapper>
  * ```
  */

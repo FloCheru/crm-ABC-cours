@@ -5,6 +5,7 @@ import { useAuthStore } from "../../stores/useAuthStore";
 import { ChevronDown, LogOut } from "lucide-react";
 import { useState } from "react";
 import "./Navbar.css";
+import { isSimulatingProfessor } from "../../utils/professorSimulation";
 
 export const Navbar = () => {
   const { user, role } = useAuthPermissions();
@@ -17,7 +18,9 @@ export const Navbar = () => {
     return null;
   }
 
-  const navItems = getNavigationForRole(role);
+  // En mode simulation, afficher la navbar professeur
+  const effectiveRole = isSimulatingProfessor() ? "professor" : role;
+  const navItems = getNavigationForRole(effectiveRole);
 
   const handleMouseEnter = (itemLabel: string) => {
     setOpenDropdown(itemLabel);
@@ -40,7 +43,7 @@ export const Navbar = () => {
 
           return (
             <div
-              key={item.path}
+              key={item.label}
               className={`navbar-item-wrapper ${
                 hasSubmenu ? "has-submenu" : ""
               }`}
@@ -83,7 +86,7 @@ export const Navbar = () => {
 
       <div className="navbar-user">
         <span className="user-badge">
-          {role === "admin" ? "ADMIN" : "PROFESSEUR"}
+          {effectiveRole === "admin" ? "ADMIN" : "PROFESSEUR"}
         </span>
         <span className="user-name">
           {user.firstName} {user.lastName}

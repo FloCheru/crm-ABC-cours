@@ -24,8 +24,9 @@ interface NavbarProps {
 const NAV_ITEMS = [
   {
     label: "Admin",
-    path: "/admin/coupons",
+    path: "/admin/dashboard",
     submenu: [
+      { label: "Dashboard", path: "/admin/dashboard" },
       { label: "Séries de coupons", path: "/admin/coupons" },
       { label: "Coupons", path: "/admin/coupons/list" },
       { label: "Aperçu Template", path: "/admin/template-preview" },
@@ -89,11 +90,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     >
       <ul className="navbar__nav">
         {NAV_ITEMS.map((item, index) => {
-          const isActive = activePath === item.path || 
+          const isActive = activePath === item.path ||
             (item.submenu && item.submenu.some(sub => activePath === sub.path));
 
           return (
-            <li key={index} className={`navbar__item ${item.submenu ? 'navbar__item--dropdown' : ''}`}>
+            <li key={`${item.label}-${index}`} className={`navbar__item ${item.submenu ? 'navbar__item--dropdown' : ''}`}>
               <a
                 href={item.path}
                 className={`navbar__link ${
@@ -109,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {item.submenu && (
                 <ul className="navbar__submenu">
                   {item.submenu.map((subItem, subIndex) => (
-                    <li key={subIndex} className="navbar__submenu-item">
+                    <li key={`${subItem.label}-${subIndex}`} className="navbar__submenu-item">
                       <a
                         href={subItem.path}
                         className={`navbar__submenu-link ${

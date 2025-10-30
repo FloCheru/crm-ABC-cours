@@ -15,7 +15,7 @@ interface Document {
 }
 
 export const ProfesseurDocuments: React.FC = () => {
-  const teacherId = localStorage.getItem('teacherId');
+  const professorId = localStorage.getItem('professorId');
   const navigate = useNavigate();
 
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -23,12 +23,12 @@ export const ProfesseurDocuments: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (teacherId) {
+    if (professorId) {
       loadDocuments();
     } else {
       navigate('/admin/professeurs', { replace: true });
     }
-  }, [teacherId, navigate]);
+  }, [professorId, navigate]);
 
   const loadDocuments = async () => {
     try {
@@ -36,7 +36,7 @@ export const ProfesseurDocuments: React.FC = () => {
       setError(null);
 
       // TODO: Remplacer par l'appel API réel
-      // const docs = await professorService.getDocuments(teacherId!);
+      // const docs = await professorService.getDocuments(professorId!);
 
       // Données mockées pour le moment
       const mockDocuments: Document[] = [
@@ -80,7 +80,7 @@ export const ProfesseurDocuments: React.FC = () => {
       setError(null);
 
       // TODO: Remplacer par l'appel API réel
-      // await professorService.uploadDocument(teacherId!, file, category);
+      // await professorService.uploadDocument(professorId!, file, category);
 
       console.log('Upload fichier:', file.name, 'Catégorie:', category);
 
@@ -171,7 +171,7 @@ export const ProfesseurDocuments: React.FC = () => {
     return <FileIcon className="w-5 h-5 text-gray-600" />;
   };
 
-  if (!teacherId) {
+  if (!professorId) {
     return null;
   }
 

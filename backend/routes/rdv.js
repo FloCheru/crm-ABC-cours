@@ -146,7 +146,7 @@ router.post('/', authorize(['admin']), async (req, res) => {
 
   } catch (error) {
     console.error('Erreur lors de la création du RDV:', error);
-    
+
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         message: 'Données invalides',
@@ -154,9 +154,22 @@ router.post('/', authorize(['admin']), async (req, res) => {
       });
     }
 
-    res.status(500).json({ 
+    // Erreur de doublon (E11000) - RDV déjà existant
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: 'Un rendez-vous existe déjà pour cet administrateur à cette date et heure',
+        error: 'DUPLICATE_RDV',
+        details: {
+          date: error.keyValue?.date,
+          time: error.keyValue?.time,
+          assignedAdminId: error.keyValue?.assignedAdminId
+        }
+      });
+    }
+
+    res.status(500).json({
       message: 'Erreur lors de la création du rendez-vous',
-      error: error.message 
+      error: error.message
     });
   }
 });

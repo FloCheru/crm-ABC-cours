@@ -32,13 +32,17 @@ const professorRoutes = require("./routes/professors");
 const subjectRoutes = require("./routes/subjects");
 // const couponRoutes = require("./routes/coupons"); // Supprimé
 // const settlementNotesRoutes = require("./routes/settlementNotes"); // Supprimé
-// const pdfRoutes = require("./routes/pdf"); // Supprimé
+// const pdfRoutes = require("./routes/pdf"); // Supprimé (ancien système NDR)
+const pdfRoutes = require("./routes/pdfRoutes"); // Nouveau système générique
 const ndrRoutes = require("./routes/ndr");
 const rdvRoutes = require("./routes/rdv");
 // const debugRoutes = require("./routes/debug"); // Supprimé
 
 // Import de la configuration de la base de données
 const connectDB = require("./config/database");
+
+// Import du storage PDF pour initialiser GridFS
+const { initGridFS } = require("./services/pdf/pdf.storage");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -141,7 +145,7 @@ app.use("/api/professors", professorRoutes);
 app.use("/api/subjects", subjectRoutes);
 // app.use("/api/coupons", couponRoutes); // Supprimé
 // app.use("/api/settlement-notes", settlementNotesRoutes); // Supprimé
-// app.use("/api", pdfRoutes); // Supprimé
+app.use("/api/pdfs", pdfRoutes); // Nouveau système générique de PDFs
 app.use("/api/ndrs", ndrRoutes);
 app.use("/api/rdv", rdvRoutes);
 // app.use("/debug", debugRoutes); // Supprimé
@@ -170,6 +174,11 @@ let server;
 const startServer = async () => {
   try {
     await connectDB();
+
+    // Initialiser GridFS après connexion MongoDB
+    initGridFS();
+    console.log('✅ GridFS initialisé pour le stockage des PDFs');
+
     server = app.listen(PORT, () => {
       console.log(`🚀 Serveur démarré sur le port ${PORT}`);
       console.log(`📊 Mode: ${process.env.NODE_ENV || "development"}`);

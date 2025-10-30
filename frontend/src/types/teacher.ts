@@ -114,6 +114,7 @@ export interface Teacher {
   // Champs système
   identifier: string; // Calculé automatiquement : prénom+nom (ex: "MarieDupont")
   notifyEmail?: string; // Email de notification (optionnel)
+  isActive?: boolean; // Statut actif/inactif du professeur
   createdAt: string;
   updatedAt?: string;
 }

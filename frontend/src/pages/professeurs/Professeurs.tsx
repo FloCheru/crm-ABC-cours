@@ -11,6 +11,8 @@ import {
   Select,
   Modal,
 } from "../../components";
+import { KeyRound, UserRound, UserRoundX } from "lucide-react";
+import { toast } from "sonner";
 
 // Type pour un professeur
 interface Teacher {
@@ -27,6 +29,8 @@ interface Teacher {
   subjects: string[];
   levels: string[];
   createdAt: string;
+  lastCouponDate?: string; // Date de saisie du dernier coupon (ISO)
+  isActive?: boolean; // Statut actif/inactif du professeur
 }
 
 // Type pour les données du tableau avec l'id requis
@@ -48,6 +52,8 @@ const MOCK_TEACHERS: Teacher[] = [
     subjects: ["Mathématiques", "Physique"],
     levels: ["Lycée", "Terminale"],
     createdAt: new Date("2024-01-15").toISOString(),
+    lastCouponDate: new Date("2024-03-20").toISOString(),
+    isActive: true,
   },
   {
     _id: "2",
@@ -63,6 +69,8 @@ const MOCK_TEACHERS: Teacher[] = [
     subjects: ["Français", "Littérature"],
     levels: ["Collège", "Lycée"],
     createdAt: new Date("2024-02-20").toISOString(),
+    lastCouponDate: undefined, // Professeur sans coupon
+    isActive: false,
   },
   {
     _id: "3",
@@ -78,6 +86,8 @@ const MOCK_TEACHERS: Teacher[] = [
     subjects: ["Anglais", "Espagnol"],
     levels: ["Collège", "Lycée", "Supérieur"],
     createdAt: new Date("2024-03-10").toISOString(),
+    lastCouponDate: new Date("2024-03-25").toISOString(),
+    isActive: true,
   },
   {
     _id: "4",
@@ -93,6 +103,8 @@ const MOCK_TEACHERS: Teacher[] = [
     subjects: ["Histoire", "Géographie"],
     levels: ["Collège"],
     createdAt: new Date("2024-01-25").toISOString(),
+    lastCouponDate: new Date("2024-03-15").toISOString(),
+    isActive: false,
   },
   {
     _id: "5",
@@ -108,6 +120,8 @@ const MOCK_TEACHERS: Teacher[] = [
     subjects: ["Biologie", "Chimie"],
     levels: ["Lycée", "Terminale"],
     createdAt: new Date("2024-02-05").toISOString(),
+    lastCouponDate: new Date("2024-03-28").toISOString(),
+    isActive: true,
   },
 ];
 
@@ -119,6 +133,7 @@ export const Professeurs: React.FC = () => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<string>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [filterDepartment, setFilterDepartment] = useState<string>("");
   const [filterCity, setFilterCity] = useState<string>("");
   const [filterSubject, setFilterSubject] = useState<string>("");
@@ -183,6 +198,7 @@ export const Professeurs: React.FC = () => {
   const handleReset = () => {
     setSearchTerm("");
     setSortBy("createdAt");
+    setSortOrder("desc");
     setFilterDepartment("");
     setFilterCity("");
     setFilterSubject("");
@@ -191,13 +207,13 @@ export const Professeurs: React.FC = () => {
 
   // Handler pour cliquer sur une ligne du tableau
   const handleRowClick = (row: TableRowData) => {
-    localStorage.setItem("teacherId", row._id);
+    localStorage.setItem("professorId", row._id);
     navigate("/admin/professeur-details");
   };
 
   // Gérer la suppression d'un professeur
-  const handleDeleteTeacher = async (teacherId: string) => {
-    const teacher = teachers.find((t) => t._id === teacherId);
+  const handleDeleteTeacher = async (professorId: string) => {
+    const teacher = teachers.find((t) => t._id === professorId);
     const fullName = teacher
       ? `${teacher.firstName} ${teacher.lastName}`
       : "ce professeur";
@@ -209,15 +225,93 @@ export const Professeurs: React.FC = () => {
     ) {
       try {
         // TODO: Appeler le service de suppression
-        // await teacherService.deleteTeacher(teacherId);
+        // await teacherService.deleteTeacher(professorId);
 
         // Update local state by removing the deleted teacher
-        setTeachers((prevData) => prevData.filter((t) => t._id !== teacherId));
+        setTeachers((prevData) => prevData.filter((t) => t._id !== professorId));
 
         console.log(`Professeur ${fullName} supprimé avec succès`);
       } catch (error) {
         console.error("Erreur lors de la suppression du professeur:", error);
         alert("Erreur lors de la suppression du professeur");
+      }
+    }
+  };
+
+  // Gérer le renvoi du mot de passe au professeur
+  const handleResendPassword = async (professorId: string, email: string) => {
+    const teacher = teachers.find((t) => t._id === professorId);
+    const fullName = teacher
+      ? `${teacher.firstName} ${teacher.lastName}`
+      : "ce professeur";
+
+    if (
+      window.confirm(
+        `Renvoyer le mot de passe à ${fullName} ?\n\nUn email sera envoyé à : ${email}`
+      )
+    ) {
+      try {
+        // TODO: Appeler le service de renvoi de mot de passe
+        // await teacherService.resendPassword(professorId);
+
+        toast.success(`Mot de passe renvoyé à ${fullName}`, {
+          description: `Un email a été envoyé à ${email}`,
+        });
+
+        console.log(`Mot de passe renvoyé à ${email}`);
+      } catch (error) {
+        console.error("Erreur lors du renvoi du mot de passe:", error);
+        toast.error("Erreur lors du renvoi du mot de passe", {
+          description: "Veuillez réessayer ultérieurement",
+        });
+      }
+    }
+  };
+
+  // Gérer l'activation/désactivation d'un professeur
+  const handleToggleActiveStatus = async (professorId: string) => {
+    const teacher = teachers.find((t) => t._id === professorId);
+    if (!teacher) return;
+
+    const fullName = `${teacher.firstName} ${teacher.lastName}`;
+    const newStatus = !teacher.isActive;
+    const action = newStatus ? "activer" : "désactiver";
+
+    if (
+      window.confirm(
+        `Êtes-vous sûr de vouloir ${action} ${fullName} ?\n\n${
+          newStatus
+            ? "Le professeur recevra à nouveau les mails de proposition de cours."
+            : "Le professeur ne recevra plus les mails de propositions de cours."
+        }`
+      )
+    ) {
+      try {
+        // TODO: Appeler le service pour changer le statut
+        // await teacherService.updateActiveStatus(professorId, newStatus);
+
+        // Update local state
+        setTeachers((prevData) =>
+          prevData.map((t) =>
+            t._id === professorId ? { ...t, isActive: newStatus } : t
+          )
+        );
+
+        toast.success(`Professeur ${newStatus ? "activé" : "désactivé"}`, {
+          description: `${fullName} a été ${
+            newStatus ? "activé" : "désactivé"
+          } avec succès`,
+        });
+
+        console.log(`Professeur ${fullName} ${action} avec succès`);
+      } catch (error) {
+        console.error(
+          "Erreur lors du changement de statut du professeur:",
+          error
+        );
+        toast.error("Erreur lors du changement de statut", {
+          description: "Veuillez réessayer ultérieurement",
+        });
       }
     }
   };
@@ -253,20 +347,38 @@ export const Professeurs: React.FC = () => {
       );
     })
     .sort((a, b) => {
+      let comparison = 0;
+
       switch (sortBy) {
         case "createdAt":
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
+          comparison =
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          break;
         case "lastName":
-          return a.lastName.localeCompare(b.lastName);
+          comparison = a.lastName.localeCompare(b.lastName);
+          break;
         case "city":
-          return a.address.city.localeCompare(b.address.city);
+          comparison = a.address.city.localeCompare(b.address.city);
+          break;
         case "department":
-          return a.address.department.localeCompare(b.address.department);
+          comparison = a.address.department.localeCompare(b.address.department);
+          break;
+        case "lastCouponDate":
+          // Professeurs sans coupon vont à la fin
+          if (!a.lastCouponDate && !b.lastCouponDate) return 0;
+          if (!a.lastCouponDate) return 1; // a va à la fin
+          if (!b.lastCouponDate) return -1; // b va à la fin
+
+          comparison =
+            new Date(b.lastCouponDate).getTime() -
+            new Date(a.lastCouponDate).getTime();
+          break;
         default:
-          return 0;
+          comparison = 0;
       }
+
+      // Appliquer l'ordre (asc/desc)
+      return sortOrder === "asc" ? -comparison : comparison;
     });
 
   // Transformer les données pour le tableau
@@ -334,17 +446,68 @@ export const Professeurs: React.FC = () => {
       ),
     },
     {
+      key: "lastCouponDate",
+      label: "Dernier coupon",
+      render: (_: unknown, row: TableRowData) => (
+        <div className="text-sm">
+          {row.lastCouponDate
+            ? new Date(row.lastCouponDate).toLocaleDateString("fr-FR")
+            : "—"}
+        </div>
+      ),
+    },
+    {
       key: "actions",
       label: "Actions",
       render: (_: unknown, row: TableRowData) => (
-        <Button
-          size="sm"
-          variant="error"
-          onClick={() => handleDeleteTeacher(row._id)}
-          title="Supprimer le professeur"
-        >
-          ✕
-        </Button>
+        <div className="flex gap-sm items-center">
+          {/* Bouton renvoyer mot de passe */}
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleResendPassword(row._id, row.email);
+            }}
+            title="Renvoyer le mot de passe"
+          >
+            <KeyRound className="w-4 h-4" />
+          </Button>
+
+          {/* Bouton statut actif/inactif */}
+          <Button
+            size="sm"
+            variant={row.isActive ? "success" : "outline"}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleActiveStatus(row._id);
+            }}
+            title={
+              row.isActive
+                ? "Professeur actif - Cliquer pour désactiver"
+                : "Professeur désactivé - Cliquer pour activer"
+            }
+          >
+            {row.isActive ? (
+              <UserRound className="w-4 h-4" />
+            ) : (
+              <UserRoundX className="w-4 h-4" />
+            )}
+          </Button>
+
+          {/* Bouton supprimer */}
+          <Button
+            size="sm"
+            variant="error"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteTeacher(row._id);
+            }}
+            title="Supprimer le professeur"
+          >
+            ✕
+          </Button>
+        </div>
       ),
     },
   ];
@@ -412,8 +575,21 @@ export const Professeurs: React.FC = () => {
                   { value: "lastName", label: "Nom" },
                   { value: "city", label: "Ville" },
                   { value: "department", label: "Département" },
+                  { value: "lastCouponDate", label: "Date dernier coupon" },
                 ]}
               />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                }
+                title={`Ordre ${
+                  sortOrder === "asc" ? "croissant" : "décroissant"
+                }`}
+              >
+                {sortOrder === "asc" ? "↑" : "↓"}
+              </Button>
             </div>
 
             <div className="flex items-center gap-2">

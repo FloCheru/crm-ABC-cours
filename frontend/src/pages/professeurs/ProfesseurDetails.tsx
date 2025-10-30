@@ -15,21 +15,29 @@ import {
 import { Checkbox } from "../../components/ui/checkbox";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
+import { Alert, AlertDescription } from "../../components/ui/alert";
 import type { RendezVous } from "../../types/rdv";
 import rdvService from "../../services/rdvService";
 import { useAuthStore } from "../../stores";
+import { enterProfessorView } from "../../utils/professorSimulation";
+import { Eye } from "lucide-react";
+import { useProfessorId } from "../../hooks/useProfessorId";
 
 export const ProfesseurDetails: React.FC = () => {
   const navigate = useNavigate();
 
-  const teacherId = localStorage.getItem("teacherId");
+  const professorId = useProfessorId();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [, setError] = useState<string>("");
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingIdentite, setIsEditingIdentite] = useState(false);
+  const [isEditingCoordonnees, setIsEditingCoordonnees] = useState(false);
+  const [isEditingCV, setIsEditingCV] = useState(false);
+  const [isEditingSituation, setIsEditingSituation] = useState(false);
   const [formData, setFormData] = useState<Partial<Teacher>>({});
   const [isEditingComments, setIsEditingComments] = useState(false);
   const [commentsData, setCommentsData] = useState<string>("");
+  const [ibanCopied, setIbanCopied] = useState(false);
 
   // États pour les rendez-vous
   const [rdvs, setRdvs] = useState<RendezVous[]>([]);
@@ -42,20 +50,20 @@ export const ProfesseurDetails: React.FC = () => {
   const currentUserRole = user?.role || "admin";
 
   useEffect(() => {
-    if (teacherId) {
+    if (professorId) {
       loadTeacherData();
       loadRdvs();
     } else {
       setError("ID de professeur manquant");
       setIsLoading(false);
     }
-  }, [teacherId]);
+  }, [professorId]);
 
   const loadTeacherData = async () => {
     try {
       setIsLoading(true);
       const mockTeacher: Teacher = {
-        _id: teacherId!,
+        _id: professorId!,
         gender: "Mme",
         firstName: "Marie",
         lastName: "Dupont",
@@ -83,6 +91,7 @@ export const ProfesseurDetails: React.FC = () => {
         currentSituation: [],
         identifier: "MarieDupont",
         notifyEmail: "marie.dupont.notif@email.com",
+        iban: "FR7612345678901234567890123", // Mock IBAN
         createdAt: new Date("2024-01-15").toISOString(),
         updatedAt: new Date("2024-03-10").toISOString(),
       };
@@ -98,20 +107,53 @@ export const ProfesseurDetails: React.FC = () => {
   };
 
   React.useEffect(() => {
-    if (!teacherId) {
+    if (!professorId) {
       navigate("/admin/professeurs", { replace: true });
     }
-  }, [teacherId, navigate]);
+  }, [professorId, navigate]);
 
-  const handleSave = async () => {
-    console.log("Données à sauvegarder:", formData);
+  const handleSaveIdentite = async () => {
+    console.log("Données à sauvegarder (Identité):", formData);
     setTeacher(formData as Teacher);
-    setIsEditing(false);
+    setIsEditingIdentite(false);
   };
 
-  const handleCancel = () => {
+  const handleCancelIdentite = () => {
     setFormData(teacher || {});
-    setIsEditing(false);
+    setIsEditingIdentite(false);
+  };
+
+  const handleSaveCoordonnees = async () => {
+    console.log("Données à sauvegarder (Coordonnées):", formData);
+    setTeacher(formData as Teacher);
+    setIsEditingCoordonnees(false);
+  };
+
+  const handleCancelCoordonnees = () => {
+    setFormData(teacher || {});
+    setIsEditingCoordonnees(false);
+  };
+
+  const handleSaveCV = async () => {
+    console.log("Données à sauvegarder (CV):", formData);
+    setTeacher(formData as Teacher);
+    setIsEditingCV(false);
+  };
+
+  const handleCancelCV = () => {
+    setFormData(teacher || {});
+    setIsEditingCV(false);
+  };
+
+  const handleSaveSituation = async () => {
+    console.log("Données à sauvegarder (Situation):", formData);
+    setTeacher(formData as Teacher);
+    setIsEditingSituation(false);
+  };
+
+  const handleCancelSituation = () => {
+    setFormData(teacher || {});
+    setIsEditingSituation(false);
   };
 
   const handleSaveComments = () => {
@@ -146,11 +188,11 @@ export const ProfesseurDetails: React.FC = () => {
   };
 
   const loadRdvs = async () => {
-    if (!teacherId) return;
+    if (!professorId) return;
 
     try {
       setIsLoadingRdvs(true);
-      const rdvsList = await rdvService.getRdvsByProfessor(teacherId);
+      const rdvsList = await rdvService.getRdvsByProfessor(professorId);
       setRdvs(rdvsList);
     } catch (err) {
       console.error("Erreur lors du chargement des RDV:", err);
@@ -217,6 +259,33 @@ export const ProfesseurDetails: React.FC = () => {
     return "-";
   };
 
+  const formatIban = (iban: string): string => {
+    // Formate l'IBAN avec des espaces tous les 4 caractères
+    return iban.replace(/(.{4})/g, "$1 ").trim();
+  };
+
+  const handleCopyIban = async (iban: string) => {
+    try {
+      await navigator.clipboard.writeText(iban);
+      setIbanCopied(true);
+      setTimeout(() => setIbanCopied(false), 2000);
+    } catch (err) {
+      console.error("Erreur lors de la copie:", err);
+      alert("Impossible de copier l'IBAN");
+    }
+  };
+
+  const handleEnterProfessorView = () => {
+    if (teacher && professorId) {
+      enterProfessorView({
+        id: professorId,
+        firstName: teacher.firstName,
+        lastName: teacher.lastName,
+      });
+      navigate("/professor/profil");
+    }
+  };
+
   if (isLoading) {
     return (
       <div>
@@ -236,7 +305,7 @@ export const ProfesseurDetails: React.FC = () => {
     );
   }
 
-  if (!teacherId || !teacher) {
+  if (!professorId || !teacher) {
     return null;
   }
 
@@ -353,29 +422,40 @@ export const ProfesseurDetails: React.FC = () => {
         }}
       />
 
+      {/* Boutons d'action */}
+      <div className="container mx-auto px-4 pt-12 max-w-6xl">
+        <div className="flex gap-md">
+          <button
+            onClick={() => navigate('/admin/professeur-documents')}
+            className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 flex items-center gap-2"
+          >
+            📄 Voir les documents
+          </button>
+          <button
+            onClick={handleEnterProfessorView}
+            className="px-4 py-2 bg-secondary text-white text-sm rounded-md hover:bg-secondary-hover flex items-center gap-2"
+          >
+            <Eye size={16} />
+            Voir comme professeur
+          </button>
+        </div>
+      </div>
+
       {/* Encart Commentaires */}
-      <div className="container mx-auto px-4 pt-8 max-w-6xl">
+      <div className="container mx-auto px-4 pt-12 max-w-6xl">
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="flex justify-between items-start mb-4">
             <h3 className="text-lg font-semibold text-gray-900">
               Commentaires admin
             </h3>
-            <div className="flex gap-3">
+            {!isEditingComments && (
               <button
-                onClick={() => navigate('/admin/professeur-documents')}
-                className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 flex items-center gap-2"
+                onClick={() => setIsEditingComments(true)}
+                className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
               >
-                📄 Voir les documents
+                Edit ✏️
               </button>
-              {!isEditingComments && (
-                <button
-                  onClick={() => setIsEditingComments(true)}
-                  className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                >
-                  Edit ✏️
-                </button>
-              )}
-            </div>
+            )}
           </div>
 
           {isEditingComments ? (
@@ -415,139 +495,7 @@ export const ProfesseurDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Section Rendez-vous */}
-      <div className="container mx-auto px-4 pt-6 max-w-6xl">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Rendez-vous
-              </h3>
-              <p className="text-sm text-gray-500">
-                Tous les rendez-vous du professeur
-              </p>
-            </div>
-            {currentUserRole === "admin" && (
-              <button
-                onClick={() => handleOpenRdvModal()}
-                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 flex items-center gap-2"
-              >
-                + Ajouter un rendez-vous
-              </button>
-            )}
-          </div>
-
-          {isLoadingRdvs ? (
-            <div className="text-center py-8 text-gray-500">
-              Chargement des rendez-vous...
-            </div>
-          ) : rdvs.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Aucun rendez-vous pour ce professeur
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Heure
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type RDV
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Avec
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Statut
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Notes
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {rdvs.map((rdv) => (
-                    <tr key={rdv._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(rdv.date).toLocaleDateString("fr-FR")}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {rdv.time}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getRdvTypeLabel(rdv)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getRdvPartnerName(rdv)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 text-xs rounded-full ${
-                            rdv.status === "planifie"
-                              ? "bg-blue-100 text-blue-800"
-                              : rdv.status === "realise"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {rdv.status === "planifie"
-                            ? "Planifié"
-                            : rdv.status === "realise"
-                            ? "Réalisé"
-                            : "Annulé"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 max-w-xs truncate">
-                        {rdv.notes || "-"}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm">
-                        <div className="flex gap-2">
-                          {canEditRdv(rdv) ? (
-                            <>
-                              <button
-                                onClick={() => handleOpenRdvModal(rdv)}
-                                className="text-blue-600 hover:text-blue-900"
-                                title="Modifier"
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                onClick={() => handleDeleteRdv(rdv._id)}
-                                className="text-red-600 hover:text-red-900"
-                                title="Supprimer"
-                              >
-                                🗑️
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              onClick={() => handleOpenRdvModal(rdv)}
-                              className="text-gray-600 hover:text-gray-900"
-                              title="Consulter"
-                            >
-                              👁️
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-12 max-w-6xl">
         <Tabs defaultValue="identite" className="w-full">
           <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
             <TabsTrigger
@@ -555,12 +503,6 @@ export const ProfesseurDetails: React.FC = () => {
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
             >
               Identité
-            </TabsTrigger>
-            <TabsTrigger
-              value="coordonnees"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
-            >
-              Coordonnées
             </TabsTrigger>
             <TabsTrigger
               value="cv"
@@ -574,10 +516,17 @@ export const ProfesseurDetails: React.FC = () => {
             >
               Situation actuelle
             </TabsTrigger>
+            <TabsTrigger
+              value="rdv"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
+            >
+              Rendez-vous
+            </TabsTrigger>
           </TabsList>
 
           {/* Section Identité */}
           <TabsContent value="identite" className="mt-6">
+            {/* Card Identité */}
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative">
               <div className="flex justify-between items-start mb-6">
                 <div>
@@ -588,9 +537,9 @@ export const ProfesseurDetails: React.FC = () => {
                     Informations personnelles du professeur
                   </p>
                 </div>
-                {!isEditing && (
+                {!isEditingIdentite && (
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => setIsEditingIdentite(true)}
                     className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
                   >
                     Edit ✏️
@@ -598,7 +547,7 @@ export const ProfesseurDetails: React.FC = () => {
                 )}
               </div>
 
-              {isEditing ? (
+              {isEditingIdentite ? (
                 <>
                   <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                     {renderEditField("Genre *", "gender", "select", [
@@ -630,13 +579,13 @@ export const ProfesseurDetails: React.FC = () => {
                   </div>
                   <div className="flex gap-3 mt-6">
                     <button
-                      onClick={handleSave}
+                      onClick={handleSaveIdentite}
                       className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
                     >
                       Sauvegarder
                     </button>
                     <button
-                      onClick={handleCancel}
+                      onClick={handleCancelIdentite}
                       className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
                     >
                       Annuler
@@ -664,11 +613,9 @@ export const ProfesseurDetails: React.FC = () => {
                 </div>
               )}
             </div>
-          </TabsContent>
 
-          {/* Section Coordonnées */}
-          <TabsContent value="coordonnees" className="mt-6">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative">
+            {/* Card Coordonnées */}
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative mt-6">
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -678,9 +625,9 @@ export const ProfesseurDetails: React.FC = () => {
                     Informations de contact et adresse
                   </p>
                 </div>
-                {!isEditing && (
+                {!isEditingCoordonnees && (
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => setIsEditingCoordonnees(true)}
                     className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
                   >
                     Edit ✏️
@@ -688,7 +635,7 @@ export const ProfesseurDetails: React.FC = () => {
                 )}
               </div>
 
-              {isEditing ? (
+              {isEditingCoordonnees ? (
                 <>
                   <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                     {renderEditField("Email *", "email", "email")}
@@ -740,13 +687,13 @@ export const ProfesseurDetails: React.FC = () => {
                   </div>
                   <div className="flex gap-3 mt-6">
                     <button
-                      onClick={handleSave}
+                      onClick={handleSaveCoordonnees}
                       className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
                     >
                       Sauvegarder
                     </button>
                     <button
-                      onClick={handleCancel}
+                      onClick={handleCancelCoordonnees}
                       className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
                     >
                       Annuler
@@ -794,9 +741,9 @@ export const ProfesseurDetails: React.FC = () => {
                     Expérience professionnelle et compétences
                   </p>
                 </div>
-                {!isEditing && (
+                {!isEditingCV && (
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => setIsEditingCV(true)}
                     className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
                   >
                     Edit ✏️
@@ -804,7 +751,7 @@ export const ProfesseurDetails: React.FC = () => {
                 )}
               </div>
 
-              {isEditing ? (
+              {isEditingCV ? (
                 <>
                   <div className="space-y-6">
                     <div>
@@ -900,13 +847,13 @@ export const ProfesseurDetails: React.FC = () => {
                   </div>
                   <div className="flex gap-3 mt-6">
                     <button
-                      onClick={handleSave}
+                      onClick={handleSaveCV}
                       className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
                     >
                       Sauvegarder
                     </button>
                     <button
-                      onClick={handleCancel}
+                      onClick={handleCancelCV}
                       className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
                     >
                       Annuler
@@ -983,9 +930,9 @@ export const ProfesseurDetails: React.FC = () => {
                     actuelle
                   </p>
                 </div>
-                {!isEditing && (
+                {!isEditingSituation && (
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => setIsEditingSituation(true)}
                     className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
                   >
                     Edit ✏️
@@ -993,7 +940,7 @@ export const ProfesseurDetails: React.FC = () => {
                 )}
               </div>
 
-              {isEditing ? (
+              {isEditingSituation ? (
                 <>
                   <div className="space-y-3">
                     {situationOptions.map((option) => (
@@ -1026,13 +973,13 @@ export const ProfesseurDetails: React.FC = () => {
                   </div>
                   <div className="flex gap-3 mt-6">
                     <button
-                      onClick={handleSave}
+                      onClick={handleSaveSituation}
                       className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
                     >
                       Sauvegarder
                     </button>
                     <button
-                      onClick={handleCancel}
+                      onClick={handleCancelSituation}
                       className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
                     >
                       Annuler
@@ -1064,6 +1011,186 @@ export const ProfesseurDetails: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Card IBAN */}
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative mt-6">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  IBAN
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Coordonnées bancaires du professeur
+                </p>
+              </div>
+
+              {teacher.iban ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between bg-gray-50 rounded-md p-4 border border-gray-200">
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">IBAN</div>
+                      <div className="text-base font-mono text-gray-900">
+                        {formatIban(teacher.iban)}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleCopyIban(teacher.iban!)}
+                      className="ml-4 px-4 py-2 bg-primary text-white text-sm rounded-md hover:bg-primary-hover transition-colors flex items-center gap-2"
+                      title="Copier l'IBAN"
+                    >
+                      {ibanCopied ? (
+                        <>
+                          <span>✓</span>
+                          <span>Copié</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>📋</span>
+                          <span>Copier</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <Alert className="bg-warning/10 border-warning text-warning">
+                  <AlertDescription className="text-sm">
+                    ⚠️ L'IBAN du professeur n'est pas renseigné. Veuillez ajouter les coordonnées bancaires.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Section Rendez-vous */}
+          <TabsContent value="rdv" className="mt-6">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Rendez-vous
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Tous les rendez-vous du professeur
+                  </p>
+                </div>
+                {currentUserRole === "admin" && (
+                  <button
+                    onClick={() => handleOpenRdvModal()}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 flex items-center gap-2"
+                  >
+                    + Ajouter un rendez-vous
+                  </button>
+                )}
+              </div>
+
+              {isLoadingRdvs ? (
+                <div className="text-center py-8 text-gray-500">
+                  Chargement des rendez-vous...
+                </div>
+              ) : rdvs.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Aucun rendez-vous pour ce professeur
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Heure
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Type RDV
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Avec
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Statut
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Notes
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {rdvs.map((rdv) => (
+                        <tr key={rdv._id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {new Date(rdv.date).toLocaleDateString("fr-FR")}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {rdv.time}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {getRdvTypeLabel(rdv)}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {getRdvPartnerName(rdv)}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-2 py-1 text-xs rounded-full ${
+                                rdv.status === "planifie"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : rdv.status === "realise"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {rdv.status === "planifie"
+                                ? "Planifié"
+                                : rdv.status === "realise"
+                                ? "Réalisé"
+                                : "Annulé"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900 max-w-xs truncate">
+                            {rdv.notes || "-"}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm">
+                            <div className="flex gap-2">
+                              {canEditRdv(rdv) ? (
+                                <>
+                                  <button
+                                    onClick={() => handleOpenRdvModal(rdv)}
+                                    className="text-blue-600 hover:text-blue-900"
+                                    title="Modifier"
+                                  >
+                                    ✏️
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteRdv(rdv._id)}
+                                    className="text-red-600 hover:text-red-900"
+                                    title="Supprimer"
+                                  >
+                                    🗑️
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  onClick={() => handleOpenRdvModal(rdv)}
+                                  className="text-gray-600 hover:text-gray-900"
+                                  title="Consulter"
+                                >
+                                  👁️
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -1077,7 +1204,7 @@ export const ProfesseurDetails: React.FC = () => {
           data={{
             ...(selectedRdv || {}),
             rdvId: selectedRdv?._id,
-            professorId: teacherId,
+            professorId: professorId,
           }}
           onSuccess={handleRdvSuccess}
           mode={selectedRdv && !canEditRdv(selectedRdv) ? "view" : "edit"}

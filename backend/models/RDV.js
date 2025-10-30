@@ -2,25 +2,30 @@ const mongoose = require("mongoose");
 
 const rdvSchema = new mongoose.Schema(
   {
-    family: {
-      id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Family",
-        required: [true, "ID de la famille requis"],
-      }
+    familyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Family",
+      required: [true, "ID de la famille requis"],
     },
-    admins: [
-      {
-        id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: [true, "ID de l'admin requis"],
-        },
-      },
-    ],
+    assignedAdminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "ID de l'admin requis"],
+    },
     date: {
       type: Date,
       required: [true, "Date du rendez-vous requise"],
+    },
+    time: {
+      type: String,
+      required: [true, "Heure du rendez-vous requise"],
+      validate: {
+        validator: function(v) {
+          // Format HH:MM (ex: "14:30")
+          return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+        },
+        message: "Format d'heure invalide. Utilisez le format HH:MM (ex: 14:30)"
+      }
     },
     type: {
       type: String,
@@ -51,8 +56,8 @@ const rdvSchema = new mongoose.Schema(
 );
 
 // Index composés pour optimiser les requêtes
-rdvSchema.index({ "family.id": 1, date: 1 }); // Recherche RDV par famille + tri date
-rdvSchema.index({ "admins.id": 1, date: 1 }); // Recherche RDV par admin + tri date
+rdvSchema.index({ familyId: 1, date: 1 }); // Recherche RDV par famille + tri date
+rdvSchema.index({ assignedAdminId: 1, date: 1 }); // Recherche RDV par admin + tri date
 rdvSchema.index({ status: 1 }); // Recherche par statut
 
 // Méthode d'instance pour formater la date

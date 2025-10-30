@@ -50,8 +50,8 @@ class FamilyService {
         User.findById(family.createdBy.userId)
           .select("firstName lastName")
           .lean(),
-        RendezVous.find({ "family.id": family._id })
-          .populate("admins.id", "firstName lastName")
+        RendezVous.find({ familyId: family._id })
+          .populate("assignedAdminId", "firstName lastName")
           .sort({ date: -1 })
           .lean(),
         Subject.find({ _id: { $in: subjectIds } })
@@ -63,7 +63,11 @@ class FamilyService {
       const formattedRdvs = rdvs.map((rdv) => ({
         ...rdv,
         id: rdv._id,
-        admins: rdv.admins.map((admin) => ({ id: admin.id._id, ...admin.id })),
+        assignedAdmin: rdv.assignedAdminId ? {
+          id: rdv.assignedAdminId._id,
+          firstName: rdv.assignedAdminId.firstName,
+          lastName: rdv.assignedAdminId.lastName,
+        } : null,
       }));
 
       // Formater les subjects avec nom selon dataFlow.md
@@ -593,7 +597,7 @@ class FamilyService {
 
       // 2. Supprimer tous les RDV liés à cette famille
       const deletedRdvs = await RendezVous.deleteMany({
-        "family.id": familyId,
+        familyId: familyId,
       });
 
       // 3. Supprimer la famille elle-même

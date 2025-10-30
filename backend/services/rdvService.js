@@ -7,8 +7,8 @@ class RdvService {
    * @returns {Promise<Array>} Liste des RDV
    */
   static async getRdvsByFamily(familyId) {
-    return await RDV.find({ "family.id": familyId })
-      .populate("admins.id", "firstName lastName")
+    return await RDV.find({ familyId: familyId })
+      .populate("assignedAdminId", "firstName lastName")
       .sort({ date: 1 });
   }
 
@@ -20,7 +20,7 @@ class RdvService {
    * @returns {Promise<Array>} Liste des RDV
    */
   static async getRdvsByAdmin(adminId, startDate = null, endDate = null) {
-    const query = { "admins.id": adminId };
+    const query = { assignedAdminId: adminId };
 
     if (startDate || endDate) {
       query.date = {};
@@ -29,7 +29,7 @@ class RdvService {
     }
 
     return await RDV.find(query)
-      .populate("family.id", "primaryContact.firstName primaryContact.lastName")
+      .populate("familyId", "primaryContact.firstName primaryContact.lastName")
       .sort({ date: 1 });
   }
 
@@ -43,7 +43,7 @@ class RdvService {
   static async checkAdminAvailability(date, adminId, excludeId = null) {
     const query = {
       date: new Date(date),
-      "admins.id": adminId,
+      assignedAdminId: adminId,
       status: "planned",
     };
 
