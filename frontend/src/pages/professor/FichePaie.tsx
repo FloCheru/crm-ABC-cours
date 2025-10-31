@@ -19,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import { couponService } from "../../services/couponService";
 import type { Coupon } from "../../types/coupon";
 import { BookOpen, FileText, Eye, Download } from "lucide-react";
 
@@ -145,9 +144,11 @@ export const FichePaie: React.FC = () => {
             familyName: "Famille Martin",
             subjectName: "Mathématiques",
             professorSalary: 45.00,
+            updatedAt: new Date(2025, 9, 15).toISOString(),
             sessionData: {
               sessionDate: new Date(2025, 9, 15).toISOString(), // 15 octobre 2025
               sessionDuration: 2,
+              sessionLocation: "home",
             },
           },
           {
@@ -158,9 +159,11 @@ export const FichePaie: React.FC = () => {
             familyName: "Famille Dubois",
             subjectName: "Physique-Chimie",
             professorSalary: 50.00,
+            updatedAt: new Date(2025, 9, 18).toISOString(),
             sessionData: {
               sessionDate: new Date(2025, 9, 18).toISOString(), // 18 octobre 2025
               sessionDuration: 1.5,
+              sessionLocation: "professor",
             },
           },
           {
@@ -171,9 +174,11 @@ export const FichePaie: React.FC = () => {
             familyName: "Famille Leroy",
             subjectName: "Français",
             professorSalary: 40.00,
+            updatedAt: new Date(2025, 9, 20).toISOString(),
             sessionData: {
               sessionDate: new Date(2025, 9, 20).toISOString(), // 20 octobre 2025
               sessionDuration: 2,
+              sessionLocation: "home",
             },
           },
           {
@@ -184,9 +189,11 @@ export const FichePaie: React.FC = () => {
             familyName: "Famille Bernard",
             subjectName: "Mathématiques",
             professorSalary: 60.00,
+            updatedAt: new Date(2025, 9, 22).toISOString(),
             sessionData: {
               sessionDate: new Date(2025, 9, 22).toISOString(), // 22 octobre 2025
               sessionDuration: 2,
+              sessionLocation: "online",
             },
           },
           {
@@ -197,9 +204,11 @@ export const FichePaie: React.FC = () => {
             familyName: "Famille Petit",
             subjectName: "Anglais",
             professorSalary: 35.00,
+            updatedAt: new Date(2025, 9, 25).toISOString(),
             sessionData: {
               sessionDate: new Date(2025, 9, 25).toISOString(), // 25 octobre 2025
               sessionDuration: 1,
+              sessionLocation: "home",
             },
           },
           {
@@ -210,9 +219,11 @@ export const FichePaie: React.FC = () => {
             familyName: "Famille Martin",
             subjectName: "Mathématiques",
             professorSalary: 45.00,
+            updatedAt: new Date(2025, 8, 12).toISOString(),
             sessionData: {
               sessionDate: new Date(2025, 8, 12).toISOString(), // 12 septembre 2025
               sessionDuration: 2,
+              sessionLocation: "home",
             },
           },
           {
@@ -223,9 +234,11 @@ export const FichePaie: React.FC = () => {
             familyName: "Famille Moreau",
             subjectName: "SVT",
             professorSalary: 42.00,
+            updatedAt: new Date(2025, 8, 18).toISOString(),
             sessionData: {
               sessionDate: new Date(2025, 8, 18).toISOString(), // 18 septembre 2025
               sessionDuration: 1.5,
+              sessionLocation: "professor",
             },
           },
         ];

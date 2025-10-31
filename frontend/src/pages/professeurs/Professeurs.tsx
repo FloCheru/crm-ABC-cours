@@ -477,7 +477,7 @@ export const Professeurs: React.FC = () => {
           {/* Bouton statut actif/inactif */}
           <Button
             size="sm"
-            variant={row.isActive ? "success" : "outline"}
+            variant={row.isActive ? "primary" : "outline"}
             onClick={(e) => {
               e.stopPropagation();
               handleToggleActiveStatus(row._id);
