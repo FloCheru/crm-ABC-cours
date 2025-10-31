@@ -350,7 +350,7 @@ export const FichePaie: React.FC = () => {
                 <Label htmlFor="month">Mois</Label>
                 <Select
                   value={filters.month.toString()}
-                  onValueChange={(value) =>
+                  onValueChange={(value: string) =>
                     setFilters((prev) => ({ ...prev, month: parseInt(value) }))
                   }
                 >
@@ -371,7 +371,7 @@ export const FichePaie: React.FC = () => {
                 <Label htmlFor="year">Année</Label>
                 <Select
                   value={filters.year.toString()}
-                  onValueChange={(value) =>
+                  onValueChange={(value: string) =>
                     setFilters((prev) => ({ ...prev, year: parseInt(value) }))
                   }
                 >
