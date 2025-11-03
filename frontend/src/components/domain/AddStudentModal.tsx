@@ -220,7 +220,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
               <Label htmlFor="grade">Classe</Label>
               <Select
                 value={formData.grade}
-                onValueChange={(value) =>
+                onValueChange={(value: string) =>
                   setFormData({ ...formData, grade: value })
                 }
               >
