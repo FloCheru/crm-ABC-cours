@@ -143,9 +143,22 @@ class FamilyService {
     return response.student;
   }
 
+  async checkStudentCanDelete(
+    familyId: string,
+    studentId: string
+  ): Promise<{ canDelete: boolean; unusedCoupons: number; message: string }> {
+    console.log("🔍 [SERVICE] checkStudentCanDelete appelé:", { familyId, studentId });
+    const response = await apiClient.get<{ canDelete: boolean; unusedCoupons: number; message: string }>(
+      `/api/families/${familyId}/students/${studentId}/check-active`
+    );
+    console.log("📊 [SERVICE] checkStudentCanDelete réponse:", response);
+    return response;
+  }
+
   async removeStudent(_familyId: string, studentId: string): Promise<void> {
+    console.log("🗑️ [SERVICE] removeStudent appelé:", { familyId: _familyId, studentId });
     await apiClient.delete(`/api/families/${_familyId}/students/${studentId}`);
-    console.log(`✅ Étudiant ${studentId} retiré de la famille ${_familyId}`);
+    console.log(`✅ [SERVICE] Étudiant ${studentId} retiré de la famille ${_familyId}`);
   }
 
   async updateFamily(
@@ -189,6 +202,11 @@ class FamilyService {
       };
     }
   ): Promise<Family> {
+    console.log("🔷 [SERVICE] updatePrimaryContact appelé:", {
+      familyId,
+      contactData
+    });
+
     // Convertir Date en ISO string pour l'API
     const apiData = {
       ...contactData,
@@ -197,10 +215,15 @@ class FamilyService {
         : contactData.birthDate,
     };
 
+    console.log("🔷 [SERVICE] Envoi requête PATCH à /api/families/" + familyId + "/primary-contact");
+    console.log("🔷 [SERVICE] Données envoyées:", apiData);
+
     const response = (await apiClient.patch(
       `/api/families/${familyId}/primary-contact`,
       apiData
     )) as FamilyResponse;
+
+    console.log("🔷 [SERVICE] Réponse reçue:", response);
     return response.family;
   }
 
@@ -245,6 +268,48 @@ class FamilyService {
       demandeData
     )) as FamilyResponse;
     return response.family;
+  }
+
+  /**
+   * Valide si une famille a toutes les informations requises pour créer une NDR
+   * @param family - La famille à valider
+   * @returns Un objet contenant isComplete (boolean) et missingFields (string[])
+   */
+  validateFamilyCompleteness(family: Family): {
+    isComplete: boolean;
+    missingFields: string[];
+  } {
+    const missingFields: string[] = [];
+
+    // Vérification des champs du contact principal
+    if (!family.primaryContact.firstName?.trim()) {
+      missingFields.push("Prénom");
+    }
+    if (!family.primaryContact.lastName?.trim()) {
+      missingFields.push("Nom");
+    }
+    if (!family.primaryContact.primaryPhone?.trim()) {
+      missingFields.push("Téléphone");
+    }
+    if (!family.primaryContact.email?.trim()) {
+      missingFields.push("Email");
+    }
+
+    // Vérification de l'adresse (dans primaryContact)
+    if (!family.primaryContact.address?.street?.trim()) {
+      missingFields.push("Rue");
+    }
+    if (!family.primaryContact.address?.city?.trim()) {
+      missingFields.push("Ville");
+    }
+    if (!family.primaryContact.address?.postalCode?.trim()) {
+      missingFields.push("Code postal");
+    }
+
+    return {
+      isComplete: missingFields.length === 0,
+      missingFields,
+    };
   }
 }
 

@@ -249,6 +249,10 @@ class FamilyService {
 
   static async updatePrimaryContact(familyId, primaryContactData) {
     try {
+      console.log("🔶 [BACKEND SERVICE] updatePrimaryContact appelé");
+      console.log("🔶 [BACKEND SERVICE] familyId:", familyId);
+      console.log("🔶 [BACKEND SERVICE] primaryContactData reçu:", JSON.stringify(primaryContactData, null, 2));
+
       const family = await Family.findByIdAndUpdate(
         familyId,
         { primaryContact: primaryContactData },
@@ -259,6 +263,8 @@ class FamilyService {
       if (!family) {
         return null;
       }
+
+      console.log("🔶 [BACKEND SERVICE] Famille après update - primaryContact:", JSON.stringify(family.primaryContact, null, 2));
 
       // Invalidate cache after successful update
       CacheManager.invalidateFamily(familyId);
@@ -530,6 +536,11 @@ class FamilyService {
   static async addStudent(familyId, studentData) {
     try {
       const mongoose = require("mongoose");
+
+      // Validation du familyId
+      if (!familyId || familyId === "undefined" || !mongoose.Types.ObjectId.isValid(familyId)) {
+        throw new Error("familyId invalide ou manquant");
+      }
 
       // Validation des données élève
       this.validateStudentData(studentData);

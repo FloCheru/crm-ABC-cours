@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
-  
+
   PageHeader,
   Container,
   SummaryCard,
@@ -15,6 +15,7 @@ import type { NDR } from "../../../services/ndrService";
 import { familyService } from "../../../services/familyService";
 import type { Family } from "../../../types/family";
 import type { Subject } from "../../../types/subject";
+import { getDepartmentFromPostalCode } from "../../../utils";
 
 // Constantes de traduction
 const statusLabels: Record<string, string> = {
@@ -49,9 +50,7 @@ const paymentMethodOptions = [
 
 export const NdrDetails: React.FC = () => {
   const navigate = useNavigate();
-
-  // Récupérer l'ID depuis localStorage
-  const ndrId = localStorage.getItem("ndrId");
+  const { ndrId } = useParams<{ ndrId: string }>();
 
   const [ndr, setNdr] = useState<NDR | null>(null);
   const [family, setFamily] = useState<Family | null>(null);
@@ -280,7 +279,7 @@ export const NdrDetails: React.FC = () => {
                 />
                 <EditableField
                   label="Département"
-                  value={family?.address?.postalCode?.substring(0, 2) || "N/A"}
+                  value={getDepartmentFromPostalCode(family?.primaryContact.address?.postalCode || "") || "N/A"}
                   readOnly
                 />
                 <EditableField

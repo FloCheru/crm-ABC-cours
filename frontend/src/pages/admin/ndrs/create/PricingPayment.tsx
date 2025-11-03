@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { toast } from "sonner";
 import { ndrService } from "../../../../services/ndrService";
 import { PageHeader, Container, Button } from "../../../../components";
 import { Input } from "../../../../components/ui/input";
 import { Switch } from "../../../../components/ui/switch";
 import { Label } from "../../../../components/ui/label";
+import { ErrorMessage } from "../../../../components/ui/error-message";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../../../components/ui/table";
 import {
   Command,
   CommandEmpty,
@@ -41,14 +51,10 @@ export const PricingPayment: React.FC = () => {
     { value: "credit", label: "Crédit" },
   ];
 
-  const deadlinesNumbers = [
-    { value: "1", label: "1 échéance" },
-    { value: "2", label: "2 échéances" },
-    { value: "3", label: "3 échéances" },
-    { value: "4", label: "4 échéances" },
-    { value: "6", label: "6 échéances" },
-    { value: "12", label: "12 échéances" },
-  ];
+  const deadlinesNumbers = Array.from({ length: 12 }, (_, i) => ({
+    value: (i + 1).toString(),
+    label: `${i + 1} échéance${i + 1 > 1 ? 's' : ''}`,
+  }));
 
   const deadlinesDays = Array.from({ length: 28 }, (_, i) => ({
     value: (i + 1).toString(),
@@ -66,6 +72,7 @@ export const PricingPayment: React.FC = () => {
     hasDeadlines: false,
     deadlinesNumber: "",
     deadlinesDay: "",
+    deadlineDates: [] as { date: string; amount: number }[],
   });
 
   // États pour les Combobox
@@ -76,12 +83,20 @@ export const PricingPayment: React.FC = () => {
     deadlinesDay: false,
   });
 
+  // États pour les erreurs de validation
+  const [validationErrors, setValidationErrors] = useState({
+    hourlyRate: "",
+    quantity: "",
+    charges: "",
+    paymentMethod: "",
+    paymentType: "",
+    deadlines: "",
+  });
+
   useEffect(() => {
     const ndrData = localStorage.getItem("ndrData");
-    const from = localStorage.getItem("from");
     if (ndrData) {
       console.log("ndrData dans PricingPayment:", JSON.parse(ndrData));
-      console.log("from dans PricingPayment:", from);
     } else {
       console.log("Aucune ndrData trouvée dans localStorage");
     }
@@ -98,19 +113,83 @@ export const PricingPayment: React.FC = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const isFormValid = () => {
-    return (
-      formData.paymentMethod &&
-      formData.paymentType &&
-      formData.hourlyRate > 0 &&
-      formData.quantity > 0 &&
-      formData.charges >= 0
-    );
+  const handleDeadlinesNumberChange = (numStr: string) => {
+    const num = parseInt(numStr);
+    updateFormData("deadlinesNumber", numStr);
+
+    // Calculer le montant par échéance
+    const amountPerDeadline = calculateDeadlineAmount(num);
+
+    // Réinitialiser les dates avec le bon nombre d'échéances
+    const newDates = Array.from({ length: num }, () => ({
+      date: "",
+      amount: Math.round(amountPerDeadline * 100) / 100, // Arrondir à 2 décimales
+    }));
+    setFormData((prev) => ({ ...prev, deadlineDates: newDates }));
+  };
+
+  const handleDeadlineChange = (index: number, field: "date" | "amount", value: string | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      deadlineDates: prev.deadlineDates.map((deadline, i) =>
+        i === index ? { ...deadline, [field]: value } : deadline
+      ),
+    }));
+  };
+
+  const calculateDeadlineAmount = (numDeadlines: number): number => {
+    const baseTotalAmount = formData.hourlyRate * formData.quantity;
+    return numDeadlines > 0 ? baseTotalAmount / numDeadlines : 0;
+  };
+
+  const validateForm = () => {
+    const errors = {
+      hourlyRate: "",
+      quantity: "",
+      charges: "",
+      paymentMethod: "",
+      paymentType: "",
+      deadlines: "",
+    };
+
+    // Validation Tarification - champs individuels
+    if (formData.hourlyRate <= 0) {
+      errors.hourlyRate = "Tarif horaire requis";
+    }
+
+    if (formData.quantity <= 0) {
+      errors.quantity = "Quantité requise";
+    }
+
+    if (formData.charges < 0) {
+      errors.charges = "Frais ne peuvent pas être négatifs";
+    }
+
+    // Validation Mode de paiement
+    if (!formData.paymentMethod) {
+      errors.paymentMethod = "Méthode de paiement requise";
+    } else if (!formData.paymentType) {
+      errors.paymentType = "Type de paiement requis";
+    }
+
+    // Validation Échéances
+    if (formData.hasDeadlines) {
+      const incompleteCount = formData.deadlineDates.filter(
+        (d) => !d.date || d.amount <= 0
+      ).length;
+
+      if (incompleteCount > 0) {
+        errors.deadlines = `${incompleteCount} échéance${incompleteCount > 1 ? 's' : ''} incomplète${incompleteCount > 1 ? 's' : ''}. Veuillez remplir toutes les dates et montants, ou désactiver les échéances.`;
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.values(errors).every((error) => !error);
   };
 
   const handleFinish = async () => {
-    if (!isFormValid()) {
-      alert("Veuillez remplir tous les champs obligatoires");
+    if (!validateForm()) {
+      toast.error("Veuillez corriger les erreurs avant de continuer");
       return;
     }
 
@@ -122,44 +201,48 @@ export const PricingPayment: React.FC = () => {
       ndrData = JSON.parse(existingNdrData);
     }
 
+    // Filtrer les deadlines incomplètes avant envoi
+    const completedDeadlines =
+      formData.hasDeadlines && formData.deadlineDates.length > 0
+        ? formData.deadlineDates.filter((d) => d.date && d.amount > 0)
+        : [];
+
     // Compléter avec les données de tarification
+    // IMPORTANT: Exclure explicitement l'ancien deadlines du spread
+    const { deadlines: _, ...cleanNdrData } = ndrData;
+
     const completedNdrData = {
-      ...ndrData,
+      ...cleanNdrData,
       paymentMethod: formData.paymentMethod,
       paymentType: formData.paymentType,
       hourlyRate: formData.hourlyRate,
       quantity: formData.quantity,
       charges: formData.charges,
       notes: formData.notes || undefined,
-      deadlines: formData.hasDeadlines
-        ? {
-            deadlinesNumber: parseInt(formData.deadlinesNumber),
-            deadlinesDay: parseInt(formData.deadlinesDay),
-          }
-        : undefined,
+      deadlines:
+        formData.hasDeadlines && completedDeadlines.length > 0
+          ? completedDeadlines
+          : undefined,
     };
-    console.log("completedNdrData", completedNdrData);
     try {
-      await ndrService.createNDR(completedNdrData);
-
-      // Récupérer l'origine avant de nettoyer localStorage
-      const from = localStorage.getItem("from") || "prospects";
+      const createdNdr = await ndrService.createNDR(completedNdrData);
 
       // Nettoyer localStorage après succès
       localStorage.removeItem("ndrData");
-      localStorage.removeItem("from");
+      localStorage.removeItem("selectedFamily");
 
-      // Retourner à la page d'origine
-      navigate(from === "ndrs" ? "/ndrs" : "/clients");
+      toast.success("NDR créée avec succès");
+
+      // Rediriger vers NdrDetails avec la nouvelle NDR
+      navigate(`/admin/ndrs/${createdNdr._id}`);
     } catch (error) {
       console.error("Erreur lors de la création de la NDR:", error);
-      alert("Erreur lors de la création de la NDR. Veuillez réessayer.");
+      toast.error("Erreur lors de la création de la NDR. Veuillez réessayer.");
     }
   };
 
   const handleBack = () => {
-    const from = localStorage.getItem("from") || "prospects";
-    navigate(`/admin/beneficiaries-subjects?from=${from}`);
+    navigate("/admin/beneficiaries-subjects");
   };
 
   return (
@@ -187,6 +270,7 @@ export const PricingPayment: React.FC = () => {
                   updateFormData("hourlyRate", parseFloat(e.target.value) || 0)
                 }
               />
+              <ErrorMessage>{validationErrors.hourlyRate}</ErrorMessage>
             </div>
             <div>
               <Label htmlFor="quantity">Quantité (heures) *</Label>
@@ -200,6 +284,7 @@ export const PricingPayment: React.FC = () => {
                   updateFormData("quantity", parseInt(e.target.value) || 0)
                 }
               />
+              <ErrorMessage>{validationErrors.quantity}</ErrorMessage>
             </div>
             <div>
               <Label htmlFor="charges">Frais supplémentaires (€) *</Label>
@@ -214,6 +299,7 @@ export const PricingPayment: React.FC = () => {
                   updateFormData("charges", parseFloat(e.target.value) || 0)
                 }
               />
+              <ErrorMessage>{validationErrors.charges}</ErrorMessage>
             </div>
           </div>
         </div>
@@ -274,6 +360,7 @@ export const PricingPayment: React.FC = () => {
                   </Command>
                 </PopoverContent>
               </Popover>
+              <ErrorMessage>{validationErrors.paymentMethod}</ErrorMessage>
             </div>
             <div>
               <Label>Type de paiement *</Label>
@@ -327,6 +414,7 @@ export const PricingPayment: React.FC = () => {
                   </Command>
                 </PopoverContent>
               </Popover>
+              <ErrorMessage>{validationErrors.paymentType}</ErrorMessage>
             </div>
           </div>
         </div>
@@ -348,113 +436,167 @@ export const PricingPayment: React.FC = () => {
           </div>
 
           {formData.hasDeadlines && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Nombre d'échéances</Label>
-                <Popover
-                  open={comboboxStates.deadlinesNumber}
-                  onOpenChange={() => toggleCombobox("deadlinesNumber")}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={comboboxStates.deadlinesNumber}
-                      className="w-full justify-between"
-                    >
-                      {formData.deadlinesNumber
-                        ? deadlinesNumbers.find(
-                            (num) => num.value === formData.deadlinesNumber
-                          )?.label
-                        : "Sélectionner..."}
-                      <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandList>
-                        <CommandEmpty>Aucun nombre trouvé.</CommandEmpty>
-                        <CommandGroup>
-                          {deadlinesNumbers.map((num) => (
-                            <CommandItem
-                              key={num.value}
-                              value={num.value}
-                              onSelect={() => {
-                                updateFormData("deadlinesNumber", num.value);
-                                toggleCombobox("deadlinesNumber");
-                              }}
-                            >
-                              {num.label}
-                              <Check
-                                className={cn(
-                                  "ml-auto",
-                                  formData.deadlinesNumber === num.value
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Nombre d'échéances</Label>
+                  <Popover
+                    open={comboboxStates.deadlinesNumber}
+                    onOpenChange={() => toggleCombobox("deadlinesNumber")}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={comboboxStates.deadlinesNumber}
+                        className="w-full justify-between"
+                      >
+                        {formData.deadlinesNumber
+                          ? deadlinesNumbers.find(
+                              (num) => num.value === formData.deadlinesNumber
+                            )?.label
+                          : "Sélectionner..."}
+                        <ChevronsUpDown className="opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandList>
+                          <CommandEmpty>Aucun nombre trouvé.</CommandEmpty>
+                          <CommandGroup>
+                            {deadlinesNumbers.map((num) => (
+                              <CommandItem
+                                key={num.value}
+                                value={num.value}
+                                onSelect={() => {
+                                  handleDeadlinesNumberChange(num.value);
+                                  toggleCombobox("deadlinesNumber");
+                                }}
+                              >
+                                {num.label}
+                                <Check
+                                  className={cn(
+                                    "ml-auto",
+                                    formData.deadlinesNumber === num.value
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label>Jour de prélèvement</Label>
+                  <Popover
+                    open={comboboxStates.deadlinesDay}
+                    onOpenChange={() => toggleCombobox("deadlinesDay")}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={comboboxStates.deadlinesDay}
+                        className="w-full justify-between"
+                      >
+                        {formData.deadlinesDay
+                          ? deadlinesDays.find(
+                              (day) => day.value === formData.deadlinesDay
+                            )?.label
+                          : "Sélectionner..."}
+                        <ChevronsUpDown className="opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Rechercher un jour..." />
+                        <CommandList>
+                          <CommandEmpty>Aucun jour trouvé.</CommandEmpty>
+                          <CommandGroup>
+                            {deadlinesDays.map((day) => (
+                              <CommandItem
+                                key={day.value}
+                                value={day.value}
+                                onSelect={() => {
+                                  updateFormData("deadlinesDay", day.value);
+                                  toggleCombobox("deadlinesDay");
+                                }}
+                              >
+                                {day.label}
+                                <Check
+                                  className={cn(
+                                    "ml-auto",
+                                    formData.deadlinesDay === day.value
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
-              <div>
-                <Label>Jour de prélèvement</Label>
-                <Popover
-                  open={comboboxStates.deadlinesDay}
-                  onOpenChange={() => toggleCombobox("deadlinesDay")}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={comboboxStates.deadlinesDay}
-                      className="w-full justify-between"
-                    >
-                      {formData.deadlinesDay
-                        ? deadlinesDays.find(
-                            (day) => day.value === formData.deadlinesDay
-                          )?.label
-                        : "Sélectionner..."}
-                      <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput placeholder="Rechercher un jour..." />
-                      <CommandList>
-                        <CommandEmpty>Aucun jour trouvé.</CommandEmpty>
-                        <CommandGroup>
-                          {deadlinesDays.map((day) => (
-                            <CommandItem
-                              key={day.value}
-                              value={day.value}
-                              onSelect={() => {
-                                updateFormData("deadlinesDay", day.value);
-                                toggleCombobox("deadlinesDay");
-                              }}
-                            >
-                              {day.label}
-                              <Check
-                                className={cn(
-                                  "ml-auto",
-                                  formData.deadlinesDay === day.value
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
+
+              {/* Tableau des dates d'échéances */}
+              {formData.deadlinesNumber && formData.deadlineDates.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-md font-semibold mb-4">Dates d'échéances</h4>
+                  <Table className="border">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[100px]">Échéance</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Montant (€)</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {formData.deadlineDates.map((deadline, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{index + 1}</TableCell>
+                          <TableCell>
+                            <Input
+                              type="date"
+                              value={deadline.date}
+                              min={new Date().toISOString().split("T")[0]}
+                              onChange={(e) =>
+                                handleDeadlineChange(index, "date", e.target.value)
+                              }
+                              className="w-full"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="0.00"
+                              value={deadline.amount || ""}
+                              onChange={(e) =>
+                                handleDeadlineChange(
+                                  index,
+                                  "amount",
+                                  parseFloat(e.target.value) || 0
+                                )
+                              }
+                              className="w-full"
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <ErrorMessage>{validationErrors.deadlines}</ErrorMessage>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -479,7 +621,6 @@ export const PricingPayment: React.FC = () => {
           <Button
             variant="primary"
             onClick={handleFinish}
-            disabled={!isFormValid()}
           >
             Créer NDR
           </Button>

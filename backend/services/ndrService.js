@@ -3,6 +3,7 @@ const Family = require("../models/Family");
 const CacheManager = require("../cache/cacheManager");
 const mongoose = require("mongoose");
 const pdfService = require("./pdf/pdfService");
+const { getDepartmentFromPostalCode } = require("../utils/postalCodeUtils");
 
 class CouponService {
   /**
@@ -210,13 +211,9 @@ class NdrService {
   static async createNDR(ndrData) {
     //1) Format NDR : ajout des coupons
     try {
-      console.log(`\n🔍 [COUPON-DEBUG] ===== DÉBUT createNDR() =====`);
-      console.log(`🔍 [COUPON-DEBUG] Quantité de coupons à générer: ${ndrData.quantity}`);
-
       // Générer les coupons
       const coupons = [];
       for (let i = 0; i < ndrData.quantity; i++) {
-        console.log(`\n🔍 [COUPON-DEBUG] --- Génération coupon ${i + 1}/${ndrData.quantity} (index=${i}) ---`);
         const couponCode = await CouponService.generateCouponCode(i);
         coupons.push({
           id: new mongoose.Types.ObjectId(),
@@ -224,15 +221,13 @@ class NdrService {
           status: "available",
           updatedAt: new Date(),
         });
-        console.log(`🔍 [COUPON-DEBUG] Coupon ajouté à la liste: code="${couponCode}"`);
       }
-
-      console.log(`\n🔍 [COUPON-DEBUG] Tous les coupons générés pour cette NDR: [${coupons.map(c => c.code).join(', ')}]`);
 
       const ndrWithCoupons = {
         ...ndrData,
         coupons,
       };
+
       //2) Enregistrement de la NDR en base
 
       const newNDR = new NDR(ndrWithCoupons);
@@ -249,7 +244,6 @@ class NdrService {
 
       //5) Générer automatiquement le PDF de la NDR
       try {
-        console.log(`📄 Génération automatique du PDF pour NDR ${savedNDR._id}...`);
 
         // Préparer les données pour le template
         const templateData = {
@@ -276,7 +270,7 @@ class NdrService {
           clientAddress: finalNDR.familyId?.address?.street
             ? `${finalNDR.familyId.address.street}, ${finalNDR.familyId.address.postalCode} ${finalNDR.familyId.address.city}`
             : 'Adresse non renseignée',
-          department: finalNDR.familyId?.address?.postalCode?.substring(0, 2) || '',
+          department: getDepartmentFromPostalCode(finalNDR.familyId?.address?.postalCode || ''),
           clientId: savedNDR._id.toString().slice(-6),
           beneficiaries: {
             students: finalNDR.familyId?.students?.map(s => ({
@@ -330,11 +324,7 @@ class NdrService {
 
       return finalNDR;
     } catch (error) {
-      console.error(
-        "❌ [NDR-SERVICE] ERREUR lors de la création de la NDR:",
-        error
-      );
-      console.error("❌ [NDR-SERVICE] Stack trace:", error.stack);
+      console.error("Erreur lors de la création de la NDR:", error.message);
       throw error;
     }
   }

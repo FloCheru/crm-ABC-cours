@@ -2,7 +2,9 @@ const express = require("express");
 const mongoose = require("mongoose");
 const { body, validationResult } = require("express-validator");
 const Family = require("../models/Family");
+const Ndr = require("../models/Ndr");
 const FamilyService = require("../services/familyService");
+const CacheManager = require("../cache/cacheManager");
 const { authenticate, authorize } = require("../middleware/auth");
 
 const router = express.Router();
@@ -485,6 +487,64 @@ router.patch(
   }
 );
 
+// @route   GET /api/families/:id/students/:studentId/check-active
+// @desc    Vérifier si un élève peut être supprimé (pas de coupons actifs)
+// @access  Private (Admin)
+router.get(
+  "/:id/students/:studentId/check-active",
+  authorize(["admin"]),
+  async (req, res) => {
+    try {
+      const { id: familyId, studentId } = req.params;
+
+      console.log(
+        `🔍 [CHECK STUDENT] Vérification - Famille: ${familyId}, Élève: ${studentId}`
+      );
+
+      // Validation des IDs ObjectId
+      if (!mongoose.Types.ObjectId.isValid(familyId)) {
+        return res.status(400).json({ message: "ID de famille invalide" });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(studentId)) {
+        return res.status(400).json({ message: "ID d'élève invalide" });
+      }
+
+      // Récupérer toutes les NDRs où cet élève est bénéficiaire
+      const ndrs = await Ndr.find({
+        familyId: familyId,
+        "beneficiaries.students.id": studentId,
+      }).lean();
+
+      console.log(`📊 [CHECK STUDENT] ${ndrs.length} NDR(s) trouvée(s) pour cet élève`);
+
+      // Compter les coupons avec status 'available' (non utilisés)
+      let unusedCoupons = 0;
+      for (const ndr of ndrs) {
+        const availableCoupons = ndr.coupons.filter(
+          (coupon) => coupon.status === "available"
+        );
+        unusedCoupons += availableCoupons.length;
+      }
+
+      console.log(`🎫 [CHECK STUDENT] ${unusedCoupons} coupon(s) inutilisé(s)`);
+
+      const canDelete = unusedCoupons === 0;
+
+      res.json({
+        canDelete,
+        unusedCoupons,
+        message: canDelete
+          ? "L'élève peut être supprimé"
+          : `Impossible de supprimer : ${unusedCoupons} coupon(s) inutilisé(s)`,
+      });
+    } catch (error) {
+      console.error("❌ [CHECK STUDENT] Erreur:", error);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
+
 // @route   DELETE /api/families/:id/students/:studentId
 // @desc    Supprimer un élève embedded  (selon dataFlow.md)
 // @access  Private (Admin)
@@ -518,11 +578,13 @@ router.delete(
       }
 
       // Trouver l'élève dans le tableau
+      console.log(`🔍 [DELETE STUDENT] Recherche de l'élève ${studentId} dans:`, family.students.map(s => ({ id: s.id.toString(), name: `${s.firstName} ${s.lastName}` })));
       const student = family.students.find(
         (s) => s.id.toString() === studentId
       );
       if (!student) {
         console.error(`❌ [DELETE STUDENT] Élève non trouvé: ${studentId}`);
+        console.error(`❌ [DELETE STUDENT] IDs disponibles:`, family.students.map(s => s.id.toString()));
         return res
           .status(404)
           .json({ message: "Élève non trouvé dans cette famille" });
@@ -535,7 +597,7 @@ router.delete(
       // Supprimer l'élève du tableau students
       const updatedFamily = await Family.findByIdAndUpdate(
         familyId,
-        { $pull: { students: { id: studentId } } },
+        { $pull: { students: { id: new mongoose.Types.ObjectId(studentId) } } },
         { new: true }
       );
 
@@ -551,6 +613,10 @@ router.delete(
       console.log(
         `✅ [DELETE STUDENT] Élève ${student.firstName} ${student.lastName} supprimé avec succès de la famille ${familyId}`
       );
+
+      // Invalider le cache pour cette famille
+      CacheManager.invalidateFamily(familyId);
+      console.log(`🗑️ [DELETE STUDENT] Cache invalidé pour la famille ${familyId}`);
 
       res.json({
         message: "Élève supprimé avec succès de la famille",

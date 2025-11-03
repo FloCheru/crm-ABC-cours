@@ -89,7 +89,7 @@ router.post("/", authorize(["admin"]), async (req, res) => {
       ndr: newNDR,
     });
   } catch (error) {
-    console.error("Erreur dans POST /api/ndrs:", error);
+    console.error("Erreur lors de la création de NDR:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 });

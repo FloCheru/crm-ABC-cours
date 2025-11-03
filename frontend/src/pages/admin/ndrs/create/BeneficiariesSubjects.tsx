@@ -24,6 +24,11 @@ import {
 } from "../../../../components/ui/popover";
 import { cn } from "../../../../lib/utils";
 import { subjectService } from "../../../../services/subjectService";
+import { familyService } from "../../../../services/familyService";
+import { AddStudentModal } from "../../../../components/domain/AddStudentModal";
+import { DeleteStudentModal } from "../../../../components/domain/DeleteStudentModal";
+import { ErrorMessage } from "../../../../components/ui/error-message";
+import { toast } from "sonner";
 import type { Family } from "../../../../types/family";
 import type { Subject } from "../../../../types/subject";
 
@@ -36,6 +41,15 @@ export const BeneficiariesSubjects: React.FC = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [comboboxOpen, setComboboxOpen] = useState(false);
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [showDeleteStudentModal, setShowDeleteStudentModal] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [beneficiaryError, setBeneficiaryError] = useState(false);
+  const [subjectError, setSubjectError] = useState(false);
   const [ndrData, setNdrData] = useState({
     familyId: "",
     beneficiaries: {
@@ -46,20 +60,56 @@ export const BeneficiariesSubjects: React.FC = () => {
     professor: null,
   });
 
-  //Pour set l'id family dans ndr data
-  useEffect(() => {
-    const familyData = localStorage.getItem("selectedFamily");
-    const from = localStorage.getItem("from");
+  // Fonction helper pour récupérer l'ID de famille de manière fiable
+  const getFamilyId = (): string => {
+    // 1. Priorité à l'état chargé
+    if (family?._id) return family._id;
 
-    if (familyData) {
-      const family = JSON.parse(familyData);
-      console.log("selectedFamily dans BeneficiariesSubjects:", family);
-      console.log("from dans BeneficiariesSubjects", from);
-      setfamily(family);
-      setNdrData((prev) => ({ ...prev, familyId: family._id }));
-    } else {
-      navigate("/admin/family-selection");
+    // 2. Fallback sur localStorage si le state n'est pas encore chargé
+    try {
+      const cachedFamily = localStorage.getItem("selectedFamily");
+      if (cachedFamily) {
+        const parsed = JSON.parse(cachedFamily);
+        return parsed._id || "";
+      }
+    } catch (error) {
+      console.error("Erreur lors de la lecture du localStorage:", error);
     }
+
+    return "";
+  };
+
+  //Pour set l'id family dans ndr data et charger les données à jour
+  useEffect(() => {
+    const loadFamily = async () => {
+      const familyData = localStorage.getItem("selectedFamily");
+
+      if (familyData) {
+        const cachedFamily = JSON.parse(familyData);
+        console.log("selectedFamily dans BeneficiariesSubjects (cache):", cachedFamily);
+
+        // Charger les données à jour depuis l'API
+        try {
+          console.log("🔄 [LOAD] Chargement de la famille à jour depuis l'API...");
+          const freshFamily = await familyService.getFamily(cachedFamily._id);
+          console.log("✅ [LOAD] Famille rechargée avec données à jour:", freshFamily);
+          setfamily(freshFamily);
+          setNdrData((prev) => ({ ...prev, familyId: freshFamily._id }));
+
+          // Mettre à jour le localStorage avec les données fraîches
+          localStorage.setItem("selectedFamily", JSON.stringify(freshFamily));
+        } catch (error) {
+          console.error("❌ [LOAD] Erreur lors du chargement de la famille:", error);
+          // En cas d'erreur, utiliser les données du cache
+          setfamily(cachedFamily);
+          setNdrData((prev) => ({ ...prev, familyId: cachedFamily._id }));
+        }
+      } else {
+        navigate("/admin/family-selection");
+      }
+    };
+
+    loadFamily();
   }, [navigate]);
 
   //récupérer les matières au chargement
@@ -76,6 +126,9 @@ export const BeneficiariesSubjects: React.FC = () => {
   }, []);
 
   const toggleBeneficiary = (id: string, type: "adult" | "student") => {
+    // Réinitialiser l'erreur lors de la sélection
+    if (beneficiaryError) setBeneficiaryError(false);
+
     if (type === "adult") {
       const isSelected = selectedBeneficiaries.includes("adult");
       if (isSelected) {
@@ -116,6 +169,9 @@ export const BeneficiariesSubjects: React.FC = () => {
   };
 
   const toggleSubject = (subjectId: string) => {
+    // Réinitialiser l'erreur lors de la sélection
+    if (subjectError) setSubjectError(false);
+
     const isSelected = selectedSubjects.includes(subjectId);
     if (isSelected) {
       setSelectedSubjects((prev) => prev.filter((s) => s !== subjectId));
@@ -141,18 +197,159 @@ export const BeneficiariesSubjects: React.FC = () => {
   };
 
   const handleNext = () => {
-    if (selectedBeneficiaries.length > 0 && selectedSubjects.length > 0) {
-      localStorage.setItem("ndrData", JSON.stringify(ndrData));
-      navigate("/admin/pricing-payment");
+    console.log("🎯 [HANDLE NEXT] Bouton Suivant cliqué");
+    console.log("🎯 [HANDLE NEXT] selectedBeneficiaries:", selectedBeneficiaries);
+    console.log("🎯 [HANDLE NEXT] selectedSubjects:", selectedSubjects);
+
+    // Reset des erreurs
+    setBeneficiaryError(false);
+    setSubjectError(false);
+
+    // Validation
+    const noBeneficiaries = selectedBeneficiaries.length === 0;
+    const noSubjects = selectedSubjects.length === 0;
+
+    console.log("🎯 [HANDLE NEXT] noBeneficiaries:", noBeneficiaries);
+    console.log("🎯 [HANDLE NEXT] noSubjects:", noSubjects);
+
+    if (noBeneficiaries || noSubjects) {
+      console.log("❌ [HANDLE NEXT] Validation échouée");
+      if (noBeneficiaries) {
+        console.log("❌ [HANDLE NEXT] Erreur bénéficiaire activée");
+        setBeneficiaryError(true);
+        toast.error("Vous devez sélectionner au moins un bénéficiaire");
+      }
+      if (noSubjects) {
+        console.log("❌ [HANDLE NEXT] Erreur matière activée");
+        setSubjectError(true);
+        toast.error("Vous devez sélectionner au moins une matière");
+      }
+      return;
     }
+
+    // Si validation OK, continuer
+    console.log("✅ [HANDLE NEXT] Validation réussie, navigation vers pricing-payment");
+    localStorage.setItem("ndrData", JSON.stringify(ndrData));
+    navigate("/admin/pricing-payment");
   };
 
   const handleBack = () => {
-    const from = localStorage.getItem("from") || "ndr";
-    if (from === "prospects") {
-      navigate("/prospects");
-    } else {
-      navigate("/admin/family-selection");
+    navigate("/admin/family-selection");
+  };
+
+  const handleStudentAdded = async () => {
+    // Recharger la famille pour obtenir le nouvel élève
+    if (family?._id) {
+      try {
+        const updatedFamily = await familyService.getFamily(family._id);
+        setfamily(updatedFamily);
+        // Mettre à jour le localStorage avec les données fraîches
+        localStorage.setItem("selectedFamily", JSON.stringify(updatedFamily));
+        console.log("✅ [STUDENT ADDED] localStorage mis à jour avec le nouvel élève");
+      } catch (error) {
+        console.error("Erreur lors du rechargement de la famille:", error);
+      }
+    }
+  };
+
+  const handlePrefillTest = () => {
+    // Cette fonction sera appelée par AddStudentModal pour préremplir les champs
+    // La modal doit gérer le préremplissage en interne
+    console.log("Préremplissage des champs de test");
+  };
+
+  const handleDeleteClick = (studentId: string, studentName: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Empêcher la sélection/désélection de la carte
+    console.log("🗑️ [DELETE CLICK] Tentative de suppression:", {
+      studentId,
+      studentName,
+      familyId: family?._id
+    });
+    setStudentToDelete({ id: studentId, name: studentName });
+    setShowDeleteStudentModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    console.log("✅ [DELETE CONFIRM] Début de la suppression:", {
+      studentToDelete,
+      familyId: family?._id
+    });
+
+    if (!studentToDelete || !family) {
+      console.log("❌ [DELETE CONFIRM] Données manquantes:", { studentToDelete, hasFamily: !!family });
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // Vérifier si l'élève peut être supprimé
+      console.log("🔍 [DELETE CONFIRM] Vérification si l'élève peut être supprimé...");
+      const checkResult = await familyService.checkStudentCanDelete(
+        family._id,
+        studentToDelete.id
+      );
+      console.log("📊 [DELETE CONFIRM] Résultat de la vérification:", checkResult);
+
+      if (!checkResult.canDelete) {
+        console.log("⛔ [DELETE CONFIRM] Suppression bloquée:", checkResult.unusedCoupons, "coupons non utilisés");
+        toast.error(
+          `Impossible de supprimer cet élève : ${checkResult.unusedCoupons} coupon(s) non utilisé(s)`
+        );
+        setShowDeleteStudentModal(false);
+        setStudentToDelete(null);
+        return;
+      }
+
+      // Supprimer l'élève
+      console.log("🗑️ [DELETE CONFIRM] Appel removeStudent...");
+      await familyService.removeStudent(family._id, studentToDelete.id);
+      console.log("✅ [DELETE CONFIRM] removeStudent terminé");
+
+      // Mettre à jour la famille localement
+      console.log("🔄 [DELETE CONFIRM] Rechargement de la famille...");
+      const updatedFamily = await familyService.getFamily(family._id);
+      console.log("✅ [DELETE CONFIRM] Famille rechargée:", updatedFamily);
+      console.log("✅ [DELETE CONFIRM] Nombre d'étudiants après suppression:", updatedFamily.students?.length || 0);
+      console.log("✅ [DELETE CONFIRM] Liste des étudiants:", updatedFamily.students?.map((s: any) => ({ id: s.id, name: `${s.firstName} ${s.lastName}` })));
+
+      // Forcer le re-render en créant un nouvel objet
+      setfamily({ ...updatedFamily });
+
+      // Mettre à jour le localStorage avec les données fraîches
+      localStorage.setItem("selectedFamily", JSON.stringify(updatedFamily));
+      console.log("✅ [DELETE CONFIRM] localStorage mis à jour après suppression");
+
+      // Retirer l'élève des bénéficiaires sélectionnés s'il y était
+      console.log("🔄 [DELETE CONFIRM] Mise à jour des bénéficiaires sélectionnés...");
+      setSelectedBeneficiaries((prev) => {
+        const updated = prev.filter((b) => b !== studentToDelete.id);
+        console.log("📋 [DELETE CONFIRM] Bénéficiaires avant:", prev, "après:", updated);
+        return updated;
+      });
+      setNdrData((prev) => {
+        const updated = {
+          ...prev,
+          beneficiaries: {
+            ...prev.beneficiaries,
+            students: prev.beneficiaries.students.filter(
+              (s) => s.id !== studentToDelete.id
+            ),
+          },
+        };
+        console.log("📋 [DELETE CONFIRM] NdrData avant:", prev, "après:", updated);
+        return updated;
+      });
+
+      console.log("🎉 [DELETE CONFIRM] Suppression terminée avec succès");
+      toast.success("Élève supprimé avec succès");
+      setShowDeleteStudentModal(false);
+      setStudentToDelete(null);
+    } catch (error) {
+      console.error("❌ [DELETE CONFIRM] Erreur lors de la suppression:", error);
+      toast.error("Erreur lors de la suppression de l'élève");
+    } finally {
+      setIsDeleting(false);
+      console.log("🏁 [DELETE CONFIRM] Fin du processus");
     }
   };
 
@@ -184,7 +381,16 @@ export const BeneficiariesSubjects: React.FC = () => {
 
         {/* Section Bénéficiaires */}
         <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-3">Bénéficiaires</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <h3 className="text-lg font-semibold">Bénéficiaires</h3>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setShowAddStudentModal(true)}
+            >
+              Ajouter un bénéficiaire
+            </Button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {/* Primary Contact */}
             <Card
@@ -210,13 +416,26 @@ export const BeneficiariesSubjects: React.FC = () => {
             {family.students?.map((student) => (
               <Card
                 key={student.id}
-                className={`cursor-pointer hover:bg-accent transition-colors ${
+                className={`cursor-pointer hover:bg-accent transition-colors relative ${
                   selectedBeneficiaries.includes(student.id)
                     ? "ring-2 ring-primary"
                     : ""
                 }`}
                 onClick={() => toggleBeneficiary(student.id, "student")}
               >
+                <button
+                  onClick={(e) =>
+                    handleDeleteClick(
+                      student.id,
+                      `${student.firstName} ${student.lastName}`,
+                      e
+                    )
+                  }
+                  className="absolute top-2 right-2 p-1 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors z-10"
+                  title="Supprimer l'élève"
+                >
+                  <X className="w-4 h-4" />
+                </button>
                 <CardHeader>
                   <CardTitle>
                     {student.firstName} {student.lastName}
@@ -228,6 +447,9 @@ export const BeneficiariesSubjects: React.FC = () => {
               </Card>
             ))}
           </div>
+          {beneficiaryError && (
+            <ErrorMessage>Aucun bénéficiaire sélectionné</ErrorMessage>
+          )}
         </div>
 
         {/* Section Matières */}
@@ -235,7 +457,7 @@ export const BeneficiariesSubjects: React.FC = () => {
           <h3 className="text-lg font-semibold mb-3">Matières</h3>
 
           {/* Combobox pour sélectionner les matières */}
-          <div className="mb-4">
+          <div className={cn("mb-4", subjectError && "ring-2 ring-error rounded-md p-1")}>
             <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -263,7 +485,6 @@ export const BeneficiariesSubjects: React.FC = () => {
                           value={subject.name}
                           onSelect={() => {
                             toggleSubject(subject._id);
-                            setComboboxOpen(false);
                           }}
                         >
                           {subject.name}
@@ -283,6 +504,9 @@ export const BeneficiariesSubjects: React.FC = () => {
               </PopoverContent>
             </Popover>
           </div>
+          {subjectError && (
+            <ErrorMessage>0 matière sélectionnée</ErrorMessage>
+          )}
 
           {/* Liste des matières sélectionnées */}
           {selectedSubjects.length > 0 && (
@@ -315,15 +539,32 @@ export const BeneficiariesSubjects: React.FC = () => {
           <Button
             variant="primary"
             onClick={handleNext}
-            disabled={
-              selectedBeneficiaries.length === 0 ||
-              selectedSubjects.length === 0
-            }
           >
             Suivant
           </Button>
         </div>
       </Container>
+
+      {/* Modal d'ajout d'élève */}
+      <AddStudentModal
+        isOpen={showAddStudentModal}
+        onClose={() => setShowAddStudentModal(false)}
+        familyId={getFamilyId()}
+        onSaveSuccess={handleStudentAdded}
+        onPrefillTest={handlePrefillTest}
+      />
+
+      {/* Modal de suppression d'élève */}
+      <DeleteStudentModal
+        isOpen={showDeleteStudentModal}
+        onClose={() => {
+          setShowDeleteStudentModal(false);
+          setStudentToDelete(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        studentName={studentToDelete?.name || ""}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 };

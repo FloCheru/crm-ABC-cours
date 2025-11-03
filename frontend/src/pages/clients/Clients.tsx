@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
-  
+
   PageHeader,
   Container,
   SummaryCard,
@@ -11,6 +12,7 @@ import {
   Table,
 } from "../../components";
 import { ModalWrapper } from "../../components/ui/ModalWrapper/ModalWrapper";
+import { CompleteFamilyModal } from "../../components/domain/CompleteFamilyModal";
 import { familyService } from "../../services/familyService";
 import { ndrService } from "../../services/ndrService";
 import type { Family } from "../../types/family";
@@ -28,6 +30,11 @@ interface StudentData {
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Family & { id: string };
 // type CreateFamilyData = Omit<Family, "_id" | "createdAt" | "updatedAt">; // Non utilisé - clients créés via NDR
+
+// Type pour famille incomplète
+interface IncompleteFamilyData extends Family {
+  missingFields: string[];
+}
 
 // Fonctions utilitaires pour extraire les valeurs (adaptées pour NDR)
 const getSubjectValue = (
@@ -86,6 +93,10 @@ export const Clients: React.FC = () => {
   const [selectedFamilyId, setSelectedFamilyId] = useState<string>("");
   const [selectedFamilyNDRs, setSelectedFamilyNDRs] = useState<NDR[]>([]);
   const [isLoadingNDRs, setIsLoadingNDRs] = useState(false);
+
+  // États pour la modal de complétion de famille
+  const [isCompleteFamilyModalOpen, setIsCompleteFamilyModalOpen] = useState(false);
+  const [selectedIncompleteFamily, setSelectedIncompleteFamily] = useState<IncompleteFamilyData | null>(null);
 
   // Load families and stats data
   useEffect(() => {
@@ -207,12 +218,35 @@ export const Clients: React.FC = () => {
   const handleCreateNDR = (familyId: string) => {
     // Trouver la famille dans la liste des clients
     const selectedFamily = clients.find((family) => family._id === familyId);
-    if (selectedFamily) {
-      // Stocker la famille complète et l'origine
-      localStorage.setItem("selectedFamily", JSON.stringify(selectedFamily));
-      localStorage.setItem("from", "clients");
-      navigate(`/admin/beneficiaries-subjects`);
+    if (!selectedFamily) return;
+
+    // Vérifier si la famille est complète
+    const validation = familyService.validateFamilyCompleteness(selectedFamily);
+
+    if (!validation.isComplete) {
+      // Famille incomplète → afficher toast + modal
+      toast.error("Veuillez compléter les informations de la famille");
+      setSelectedIncompleteFamily({
+        ...selectedFamily,
+        missingFields: validation.missingFields,
+      });
+      setIsCompleteFamilyModalOpen(true);
+      return;
     }
+
+    // Famille complète → naviguer directement
+    localStorage.setItem("selectedFamily", JSON.stringify(selectedFamily));
+    navigate(`/admin/beneficiaries-subjects`);
+  };
+
+  // Handler pour la sauvegarde réussie de la modal
+  const handleCompleteFamilySaveSuccess = (updatedFamily: Family) => {
+    // Fermer la modal
+    setIsCompleteFamilyModalOpen(false);
+
+    // Stocker la famille mise à jour et naviguer
+    localStorage.setItem("selectedFamily", JSON.stringify(updatedFamily));
+    navigate(`/admin/beneficiaries-subjects`);
   };
 
   // Handlers pour les actions NDR (copiés du tableau de bord)
@@ -282,8 +316,9 @@ export const Clients: React.FC = () => {
       `${family.primaryContact.firstName} ${family.primaryContact.lastName}`.toLowerCase();
     const phone = family.primaryContact.primaryPhone || "";
     const email = (family.primaryContact?.email || "").toLowerCase();
-    const address =
-      `${family.address.street} ${family.address.city}`.toLowerCase();
+    const address = family.primaryContact.address
+      ? `${family.primaryContact.address.street} ${family.primaryContact.address.city}`.toLowerCase()
+      : "";
 
     return (
       fullName.includes(searchLower) ||
@@ -563,7 +598,7 @@ export const Clients: React.FC = () => {
       key: "postalCode",
       label: "Code postal",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.address.postalCode}</div>
+        <div className="text-sm">{row.primaryContact.address?.postalCode || "N/A"}</div>
       ),
     },
     {
@@ -771,6 +806,14 @@ export const Clients: React.FC = () => {
           </div>
         </ModalWrapper>
       )}
+
+      {/* Modal de complétion de famille */}
+      <CompleteFamilyModal
+        isOpen={isCompleteFamilyModalOpen}
+        onClose={() => setIsCompleteFamilyModalOpen(false)}
+        family={selectedIncompleteFamily}
+        onSaveSuccess={handleCompleteFamilySaveSuccess}
+      />
     </div>
   );
 };

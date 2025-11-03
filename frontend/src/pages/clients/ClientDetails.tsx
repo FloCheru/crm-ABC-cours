@@ -1,14 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import {
-  
+
   PageHeader,
   Container,
   Button,
   DataCard,
   Table,
-  Modal,
 } from "../../components";
+import { AddStudentModal } from "../../components/domain/AddStudentModal";
 import { familyService } from "../../services/familyService";
 import { ndrService } from "../../services/ndrService";
 import type { Family } from "../../types/family";
@@ -1014,12 +1014,11 @@ export const ClientDetails: React.FC = () => {
       </Container>
 
       {/* Modal ajout d'élève */}
-      <Modal
-        type="student"
+      <AddStudentModal
         isOpen={showAddStudentModal}
         onClose={() => setShowAddStudentModal(false)}
-        data={{ familyId: client?._id || "" }}
-        onSuccess={() => {
+        familyId={client?._id || ""}
+        onSaveSuccess={() => {
           // Recharger les données du client pour afficher le nouvel élève
           if (clientId) {
             loadClientDetails();

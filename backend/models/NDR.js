@@ -39,17 +39,19 @@ const ndrSchema = new mongoose.Schema(
           "Type de paiement invalide. Valeurs autorisées: avance, credit",
       },
     },
-    deadlines: {
-      deadlinesNumber: {
-        type: Number,
-        min: [1, "Le nombre d'échéances doit être au moins 1"],
+    deadlines: [
+      {
+        date: {
+          type: Date,
+          required: [true, "Date d'échéance requise"],
+        },
+        amount: {
+          type: Number,
+          required: [true, "Montant de l'échéance requis"],
+          min: [0, "Le montant doit être positif"],
+        },
       },
-      deadlinesDay: {
-        type: Number,
-        min: [1, "Le jour d'échéance doit être entre 1 et 31"],
-        max: [31, "Le jour d'échéance doit être entre 1 et 31"],
-      },
-    },
+    ],
     subjects: {
       type: [
         {
@@ -155,4 +157,4 @@ ndrSchema.index({ status: 1 });
 ndrSchema.index({ createdAt: -1 });
 ndrSchema.index({ "createdBy.userId": 1 });
 
-module.exports = mongoose.model("NDR", ndrSchema, "ndrs");
+module.exports = mongoose.models.NDR || mongoose.model("NDR", ndrSchema, "ndrs");

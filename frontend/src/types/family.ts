@@ -2,11 +2,6 @@ import type { RendezVous } from "./rdv";
 
 export interface Family {
   _id: string;
-  address: {
-    street: string;
-    city: string;
-    postalCode: string;
-  };
   // Adresse de facturation (si différente)
   billingAddress?: {
     street: string;
@@ -22,6 +17,11 @@ export interface Family {
     email: string;
     birthDate?: Date;
     relation: "père" | "mère";
+    address?: {
+      street: string;
+      city: string;
+      postalCode: string;
+    };
   };
   secondaryContact?: {
     firstName?: string;

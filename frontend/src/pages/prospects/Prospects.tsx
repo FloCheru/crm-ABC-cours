@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
 
   Container,
@@ -13,6 +14,8 @@ import {
   PageHeader,
   Modal,
 } from "../../components";
+import { CompleteFamilyModal } from "../../components/domain/CompleteFamilyModal";
+import { AddStudentModal } from "../../components/domain/AddStudentModal";
 import { familyService } from "../../services/familyService";
 import { subjectService } from "../../services/subjectService";
 import { userService } from "../../services/userService";
@@ -29,6 +32,11 @@ import "./Prospects.css";
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Family & { id: string };
 
+// Type pour famille incomplète
+interface IncompleteFamilyData extends Family {
+  missingFields: string[];
+}
+
 export const Prospects: React.FC = () => {
   const navigate = useNavigate();
 
@@ -37,6 +45,23 @@ export const Prospects: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [, setStats] = useState({ prospects: 0 });
 
+  // Fonction pour rafraîchir les prospects
+  const fetchProspects = async () => {
+    try {
+      setIsLoading(true);
+      const families = await familyService.getFamilies();
+      console.log("Familles Voiiir:", families);
+      setProspects(
+        families.filter((family) => !family.ndr || family.ndr.length === 0)
+      );
+      setStats({ prospects: families.length });
+    } catch (error) {
+      console.error("Erreur lors de la récupération des prospects:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Récupération des données au chargement
   useEffect(() => {
     // // Nettoyage des données de session NDR
@@ -44,28 +69,16 @@ export const Prospects: React.FC = () => {
     // localStorage.removeItem("from");
     // localStorage.removeItem("ndrData");
 
-    const fetchProspects = async () => {
-      try {
-        setIsLoading(true);
-        const families = await familyService.getFamilies();
-        console.log("Familles Voiiir:", families);
-        setProspects(
-          families.filter((family) => !family.ndr || family.ndr.length === 0)
-        );
-        setStats({ prospects: families.length });
-      } catch (error) {
-        console.error("Erreur lors de la récupération des prospects:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchProspects();
   }, []);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateProspectModalOpen, setIsCreateProspectModalOpen] =
     useState(false);
+
+  // États pour la modal de complétion de famille
+  const [isCompleteFamilyModalOpen, setIsCompleteFamilyModalOpen] = useState(false);
+  const [selectedIncompleteFamily, setSelectedIncompleteFamily] = useState<IncompleteFamilyData | null>(null);
 
   // Utilisation du hook factorisé pour la gestion des élèves
   const {
@@ -82,12 +95,35 @@ export const Prospects: React.FC = () => {
   const handleCreateNDR = (familyId: string) => {
     // Trouver la famille dans la liste des prospects
     const selectedFamily = prospects.find((family) => family._id === familyId);
-    if (selectedFamily) {
-      // Stocker la famille complète et l'origine
-      localStorage.setItem("selectedFamily", JSON.stringify(selectedFamily));
-      localStorage.setItem("from", "prospects");
-      navigate(`/admin/beneficiaries-subjects`);
+    if (!selectedFamily) return;
+
+    // Vérifier si la famille est complète
+    const validation = familyService.validateFamilyCompleteness(selectedFamily);
+
+    if (!validation.isComplete) {
+      // Famille incomplète → afficher toast + modal
+      toast.error("Veuillez compléter les informations de la famille");
+      setSelectedIncompleteFamily({
+        ...selectedFamily,
+        missingFields: validation.missingFields,
+      });
+      setIsCompleteFamilyModalOpen(true);
+      return;
     }
+
+    // Famille complète → naviguer directement
+    localStorage.setItem("selectedFamily", JSON.stringify(selectedFamily));
+    navigate(`/admin/beneficiaries-subjects`);
+  };
+
+  // Handler pour la sauvegarde réussie de la modal
+  const handleCompleteFamilySaveSuccess = (updatedFamily: Family) => {
+    // Fermer la modal
+    setIsCompleteFamilyModalOpen(false);
+
+    // Stocker la famille mise à jour et naviguer
+    localStorage.setItem("selectedFamily", JSON.stringify(updatedFamily));
+    navigate(`/admin/beneficiaries-subjects`);
   };
 
   // handleAddStudent maintenant fourni par le hook useStudentModal
@@ -223,9 +259,9 @@ export const Prospects: React.FC = () => {
       `${family.primaryContact?.firstName} ${family.primaryContact?.lastName}`.toLowerCase();
     const phone = family.primaryContact?.primaryPhone || "";
     const email = (family.primaryContact?.email || "").toLowerCase();
-    const address = `${family.address?.street || ""} ${
-      family.address?.city || ""
-    } ${family.address?.postalCode || ""}`.toLowerCase();
+    const address = family.primaryContact.address
+      ? `${family.primaryContact.address.street || ""} ${family.primaryContact.address.city || ""} ${family.primaryContact.address.postalCode || ""}`.toLowerCase()
+      : "";
 
     return (
       fullName.includes(searchLower) ||
@@ -286,14 +322,14 @@ export const Prospects: React.FC = () => {
       key: "postalCode",
       label: "Code postal",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.address?.postalCode || "-"}</div>
+        <div className="text-sm">{row.primaryContact.address?.postalCode || "-"}</div>
       ),
     },
     {
       key: "city",
       label: "Ville",
       render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.address?.city || "-"}</div>
+        <div className="text-sm">{row.primaryContact.address?.city || "-"}</div>
       ),
     },
     {
@@ -631,17 +667,25 @@ export const Prospects: React.FC = () => {
       />
 
       {/* Modal d'ajout d'élève */}
-      <Modal
-        type="student"
+      <AddStudentModal
         isOpen={showAddStudentModal}
         onClose={() => {
           handleStudentSuccess();
         }}
-        data={{ familyId: selectedFamilyForStudent }}
-        onSuccess={() => {
+        familyId={selectedFamilyForStudent || ""}
+        onSaveSuccess={async () => {
+          await fetchProspects();
           handleStudentSuccess();
         }}
-        onAddStudentTest={handleAddStudentTest}
+        onPrefillTest={() => handleAddStudentTest(selectedFamilyForStudent || "")}
+      />
+
+      {/* Modal de complétion de famille */}
+      <CompleteFamilyModal
+        isOpen={isCompleteFamilyModalOpen}
+        onClose={() => setIsCompleteFamilyModalOpen(false)}
+        family={selectedIncompleteFamily}
+        onSaveSuccess={handleCompleteFamilySaveSuccess}
       />
     </main>
   );

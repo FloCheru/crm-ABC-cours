@@ -107,9 +107,11 @@ export const Step1ClientSelection: React.FC<Props> = ({
                 <div className="step1__family-contact">
                   📞 {family.primaryContact.primaryPhone}
                 </div>
-                <div className="step1__family-address">
-                  🏠 {family.address.city}, {family.address.postalCode}
-                </div>
+                {family.primaryContact.address && (
+                  <div className="step1__family-address">
+                    🏠 {family.primaryContact.address.city}, {family.primaryContact.address.postalCode}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -123,7 +125,9 @@ export const Step1ClientSelection: React.FC<Props> = ({
             <h4>{selectedFamily.primaryContact.firstName} {selectedFamily.primaryContact.lastName}</h4>
             <p>📧 {selectedFamily.primaryContact.email}</p>
             <p>📞 {selectedFamily.primaryContact.primaryPhone}</p>
-            <p>🏠 {selectedFamily.address.street}, {selectedFamily.address.city} {selectedFamily.address.postalCode}</p>
+            {selectedFamily.primaryContact.address && (
+              <p>🏠 {selectedFamily.primaryContact.address.street}, {selectedFamily.primaryContact.address.city} {selectedFamily.primaryContact.address.postalCode}</p>
+            )}
           </div>
         </FormCard>
       )}

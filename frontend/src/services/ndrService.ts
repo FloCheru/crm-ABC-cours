@@ -8,10 +8,10 @@ interface CreateNDRData {
   };
   paymentMethod: "card" | "CESU" | "check" | "transfer" | "cash" | "PRLV";
   paymentType?: "avance" | "credit";
-  deadlines?: {
-    deadlinesNumber: number;
-    deadlinesDay: number;
-  };
+  deadlines?: Array<{
+    date: string;
+    amount: number;
+  }>;
   subjects?: Array<string | { id: string }>;
   hourlyRate: number;
   quantity: number;
@@ -43,10 +43,10 @@ interface NDR {
   };
   paymentMethod: "card" | "CESU" | "check" | "transfer" | "cash" | "PRLV";
   paymentType: "avance" | "credit";
-  deadlines?: {
-    deadlinesNumber: number;
-    deadlinesDay: number;
-  };
+  deadlines?: Array<{
+    date: string;
+    amount: number;
+  }>;
   subjects: Array<{
     id: string | { _id: string; name: string; category: string };
     name?: string;
@@ -100,12 +100,7 @@ class NdrService {
         beneficiaries: data.beneficiaries,
         paymentMethod: data.paymentMethod,
         paymentType: data.paymentType || "avance",
-        deadlines: data.deadlines
-          ? {
-              deadlinesNumber: data.deadlines.deadlinesNumber,
-              deadlinesDay: data.deadlines.deadlinesDay,
-            }
-          : undefined,
+        deadlines: data.deadlines,
         subjects:
           data.subjects?.map((subject: string | { id: string }) => ({
             id: typeof subject === "string" ? subject : subject.id,
@@ -126,7 +121,6 @@ class NdrService {
       const response = await apiClient.post("/api/ndrs", ndrData);
       const result = (response as NDRResponse).ndr;
 
-      console.log("✅ NDR créée avec succès:", result);
       return result;
     } catch (error) {
       console.error("Erreur lors de la création de la NDR:", error);

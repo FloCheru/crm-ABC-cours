@@ -1,258 +1,30 @@
-authService.ts:107  POST http://localhost:3000/api/api/auth/extend-session 404 (Not Found)
-extendSession @ authService.ts:107
-(anonymous) @ useActivityReset.ts:23
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18567
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-commitHookEffectListMount @ react-dom_client.js?v=edb7fdf0:9411
-commitHookPassiveMountEffects @ react-dom_client.js?v=edb7fdf0:9465
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11040
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11066
-flushPassiveEffects @ react-dom_client.js?v=edb7fdf0:13150
-(anonymous) @ react-dom_client.js?v=edb7fdf0:12776
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<AppRoutes>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-App @ main.tsx:146
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
-renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
-renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
-updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
-beginWork @ react-dom_client.js?v=edb7fdf0:8525
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
-workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
-renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
-performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
-performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<App>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-(anonymous) @ main.tsx:154Understand this error
-authService.ts:122 Impossible d'étendre la session: 404
-extendSession @ authService.ts:122
-await in extendSession
-(anonymous) @ useActivityReset.ts:23
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18567
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-commitHookEffectListMount @ react-dom_client.js?v=edb7fdf0:9411
-commitHookPassiveMountEffects @ react-dom_client.js?v=edb7fdf0:9465
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11040
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11033
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11201
-recursivelyTraversePassiveMountEffects @ react-dom_client.js?v=edb7fdf0:11010
-commitPassiveMountOnFiber @ react-dom_client.js?v=edb7fdf0:11066
-flushPassiveEffects @ react-dom_client.js?v=edb7fdf0:13150
-(anonymous) @ react-dom_client.js?v=edb7fdf0:12776
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<AppRoutes>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-App @ main.tsx:146
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
-renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
-renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
-updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
-beginWork @ react-dom_client.js?v=edb7fdf0:8525
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
-workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
-renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
-performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
-performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<App>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-(anonymous) @ main.tsx:154Understand this warning
-authService.ts:107  POST http://localhost:3000/api/api/auth/extend-session 404 (Not Found)
-extendSession @ authService.ts:107
-(anonymous) @ useActivityReset.ts:23
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18567
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-commitHookEffectListMount @ react-dom_client.js?v=edb7fdf0:9411
-commitHookPassiveMountEffects @ react-dom_client.js?v=edb7fdf0:9465
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11273
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
-doubleInvokeEffectsOnFiber @ react-dom_client.js?v=edb7fdf0:13339
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=edb7fdf0:13312
-commitDoubleInvokeEffectsInDEV @ react-dom_client.js?v=edb7fdf0:13347
-flushPassiveEffects @ react-dom_client.js?v=edb7fdf0:13157
-(anonymous) @ react-dom_client.js?v=edb7fdf0:12776
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<AppRoutes>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-App @ main.tsx:146
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
-renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
-renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
-updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
-beginWork @ react-dom_client.js?v=edb7fdf0:8525
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
-workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
-renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
-performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
-performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<App>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-(anonymous) @ main.tsx:154Understand this error
-authService.ts:122 Impossible d'étendre la session: 404
-extendSession @ authService.ts:122
-await in extendSession
-(anonymous) @ useActivityReset.ts:23
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18567
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-commitHookEffectListMount @ react-dom_client.js?v=edb7fdf0:9411
-commitHookPassiveMountEffects @ react-dom_client.js?v=edb7fdf0:9465
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11273
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11265
-recursivelyTraverseReconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11240
-reconnectPassiveEffects @ react-dom_client.js?v=edb7fdf0:11317
-doubleInvokeEffectsOnFiber @ react-dom_client.js?v=edb7fdf0:13339
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom_client.js?v=edb7fdf0:13312
-commitDoubleInvokeEffectsInDEV @ react-dom_client.js?v=edb7fdf0:13347
-flushPassiveEffects @ react-dom_client.js?v=edb7fdf0:13157
-(anonymous) @ react-dom_client.js?v=edb7fdf0:12776
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<AppRoutes>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-App @ main.tsx:146
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
-renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
-renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
-updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
-beginWork @ react-dom_client.js?v=edb7fdf0:8525
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
-workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
-renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
-performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
-performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<App>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-(anonymous) @ main.tsx:154Understand this warning
-authService.ts:24 {email: 'admin@abc-cours.fr', password: '123456'}
-authService.ts:25  POST http://localhost:3000/api/api/auth/login 404 (Not Found)
-login @ authService.ts:25
-login @ useAuthStore.ts:32
-handleQuickAdminLogin @ Login.tsx:46
-executeDispatch @ react-dom_client.js?v=edb7fdf0:13622
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-processDispatchQueue @ react-dom_client.js?v=edb7fdf0:13658
-(anonymous) @ react-dom_client.js?v=edb7fdf0:14071
-batchedUpdates$1 @ react-dom_client.js?v=edb7fdf0:2626
-dispatchEventForPluginEventSystem @ react-dom_client.js?v=edb7fdf0:13763
-dispatchEvent @ react-dom_client.js?v=edb7fdf0:16784
-dispatchDiscreteEvent @ react-dom_client.js?v=edb7fdf0:16765
-<button>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-Button @ Button.tsx:69
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
-renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
-renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
-updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
-beginWork @ react-dom_client.js?v=edb7fdf0:8525
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
-workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
-renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
-performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
-performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<Button>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-Login @ Login.tsx:141
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
-renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
-renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
-updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
-beginWork @ react-dom_client.js?v=edb7fdf0:8525
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
-workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
-renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
-performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
-performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<Login>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-AppRoutes @ main.tsx:66
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
-renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
-renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
-updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
-beginWork @ react-dom_client.js?v=edb7fdf0:8525
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
-workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
-renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
-performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
-performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<AppRoutes>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-App @ main.tsx:146
-react_stack_bottom_frame @ react-dom_client.js?v=edb7fdf0:18509
-renderWithHooksAgain @ react-dom_client.js?v=edb7fdf0:5729
-renderWithHooks @ react-dom_client.js?v=edb7fdf0:5665
-updateFunctionComponent @ react-dom_client.js?v=edb7fdf0:7475
-beginWork @ react-dom_client.js?v=edb7fdf0:8525
-runWithFiberInDEV @ react-dom_client.js?v=edb7fdf0:997
-performUnitOfWork @ react-dom_client.js?v=edb7fdf0:12561
-workLoopSync @ react-dom_client.js?v=edb7fdf0:12424
-renderRootSync @ react-dom_client.js?v=edb7fdf0:12408
-performWorkOnRoot @ react-dom_client.js?v=edb7fdf0:11766
-performWorkOnRootViaSchedulerTask @ react-dom_client.js?v=edb7fdf0:13505
-performWorkUntilDeadline @ react-dom_client.js?v=edb7fdf0:36
-<App>
-exports.jsxDEV @ react_jsx-dev-runtime.js?v=edb7fdf0:247
-(anonymous) @ main.tsx:154Understand this error
-useAuthStore.ts:39 Login error: Error: Route non trouvée
-    at AuthService.login (authService.ts:35:13)
-    at async login (useAuthStore.ts:32:30)
-    at async handleQuickAdminLogin (Login.tsx:46:7)
+Erreur lors de l'ajout de l'élève: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Family"
+[0]     at SchemaObjectId.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schema\objectId.js:251:11)
+[0]     at SchemaType.applySetters (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1262:12)
+[0]     at SchemaType.castForQuery (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1698:17)
+[0]     at cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\cast.js:390:32)
+[0]     at Query.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:5060:12)
+[0]     at Query._castConditions (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2374:10)
+[0]     at model.Query._findOneAndUpdate (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:3477:8)
+[0]     at model.Query.exec (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:4627:80)
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:552:29) {
+[0]   stringValue: '"undefined"',
+[0]   messageFormat: undefined,
+[0]   kind: 'ObjectId',
+[0]   value: 'undefined',
+[0]   path: '_id',
+[0]   reason: BSONError: input must be a 24 character hex string, 12 byte Uint8Array, or an integer
+[0]       at new ObjectId (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\bson@6.10.4\node_modules\bson\lib\bson.cjs:2538:23)
+[0]       at castObjectId (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\cast\objectid.js:25:12)
+[0]       at SchemaObjectId.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schema\objectId.js:249:12)
+[0]       at SchemaType.applySetters (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1262:12)
+[0]       at SchemaType.castForQuery (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1698:17)
+[0]       at cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\cast.js:390:32)
+[0]       at Query.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:5060:12)
+[0]       at Query._castConditions (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2374:10)
+[0]       at model.Query._findOneAndUpdate (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:3477:8)
+[0]       at model.Query.exec (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:4627:80),
+[0]   valueType: 'string'
+[0] }
+[0] ::1 - - [03/Nov/2025:07:22:57 +0000] "POST /api/families/undefined/students HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"

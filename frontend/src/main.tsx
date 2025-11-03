@@ -88,7 +88,7 @@ function AppRoutes() {
             <Route path="clients" element={<Clients />} />
             <Route path="client-details" element={<ClientDetails />} />
             <Route path="ndrs" element={<Ndrs />} />
-            <Route path="ndr-details" element={<NdrDetails />} />
+            <Route path="ndrs/:ndrId" element={<NdrDetails />} />
             <Route path="family-selection" element={<FamilySelection />} />
             <Route path="beneficiaries-subjects" element={<BeneficiariesSubjects />} />
             <Route path="pricing-payment" element={<PricingPayment />} />

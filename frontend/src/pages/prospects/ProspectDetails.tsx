@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import {
-  
+
   Button,
   ButtonGroup,
   StatusBanner,
@@ -14,6 +14,7 @@ import {
   DatePicker,
   Container,
 } from "../../components";
+import { AddStudentModal } from "../../components/domain/AddStudentModal";
 import { familyService } from "../../services/familyService";
 import { subjectService } from "../../services/subjectService";
 import { getAllGrades } from "../../constants/schoolLevels";
@@ -1170,18 +1171,17 @@ export const ProspectDetails: React.FC = () => {
       />
 
       {/* Modal ajout d'élève */}
-      <Modal
-        type="student"
+      <AddStudentModal
         isOpen={showAddStudentModal}
         onClose={() => {
           handleStudentSuccess();
         }}
-        data={{ familyId: selectedFamilyForStudent || prospectId || "" }}
-        onSuccess={() => {
-          // Les données du prospect sont automatiquement mises à jour par l'ActionCache
+        familyId={selectedFamilyForStudent || prospectId || ""}
+        onSaveSuccess={async () => {
+          await loadProspectData();
           handleStudentSuccess();
         }}
-        onAddStudentTest={handleAddStudentTest}
+        onPrefillTest={handleAddStudentTest}
       />
 
       {/* Modal unifiée pour élèves ET RDV */}

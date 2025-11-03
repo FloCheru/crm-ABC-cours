@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  
+
   PageHeader,
   Container,
   SummaryCard,
@@ -12,6 +12,7 @@ import {
   SettlementDeletionPreviewModal,
 } from "../../../components";
 import { ndrService, type NDR } from "../../../services/ndrService";
+import { getDepartmentFromPostalCode } from "../../../utils";
 
 // Type pour les données du tableau avec l'id requis
 type TableRowData = NDR & {
@@ -42,10 +43,8 @@ export const Ndrs: React.FC = () => {
   const navigate = useNavigate();
 
   // Nettoyage des données de session NDR au chargement
-  // Nettoyage des données de session NDR au chargement
   useEffect(() => {
     localStorage.removeItem('selectedFamily');
-    localStorage.removeItem('from');
     localStorage.removeItem('ndrData');
   }, []);
 
@@ -88,25 +87,6 @@ export const Ndrs: React.FC = () => {
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
 
   // Les données sont maintenant gérées par le store global
-
-  // Fonction pour extraire le département depuis le code postal
-  const extractDepartmentFromPostalCode = (postalCode: string): string => {
-    if (!postalCode || typeof postalCode !== "string") return "";
-
-    // Nettoyer le code postal (enlever les espaces)
-    const cleanPostalCode = postalCode.trim();
-
-    // Vérifier la longueur minimale
-    if (cleanPostalCode.length < 2) return "";
-
-    // Si le code postal commence par 97 (DOM-TOM), prendre les 3 premiers chiffres
-    if (cleanPostalCode.startsWith("97") && cleanPostalCode.length >= 3) {
-      return cleanPostalCode.substring(0, 3);
-    }
-
-    // Sinon, prendre les 2 premiers chiffres (métropole)
-    return cleanPostalCode.substring(0, 2);
-  };
 
   // Fonction pour traduire les méthodes de paiement en français
   const getPaymentMethodLabel = (paymentMethod: string): string => {
@@ -405,7 +385,7 @@ export const Ndrs: React.FC = () => {
           typeof row.familyId === "object" &&
           (row.familyId as any)?.address?.postalCode
         ) {
-          displayDepartment = extractDepartmentFromPostalCode(
+          displayDepartment = getDepartmentFromPostalCode(
             (row.familyId as any).address.postalCode
           );
         }
@@ -451,7 +431,7 @@ export const Ndrs: React.FC = () => {
           typeof row.familyId === "object" &&
           (row.familyId as any)?.address?.postalCode
         ) {
-          department = extractDepartmentFromPostalCode(
+          department = getDepartmentFromPostalCode(
             (row.familyId as any).address.postalCode
           );
         }
@@ -481,7 +461,7 @@ export const Ndrs: React.FC = () => {
           typeof row.familyId === "object" &&
           (row.familyId as any)?.address?.postalCode
         ) {
-          department = extractDepartmentFromPostalCode(
+          department = getDepartmentFromPostalCode(
             (row.familyId as any).address.postalCode
           );
         }
@@ -680,8 +660,7 @@ export const Ndrs: React.FC = () => {
               columns={settlementColumns}
               data={tableData}
               onRowClick={(row) => {
-                localStorage.setItem("ndrId", row._id);
-                navigate("/admin/ndr-details");
+                navigate(`/admin/ndrs/${row._id}`);
               }}
             />
           )}
