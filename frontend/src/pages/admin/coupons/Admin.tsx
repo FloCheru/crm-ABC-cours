@@ -385,7 +385,7 @@ export const Admin: React.FC = () => {
                   "Aucune NDR trouvée pour cette recherche"
                 ) : (
                   <div>
-                    <div>Aucune NDR disponible</div>
+                    <div>Aucune série disponible</div>
                   </div>
                 )}
               </div>
