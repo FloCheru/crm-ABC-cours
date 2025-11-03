@@ -2,29 +2,49 @@ const mongoose = require("mongoose");
 
 const professorSchema = new mongoose.Schema(
   {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: [true, "Utilisateur requis"],
+    // Informations personnelles
+    firstName: {
+      type: String,
+      required: [true, "Prénom requis"],
+      trim: true,
     },
+    lastName: {
+      type: String,
+      required: [true, "Nom requis"],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, "Email requis"],
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    birthDate: {
+      type: Date,
+    },
+    postalCode: {
+      type: String,
+      trim: true,
+    },
+    identifier: {
+      type: String,
+      trim: true,
+    },
+    notifyEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
+    // Matières enseignées (références au modèle Subject)
     subjects: [
       {
-        name: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-        levels: [
-          {
-            type: String,
-            enum: ["primaire", "collège", "lycée", "supérieur"],
-          },
-        ],
-        experience: {
-          type: Number,
-          min: 0,
-          default: 0,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Subject",
       },
     ],
     availability: [
@@ -135,8 +155,8 @@ const professorSchema = new mongoose.Schema(
 );
 
 // Index pour améliorer les performances
-professorSchema.index({ user: 1 });
-professorSchema.index({ "subjects.name": 1 });
+professorSchema.index({ email: 1 });
+professorSchema.index({ subjects: 1 });
 professorSchema.index({ status: 1 });
 professorSchema.index({ hourlyRate: 1 });
 

@@ -83,7 +83,7 @@ router.get("/", async (req, res) => {
     const skip = (page - 1) * limit;
 
     const professors = await Professor.find(filter)
-      .populate("user", "firstName lastName email phone")
+      .populate("subjects", "name category")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -111,8 +111,8 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const professor = await Professor.findById(req.params.id).populate(
-      "user",
-      "firstName lastName email phone"
+      "subjects",
+      "name category"
     );
 
     if (!professor) {
@@ -133,18 +133,28 @@ router.post(
   "/",
   [
     authorize(["admin"]),
-    body("user").isMongoId().withMessage("Utilisateur valide requis"),
-    body("subjects")
-      .isArray({ min: 1 })
-      .withMessage("Au moins une matière requise"),
-    body("subjects.*.name")
-      .trim()
-      .notEmpty()
-      .withMessage("Nom de matière requis"),
-    body("hourlyRate").isNumeric().withMessage("Tarif horaire valide requis"),
+    body("firstName").trim().notEmpty().withMessage("Prénom requis"),
+    body("lastName").trim().notEmpty().withMessage("Nom requis"),
+    body("email").isEmail().normalizeEmail().withMessage("Email valide requis"),
+    body("phone").optional().trim(),
+    body("birthDate").optional().isISO8601().withMessage("Date valide requise"),
+    body("postalCode").optional().trim(),
+    body("identifier").optional().trim(),
+    body("notifyEmail").optional().isEmail().normalizeEmail(),
+    body("hourlyRate")
+      .isNumeric()
+      .withMessage("Tarif horaire valide requis"),
     body("hourlyRate")
       .isFloat({ min: 0 })
       .withMessage("Tarif horaire doit être positif"),
+    body("subjects")
+      .optional()
+      .isArray()
+      .withMessage("Les matières doivent être un array"),
+    body("subjects.*")
+      .optional()
+      .isMongoId()
+      .withMessage("Les IDs de matières doivent être valides"),
   ],
   async (req, res) => {
     try {
@@ -157,25 +167,27 @@ router.post(
         });
       }
 
-      // Vérifier que l'utilisateur existe et est un professeur
-      const user = await User.findById(req.body.user);
-      if (!user) {
-        return res.status(400).json({ message: "Utilisateur non trouvé" });
-      }
-      if (user.role !== "professor") {
-        return res
-          .status(400)
-          .json({ message: "L'utilisateur doit avoir le rôle professeur" });
-      }
-
-      // Vérifier qu'il n'y a pas déjà un profil professeur pour cet utilisateur
+      // Vérifier qu'un professeur n'existe pas déjà avec cet email
       const existingProfessor = await Professor.findOne({
-        user: req.body.user,
+        email: req.body.email,
       });
       if (existingProfessor) {
         return res.status(400).json({
-          message: "Un profil professeur existe déjà pour cet utilisateur",
+          message: "Un professeur existe déjà avec cet email",
         });
+      }
+
+      // Valider les subjects s'ils sont fournis
+      if (req.body.subjects && req.body.subjects.length > 0) {
+        const Subject = require("../models/Subject");
+        for (const subjectId of req.body.subjects) {
+          const subject = await Subject.findById(subjectId);
+          if (!subject) {
+            return res.status(400).json({
+              message: `Matière avec l'ID ${subjectId} non trouvée`,
+            });
+          }
+        }
       }
 
       const professor = new Professor(req.body);
@@ -183,7 +195,7 @@ router.post(
 
       const populatedProfessor = await Professor.findById(
         professor._id
-      ).populate("user", "firstName lastName email phone");
+      ).populate("subjects", "name category");
 
       res.status(201).json({
         message: "Professeur créé avec succès",
@@ -203,7 +215,7 @@ router.put(
   "/:id",
   [
     authorize(["admin", "professor"]),
-    body("subjects.*.name").optional().trim().notEmpty(),
+    body("subjects.*").optional().isMongoId().withMessage("Les IDs de matières doivent être valides"),
     body("hourlyRate").optional().isNumeric(),
     body("hourlyRate").optional().isFloat({ min: 0 }),
   ],
@@ -222,7 +234,7 @@ router.put(
         req.params.id,
         req.body,
         { new: true, runValidators: true }
-      ).populate("user", "firstName lastName email phone");
+      ).populate("subjects", "name category");
 
       if (!professor) {
         return res.status(404).json({ message: "Professeur non trouvé" });

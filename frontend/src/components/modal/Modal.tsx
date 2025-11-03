@@ -10,6 +10,7 @@ import {
 import { familyService } from "../../services/familyService";
 import rdvService from "../../services/rdvService";
 import { adminService, type Admin } from "../../services/adminService";
+import { professorService } from "../../services/professorService";
 import { usePrefillTest } from "../../hooks/usePrefillTest";
 import { toast } from "sonner";
 import "./Modal.css";
@@ -175,6 +176,7 @@ const ENTITY_HANDLERS = {
         postalCode: formData.postalCode.trim(),
         identifier: formData.identifier,
         notifyEmail: formData.notifyEmail?.trim() || "",
+        hourlyRate: parseFloat(formData.hourlyRate) || 0,
       };
 
       console.log("[TEACHER PREPARE] ✅ Données nettoyées et préparées:", prepared);
@@ -186,23 +188,17 @@ const ENTITY_HANDLERS = {
       return Promise.resolve(preparedData);
     },
     create: async (_: string, preparedData: any) => {
-      // TODO: Implémenter teacherService.createTeacher quand le backend será prêt
-      console.log("[TEACHER CREATE] 📊 Données prêtes pour création:", {
-        ...preparedData,
-        __timestamp: new Date().toISOString(),
-        __note: "⚠️ DONNÉES UNIQUEMENT EN MÉMOIRE - PAS SAUVEGARDÉES EN DB"
-      });
+      console.log("[TEACHER CREATE] 📊 Données prêtes pour création:", preparedData);
 
-      const mockTeacher = {
-        _id: Date.now().toString(),
-        ...preparedData,
-        createdAt: new Date().toISOString()
-      };
-
-      console.log("[TEACHER CREATE] ✅ Objet mock créé (LOCAL ONLY):", mockTeacher);
-      console.log("[TEACHER CREATE] 🔗 Pour persister en DB, appeler: professorService.createProfessor(preparedData)");
-
-      return Promise.resolve(mockTeacher);
+      try {
+        console.log("[TEACHER CREATE] 🚀 Appel API: professorService.createProfessor()");
+        const result = await professorService.createProfessor(preparedData);
+        console.log("[TEACHER CREATE] ✅ Professeur créé avec succès en DB:", result);
+        return result;
+      } catch (error) {
+        console.error("[TEACHER CREATE] ❌ Erreur lors de la création:", error);
+        throw error;
+      }
     },
     logs: {
       entityName: "PROFESSEUR",
@@ -509,6 +505,12 @@ export const Modal: React.FC<ModalProps> = ({
             { key: "email", label: "Email", type: "email", required: true },
             { key: "postalCode", label: "Code postal", type: "text", required: true },
             { key: "identifier", label: "Identifiant", type: "text" },
+          ],
+        },
+        {
+          title: "Informations professionnelles",
+          fields: [
+            { key: "hourlyRate", label: "Tarif horaire (€/h)", type: "number", required: true, placeholder: "30" },
           ],
         },
         {

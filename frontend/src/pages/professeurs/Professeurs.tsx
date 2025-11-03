@@ -13,6 +13,7 @@ import {
 } from "../../components";
 import { KeyRound, UserRound, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
+import { professorService } from "../../services/professorService";
 
 // Type pour un professeur
 interface Teacher {
@@ -175,21 +176,42 @@ export const Professeurs: React.FC = () => {
     setIsCreateTeacherModalOpen(true);
   };
 
-  const handleCreateTeacherSuccess = () => {
+  const handleCreateTeacherSuccess = async () => {
     console.log("[PROFESSEURS PAGE] 🎉 Callback onSuccess appelé après création de professeur");
 
     // Fermer la modal
     setIsCreateTeacherModalOpen(false);
     console.log("[PROFESSEURS PAGE] 🚪 Modal fermée");
 
-    // ⚠️ IMPORTANT: Les données ne sont PAS persistées en base de données
-    // Le professeur créé n'existe que localement dans l'objet mock retourné par Modal
-    // Pour persister en DB, il faut implémenter l'appel API:
-    // const updatedTeachers = await teacherService.getTeachers();
-    // setTeachers(updatedTeachers);
+    // Recharger les données depuis la DB
+    try {
+      console.log("[PROFESSEURS PAGE] 🔄 Rechargement des données depuis la DB...");
+      const professors = await professorService.getAllProfessors();
 
-    console.log("[PROFESSEURS PAGE] ⚠️ ATTENTION: Professeur créé LOCAL ONLY (pas en DB)");
-    console.log("[PROFESSEURS PAGE] 💾 TODO: Implémenter teacherService.createProfessor() pour persister en MongoDB");
+      // Mapper les Professor vers Teacher (adapter la structure)
+      const mappedTeachers: Teacher[] = professors.map((prof: any) => ({
+        _id: prof._id,
+        firstName: prof.firstName,
+        lastName: prof.lastName,
+        email: prof.email,
+        phone: prof.phone,
+        address: {
+          postalCode: prof.postalCode || "",
+          city: "",
+          department: prof.postalCode ? prof.postalCode.substring(0, 2) : "",
+        },
+        subjects: prof.subjects?.map((s: any) => s.name || s) || [],
+        levels: [],
+        createdAt: prof.createdAt,
+      }));
+
+      setTeachers(mappedTeachers);
+      console.log("[PROFESSEURS PAGE] ✅ Données rechargées avec succès:", mappedTeachers.length, "professeurs");
+      toast.success("Professeur créé avec succès");
+    } catch (error) {
+      console.error("[PROFESSEURS PAGE] ❌ Erreur au rechargement des données:", error);
+      toast.error("Erreur lors du rechargement des professeurs");
+    }
   };
 
   const handleSearch = () => {
