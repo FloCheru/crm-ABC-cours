@@ -320,7 +320,7 @@ export const Modal: React.FC<ModalProps> = ({
   onCreateTestProspect,
 }) => {
   // Hook pour les données de test de préremplissage
-  const { studentTestData, rdvTestData } = usePrefillTest();
+  const { studentTestData, rdvTestData, teacherTestData } = usePrefillTest();
 
   // Nouvelle logique de détection création vs modification
   const entityId = data?.studentId || data?.rdvId || data?.professorId;
@@ -979,6 +979,11 @@ export const Modal: React.FC<ModalProps> = ({
         ...rdvTestData,
         assignedAdminId: adminId,
       }));
+    } else if (type === "teacher") {
+      setFormData((prev) => ({
+        ...prev,
+        ...teacherTestData,
+      }));
     } else if (type === "family" && onCreateTestProspect) {
       await onCreateTestProspect();
     }
@@ -1253,7 +1258,7 @@ export const Modal: React.FC<ModalProps> = ({
                   >
                     Annuler
                   </Button>
-                  {(!data || !data.firstName) && (type === "student" || type === "rdv" || (type === "family" && onCreateTestProspect)) && (
+                  {(!data || !data.firstName) && (type === "student" || type === "rdv" || type === "teacher" || (type === "family" && onCreateTestProspect)) && (
                     <Button
                       type="button"
                       variant="primary"

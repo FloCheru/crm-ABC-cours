@@ -27,6 +27,17 @@ export interface RdvTestData {
   notes: string;
 }
 
+export interface TeacherTestData {
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  phone: string;
+  email: string;
+  postalCode: string;
+  identifier: string;
+  notifyEmail: string;
+}
+
 /**
  * Hook qui fournit des données de test fixes pour préremplir rapidement les formulaires
  */
@@ -63,8 +74,21 @@ export const usePrefillTest = () => {
     notes: "Rendez-vous de suivi pédagogique",
   };
 
+  // Données de test fixes pour professeur
+  const teacherTestData: TeacherTestData = {
+    firstName: "Marie",
+    lastName: "Leclerc",
+    birthDate: "1985-03-22",
+    phone: "06 98 76 54 32",
+    email: "marie.leclerc@example.com",
+    postalCode: "75002",
+    identifier: "PROF001",
+    notifyEmail: "marie.leclerc@example.com",
+  };
+
   return {
     studentTestData,
     rdvTestData,
+    teacherTestData,
   };
 };
