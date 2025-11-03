@@ -279,6 +279,31 @@ router.put(
   }
 );
 
+// @route   DELETE /api/professors/:id
+// @desc    Supprimer un professeur
+// @access  Private (Admin)
+router.delete(
+  "/:id",
+  authorize(["admin"]),
+  async (req, res) => {
+    try {
+      const professor = await Professor.findByIdAndDelete(req.params.id);
+
+      if (!professor) {
+        return res.status(404).json({ message: "Professeur non trouvé" });
+      }
+
+      res.json({
+        message: "Professeur supprimé avec succès",
+        professor,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la suppression du professeur:", error);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
+
 // @route   POST /api/professors/:id/documents
 // @desc    Uploader un document pour un professeur
 // @access  Private (Admin ou le professeur lui-même)
