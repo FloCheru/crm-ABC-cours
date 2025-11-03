@@ -249,6 +249,14 @@ export const PricingPayment: React.FC = () => {
       ndrData = JSON.parse(existingNdrData);
     }
 
+    // ⚠️ Validation critique: familyId DOIT être présent
+    if (!ndrData.familyId) {
+      console.error("❌ [FINISH] familyId manquant dans ndrData:", ndrData);
+      toast.error("Erreur: la famille n'a pas pu être chargée. Veuillez recommencer.");
+      navigate("/admin/family-selection");
+      return;
+    }
+
     // Filtrer les deadlines incomplètes avant envoi
     const completedDeadlines =
       formData.hasDeadlines && formData.deadlineDates.length > 0
@@ -273,6 +281,7 @@ export const PricingPayment: React.FC = () => {
           : undefined,
     };
     try {
+      console.log("✅ [FINISH] Création NDR avec familyId:", completedNdrData.familyId);
       const createdNdr = await ndrService.createNDR(completedNdrData);
 
       // Nettoyer localStorage après succès

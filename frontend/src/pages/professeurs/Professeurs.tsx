@@ -207,8 +207,7 @@ export const Professeurs: React.FC = () => {
 
   // Handler pour cliquer sur une ligne du tableau
   const handleRowClick = (row: TableRowData) => {
-    localStorage.setItem("professorId", row._id);
-    navigate("/admin/professeur-details");
+    navigate(`/admin/professeur-details/${row._id}`);
   };
 
   // Gérer la suppression d'un professeur

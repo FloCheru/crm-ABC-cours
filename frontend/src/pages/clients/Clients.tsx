@@ -184,8 +184,7 @@ export const Clients: React.FC = () => {
     console.log(
       `🔍 Navigation vers détails client: ${row.primaryContact.firstName} ${row.primaryContact.lastName}`
     );
-    localStorage.setItem("clientId", row._id);
-    navigate("/admin/client-details");
+    navigate(`/admin/client-details/${row._id}`);
   };
 
   // Gérer la suppression d'un client

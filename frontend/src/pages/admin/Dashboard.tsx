@@ -127,8 +127,7 @@ export const Dashboard: React.FC = () => {
 
   // Handler: naviguer vers détails du prospect
   const handleProspectClick = (prospectId: string) => {
-    localStorage.setItem("prospectId", prospectId);
-    navigate("/admin/prospect-details");
+    navigate(`/admin/prospect-details/${prospectId}`);
   };
 
   // Handler: créer un RDV

@@ -200,6 +200,7 @@ export const BeneficiariesSubjects: React.FC = () => {
     console.log("🎯 [HANDLE NEXT] Bouton Suivant cliqué");
     console.log("🎯 [HANDLE NEXT] selectedBeneficiaries:", selectedBeneficiaries);
     console.log("🎯 [HANDLE NEXT] selectedSubjects:", selectedSubjects);
+    console.log("🎯 [HANDLE NEXT] ndrData.familyId:", ndrData.familyId);
 
     // Reset des erreurs
     setBeneficiaryError(false);
@@ -208,12 +209,20 @@ export const BeneficiariesSubjects: React.FC = () => {
     // Validation
     const noBeneficiaries = selectedBeneficiaries.length === 0;
     const noSubjects = selectedSubjects.length === 0;
+    const noFamilyId = !ndrData.familyId;
 
     console.log("🎯 [HANDLE NEXT] noBeneficiaries:", noBeneficiaries);
     console.log("🎯 [HANDLE NEXT] noSubjects:", noSubjects);
+    console.log("🎯 [HANDLE NEXT] noFamilyId:", noFamilyId);
 
-    if (noBeneficiaries || noSubjects) {
+    if (noBeneficiaries || noSubjects || noFamilyId) {
       console.log("❌ [HANDLE NEXT] Validation échouée");
+      if (noFamilyId) {
+        console.log("❌ [HANDLE NEXT] Erreur: familyId manquant");
+        toast.error("Erreur: la famille n'a pas pu être chargée. Veuillez réessayer.");
+        navigate("/admin/family-selection");
+        return;
+      }
       if (noBeneficiaries) {
         console.log("❌ [HANDLE NEXT] Erreur bénéficiaire activée");
         setBeneficiaryError(true);

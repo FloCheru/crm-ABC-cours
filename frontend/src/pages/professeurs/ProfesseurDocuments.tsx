@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../components';
 import { DocumentUpload } from '../../components/documents/DocumentUpload';
@@ -15,7 +15,7 @@ interface Document {
 }
 
 export const ProfesseurDocuments: React.FC = () => {
-  const professorId = localStorage.getItem('professorId');
+  const { professorId } = useParams<{ professorId: string }>();
   const navigate = useNavigate();
 
   const [documents, setDocuments] = useState<Document[]>([]);

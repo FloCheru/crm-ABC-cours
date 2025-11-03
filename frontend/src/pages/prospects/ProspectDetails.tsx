@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import {
 
@@ -40,9 +40,7 @@ type FieldType =
 
 export const ProspectDetails: React.FC = () => {
   const navigate = useNavigate();
-
-  // Récupérer l'ID depuis localStorage
-  const prospectId = localStorage.getItem("prospectId");
+  const { prospectId } = useParams<{ prospectId: string }>();
   const [prospect, setProspect] = useState<Family | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [, setError] = useState<string>("");

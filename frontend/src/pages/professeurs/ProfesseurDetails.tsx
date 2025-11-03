@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import { PageHeader, Modal } from "../../components";
 import type {
@@ -21,12 +21,10 @@ import rdvService from "../../services/rdvService";
 import { useAuthStore } from "../../stores";
 import { enterProfessorView } from "../../utils/professorSimulation";
 import { Eye } from "lucide-react";
-import { useProfessorId } from "../../hooks/useProfessorId";
 
 export const ProfesseurDetails: React.FC = () => {
   const navigate = useNavigate();
-
-  const professorId = useProfessorId();
+  const { professorId } = useParams<{ professorId: string }>();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [, setError] = useState<string>("");
@@ -426,7 +424,7 @@ export const ProfesseurDetails: React.FC = () => {
       <div className="container mx-auto px-4 pt-12 max-w-6xl">
         <div className="flex gap-md">
           <button
-            onClick={() => navigate('/admin/professeur-documents')}
+            onClick={() => navigate(`/admin/professeur-details/${professorId}/documents`)}
             className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 flex items-center gap-2"
           >
             📄 Voir les documents

@@ -1,30 +1,329 @@
-Erreur lors de l'ajout de l'élève: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Family"
-[0]     at SchemaObjectId.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schema\objectId.js:251:11)
-[0]     at SchemaType.applySetters (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1262:12)
-[0]     at SchemaType.castForQuery (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1698:17)
-[0]     at cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\cast.js:390:32)
-[0]     at Query.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:5060:12)
-[0]     at Query._castConditions (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2374:10)
-[0]     at model.Query._findOneAndUpdate (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:3477:8)
-[0]     at model.Query.exec (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:4627:80)
-[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-[0]     at async FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:552:29) {
-[0]   stringValue: '"undefined"',
-[0]   messageFormat: undefined,
-[0]   kind: 'ObjectId',
-[0]   value: 'undefined',
-[0]   path: '_id',
-[0]   reason: BSONError: input must be a 24 character hex string, 12 byte Uint8Array, or an integer
-[0]       at new ObjectId (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\bson@6.10.4\node_modules\bson\lib\bson.cjs:2538:23)
-[0]       at castObjectId (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\cast\objectid.js:25:12)
-[0]       at SchemaObjectId.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schema\objectId.js:249:12)
-[0]       at SchemaType.applySetters (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1262:12)
-[0]       at SchemaType.castForQuery (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1698:17)
-[0]       at cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\cast.js:390:32)
-[0]       at Query.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:5060:12)
-[0]       at Query._castConditions (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2374:10)
-[0]       at model.Query._findOneAndUpdate (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:3477:8)
-[0]       at model.Query.exec (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:4627:80),
-[0]   valueType: 'string'
+0] 🔶 [BACKEND SERVICE] updatePrimaryContact appelé
+[0] 🔶 [BACKEND SERVICE] familyId: 68d922008ec0c0c05b31d54f
+[0] 🔶 [BACKEND SERVICE] primaryContactData reçu: {
+[0]   "firstName": "Jean",
+[0]   "lastName": "Dupontal",
+[0]   "primaryPhone": "0123456789",
+[0]   "email": "jean.dupont@email.com",
+[0]   "relation": "père",
+[0]   "address": {
+[0]     "street": "4 rue filante",
+[0]     "city": "Nantes",
+[0]     "postalCode": "44120"
+[0]   }
 [0] }
-[0] ::1 - - [03/Nov/2025:07:22:57 +0000] "POST /api/families/undefined/students HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+[0] 🔶 [BACKEND SERVICE] Famille après update - primaryContact: {
+[0]   "firstName": "Jean",
+[0]   "lastName": "Dupontal",
+[0]   "primaryPhone": "0123456789",
+[0]   "email": "jean.dupont@email.com",
+[0]   "relation": "père",
+[0]   "address": {
+[0]     "street": "4 rue filante",
+[0]     "city": "Nantes",
+[0]     "postalCode": "44120"
+[0]   }
+[0] }
+[0] Cache invalidated for families with pattern 'family_68d922008ec0c0c05b31d54f': 0 entries removed
+[0] Cache invalidated for families with pattern 'families_list*': 1 entries removed
+[0] Cache invalidated for families with pattern 'families_stats': 1 entries removed
+[0] Cache invalidated for family 68d922008ec0c0c05b31d54f after primary contact update
+[0] ::1 - - [03/Nov/2025:09:34:56 +0000] "PATCH /api/families/68d922008ec0c0c05b31d54f/primary-contact HTTP/1.1" 200 525 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+[0] ::1 - - [03/Nov/2025:09:34:56 +0000] "GET /api/families/undefined HTTP/1.1" 404 34 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+[0] ::1 - - [03/Nov/2025:09:34:56 +0000] "POST /api/auth/extend-session HTTP/1.1" 401 30 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+[0] ::1 - - [03/Nov/2025:09:34:56 +0000] "GET /api/subjects HTTP/1.1" 304 - "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+[0] ::1 - - [03/Nov/2025:09:34:56 +0000] "GET /api/families/undefined HTTP/1.1" 404 34 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+[0] ::1 - - [03/Nov/2025:09:34:56 +0000] "GET /api/subjects HTTP/1.1" 304 - "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+[0] ::1 - - [03/Nov/2025:09:35:00 +0000] "POST /api/auth/extend-session HTTP/1.1" 401 30 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=0)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 0 + 1 = 24
+[0]    - Code généré: "18"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=1)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 1 + 1 = 25
+[0]    - Code généré: "19"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=2)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 2 + 1 = 26
+[0]    - Code généré: "1A"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=3)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 3 + 1 = 27
+[0]    - Code généré: "1B"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=4)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 4 + 1 = 28
+[0]    - Code généré: "1C"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=5)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 5 + 1 = 29
+[0]    - Code généré: "1D"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=6)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 6 + 1 = 30
+[0]    - Code généré: "1E"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=7)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 7 + 1 = 31
+[0]    - Code généré: "1F"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=8)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 8 + 1 = 32
+[0]    - Code généré: "20"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=9)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 9 + 1 = 33
+[0]    - Code généré: "21"
+[0] Erreur lors de la création de la NDR: NDR validation failed: familyId: ID de la famille requis
+[0] ::1 - - [03/Nov/2025:09:35:05 +0000] "POST /api/ndrs HTTP/1.1" 500 33 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+[0] Erreur lors de la création de NDR: NDR validation failed: familyId: ID de la famille requis
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=0)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 0 + 1 = 24
+[0]    - Code généré: "18"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=1)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 1 + 1 = 25
+[0]    - Code généré: "19"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=2)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 2 + 1 = 26
+[0]    - Code généré: "1A"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=3)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 3 + 1 = 27
+[0]    - Code généré: "1B"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=4)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 4 + 1 = 28
+[0]    - Code généré: "1C"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=5)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 5 + 1 = 29
+[0]    - Code généré: "1D"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=6)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 6 + 1 = 30
+[0]    - Code généré: "1E"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=7)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 7 + 1 = 31
+[0]    - Code généré: "1F"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=8)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 8 + 1 = 32
+[0]    - Code généré: "20"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=9)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 9 + 1 = 33
+[0]    - Code généré: "21"
+[0] Erreur lors de la création de la NDR: NDR validation failed: familyId: ID de la famille requis
+[0] Erreur lors de la création de NDR: NDR validation failed: familyId: ID de la famille requis
+[0] ::1 - - [03/Nov/2025:09:35:06 +0000] "POST /api/ndrs HTTP/1.1" 500 33 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=0)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 0 + 1 = 24
+[0]    - Code généré: "18"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=1)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 1 + 1 = 25
+[0]    - Code généré: "19"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=2)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 2 + 1 = 26
+[0]    - Code généré: "1A"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=3)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 3 + 1 = 27
+[0]    - Code généré: "1B"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=4)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 4 + 1 = 28
+[0]    - Code généré: "1C"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=5)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 5 + 1 = 29
+[0]    - Code généré: "1D"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=6)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 6 + 1 = 30
+[0]    - Code généré: "1E"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=7)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 7 + 1 = 31
+[0]    - Code généré: "1F"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=8)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 8 + 1 = 32
+[0]    - Code généré: "20"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=9)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 9 + 1 = 33
+[0]    - Code généré: "21"
+[0] Erreur lors de la création de la NDR: NDR validation failed: familyId: ID de la famille requis
+[0] Erreur lors de la création de NDR: NDR validation failed: familyId: ID de la famille requis
+[0] ::1 - - [03/Nov/2025:09:35:09 +0000] "POST /api/ndrs HTTP/1.1" 500 33 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=0)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 0 + 1 = 24
+[0]    - Code généré: "18"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=1)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 1 + 1 = 25
+[0]    - Code généré: "19"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=2)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 2 + 1 = 26
+[0]    - Code généré: "1A"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=3)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 3 + 1 = 27
+[0]    - Code généré: "1B"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=4)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 4 + 1 = 28
+[0]    - Code généré: "1C"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=5)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 5 + 1 = 29
+[0]    - Code généré: "1D"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=6)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 6 + 1 = 30
+[0]    - Code généré: "1E"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=7)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 7 + 1 = 31
+[0]    - Code généré: "1F"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=8)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 8 + 1 = 32
+[0]    - Code généré: "20"
+[0] 🔍 [COUPON-DEBUG] getAllCoupons() - Nombre de coupons trouvés: 22
+[0] 🔍 [COUPON-DEBUG] Codes existants: [10, 11, 12, 13, 14, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F]
+[0] 🔍 [COUPON-DEBUG] generateCouponCode(index=9)
+[0]    - Coupons existants: 22
+[0]    - Code max existant (hex->dec): 23
+[0]    - Calcul: 23 + 9 + 1 = 33
+[0]    - Code généré: "21"
+[0] Erreur lors de la création de la NDR: NDR validation failed: familyId: ID de la famille requis
+[0] Erreur lors de la création de NDR: NDR validation failed: familyId: ID de la famille requis
+[0] ::1 - - [03/Nov/2025:09:35:13 +0000] "POST /api/ndrs HTTP/1.1" 500 33 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"

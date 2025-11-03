@@ -649,8 +649,7 @@ export const Prospects: React.FC = () => {
                 id: family._id,
               }))}
               onRowClick={(row) => {
-                localStorage.setItem("prospectId", row._id);
-                navigate("/admin/prospect-details");
+                navigate(`/admin/prospect-details/${row._id}`);
               }}
             />
           )}

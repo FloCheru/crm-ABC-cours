@@ -81,12 +81,12 @@ function AppRoutes() {
             <Route path="coupons/list" element={<CouponsList />} />
             <Route path="coupons/:seriesId/coupons" element={<SeriesDetails />} />
             <Route path="professeurs" element={<Professeurs />} />
-            <Route path="professeur-details" element={<ProfesseurDetails />} />
-            <Route path="professeur-documents" element={<ProfesseurDocuments />} />
+            <Route path="professeur-details/:professorId" element={<ProfesseurDetails />} />
+            <Route path="professeur-details/:professorId/documents" element={<ProfesseurDocuments />} />
             <Route path="prospects" element={<Prospects />} />
-            <Route path="prospect-details" element={<ProspectDetails />} />
+            <Route path="prospect-details/:prospectId" element={<ProspectDetails />} />
             <Route path="clients" element={<Clients />} />
-            <Route path="client-details" element={<ClientDetails />} />
+            <Route path="client-details/:clientId" element={<ClientDetails />} />
             <Route path="ndrs" element={<Ndrs />} />
             <Route path="ndrs/:ndrId" element={<NdrDetails />} />
             <Route path="family-selection" element={<FamilySelection />} />

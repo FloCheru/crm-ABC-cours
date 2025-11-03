@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import {
 
@@ -16,9 +16,7 @@ import type { NDR } from "../../services/ndrService";
 
 export const ClientDetails: React.FC = () => {
   const navigate = useNavigate();
-
-  // Récupérer l'ID depuis localStorage
-  const clientId = localStorage.getItem("clientId");
+  const { clientId } = useParams<{ clientId: string }>();
 
   const [client, setClient] = useState<Family | null>(null);
   const [isLoading, setIsLoading] = useState(true);
