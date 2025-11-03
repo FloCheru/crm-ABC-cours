@@ -164,7 +164,9 @@ const ENTITY_HANDLERS = {
   },
   teacher: {
     prepareData: (formData: any, _data: any) => {
-      return {
+      console.log("[TEACHER PREPARE] 📝 Données du formulaire reçues:", formData);
+
+      const prepared = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         birthDate: formData.birthDate,
@@ -174,6 +176,9 @@ const ENTITY_HANDLERS = {
         identifier: formData.identifier,
         notifyEmail: formData.notifyEmail?.trim() || "",
       };
+
+      console.log("[TEACHER PREPARE] ✅ Données nettoyées et préparées:", prepared);
+      return prepared;
     },
     update: async (professorId: string, preparedData: any) => {
       // TODO: Implémenter teacherService.updateTeacher quand le backend sera prêt
@@ -182,12 +187,22 @@ const ENTITY_HANDLERS = {
     },
     create: async (_: string, preparedData: any) => {
       // TODO: Implémenter teacherService.createTeacher quand le backend será prêt
-      console.log("Create teacher:", preparedData);
-      return Promise.resolve({
+      console.log("[TEACHER CREATE] 📊 Données prêtes pour création:", {
+        ...preparedData,
+        __timestamp: new Date().toISOString(),
+        __note: "⚠️ DONNÉES UNIQUEMENT EN MÉMOIRE - PAS SAUVEGARDÉES EN DB"
+      });
+
+      const mockTeacher = {
         _id: Date.now().toString(),
         ...preparedData,
         createdAt: new Date().toISOString()
-      });
+      };
+
+      console.log("[TEACHER CREATE] ✅ Objet mock créé (LOCAL ONLY):", mockTeacher);
+      console.log("[TEACHER CREATE] 🔗 Pour persister en DB, appeler: professorService.createProfessor(preparedData)");
+
+      return Promise.resolve(mockTeacher);
     },
     logs: {
       entityName: "PROFESSEUR",
@@ -867,13 +882,18 @@ export const Modal: React.FC<ModalProps> = ({
 
   const handleSave = async () => {
     if (!validateForm()) {
+      console.log("[HANDLESAVE] ❌ Validation échouée pour type:", type);
       return;
     }
 
     // Vérifier si déjà en cours de chargement pour éviter double soumission
     if (isLoading) {
+      console.log("[HANDLESAVE] ⏳ Déjà en cours de chargement, ignoré");
       return;
     }
+
+    console.log("[HANDLESAVE] 🚀 Début de la sauvegarde pour type:", type);
+    console.log("[HANDLESAVE] Mode:", entityId ? "UPDATE" : "CREATE");
 
     setIsLoading(true);
     setError(null);
@@ -882,16 +902,20 @@ export const Modal: React.FC<ModalProps> = ({
       const handler = ENTITY_HANDLERS[type];
 
       // 1. Préparation des données
+      console.log("[HANDLESAVE] 1️⃣ Préparation des données...");
       const preparedData = handler.prepareData(formData, data);
 
       // 2. Sauvegarde
       if (entityId) {
         // Mode UPDATE
+        console.log("[HANDLESAVE] 2️⃣ Mode UPDATE - ID:", entityId);
         await handler.update(entityId, preparedData, familyId);
       } else {
         // Mode CREATE
+        console.log("[HANDLESAVE] 2️⃣ Mode CREATE - Aucun ID");
         const additionalData = type === "rdv" ? admins : undefined;
-        await handler.create(familyId, preparedData, additionalData);
+        const result = await handler.create(familyId, preparedData, additionalData);
+        console.log("[HANDLESAVE] ✅ Résultat CREATE:", result);
       }
 
       // 3. Gestion du mode selon le contexte (création vs édition)

@@ -176,15 +176,20 @@ export const Professeurs: React.FC = () => {
   };
 
   const handleCreateTeacherSuccess = () => {
+    console.log("[PROFESSEURS PAGE] 🎉 Callback onSuccess appelé après création de professeur");
+
     // Fermer la modal
     setIsCreateTeacherModalOpen(false);
+    console.log("[PROFESSEURS PAGE] 🚪 Modal fermée");
 
-    // Recharger les données
-    // TODO: Remplacer par un vrai appel API
+    // ⚠️ IMPORTANT: Les données ne sont PAS persistées en base de données
+    // Le professeur créé n'existe que localement dans l'objet mock retourné par Modal
+    // Pour persister en DB, il faut implémenter l'appel API:
     // const updatedTeachers = await teacherService.getTeachers();
     // setTeachers(updatedTeachers);
 
-    console.log("✅ Professeur créé avec succès");
+    console.log("[PROFESSEURS PAGE] ⚠️ ATTENTION: Professeur créé LOCAL ONLY (pas en DB)");
+    console.log("[PROFESSEURS PAGE] 💾 TODO: Implémenter teacherService.createProfessor() pour persister en MongoDB");
   };
 
   const handleSearch = () => {
@@ -227,7 +232,9 @@ export const Professeurs: React.FC = () => {
         // await teacherService.deleteTeacher(professorId);
 
         // Update local state by removing the deleted teacher
-        setTeachers((prevData) => prevData.filter((t) => t._id !== professorId));
+        setTeachers((prevData) =>
+          prevData.filter((t) => t._id !== professorId)
+        );
 
         console.log(`Professeur ${fullName} supprimé avec succès`);
       } catch (error) {
@@ -539,7 +546,7 @@ export const Professeurs: React.FC = () => {
             variant="single"
             buttons={[
               {
-                text: "Ajouter un Prof",
+                text: "Ajouter un professeur",
                 variant: "primary",
                 onClick: handleAddTeacher,
               },
