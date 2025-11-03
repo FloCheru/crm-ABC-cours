@@ -1,6 +1,5 @@
+import { apiClient } from '../utils';
 import type { TeachingSubject } from '../types/teacher';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export interface Professor {
   _id: string;
@@ -40,19 +39,7 @@ class ProfessorService {
    */
   async getAllProfessors(): Promise<Professor[]> {
     try {
-      const response = await fetch(`${API_URL}/professors`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des professeurs');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.get<any>('/api/professors');
       return data.professors || [];
     } catch (error) {
       console.error('Erreur getAllProfessors:', error);
@@ -65,19 +52,7 @@ class ProfessorService {
    */
   async getProfessorById(professorId: string): Promise<Professor> {
     try {
-      const response = await fetch(`${API_URL}/professors/${professorId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération du professeur');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.get<any>(`/api/professors/${professorId}`);
       return data.professor;
     } catch (error) {
       console.error('Erreur getProfessorById:', error);
@@ -90,20 +65,7 @@ class ProfessorService {
    */
   async createProfessor(professorData: Partial<Professor>): Promise<Professor> {
     try {
-      const response = await fetch(`${API_URL}/professors`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(professorData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la création du professeur');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.post<any>('/api/professors', professorData);
       return data.professor;
     } catch (error) {
       console.error('Erreur createProfessor:', error);
@@ -116,20 +78,7 @@ class ProfessorService {
    */
   async updateProfessor(professorId: string, professorData: Partial<Professor>): Promise<Professor> {
     try {
-      const response = await fetch(`${API_URL}/professors/${professorId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(professorData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la mise à jour du professeur');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.put<any>(`/api/professors/${professorId}`, professorData);
       return data.professor;
     } catch (error) {
       console.error('Erreur updateProfessor:', error);
@@ -142,14 +91,7 @@ class ProfessorService {
    */
   async deleteProfessor(professorId: string): Promise<void> {
     try {
-      const response = await fetch(`${API_URL}/professors/${professorId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la suppression du professeur');
-      }
+      await apiClient.delete(`/api/professors/${professorId}`);
     } catch (error) {
       console.error('Erreur deleteProfessor:', error);
       throw error;
@@ -163,19 +105,7 @@ class ProfessorService {
    */
   async getDocuments(professorId: string): Promise<ProfessorDocument[]> {
     try {
-      const response = await fetch(`${API_URL}/professors/${professorId}/documents`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des documents');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.get<any>(`/api/professors/${professorId}/documents`);
       return data.documents || [];
     } catch (error) {
       console.error('Erreur getDocuments:', error);
@@ -200,10 +130,15 @@ class ProfessorService {
       formData.append('category', category);
       formData.append('professorId', professorId);
 
-      const response = await fetch(`${API_URL}/professors/${professorId}/documents`, {
+      // Récupérer le token pour les uploads de fichiers
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+      const response = await fetch(`http://localhost:3000/api/professors/${professorId}/documents`, {
         method: 'POST',
         credentials: 'include',
         body: formData,
+        headers,
         // Ne pas définir Content-Type, le navigateur le fera automatiquement avec le boundary
       });
 
@@ -227,9 +162,14 @@ class ProfessorService {
    */
   async downloadDocument(documentId: string): Promise<Blob> {
     try {
-      const response = await fetch(`${API_URL}/documents/${documentId}/download`, {
+      // Récupérer le token pour les téléchargements
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+      const response = await fetch(`http://localhost:3000/api/documents/${documentId}/download`, {
         method: 'GET',
         credentials: 'include',
+        headers,
       });
 
       if (!response.ok) {
@@ -249,14 +189,7 @@ class ProfessorService {
    */
   async deleteDocument(documentId: string): Promise<void> {
     try {
-      const response = await fetch(`${API_URL}/documents/${documentId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la suppression du document');
-      }
+      await apiClient.delete(`/api/documents/${documentId}`);
     } catch (error) {
       console.error('Erreur deleteDocument:', error);
       throw error;
@@ -269,19 +202,7 @@ class ProfessorService {
    */
   async getDocumentMetadata(documentId: string): Promise<ProfessorDocument> {
     try {
-      const response = await fetch(`${API_URL}/documents/${documentId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des métadonnées');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.get<any>(`/api/documents/${documentId}`);
       return data.document;
     } catch (error) {
       console.error('Erreur getDocumentMetadata:', error);
@@ -297,19 +218,7 @@ class ProfessorService {
    */
   async getMyProfile(): Promise<Professor> {
     try {
-      const response = await fetch(`${API_URL}/professors/me`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération du profil');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.get<any>('/api/professors/me');
       return data.professor;
     } catch (error) {
       console.error('Erreur getMyProfile:', error);
@@ -324,21 +233,7 @@ class ProfessorService {
    */
   async updateMyProfile(profileData: Partial<Professor>): Promise<Professor> {
     try {
-      const response = await fetch(`${API_URL}/professors/me`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(profileData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Erreur lors de la mise à jour du profil');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.put<any>('/api/professors/me', profileData);
       return data.professor;
     } catch (error) {
       console.error('Erreur updateMyProfile:', error);
@@ -359,21 +254,7 @@ class ProfessorService {
     bic?: string;
   }): Promise<Professor> {
     try {
-      const response = await fetch(`${API_URL}/professors/me/rib`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(ribData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Erreur lors de la mise à jour du RIB');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.put<any>('/api/professors/me/rib', ribData);
       return data.professor;
     } catch (error) {
       console.error('Erreur updateMyRib:', error);
@@ -388,21 +269,7 @@ class ProfessorService {
    */
   async updateMyAvailability(availability: any): Promise<Professor> {
     try {
-      const response = await fetch(`${API_URL}/professors/me/availability`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ weeklyAvailability: availability }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Erreur lors de la mise à jour des disponibilités');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.put<any>('/api/professors/me/availability', { weeklyAvailability: availability });
       return data.professor;
     } catch (error) {
       console.error('Erreur updateMyAvailability:', error);
@@ -418,19 +285,7 @@ class ProfessorService {
    */
   async getMySubjects(): Promise<TeachingSubject[]> {
     try {
-      const response = await fetch(`${API_URL}/professors/me/subjects`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des matières');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.get<any>('/api/professors/me/subjects');
       return data.subjects || [];
     } catch (error) {
       console.error('Erreur getMySubjects:', error);
@@ -445,21 +300,7 @@ class ProfessorService {
    */
   async updateMySubjects(subjects: TeachingSubject[]): Promise<TeachingSubject[]> {
     try {
-      const response = await fetch(`${API_URL}/professors/me/subjects`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ subjects }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Erreur lors de la mise à jour des matières');
-      }
-
-      const data = await response.json();
+      const data = await apiClient.put<any>('/api/professors/me/subjects', { subjects });
       return data.subjects || [];
     } catch (error) {
       console.error('Erreur updateMySubjects:', error);
