@@ -113,6 +113,54 @@ export const PricingPayment: React.FC = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handlePrefill = () => {
+    // Remplir les champs tarifaires
+    updateFormData("hourlyRate", 45.00);
+    updateFormData("quantity", 10);
+    updateFormData("charges", 25.00);
+
+    // Remplir le mode de paiement
+    updateFormData("paymentMethod", "card");
+    updateFormData("paymentType", "avance");
+
+    // Activer les échéances
+    updateFormData("hasDeadlines", true);
+    updateFormData("deadlinesNumber", "2");
+
+    // Générer 2 dates d'échéance réalistes (30j et 60j à partir d'aujourd'hui)
+    const today = new Date();
+    const deadline1 = new Date(today);
+    deadline1.setDate(deadline1.getDate() + 30);
+    const deadline2 = new Date(today);
+    deadline2.setDate(deadline2.getDate() + 60);
+
+    const amountPerDeadline = (45.00 * 10) / 2; // 225€
+
+    const newDates = [
+      {
+        date: deadline1.toISOString().split("T")[0],
+        amount: Math.round(amountPerDeadline * 100) / 100,
+      },
+      {
+        date: deadline2.toISOString().split("T")[0],
+        amount: Math.round(amountPerDeadline * 100) / 100,
+      },
+    ];
+
+    setFormData((prev) => ({
+      ...prev,
+      hourlyRate: 45.00,
+      quantity: 10,
+      charges: 25.00,
+      paymentMethod: "card",
+      paymentType: "avance",
+      hasDeadlines: true,
+      deadlinesNumber: "2",
+      deadlineDates: newDates,
+      notes: "Données de test",
+    }));
+  };
+
   const handleDeadlinesNumberChange = (numStr: string) => {
     const num = parseInt(numStr);
     updateFormData("deadlinesNumber", numStr);
@@ -251,6 +299,13 @@ export const PricingPayment: React.FC = () => {
       <Container layout="flex-col">
         <div className="mb-4">
           <h2>Étape 3 : Tarification et mode de paiement</h2>
+          <Button
+            variant="outline"
+            onClick={handlePrefill}
+            className="mt-3 text-sm"
+          >
+            Remplir avec données de test
+          </Button>
         </div>
 
         {/* Section Tarification */}
