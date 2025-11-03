@@ -158,14 +158,32 @@ router.post(
   ],
   async (req, res) => {
     try {
+      // Debug logging
+      console.log("[POST /professors] 🔐 Authentification réussie");
+      console.log("[POST /professors] 👤 User:", {
+        userId: req.user?._id,
+        userRole: req.user?.role,
+        userEmail: req.user?.email,
+      });
+      console.log("[POST /professors] 📊 Données reçues:", {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email,
+        hourlyRate: req.body.hourlyRate,
+        subjects: req.body.subjects,
+      });
+
       // Vérifier les erreurs de validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log("[POST /professors] ❌ Erreurs de validation:", errors.array());
         return res.status(400).json({
           message: "Données invalides",
           errors: errors.array(),
         });
       }
+
+      console.log("[POST /professors] ✅ Validation réussie");
 
       // Vérifier qu'un professeur n'existe pas déjà avec cet email
       const existingProfessor = await Professor.findOne({
@@ -190,19 +208,29 @@ router.post(
         }
       }
 
+      console.log("[POST /professors] 💾 Création du document MongoDB...");
       const professor = new Professor(req.body);
       await professor.save();
+      console.log("[POST /professors] ✅ Document créé avec ID:", professor._id);
 
       const populatedProfessor = await Professor.findById(
         professor._id
       ).populate("subjects", "name category");
+
+      console.log("[POST /professors] 📤 Réponse envoyée au client:", {
+        id: populatedProfessor._id,
+        firstName: populatedProfessor.firstName,
+        lastName: populatedProfessor.lastName,
+        email: populatedProfessor.email,
+      });
 
       res.status(201).json({
         message: "Professeur créé avec succès",
         professor: populatedProfessor,
       });
     } catch (error) {
-      console.error("Erreur lors de la création du professeur:", error);
+      console.error("[POST /professors] ❌ Erreur lors de la création:", error.message);
+      console.error("[POST /professors] Stack:", error.stack);
       res.status(500).json({ message: "Erreur serveur" });
     }
   }
