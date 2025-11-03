@@ -37,95 +37,6 @@ interface Teacher {
 // Type pour les données du tableau avec l'id requis
 type TableRowData = Teacher & { id: string };
 
-// Données mockées pour les tests
-const MOCK_TEACHERS: Teacher[] = [
-  {
-    _id: "1",
-    firstName: "Marie",
-    lastName: "Dupont",
-    email: "marie.dupont@email.com",
-    phone: "0123456789",
-    address: {
-      postalCode: "75001",
-      city: "Paris",
-      department: "75",
-    },
-    subjects: ["Mathématiques", "Physique"],
-    levels: ["Lycée", "Terminale"],
-    createdAt: new Date("2024-01-15").toISOString(),
-    lastCouponDate: new Date("2024-03-20").toISOString(),
-    isActive: true,
-  },
-  {
-    _id: "2",
-    firstName: "Pierre",
-    lastName: "Martin",
-    email: "pierre.martin@email.com",
-    phone: "0234567890",
-    address: {
-      postalCode: "69001",
-      city: "Lyon",
-      department: "69",
-    },
-    subjects: ["Français", "Littérature"],
-    levels: ["Collège", "Lycée"],
-    createdAt: new Date("2024-02-20").toISOString(),
-    lastCouponDate: undefined, // Professeur sans coupon
-    isActive: false,
-  },
-  {
-    _id: "3",
-    firstName: "Sophie",
-    lastName: "Bernard",
-    email: "sophie.bernard@email.com",
-    phone: "0345678901",
-    address: {
-      postalCode: "33000",
-      city: "Bordeaux",
-      department: "33",
-    },
-    subjects: ["Anglais", "Espagnol"],
-    levels: ["Collège", "Lycée", "Supérieur"],
-    createdAt: new Date("2024-03-10").toISOString(),
-    lastCouponDate: new Date("2024-03-25").toISOString(),
-    isActive: true,
-  },
-  {
-    _id: "4",
-    firstName: "Thomas",
-    lastName: "Petit",
-    email: "thomas.petit@email.com",
-    phone: "0456789012",
-    address: {
-      postalCode: "75015",
-      city: "Paris",
-      department: "75",
-    },
-    subjects: ["Histoire", "Géographie"],
-    levels: ["Collège"],
-    createdAt: new Date("2024-01-25").toISOString(),
-    lastCouponDate: new Date("2024-03-15").toISOString(),
-    isActive: false,
-  },
-  {
-    _id: "5",
-    firstName: "Julie",
-    lastName: "D'Arèle",
-    email: "julie.dubois@email.com",
-    phone: "0567890123",
-    address: {
-      postalCode: "13001",
-      city: "Marseille",
-      department: "13",
-    },
-    subjects: ["Biologie", "Chimie"],
-    levels: ["Lycée", "Terminale"],
-    createdAt: new Date("2024-02-05").toISOString(),
-    lastCouponDate: new Date("2024-03-28").toISOString(),
-    isActive: true,
-  },
-];
-
 export const Professeurs: React.FC = () => {
   const navigate = useNavigate();
 
@@ -147,11 +58,29 @@ export const Professeurs: React.FC = () => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        // TODO: Remplacer par un appel API quand le backend sera prêt
-        // const data = await teacherService.getTeachers();
-        setTeachers(MOCK_TEACHERS);
+        const professors = await professorService.getAllProfessors();
+
+        // Mapper les Professor vers Teacher (adapter la structure)
+        const mappedTeachers: Teacher[] = professors.map((prof: any) => ({
+          _id: prof._id,
+          firstName: prof.firstName,
+          lastName: prof.lastName,
+          email: prof.email,
+          phone: prof.phone,
+          address: {
+            postalCode: prof.postalCode || "",
+            city: "",
+            department: prof.postalCode ? prof.postalCode.substring(0, 2) : "",
+          },
+          subjects: prof.subjects?.map((s: any) => s.name || s) || [],
+          levels: [],
+          createdAt: prof.createdAt,
+        }));
+
+        setTeachers(mappedTeachers);
       } catch (err) {
         console.error("Erreur lors du chargement des données:", err);
+        toast.error("Erreur lors du chargement des professeurs");
       } finally {
         setIsLoading(false);
       }
@@ -250,18 +179,18 @@ export const Professeurs: React.FC = () => {
       )
     ) {
       try {
-        // TODO: Appeler le service de suppression
-        // await teacherService.deleteTeacher(professorId);
+        await professorService.deleteProfessor(professorId);
 
         // Update local state by removing the deleted teacher
         setTeachers((prevData) =>
           prevData.filter((t) => t._id !== professorId)
         );
 
+        toast.success(`${fullName} supprimé avec succès`);
         console.log(`Professeur ${fullName} supprimé avec succès`);
       } catch (error) {
         console.error("Erreur lors de la suppression du professeur:", error);
-        alert("Erreur lors de la suppression du professeur");
+        toast.error("Erreur lors de la suppression du professeur");
       }
     }
   };
