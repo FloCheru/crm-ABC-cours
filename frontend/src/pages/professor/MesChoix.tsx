@@ -11,7 +11,7 @@ import { SubjectLevelsSelector } from '@/components/professor/SubjectLevelsSelec
 import { subjectService } from '@/services/subjectService';
 import { professorService } from '@/services/professorService';
 import type { Subject } from '@/types/subject';
-import type { TeachingSubject } from '@/types/teacher';
+import type { TeachingSubject } from '@/types/professor';
 import type { SchoolCategory } from '@/constants/schoolLevels';
 
 export default function MesChoix() {

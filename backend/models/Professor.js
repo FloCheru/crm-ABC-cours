@@ -75,11 +75,6 @@ const professorSchema = new mongoose.Schema(
         ],
       },
     ],
-    hourlyRate: {
-      type: Number,
-      required: [true, "Tarif horaire requis"],
-      min: [0, "Le tarif doit être positif"],
-    },
     documents: [
       {
         name: {
@@ -158,7 +153,6 @@ const professorSchema = new mongoose.Schema(
 professorSchema.index({ email: 1 });
 professorSchema.index({ subjects: 1 });
 professorSchema.index({ status: 1 });
-professorSchema.index({ hourlyRate: 1 });
 
 // Méthode pour calculer le rating moyen
 professorSchema.methods.updateRating = function (newRating) {

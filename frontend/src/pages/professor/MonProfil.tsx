@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../stores';
 import { PageHeader } from '../../components';
-import type { Teacher, EmploymentStatus, WeeklySchedule } from '../../types/teacher';
+import type { ProfessorProfile, EmploymentStatus, WeeklySchedule, Gender } from '../../types/professor';
 import {
   Tabs,
   TabsContent,
@@ -12,11 +12,12 @@ import { Checkbox } from '../../components/ui/checkbox';
 import { Label } from '../../components/ui/label';
 import { AvailabilityForm } from '../../components/professor/AvailabilityForm';
 import { FRENCH_DEPARTMENTS } from '../../constants/departments';
+import { TRANSPORT_MODES } from '../../constants/transportModes';
 
 export const MonProfil: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const [isLoading, setIsLoading] = useState(true);
-  const [formData, setFormData] = useState<Partial<Teacher>>({});
+  const [formData, setFormData] = useState<Partial<ProfessorProfile>>({});
   const [activeTab, setActiveTab] = useState('identite');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -32,9 +33,9 @@ export const MonProfil: React.FC = () => {
       setIsLoading(true);
       // TODO: Remplacer par un vrai appel API via professorService.getMyProfile()
       // Pour l'instant, données mockées
-      const mockProfile: Partial<Teacher> = {
+      const mockProfile: Partial<ProfessorProfile> = {
         _id: user?._id || '',
-        gender: 'Mme',
+        gender: 'Mme' as Gender,
         firstName: user?.firstName || '',
         lastName: user?.lastName || '',
         birthName: '',
@@ -92,8 +93,8 @@ export const MonProfil: React.FC = () => {
     loadProfile(); // Recharger les données originales
   };
 
-  const handleInputChange = (field: keyof Teacher, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: keyof ProfessorProfile, value: any) => {
+    setFormData((prev: Partial<ProfessorProfile>) => ({ ...prev, [field]: value }));
   };
 
   const toggleDepartment = (code: string) => {
@@ -110,35 +111,38 @@ export const MonProfil: React.FC = () => {
 
   const renderEditField = (
     label: string,
-    field: keyof Teacher,
+    field: keyof ProfessorProfile,
     type: 'text' | 'email' | 'tel' | 'date' | 'select' = 'text',
     options?: { value: string; label: string }[],
     isFullWidth = false
-  ) => (
-    <div className={isFullWidth ? 'col-span-2' : ''}>
-      <label className="text-xs text-gray-500 mb-1 block">{label}</label>
-      {type === 'select' ? (
-        <select
-          value={(formData[field] as string) || ''}
-          onChange={(e) => handleInputChange(field, e.target.value)}
-          className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-        >
-          {options?.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <input
-          type={type}
-          value={(formData[field] as string) || ''}
-          onChange={(e) => handleInputChange(field, e.target.value)}
-          className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-        />
-      )}
-    </div>
-  );
+  ) => {
+    const fieldValue = formData[field];
+    return (
+      <div className={isFullWidth ? 'col-span-2' : ''}>
+        <label className="text-xs text-gray-500 mb-1 block">{label}</label>
+        {type === 'select' ? (
+          <select
+            value={String(fieldValue || '')}
+            onChange={(e) => handleInputChange(field, e.target.value)}
+            className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          >
+            {options?.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type={type}
+            value={String(fieldValue || '')}
+            onChange={(e) => handleInputChange(field, e.target.value)}
+            className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          />
+        )}
+      </div>
+    );
+  };
 
   const renderField = (label: string, value: string | undefined, isFullWidth = false) => (
     <div className={isFullWidth ? 'col-span-2' : ''}>
@@ -326,10 +330,7 @@ export const MonProfil: React.FC = () => {
                   {renderEditField('Bureau distributeur', 'distributionOffice', 'text', undefined, true)}
                   {renderEditField('Déplacement', 'transportMode', 'select', [
                     { value: '', label: 'Sélectionner...' },
-                    { value: 'voiture', label: 'Voiture' },
-                    { value: 'vélo', label: 'Vélo' },
-                    { value: 'transports', label: 'Transports en commun' },
-                    { value: 'moto', label: 'Moto' },
+                    ...TRANSPORT_MODES
                   ])}
                   {renderEditField('Cours', 'courseLocation', 'select', [
                     { value: '', label: 'Sélectionner...' },
@@ -560,7 +561,7 @@ export const MonProfil: React.FC = () => {
 
             {editingTab === 'deplacements' ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-flow-col grid-rows-[repeat(101,minmax(0,1fr))] sm:grid-rows-[repeat(51,minmax(0,1fr))] lg:grid-rows-[repeat(34,minmax(0,1fr))] gap-3 auto-cols-fr">
                   {FRENCH_DEPARTMENTS.map((dept) => (
                     <div key={dept.code} className="flex items-center space-x-2">
                       <Checkbox

@@ -15,34 +15,24 @@ import { KeyRound, UserRound, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
 import { professorService } from "../../services/professorService";
 
-// Type pour un professeur
-interface Teacher {
+// Type pour les données du tableau avec l'id requis (adapté au modèle Professor)
+interface ProfessorTableRow {
   _id: string;
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
-  address: {
-    postalCode: string;
-    city: string;
-    department: string;
-  };
-  subjects: string[];
-  levels: string[];
+  phone?: string;
+  postalCode?: string;
   createdAt: string;
-  lastCouponDate?: string; // Date de saisie du dernier coupon (ISO)
-  isActive?: boolean; // Statut actif/inactif du professeur
+  status?: "active" | "inactive" | "pending" | "suspended";
 }
-
-// Type pour les données du tableau avec l'id requis
-type TableRowData = Teacher & { id: string };
 
 export const Professeurs: React.FC = () => {
   const navigate = useNavigate();
 
   // State for data management
   const [isLoading, setIsLoading] = useState(true);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teachers, setTeachers] = useState<ProfessorTableRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<string>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -60,21 +50,16 @@ export const Professeurs: React.FC = () => {
         setIsLoading(true);
         const professors = await professorService.getAllProfessors();
 
-        // Mapper les Professor vers Teacher (adapter la structure)
-        const mappedTeachers: Teacher[] = professors.map((prof: any) => ({
+        // Mapper les Professor vers ProfessorTableRow (adapter la structure)
+        const mappedTeachers: ProfessorTableRow[] = professors.map((prof: any) => ({
           _id: prof._id,
           firstName: prof.firstName,
           lastName: prof.lastName,
           email: prof.email,
           phone: prof.phone,
-          address: {
-            postalCode: prof.postalCode || "",
-            city: "",
-            department: prof.postalCode ? prof.postalCode.substring(0, 2) : "",
-          },
-          subjects: prof.subjects?.map((s: any) => s.name || s) || [],
-          levels: [],
+          postalCode: prof.postalCode,
           createdAt: prof.createdAt,
+          status: prof.status,
         }));
 
         setTeachers(mappedTeachers);
@@ -91,15 +76,11 @@ export const Professeurs: React.FC = () => {
 
   // Extraire les valeurs uniques pour les filtres
   const departments = Array.from(
-    new Set(teachers.map((t) => t.address.department))
+    new Set(teachers.map((t) => t.postalCode?.substring(0, 2) || "").filter(Boolean))
   ).sort();
-  const cities = Array.from(
-    new Set(teachers.map((t) => t.address.city))
-  ).sort();
-  const subjects = Array.from(
-    new Set(teachers.flatMap((t) => t.subjects))
-  ).sort();
-  const levels = Array.from(new Set(teachers.flatMap((t) => t.levels))).sort();
+  const cities: string[] = [];
+  const subjects: string[] = [];
+  const levels: string[] = [];
 
   const handleAddTeacher = () => {
     setIsCreateTeacherModalOpen(true);
@@ -117,21 +98,16 @@ export const Professeurs: React.FC = () => {
       console.log("[PROFESSEURS PAGE] 🔄 Rechargement des données depuis la DB...");
       const professors = await professorService.getAllProfessors();
 
-      // Mapper les Professor vers Teacher (adapter la structure)
-      const mappedTeachers: Teacher[] = professors.map((prof: any) => ({
+      // Mapper les Professor vers ProfessorTableRow (adapter la structure)
+      const mappedTeachers: ProfessorTableRow[] = professors.map((prof: any) => ({
         _id: prof._id,
         firstName: prof.firstName,
         lastName: prof.lastName,
         email: prof.email,
         phone: prof.phone,
-        address: {
-          postalCode: prof.postalCode || "",
-          city: "",
-          department: prof.postalCode ? prof.postalCode.substring(0, 2) : "",
-        },
-        subjects: prof.subjects?.map((s: any) => s.name || s) || [],
-        levels: [],
+        postalCode: prof.postalCode,
         createdAt: prof.createdAt,
+        status: prof.status,
       }));
 
       setTeachers(mappedTeachers);
@@ -162,7 +138,7 @@ export const Professeurs: React.FC = () => {
   };
 
   // Handler pour cliquer sur une ligne du tableau
-  const handleRowClick = (row: TableRowData) => {
+  const handleRowClick = (row: ProfessorTableRow) => {
     navigate(`/admin/professeur-details/${row._id}`);
   };
 
@@ -231,32 +207,31 @@ export const Professeurs: React.FC = () => {
     if (!teacher) return;
 
     const fullName = `${teacher.firstName} ${teacher.lastName}`;
-    const newStatus = !teacher.isActive;
-    const action = newStatus ? "activer" : "désactiver";
+    const newStatus = teacher.status === "inactive" ? "active" : "inactive";
+    const action = newStatus === "active" ? "activer" : "désactiver";
 
     if (
       window.confirm(
         `Êtes-vous sûr de vouloir ${action} ${fullName} ?\n\n${
-          newStatus
+          newStatus === "active"
             ? "Le professeur recevra à nouveau les mails de proposition de cours."
             : "Le professeur ne recevra plus les mails de propositions de cours."
         }`
       )
     ) {
       try {
-        // TODO: Appeler le service pour changer le statut
-        // await teacherService.updateActiveStatus(professorId, newStatus);
+        await professorService.updateStatus(professorId, newStatus);
 
         // Update local state
         setTeachers((prevData) =>
           prevData.map((t) =>
-            t._id === professorId ? { ...t, isActive: newStatus } : t
+            t._id === professorId ? { ...t, status: newStatus } : t
           )
         );
 
-        toast.success(`Professeur ${newStatus ? "activé" : "désactivé"}`, {
+        toast.success(`Professeur ${newStatus === "active" ? "activé" : "désactivé"}`, {
           description: `${fullName} a été ${
-            newStatus ? "activé" : "désactivé"
+            newStatus === "active" ? "activé" : "désactivé"
           } avec succès`,
         });
 
@@ -280,28 +255,18 @@ export const Professeurs: React.FC = () => {
       const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase();
       const phone = teacher.phone || "";
       const email = teacher.email.toLowerCase();
-      const city = teacher.address.city.toLowerCase();
+      const postalCode = teacher.postalCode || "";
 
       const matchesSearch =
         fullName.includes(searchLower) ||
         phone.includes(searchLower) ||
         email.includes(searchLower) ||
-        city.includes(searchLower);
+        postalCode.includes(searchLower);
 
       const matchesDepartment =
-        !filterDepartment || teacher.address.department === filterDepartment;
-      const matchesCity = !filterCity || teacher.address.city === filterCity;
-      const matchesSubject =
-        !filterSubject || teacher.subjects.includes(filterSubject);
-      const matchesLevel = !filterLevel || teacher.levels.includes(filterLevel);
+        !filterDepartment || postalCode.substring(0, 2) === filterDepartment;
 
-      return (
-        matchesSearch &&
-        matchesDepartment &&
-        matchesCity &&
-        matchesSubject &&
-        matchesLevel
-      );
+      return matchesSearch && matchesDepartment;
     })
     .sort((a, b) => {
       let comparison = 0;
@@ -314,21 +279,10 @@ export const Professeurs: React.FC = () => {
         case "lastName":
           comparison = a.lastName.localeCompare(b.lastName);
           break;
-        case "city":
-          comparison = a.address.city.localeCompare(b.address.city);
-          break;
         case "department":
-          comparison = a.address.department.localeCompare(b.address.department);
-          break;
-        case "lastCouponDate":
-          // Professeurs sans coupon vont à la fin
-          if (!a.lastCouponDate && !b.lastCouponDate) return 0;
-          if (!a.lastCouponDate) return 1; // a va à la fin
-          if (!b.lastCouponDate) return -1; // b va à la fin
-
-          comparison =
-            new Date(b.lastCouponDate).getTime() -
-            new Date(a.lastCouponDate).getTime();
+          const deptA = a.postalCode?.substring(0, 2) || "";
+          const deptB = b.postalCode?.substring(0, 2) || "";
+          comparison = deptA.localeCompare(deptB);
           break;
         default:
           comparison = 0;
@@ -339,9 +293,8 @@ export const Professeurs: React.FC = () => {
     });
 
   // Transformer les données pour le tableau
-  const tableData: TableRowData[] = filteredAndSortedData.map((teacher) => ({
+  const tableData: ProfessorTableRow[] = filteredAndSortedData.map((teacher) => ({
     ...teacher,
-    id: teacher._id,
   }));
 
   // Configuration des colonnes du tableau
@@ -349,74 +302,52 @@ export const Professeurs: React.FC = () => {
     {
       key: "lastName",
       label: "Nom",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium text-sm">{row.lastName}</div>
+      render: (_: unknown, row: ProfessorTableRow) => (
+        <div className={row.status === "inactive" ? "font-medium text-base uppercase text-gray-400" : "font-medium text-base uppercase"}>
+          {row.lastName}
+        </div>
       ),
     },
     {
       key: "firstName",
       label: "Prénom",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="font-medium text-sm">{row.firstName}</div>
+      render: (_: unknown, row: ProfessorTableRow) => (
+        <div className={row.status === "inactive" ? "font-medium text-base capitalize text-gray-400" : "font-medium text-base capitalize"}>
+          {row.firstName}
+        </div>
       ),
     },
     {
       key: "postalCode",
       label: "Code Postal",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.address.postalCode}</div>
-      ),
-    },
-    {
-      key: "city",
-      label: "Ville",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.address.city}</div>
+      render: (_: unknown, row: ProfessorTableRow) => (
+        <div className={row.status === "inactive" ? "text-sm text-gray-400" : "text-sm"}>
+          {row.postalCode}
+        </div>
       ),
     },
     {
       key: "phone",
       label: "Téléphone",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.phone}</div>
+      render: (_: unknown, row: ProfessorTableRow) => (
+        <div className={row.status === "inactive" ? "text-sm text-gray-400" : "text-sm"}>
+          {row.phone}
+        </div>
       ),
     },
     {
       key: "email",
       label: "Mail",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.email}</div>
-      ),
-    },
-    {
-      key: "subjects",
-      label: "Matières",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.subjects.join(", ")}</div>
-      ),
-    },
-    {
-      key: "levels",
-      label: "Niveaux",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">{row.levels.join(", ")}</div>
-      ),
-    },
-    {
-      key: "lastCouponDate",
-      label: "Dernier coupon",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-sm">
-          {row.lastCouponDate
-            ? new Date(row.lastCouponDate).toLocaleDateString("fr-FR")
-            : "—"}
+      render: (_: unknown, row: ProfessorTableRow) => (
+        <div className={row.status === "inactive" ? "text-sm text-gray-400" : "text-sm"}>
+          {row.email}
         </div>
       ),
     },
     {
       key: "actions",
       label: "Actions",
-      render: (_: unknown, row: TableRowData) => (
+      render: (_: unknown, row: ProfessorTableRow) => (
         <div className="flex gap-sm items-center">
           {/* Bouton renvoyer mot de passe */}
           <Button
@@ -434,18 +365,18 @@ export const Professeurs: React.FC = () => {
           {/* Bouton statut actif/inactif */}
           <Button
             size="sm"
-            variant={row.isActive ? "primary" : "outline"}
+            variant={row.status === "inactive" ? "primary" : "outline"}
             onClick={(e) => {
               e.stopPropagation();
               handleToggleActiveStatus(row._id);
             }}
             title={
-              row.isActive
+              row.status === "active"
                 ? "Professeur actif - Cliquer pour désactiver"
                 : "Professeur désactivé - Cliquer pour activer"
             }
           >
-            {row.isActive ? (
+            {row.status === "active" ? (
               <UserRound className="w-4 h-4" />
             ) : (
               <UserRoundX className="w-4 h-4" />
@@ -473,24 +404,6 @@ export const Professeurs: React.FC = () => {
     <div>
       <PageHeader title="Gestion des Professeurs" />
       <Container layout="flex-col">
-        <Container layout="grid" padding="none">
-          <SummaryCard
-            title="PROFESSEURS"
-            metrics={[
-              {
-                value: teachers.length,
-                label: "Total professeurs",
-                variant: "primary",
-              },
-              {
-                value: teachers.length,
-                label: "Professeurs actifs",
-                variant: "success",
-              },
-            ]}
-          />
-        </Container>
-
         {/* Bouton Ajouter un Prof */}
         <Container layout="flex">
           <ButtonGroup
@@ -640,6 +553,24 @@ export const Professeurs: React.FC = () => {
               onRowClick={handleRowClick}
             />
           )}
+        </Container>
+
+        <Container layout="grid" padding="none">
+          <SummaryCard
+            title="PROFESSEURS"
+            metrics={[
+              {
+                value: teachers.length,
+                label: "Total professeurs",
+                variant: "primary",
+              },
+              {
+                value: teachers.length,
+                label: "Professeurs actifs",
+                variant: "success",
+              },
+            ]}
+          />
         </Container>
       </Container>
 

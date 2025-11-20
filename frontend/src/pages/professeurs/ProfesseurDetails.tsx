@@ -1,23 +1,18 @@
 import { useNavigate, useParams } from "react-router-dom";
 import React, { useState, useEffect } from "react";
-import { PageHeader, Modal } from "../../components";
-import type {
-  Teacher,
-  DisabilityKnowledge,
-  CurrentSituation,
-} from "../../types/teacher";
+import { PageHeader } from "../../components";
+import type { Professor } from "../../types/professor";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import { Checkbox } from "../../components/ui/checkbox";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
-import { Alert, AlertDescription } from "../../components/ui/alert";
 import type { RendezVous } from "../../types/rdv";
 import rdvService from "../../services/rdvService";
+import { professorService } from "../../services/professorService";
 import { useAuthStore } from "../../stores";
 import { enterProfessorView } from "../../utils/professorSimulation";
 import { Eye } from "lucide-react";
@@ -25,22 +20,16 @@ import { Eye } from "lucide-react";
 export const ProfesseurDetails: React.FC = () => {
   const navigate = useNavigate();
   const { professorId } = useParams<{ professorId: string }>();
-  const [teacher, setTeacher] = useState<Teacher | null>(null);
+  const [professor, setProfessor] = useState<Professor | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [, setError] = useState<string>("");
-  const [isEditingIdentite, setIsEditingIdentite] = useState(false);
-  const [isEditingCoordonnees, setIsEditingCoordonnees] = useState(false);
-  const [isEditingCV, setIsEditingCV] = useState(false);
-  const [isEditingSituation, setIsEditingSituation] = useState(false);
-  const [formData, setFormData] = useState<Partial<Teacher>>({});
-  const [isEditingComments, setIsEditingComments] = useState(false);
-  const [commentsData, setCommentsData] = useState<string>("");
-  const [ibanCopied, setIbanCopied] = useState(false);
+  const [isEditingBasic, setIsEditingBasic] = useState(false);
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [formData, setFormData] = useState<Partial<Professor>>({});
+  const [notesData, setNotesData] = useState<string>("");
 
   // États pour les rendez-vous
   const [rdvs, setRdvs] = useState<RendezVous[]>([]);
-  const [isRdvModalOpen, setIsRdvModalOpen] = useState(false);
-  const [selectedRdv, setSelectedRdv] = useState<RendezVous | null>(null);
   const [isLoadingRdvs, setIsLoadingRdvs] = useState(false);
 
   // Récupérer le rôle de l'utilisateur connecté
@@ -49,7 +38,7 @@ export const ProfesseurDetails: React.FC = () => {
 
   useEffect(() => {
     if (professorId) {
-      loadTeacherData();
+      loadProfessorData();
       loadRdvs();
     } else {
       setError("ID de professeur manquant");
@@ -57,45 +46,13 @@ export const ProfesseurDetails: React.FC = () => {
     }
   }, [professorId]);
 
-  const loadTeacherData = async () => {
+  const loadProfessorData = async () => {
     try {
       setIsLoading(true);
-      const mockTeacher: Teacher = {
-        _id: professorId!,
-        gender: "Mme",
-        firstName: "Marie",
-        lastName: "Dupont",
-        birthName: "",
-        birthDate: "1990-05-15",
-        socialSecurityNumber: "",
-        birthCountry: "France",
-        email: "marie.dupont@email.com",
-        phone: "0123456789",
-        secondaryPhone: "",
-        address: "",
-        addressComplement: "",
-        postalCode: "75001",
-        city: "Paris",
-        inseeCity: "",
-        distributionOffice: "",
-        transportMode: "voiture",
-        courseLocation: "domicile",
-        secondaryAddress: "",
-        experience: "",
-        certifications: "",
-        miscellaneous: "",
-        disabilityKnowledge: [],
-        additionalNotes: "",
-        currentSituation: [],
-        identifier: "MarieDupont",
-        notifyEmail: "marie.dupont.notif@email.com",
-        iban: "FR7612345678901234567890123", // Mock IBAN
-        createdAt: new Date("2024-01-15").toISOString(),
-        updatedAt: new Date("2024-03-10").toISOString(),
-      };
-      setTeacher(mockTeacher);
-      setFormData(mockTeacher);
-      setCommentsData(mockTeacher.additionalNotes || "");
+      const professor = await professorService.getProfessorById(professorId!);
+      setProfessor(professor);
+      setFormData(professor);
+      setNotesData(professor.notes || "");
     } catch (err) {
       console.error("Erreur lors du chargement du professeur:", err);
       setError("Impossible de charger les détails du professeur");
@@ -110,79 +67,33 @@ export const ProfesseurDetails: React.FC = () => {
     }
   }, [professorId, navigate]);
 
-  const handleSaveIdentite = async () => {
-    console.log("Données à sauvegarder (Identité):", formData);
-    setTeacher(formData as Teacher);
-    setIsEditingIdentite(false);
+  const handleSaveBasic = async () => {
+    console.log("Données à sauvegarder (Infos):", formData);
+    setProfessor(formData as Professor);
+    setIsEditingBasic(false);
   };
 
-  const handleCancelIdentite = () => {
-    setFormData(teacher || {});
-    setIsEditingIdentite(false);
+  const handleCancelBasic = () => {
+    setFormData(professor || {});
+    setIsEditingBasic(false);
   };
 
-  const handleSaveCoordonnees = async () => {
-    console.log("Données à sauvegarder (Coordonnées):", formData);
-    setTeacher(formData as Teacher);
-    setIsEditingCoordonnees(false);
-  };
-
-  const handleCancelCoordonnees = () => {
-    setFormData(teacher || {});
-    setIsEditingCoordonnees(false);
-  };
-
-  const handleSaveCV = async () => {
-    console.log("Données à sauvegarder (CV):", formData);
-    setTeacher(formData as Teacher);
-    setIsEditingCV(false);
-  };
-
-  const handleCancelCV = () => {
-    setFormData(teacher || {});
-    setIsEditingCV(false);
-  };
-
-  const handleSaveSituation = async () => {
-    console.log("Données à sauvegarder (Situation):", formData);
-    setTeacher(formData as Teacher);
-    setIsEditingSituation(false);
-  };
-
-  const handleCancelSituation = () => {
-    setFormData(teacher || {});
-    setIsEditingSituation(false);
-  };
-
-  const handleSaveComments = () => {
-    if (teacher) {
-      const updatedTeacher = { ...teacher, additionalNotes: commentsData };
-      setTeacher(updatedTeacher);
-      console.log("Commentaires sauvegardés:", commentsData);
+  const handleSaveNotes = () => {
+    if (professor) {
+      const updatedProfessor = { ...professor, notes: notesData };
+      setProfessor(updatedProfessor);
+      console.log("Notes sauvegardées:", notesData);
     }
-    setIsEditingComments(false);
+    setIsEditingNotes(false);
   };
 
-  const handleCancelComments = () => {
-    setCommentsData(teacher?.additionalNotes || "");
-    setIsEditingComments(false);
+  const handleCancelNotes = () => {
+    setNotesData(professor?.notes || "");
+    setIsEditingNotes(false);
   };
 
-  const handleInputChange = (field: keyof Teacher, value: any) => {
+  const handleInputChange = (field: keyof Professor, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const toggleArrayValue = <T extends string>(
-    field: keyof Teacher,
-    value: T
-  ) => {
-    setFormData((prev) => {
-      const currentArray = (prev[field] as T[]) || [];
-      const newArray = currentArray.includes(value)
-        ? currentArray.filter((item) => item !== value)
-        : [...currentArray, value];
-      return { ...prev, [field]: newArray };
-    });
   };
 
   const loadRdvs = async () => {
@@ -199,23 +110,10 @@ export const ProfesseurDetails: React.FC = () => {
     }
   };
 
-  const handleOpenRdvModal = (rdv?: RendezVous) => {
-    setSelectedRdv(rdv || null);
-    setIsRdvModalOpen(true);
-  };
-
-  const handleCloseRdvModal = () => {
-    setSelectedRdv(null);
-    setIsRdvModalOpen(false);
-  };
-
-  const handleRdvSuccess = () => {
-    loadRdvs();
-    handleCloseRdvModal();
-  };
-
   const handleDeleteRdv = async (rdvId: string) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce rendez-vous ?")) {
+    if (
+      !window.confirm("Êtes-vous sûr de vouloir supprimer ce rendez-vous ?")
+    ) {
       return;
     }
 
@@ -230,7 +128,11 @@ export const ProfesseurDetails: React.FC = () => {
 
   const canEditRdv = (rdv: RendezVous): boolean => {
     if (currentUserRole === "admin") return true;
-    if (currentUserRole === "professor" && rdv.entityType === "professor-student") return true;
+    if (
+      currentUserRole === "professor" &&
+      rdv.entityType === "professor-student"
+    )
+      return true;
     return false;
   };
 
@@ -248,41 +150,70 @@ export const ProfesseurDetails: React.FC = () => {
   };
 
   const getRdvPartnerName = (rdv: RendezVous): string => {
-    // TODO: Récupérer les noms réels depuis les IDs
     if (rdv.entityType === "admin-professor") {
-      return "Admin ABC"; // Placeholder
+      return "Admin ABC";
     } else if (rdv.entityType === "professor-student") {
-      return "Élève"; // Placeholder - devrait récupérer le nom de l'élève
+      return "Élève";
     }
     return "-";
   };
 
-  const formatIban = (iban: string): string => {
-    // Formate l'IBAN avec des espaces tous les 4 caractères
-    return iban.replace(/(.{4})/g, "$1 ").trim();
-  };
-
-  const handleCopyIban = async (iban: string) => {
-    try {
-      await navigator.clipboard.writeText(iban);
-      setIbanCopied(true);
-      setTimeout(() => setIbanCopied(false), 2000);
-    } catch (err) {
-      console.error("Erreur lors de la copie:", err);
-      alert("Impossible de copier l'IBAN");
-    }
-  };
-
   const handleEnterProfessorView = () => {
-    if (teacher && professorId) {
+    if (professor && professorId) {
       enterProfessorView({
         id: professorId,
-        firstName: teacher.firstName,
-        lastName: teacher.lastName,
+        firstName: professor.firstName,
+        lastName: professor.lastName,
       });
       navigate("/professor/profil");
     }
   };
+
+  const renderField = (
+    label: string,
+    value: string | undefined,
+    isFullWidth = false
+  ) => {
+    // Déterminer le style selon le label
+    let textStyle = "text-base text-gray-900";
+    if (label === "Nom *") {
+      textStyle = "text-base text-gray-900 uppercase font-medium";
+    } else if (label === "Prénom *") {
+      textStyle = "text-base text-gray-900 capitalize font-medium";
+    }
+
+    return (
+      <div className={isFullWidth ? "col-span-2" : ""}>
+        <div className="text-xs text-gray-500 mb-1">{label}</div>
+        <div className={textStyle}>{value || "-"}</div>
+      </div>
+    );
+  };
+
+  const renderEditField = (
+    label: string,
+    field: keyof Professor,
+    type: "text" | "email" | "tel" | "textarea" = "text",
+    isFullWidth = false
+  ) => (
+    <div className={isFullWidth ? "col-span-2" : ""}>
+      <label className="text-xs text-gray-500 mb-1 block">{label}</label>
+      {type === "textarea" ? (
+        <textarea
+          value={(formData[field] as string) || ""}
+          onChange={(e) => handleInputChange(field, e.target.value)}
+          className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none min-h-[100px]"
+        />
+      ) : (
+        <input
+          type={type}
+          value={(formData[field] as string) || ""}
+          onChange={(e) => handleInputChange(field, e.target.value)}
+          className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+        />
+      )}
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -303,95 +234,9 @@ export const ProfesseurDetails: React.FC = () => {
     );
   }
 
-  if (!professorId || !teacher) {
+  if (!professorId || !professor) {
     return null;
   }
-
-  const disabilityOptions: { value: DisabilityKnowledge; label: string }[] = [
-    { value: "aucune", label: "Aucune" },
-    { value: "dys", label: "Dys (dyslexie, dyspraxie, etc.)" },
-    { value: "autisme", label: "Autisme" },
-    { value: "déficience_visuelle", label: "Déficience visuelle" },
-    { value: "déficience_auditive", label: "Déficience auditive" },
-    { value: "handicap_moteur", label: "Handicap moteur" },
-    { value: "handicap_cognitif", label: "Handicap cognitif" },
-    { value: "autre", label: "Autre" },
-  ];
-
-  const situationOptions: { value: CurrentSituation; label: string }[] = [
-    {
-      value: "enseignant_education_nationale",
-      label:
-        "Enseignant de l'Éducation Nationale en poste, en disponibilité ou à la retraite",
-    },
-    {
-      value: "enseignant_vacataire_contractuel",
-      label:
-        "Enseignant vacataire ou contractuel actif qui opère dans le public ou dans le privé",
-    },
-    {
-      value: "etudiant_master_professorat",
-      label: "Étudiant en master Enseignement ou Professorat",
-    },
-    {
-      value: "enseignant_avec_activite_domicile",
-      label: "Enseignant avec pour seule activité le cours à domicile",
-    },
-    {
-      value: "enseignant_activite_professionnelle",
-      label:
-        "Enseignant ayant une autre activité professionnelle autre que l'enseignement et dispensant des cours à domicile",
-    },
-    {
-      value: "enseignant_formation_professionnelle",
-      label: "Enseignant en formation professionnelle",
-    },
-    { value: "etudiant", label: "Étudiant" },
-    { value: "autre", label: "Autre" },
-  ];
-
-  const renderField = (
-    label: string,
-    value: string | undefined,
-    isFullWidth = false
-  ) => (
-    <div className={isFullWidth ? "col-span-2" : ""}>
-      <div className="text-xs text-gray-500 mb-1">{label}</div>
-      <div className="text-base text-gray-900">{value || "-"}</div>
-    </div>
-  );
-
-  const renderEditField = (
-    label: string,
-    field: keyof Teacher,
-    type: "text" | "email" | "tel" | "date" | "select" = "text",
-    options?: { value: string; label: string }[],
-    isFullWidth = false
-  ) => (
-    <div className={isFullWidth ? "col-span-2" : ""}>
-      <label className="text-xs text-gray-500 mb-1 block">{label}</label>
-      {type === "select" ? (
-        <select
-          value={(formData[field] as string) || ""}
-          onChange={(e) => handleInputChange(field, e.target.value)}
-          className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-        >
-          {options?.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <input
-          type={type}
-          value={(formData[field] as string) || ""}
-          onChange={(e) => handleInputChange(field, e.target.value)}
-          className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-        />
-      )}
-    </div>
-  );
 
   return (
     <main className="bg-gray-50 min-h-screen">
@@ -402,13 +247,13 @@ export const ProfesseurDetails: React.FC = () => {
           { label: "Détails" },
         ]}
         description={
-          teacher
-            ? `Créé le ${new Date(teacher.createdAt).toLocaleDateString(
+          professor
+            ? `Créé le ${new Date(professor.createdAt || "").toLocaleDateString(
                 "fr-FR"
               )}${
-                teacher.updatedAt
+                professor.updatedAt
                   ? ` • Modifié le ${new Date(
-                      teacher.updatedAt
+                      professor.updatedAt
                     ).toLocaleDateString("fr-FR")}`
                   : ""
               }`
@@ -424,7 +269,9 @@ export const ProfesseurDetails: React.FC = () => {
       <div className="container mx-auto px-4 pt-12 max-w-6xl">
         <div className="flex gap-md">
           <button
-            onClick={() => navigate(`/admin/professeur-details/${professorId}/documents`)}
+            onClick={() =>
+              navigate(`/admin/professeur-details/${professorId}/documents`)
+            }
             className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 flex items-center gap-2"
           >
             📄 Voir les documents
@@ -439,80 +286,14 @@ export const ProfesseurDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Encart Commentaires */}
-      <div className="container mx-auto px-4 pt-12 max-w-6xl">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="flex justify-between items-start mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Commentaires admin
-            </h3>
-            {!isEditingComments && (
-              <button
-                onClick={() => setIsEditingComments(true)}
-                className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-              >
-                Edit ✏️
-              </button>
-            )}
-          </div>
-
-          {isEditingComments ? (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="admin-comments" className="text-sm text-gray-700 mb-2 block">
-                  Commentaires admin
-                </Label>
-                <Textarea
-                  id="admin-comments"
-                  value={commentsData}
-                  onChange={(e) => setCommentsData(e.target.value)}
-                  placeholder="Saisissez vos commentaires..."
-                  className="min-h-[120px]"
-                />
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleSaveComments}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                >
-                  Sauvegarder
-                </button>
-                <button
-                  onClick={handleCancelComments}
-                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                >
-                  Annuler
-                </button>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">
-              {teacher.additionalNotes || "Aucun commentaire"}
-            </p>
-          )}
-        </div>
-      </div>
-
       <div className="container mx-auto px-4 py-12 max-w-6xl">
-        <Tabs defaultValue="identite" className="w-full">
+        <Tabs defaultValue="info" className="w-full">
           <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
             <TabsTrigger
-              value="identite"
+              value="info"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
             >
-              Identité
-            </TabsTrigger>
-            <TabsTrigger
-              value="cv"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
-            >
-              CV
-            </TabsTrigger>
-            <TabsTrigger
-              value="situation"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
-            >
-              Situation actuelle
+              Informations
             </TabsTrigger>
             <TabsTrigger
               value="rdv"
@@ -522,22 +303,22 @@ export const ProfesseurDetails: React.FC = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Section Identité */}
-          <TabsContent value="identite" className="mt-6">
-            {/* Card Identité */}
+          {/* Section Informations */}
+          <TabsContent value="info" className="mt-6">
+            {/* Card Infos de base */}
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative">
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Identité
+                    Informations de base
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Informations personnelles du professeur
+                    Identité et coordonnées du professeur
                   </p>
                 </div>
-                {!isEditingIdentite && (
+                {!isEditingBasic && (
                   <button
-                    onClick={() => setIsEditingIdentite(true)}
+                    onClick={() => setIsEditingBasic(true)}
                     className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
                   >
                     Edit ✏️
@@ -545,153 +326,30 @@ export const ProfesseurDetails: React.FC = () => {
                 )}
               </div>
 
-              {isEditingIdentite ? (
+              {isEditingBasic ? (
                 <>
                   <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                    {renderEditField("Genre *", "gender", "select", [
-                      { value: "M.", label: "M." },
-                      { value: "Mme", label: "Mme" },
-                    ])}
                     {renderEditField("Prénom *", "firstName")}
                     {renderEditField("Nom *", "lastName")}
-                    {renderEditField(
-                      "Nom de naissance (si différent)",
-                      "birthName"
-                    )}
-                    {renderEditField(
-                      "Date de naissance *",
-                      "birthDate",
-                      "date"
-                    )}
-                    {renderEditField(
-                      "N° de sécurité sociale",
-                      "socialSecurityNumber"
-                    )}
-                    {renderEditField(
-                      "Pays de naissance",
-                      "birthCountry",
-                      "text",
-                      undefined,
-                      true
-                    )}
-                  </div>
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleSaveIdentite}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                    >
-                      Sauvegarder
-                    </button>
-                    <button
-                      onClick={handleCancelIdentite}
-                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                  {renderField("Genre *", teacher.gender)}
-                  {renderField("Prénom *", teacher.firstName)}
-                  {renderField("Nom *", teacher.lastName)}
-                  {renderField(
-                    "Nom de naissance (si différent)",
-                    teacher.birthName
-                  )}
-                  {renderField(
-                    "Date de naissance *",
-                    new Date(teacher.birthDate).toLocaleDateString("fr-FR")
-                  )}
-                  {renderField(
-                    "N° de sécurité sociale",
-                    teacher.socialSecurityNumber
-                  )}
-                  {renderField("Pays de naissance", teacher.birthCountry, true)}
-                </div>
-              )}
-            </div>
-
-            {/* Card Coordonnées */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative mt-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Coordonnées
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Informations de contact et adresse
-                  </p>
-                </div>
-                {!isEditingCoordonnees && (
-                  <button
-                    onClick={() => setIsEditingCoordonnees(true)}
-                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Edit ✏️
-                  </button>
-                )}
-              </div>
-
-              {isEditingCoordonnees ? (
-                <>
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                     {renderEditField("Email *", "email", "email")}
-                    {renderEditField("Tél principal *", "phone", "tel")}
-                    {renderEditField("Tél secondaire", "secondaryPhone", "tel")}
-                    {renderEditField("Code postal *", "postalCode")}
+                    {renderEditField("Téléphone", "phone", "tel")}
+                    {renderEditField("Code postal", "postalCode")}
                     {renderEditField(
-                      "Adresse",
-                      "address",
-                      "text",
-                      undefined,
-                      true
-                    )}
-                    {renderEditField(
-                      "Complément d'adresse",
-                      "addressComplement",
-                      "text",
-                      undefined,
-                      true
-                    )}
-                    {renderEditField("Commune", "city")}
-                    {renderEditField("Commune INSEE", "inseeCity")}
-                    {renderEditField(
-                      "Bureau distributeur",
-                      "distributionOffice",
-                      "text",
-                      undefined,
-                      true
-                    )}
-                    {renderEditField("Déplacement", "transportMode", "select", [
-                      { value: "", label: "Sélectionner..." },
-                      { value: "voiture", label: "Voiture" },
-                      { value: "vélo", label: "Vélo" },
-                      { value: "transports", label: "Transports en commun" },
-                      { value: "moto", label: "Moto" },
-                    ])}
-                    {renderEditField("Cours", "courseLocation", "select", [
-                      { value: "", label: "Sélectionner..." },
-                      { value: "domicile", label: "À domicile" },
-                      { value: "visio", label: "En visio" },
-                    ])}
-                    {renderEditField(
-                      "Adresse secondaire",
-                      "secondaryAddress",
-                      "text",
-                      undefined,
+                      "Biographie",
+                      "bio",
+                      "textarea",
                       true
                     )}
                   </div>
                   <div className="flex gap-3 mt-6">
                     <button
-                      onClick={handleSaveCoordonnees}
+                      onClick={handleSaveBasic}
                       className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
                     >
                       Sauvegarder
                     </button>
                     <button
-                      onClick={handleCancelCoordonnees}
+                      onClick={handleCancelBasic}
                       className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
                     >
                       Annuler
@@ -700,362 +358,100 @@ export const ProfesseurDetails: React.FC = () => {
                 </>
               ) : (
                 <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                  {renderField("Email *", teacher.email)}
-                  {renderField("Tél principal *", teacher.phone)}
-                  {renderField("Tél secondaire", teacher.secondaryPhone)}
-                  {renderField("Code postal *", teacher.postalCode)}
-                  {renderField("Adresse", teacher.address, true)}
-                  {renderField(
-                    "Complément d'adresse",
-                    teacher.addressComplement,
-                    true
-                  )}
-                  {renderField("Commune", teacher.city)}
-                  {renderField("Commune INSEE", teacher.inseeCity)}
-                  {renderField(
-                    "Bureau distributeur",
-                    teacher.distributionOffice,
-                    true
-                  )}
-                  {renderField("Déplacement", teacher.transportMode)}
-                  {renderField("Cours", teacher.courseLocation)}
-                  {renderField(
-                    "Adresse secondaire",
-                    teacher.secondaryAddress,
-                    true
-                  )}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* Section CV */}
-          <TabsContent value="cv" className="mt-6">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">CV</h3>
-                  <p className="text-sm text-gray-500">
-                    Expérience professionnelle et compétences
-                  </p>
-                </div>
-                {!isEditingCV && (
-                  <button
-                    onClick={() => setIsEditingCV(true)}
-                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Edit ✏️
-                  </button>
-                )}
-              </div>
-
-              {isEditingCV ? (
-                <>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">
-                        Expérience
-                      </label>
-                      <textarea
-                        value={formData.experience || ""}
-                        onChange={(e) =>
-                          handleInputChange("experience", e.target.value)
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none min-h-[100px]"
-                        placeholder="Décrivez votre expérience professionnelle..."
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">
-                        Formation / Certifications
-                      </label>
-                      <textarea
-                        value={formData.certifications || ""}
-                        onChange={(e) =>
-                          handleInputChange("certifications", e.target.value)
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none min-h-[100px]"
-                        placeholder="Diplômes, certifications, formations..."
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">
-                        Divers
-                      </label>
-                      <textarea
-                        value={formData.miscellaneous || ""}
-                        onChange={(e) =>
-                          handleInputChange("miscellaneous", e.target.value)
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none min-h-[100px]"
-                        placeholder="Informations complémentaires..."
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs text-gray-500 mb-2 block">
-                        Connaissance du public en situation de handicap
-                      </label>
-                      <div className="space-y-2">
-                        {disabilityOptions.map((option) => (
-                          <div
-                            key={option.value}
-                            className="flex items-center space-x-2"
-                          >
-                            <Checkbox
-                              id={`disability-${option.value}`}
-                              checked={
-                                formData.disabilityKnowledge?.includes(
-                                  option.value
-                                ) || false
-                              }
-                              onCheckedChange={() =>
-                                toggleArrayValue<DisabilityKnowledge>(
-                                  "disabilityKnowledge",
-                                  option.value
-                                )
-                              }
-                            />
-                            <label
-                              htmlFor={`disability-${option.value}`}
-                              className="text-sm cursor-pointer"
-                            >
-                              {option.label}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">
-                        Ce que je juge bon de signaler
-                      </label>
-                      <textarea
-                        value={formData.additionalNotes || ""}
-                        onChange={(e) =>
-                          handleInputChange("additionalNotes", e.target.value)
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none min-h-[100px]"
-                        placeholder="Informations que vous souhaitez signaler..."
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleSaveCV}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                    >
-                      Sauvegarder
-                    </button>
-                    <button
-                      onClick={handleCancelCV}
-                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-6">
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Expérience</div>
-                    <div className="text-base text-gray-900 whitespace-pre-wrap">
-                      {teacher.experience || "-"}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">
-                      Formation / Certifications
-                    </div>
-                    <div className="text-base text-gray-900 whitespace-pre-wrap">
-                      {teacher.certifications || "-"}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Divers</div>
-                    <div className="text-base text-gray-900 whitespace-pre-wrap">
-                      {teacher.miscellaneous || "-"}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">
-                      Connaissance du public en situation de handicap
-                    </div>
-                    <div className="text-base text-gray-900">
-                      {teacher.disabilityKnowledge &&
-                      teacher.disabilityKnowledge.length > 0
-                        ? teacher.disabilityKnowledge
-                            .map(
-                              (val) =>
-                                disabilityOptions.find(
-                                  (opt) => opt.value === val
-                                )?.label
-                            )
-                            .join(", ")
-                        : "-"}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">
-                      Ce que je juge bon de signaler
-                    </div>
-                    <div className="text-base text-gray-900 whitespace-pre-wrap">
-                      {teacher.additionalNotes || "-"}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* Section Situation actuelle */}
-          <TabsContent value="situation" className="mt-6">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Situation actuelle
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Merci de cocher les cases correspondant à votre situation
-                    actuelle
-                  </p>
-                </div>
-                {!isEditingSituation && (
-                  <button
-                    onClick={() => setIsEditingSituation(true)}
-                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Edit ✏️
-                  </button>
-                )}
-              </div>
-
-              {isEditingSituation ? (
-                <>
-                  <div className="space-y-3">
-                    {situationOptions.map((option) => (
-                      <div
-                        key={option.value}
-                        className="flex items-start space-x-3"
-                      >
-                        <Checkbox
-                          id={`situation-${option.value}`}
-                          checked={
-                            formData.currentSituation?.includes(option.value) ||
-                            false
-                          }
-                          onCheckedChange={() =>
-                            toggleArrayValue<CurrentSituation>(
-                              "currentSituation",
-                              option.value
-                            )
-                          }
-                          className="mt-0.5"
-                        />
-                        <label
-                          htmlFor={`situation-${option.value}`}
-                          className="text-sm cursor-pointer flex-1"
-                        >
-                          {option.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleSaveSituation}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                    >
-                      Sauvegarder
-                    </button>
-                    <button
-                      onClick={handleCancelSituation}
-                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-2">
-                  {teacher.currentSituation &&
-                  teacher.currentSituation.length > 0 ? (
-                    teacher.currentSituation.map((val) => {
-                      const option = situationOptions.find(
-                        (opt) => opt.value === val
-                      );
-                      return option ? (
-                        <div key={val} className="flex items-start space-x-2">
-                          <span className="text-blue-600 mt-0.5">✓</span>
-                          <span className="text-sm text-gray-900">
-                            {option.label}
-                          </span>
-                        </div>
-                      ) : null;
-                    })
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      Aucune situation sélectionnée
-                    </p>
-                  )}
+                  {renderField("Prénom *", professor.firstName)}
+                  {renderField("Nom *", professor.lastName)}
+                  {renderField("Email *", professor.email)}
+                  {renderField("Téléphone", professor.phone)}
+                  {renderField("Code postal", professor.postalCode)}
+                  {renderField("Biographie", professor.bio, true)}
                 </div>
               )}
             </div>
 
-            {/* Card IBAN */}
+            {/* Card Notes */}
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative mt-6">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  IBAN
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Notes administratives
                 </h3>
-                <p className="text-sm text-gray-500">
-                  Coordonnées bancaires du professeur
+                {!isEditingNotes && (
+                  <button
+                    onClick={() => setIsEditingNotes(true)}
+                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                  >
+                    Edit ✏️
+                  </button>
+                )}
+              </div>
+
+              {isEditingNotes ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label
+                      htmlFor="admin-notes"
+                      className="text-sm text-gray-700 mb-2 block"
+                    >
+                      Notes
+                    </Label>
+                    <Textarea
+                      id="admin-notes"
+                      value={notesData}
+                      onChange={(e) => setNotesData(e.target.value)}
+                      placeholder="Saisissez vos notes..."
+                      className="min-h-[120px]"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleSaveNotes}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                    >
+                      Sauvegarder
+                    </button>
+                    <button
+                      onClick={handleCancelNotes}
+                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                  {professor.notes || "Aucune note"}
+                </p>
+              )}
+            </div>
+
+            {/* Card Statut */}
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative mt-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Statut
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  État actuel du professeur
                 </p>
               </div>
-
-              {teacher.iban ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between bg-gray-50 rounded-md p-4 border border-gray-200">
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">IBAN</div>
-                      <div className="text-base font-mono text-gray-900">
-                        {formatIban(teacher.iban)}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleCopyIban(teacher.iban!)}
-                      className="ml-4 px-4 py-2 bg-primary text-white text-sm rounded-md hover:bg-primary-hover transition-colors flex items-center gap-2"
-                      title="Copier l'IBAN"
-                    >
-                      {ibanCopied ? (
-                        <>
-                          <span>✓</span>
-                          <span>Copié</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>📋</span>
-                          <span>Copier</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <Alert className="bg-warning/10 border-warning text-warning">
-                  <AlertDescription className="text-sm">
-                    ⚠️ L'IBAN du professeur n'est pas renseigné. Veuillez ajouter les coordonnées bancaires.
-                  </AlertDescription>
-                </Alert>
-              )}
+              <div className="text-base text-gray-900">
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  professor.status === "active"
+                    ? "bg-green-100 text-green-800"
+                    : professor.status === "inactive"
+                    ? "bg-gray-100 text-gray-800"
+                    : professor.status === "pending"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-red-100 text-red-800"
+                }`}>
+                  {professor.status === "active"
+                    ? "Actif"
+                    : professor.status === "inactive"
+                    ? "Inactif"
+                    : professor.status === "pending"
+                    ? "En attente"
+                    : "Suspendu"}
+                </span>
+              </div>
             </div>
           </TabsContent>
 
@@ -1073,7 +469,7 @@ export const ProfesseurDetails: React.FC = () => {
                 </div>
                 {currentUserRole === "admin" && (
                   <button
-                    onClick={() => handleOpenRdvModal()}
+                    onClick={() => console.log('TODO: implement RDV modal')}
                     className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 flex items-center gap-2"
                   >
                     + Ajouter un rendez-vous
@@ -1157,7 +553,7 @@ export const ProfesseurDetails: React.FC = () => {
                               {canEditRdv(rdv) ? (
                                 <>
                                   <button
-                                    onClick={() => handleOpenRdvModal(rdv)}
+                                    onClick={() => console.log('TODO: implement edit RDV', rdv)}
                                     className="text-blue-600 hover:text-blue-900"
                                     title="Modifier"
                                   >
@@ -1173,7 +569,7 @@ export const ProfesseurDetails: React.FC = () => {
                                 </>
                               ) : (
                                 <button
-                                  onClick={() => handleOpenRdvModal(rdv)}
+                                  onClick={() => console.log('TODO: implement view RDV', rdv)}
                                   className="text-gray-600 hover:text-gray-900"
                                   title="Consulter"
                                 >
@@ -1192,22 +588,6 @@ export const ProfesseurDetails: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Modal RDV */}
-      {isRdvModalOpen && (
-        <Modal
-          isOpen={isRdvModalOpen}
-          onClose={handleCloseRdvModal}
-          type="rdv"
-          data={{
-            ...(selectedRdv || {}),
-            rdvId: selectedRdv?._id,
-            professorId: professorId,
-          }}
-          onSuccess={handleRdvSuccess}
-          mode={selectedRdv && !canEditRdv(selectedRdv) ? "view" : "edit"}
-        />
-      )}
     </main>
   );
 };

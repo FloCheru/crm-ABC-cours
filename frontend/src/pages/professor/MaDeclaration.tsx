@@ -21,7 +21,7 @@ import {
 } from "../../components/ui/dialog";
 import { professorService } from "../../services/professorService";
 import { professorDocumentService } from "../../services/professorDocumentService";
-import type { EmploymentStatus } from "../../types/teacher";
+import type { EmploymentStatus } from "../../types/professor";
 import type {
   ProfessorDocument,
   DocumentType,
@@ -46,7 +46,7 @@ export const MaDeclaration: React.FC = () => {
 
         // Charger le profil pour vérifier le statut d'emploi
         const profile = await professorService.getMyProfile();
-        setEmploymentStatus((profile.employmentStatus as EmploymentStatus) || null);
+        setEmploymentStatus((profile as any).employmentStatus as EmploymentStatus || null);
 
         // Charger les documents
         const docs = await professorDocumentService.getMyDocuments();

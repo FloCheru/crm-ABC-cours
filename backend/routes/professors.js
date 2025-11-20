@@ -141,12 +141,6 @@ router.post(
     body("postalCode").optional().trim(),
     body("identifier").optional().trim(),
     body("notifyEmail").optional().isEmail().normalizeEmail(),
-    body("hourlyRate")
-      .isNumeric()
-      .withMessage("Tarif horaire valide requis"),
-    body("hourlyRate")
-      .isFloat({ min: 0 })
-      .withMessage("Tarif horaire doit être positif"),
     body("subjects")
       .optional()
       .isArray()
@@ -169,7 +163,6 @@ router.post(
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,
-        hourlyRate: req.body.hourlyRate,
         subjects: req.body.subjects,
       });
 
@@ -244,8 +237,6 @@ router.put(
   [
     authorize(["admin", "professor"]),
     body("subjects.*").optional().isMongoId().withMessage("Les IDs de matières doivent être valides"),
-    body("hourlyRate").optional().isNumeric(),
-    body("hourlyRate").optional().isFloat({ min: 0 }),
   ],
   async (req, res) => {
     try {
@@ -366,7 +357,7 @@ router.put(
         req.params.id,
         { status: req.body.status },
         { new: true }
-      ).populate("user", "firstName lastName email");
+      );
 
       if (!professor) {
         return res.status(404).json({ message: "Professeur non trouvé" });

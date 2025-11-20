@@ -1,24 +1,5 @@
 import { apiClient } from '../utils';
-import type { TeachingSubject } from '../types/teacher';
-
-export interface Professor {
-  _id: string;
-  gender: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  postalCode: string;
-  city: string;
-  employmentStatus?: string;
-  bankDetails?: {
-    siret?: string;
-    bankName?: string;
-    iban?: string;
-    bic?: string;
-  };
-  // ... autres champs du professeur
-}
+import type { Professor, TeachingSubject } from '../types/professor';
 
 export interface ProfessorDocument {
   _id: string;
@@ -94,6 +75,19 @@ class ProfessorService {
       await apiClient.delete(`/api/professors/${professorId}`);
     } catch (error) {
       console.error('Erreur deleteProfessor:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Met à jour le statut d'un professeur
+   */
+  async updateStatus(professorId: string, status: "active" | "inactive" | "pending" | "suspended"): Promise<Professor> {
+    try {
+      const data = await apiClient.put<any>(`/api/professors/${professorId}/status`, { status });
+      return data.professor;
+    } catch (error) {
+      console.error('Erreur updateStatus:', error);
       throw error;
     }
   }

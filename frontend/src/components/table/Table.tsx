@@ -31,7 +31,8 @@ interface TableData {
   /**
    * ID unique de la ligne
    */
-  id: string | number;
+  id?: string | number;
+  _id?: string;
 
   /**
    * Données de la ligne (clé-valeur)
@@ -175,6 +176,13 @@ export const Table: React.FC<TableProps> = ({
 
   // Fonction pour obtenir le style de ligne basé sur le statut
   const getRowStyle = (row: TableData): React.CSSProperties => {
+    // Style pour les professeurs inactifs
+    if (row.status === "inactive") {
+      return {
+        backgroundColor: '#f3f4f6', // gray-100 en Tailwind
+      };
+    }
+
     // Ne pas appliquer de couleur si c'est un client (a des NDRs)
     if (row.ndr && row.ndr.length > 0) {
       return {};

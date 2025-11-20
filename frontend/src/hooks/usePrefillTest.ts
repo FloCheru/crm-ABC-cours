@@ -27,7 +27,7 @@ export interface RdvTestData {
   notes: string;
 }
 
-export interface TeacherTestData {
+export interface ProfessorTestData {
   firstName: string;
   lastName: string;
   birthDate: string;
@@ -75,7 +75,7 @@ export const usePrefillTest = () => {
   };
 
   // Données de test fixes pour professeur
-  const teacherTestData: TeacherTestData = {
+  const professorTestData: ProfessorTestData = {
     firstName: "Marie",
     lastName: "Leclerc",
     birthDate: "1985-03-22",
@@ -89,6 +89,6 @@ export const usePrefillTest = () => {
   return {
     studentTestData,
     rdvTestData,
-    teacherTestData,
+    professorTestData,
   };
 };

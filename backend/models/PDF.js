@@ -31,11 +31,11 @@ const pdfSchema = new mongoose.Schema({
     refPath: 'userModel'
   },
 
-  // Modèle du propriétaire (Teacher ou Admin)
+  // Modèle du propriétaire (Professor ou Admin)
   userModel: {
     type: String,
     required: true,
-    enum: ['Teacher', 'Admin']
+    enum: ['Professor', 'Admin']
   },
 
   // Version du document (pour versionning)
@@ -85,7 +85,7 @@ const pdfSchema = new mongoose.Schema({
     },
     byModel: {
       type: String,
-      enum: ['Teacher', 'Admin']
+      enum: ['Professor', 'Admin']
     },
     at: {
       type: Date,

@@ -176,7 +176,6 @@ const ENTITY_HANDLERS = {
         postalCode: formData.postalCode.trim(),
         identifier: formData.identifier,
         notifyEmail: formData.notifyEmail?.trim() || "",
-        hourlyRate: parseFloat(formData.hourlyRate) || 0,
       };
 
       console.log("[TEACHER PREPARE] ✅ Données nettoyées et préparées:", prepared);
@@ -331,7 +330,7 @@ export const Modal: React.FC<ModalProps> = ({
   onCreateTestProspect,
 }) => {
   // Hook pour les données de test de préremplissage
-  const { studentTestData, rdvTestData, teacherTestData } = usePrefillTest();
+  const { studentTestData, rdvTestData, professorTestData } = usePrefillTest();
 
   // Nouvelle logique de détection création vs modification
   const entityId = data?.studentId || data?.rdvId || data?.professorId;
@@ -505,12 +504,6 @@ export const Modal: React.FC<ModalProps> = ({
             { key: "email", label: "Email", type: "email", required: true },
             { key: "postalCode", label: "Code postal", type: "text", required: true },
             { key: "identifier", label: "Identifiant", type: "text" },
-          ],
-        },
-        {
-          title: "Informations professionnelles",
-          fields: [
-            { key: "hourlyRate", label: "Tarif horaire (€/h)", type: "number", required: true, placeholder: "30" },
           ],
         },
         {
@@ -1008,7 +1001,7 @@ export const Modal: React.FC<ModalProps> = ({
     } else if (type === "teacher") {
       setFormData((prev) => ({
         ...prev,
-        ...teacherTestData,
+        ...professorTestData,
       }));
     } else if (type === "family" && onCreateTestProspect) {
       await onCreateTestProspect();

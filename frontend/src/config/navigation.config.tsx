@@ -4,7 +4,6 @@ import {
   Calendar,
   Settings,
   User,
-  CheckSquare,
   Ticket,
   MessageSquare,
   FileText,
@@ -94,18 +93,19 @@ export const navigationItems: NavItem[] = [
     submenu: [
       { label: 'Identité & Coordonnées', path: '/professor/profil' },
       { label: 'Mes documents', path: '/professor/documents' },
+      { label: 'Mes choix', path: '/professor/choix' },
     ],
-  },
-  {
-    label: 'Mes choix',
-    path: '/professor/choix',
-    icon: CheckSquare,
-    roles: ['professor'],
   },
   {
     label: 'Mes coupons',
     path: '/professor/coupons',
     icon: Ticket,
+    roles: ['professor'],
+  },
+  {
+    label: 'Fiche de paie',
+    path: '/professor/paie',
+    icon: DollarSign,
     roles: ['professor'],
   },
   {
@@ -130,12 +130,6 @@ export const navigationItems: NavItem[] = [
     label: 'Mes élèves',
     path: '/professor/eleves',
     icon: BookOpen,
-    roles: ['professor'],
-  },
-  {
-    label: 'Fiche de paie',
-    path: '/professor/paie',
-    icon: DollarSign,
     roles: ['professor'],
   },
 ];
