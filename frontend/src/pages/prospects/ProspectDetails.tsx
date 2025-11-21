@@ -522,7 +522,11 @@ export const ProspectDetails: React.FC = () => {
   return (
     <main>
       <PageHeader
-        title="Détails du Prospect"
+        title={
+          prospect
+            ? `Détails du Prospect - ${prospect.primaryContact.lastName.toUpperCase()} ${prospect.primaryContact.firstName.charAt(0).toUpperCase()}${prospect.primaryContact.firstName.slice(1).toLowerCase()}`
+            : "Détails du Prospect"
+        }
         breadcrumb={[
           { label: "Prospects", href: "/admin/prospects" },
           { label: "Détails" },

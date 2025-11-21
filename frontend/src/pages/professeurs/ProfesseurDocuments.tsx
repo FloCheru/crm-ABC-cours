@@ -181,12 +181,12 @@ export const ProfesseurDocuments: React.FC = () => {
         title="Documents du professeur"
         breadcrumb={[
           { label: 'Professeurs', href: '/admin/professeurs' },
-          { label: 'Détails', href: '/admin/professeur-details' },
+          { label: 'Détails', href: `/admin/professeur-details/${professorId}` },
           { label: 'Documents' }
         ]}
         backButton={{
           label: 'Retour aux détails',
-          href: '/admin/professeur-details'
+          href: `/admin/professeur-details/${professorId}`
         }}
       />
 

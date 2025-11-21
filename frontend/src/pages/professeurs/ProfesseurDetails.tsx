@@ -241,7 +241,11 @@ export const ProfesseurDetails: React.FC = () => {
   return (
     <main className="bg-gray-50 min-h-screen">
       <PageHeader
-        title="Détails du Professeur"
+        title={
+          professor
+            ? `Détails du Professeur - ${professor.lastName.toUpperCase()} ${professor.firstName.charAt(0).toUpperCase()}${professor.firstName.slice(1).toLowerCase()}`
+            : "Détails du Professeur"
+        }
         breadcrumb={[
           { label: "Professeurs", href: "/admin/professeurs" },
           { label: "Détails" },
