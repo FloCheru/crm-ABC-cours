@@ -14,6 +14,11 @@ import {
 import { KeyRound, UserRound, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
 import { professorService } from "../../services/professorService";
+import { subjectService } from "../../services/subjectService";
+import { geoApiService } from "../../services/geoApiService";
+import { FRENCH_DEPARTMENTS } from "../../constants/departments";
+import { getAllGrades } from "../../constants/schoolLevels";
+import type { Subject } from "../../types/subject";
 
 // Type pour les données du tableau avec l'id requis (adapté au modèle Professor)
 interface ProfessorTableRow {
@@ -25,6 +30,9 @@ interface ProfessorTableRow {
   postalCode?: string;
   createdAt: string;
   status?: "active" | "inactive" | "pending" | "suspended";
+  bio?: string;
+  notes?: string;
+  subjects?: Array<{ _id: string; name: string; category?: string }>;
 }
 
 export const Professeurs: React.FC = () => {
@@ -43,12 +51,22 @@ export const Professeurs: React.FC = () => {
   const [isCreateTeacherModalOpen, setIsCreateTeacherModalOpen] =
     useState(false);
 
-  // Load teachers data
+  // State pour les données des filtres
+  const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [postalCodeToCityMap, setPostalCodeToCityMap] = useState<Record<string, string>>({});
+
+  // Load teachers data and subjects
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        const professors = await professorService.getAllProfessors();
+
+        // Charger les professeurs et les matières en parallèle
+        const [professors, subjects] = await Promise.all([
+          professorService.getAllProfessors(),
+          subjectService.getSubjects(),
+        ]);
 
         // Mapper les Professor vers ProfessorTableRow (adapter la structure)
         const mappedTeachers: ProfessorTableRow[] = professors.map((prof: any) => ({
@@ -60,9 +78,13 @@ export const Professeurs: React.FC = () => {
           postalCode: prof.postalCode,
           createdAt: prof.createdAt,
           status: prof.status,
+          bio: prof.bio,
+          notes: prof.notes,
+          subjects: prof.subjects,
         }));
 
         setTeachers(mappedTeachers);
+        setAllSubjects(subjects);
       } catch (err) {
         console.error("Erreur lors du chargement des données:", err);
         toast.error("Erreur lors du chargement des professeurs");
@@ -74,13 +96,41 @@ export const Professeurs: React.FC = () => {
     loadData();
   }, []);
 
-  // Extraire les valeurs uniques pour les filtres
-  const departments = Array.from(
-    new Set(teachers.map((t) => t.postalCode?.substring(0, 2) || "").filter(Boolean))
-  ).sort();
-  const cities: string[] = [];
-  const subjects: string[] = [];
-  const levels: string[] = [];
+  // Load cities from postal codes when teachers are loaded
+  useEffect(() => {
+    const loadCities = async () => {
+      if (teachers.length === 0) return;
+
+      try {
+        // Extraire les codes postaux uniques des professeurs
+        const postalCodes = Array.from(
+          new Set(
+            teachers
+              .map((t) => t.postalCode)
+              .filter((code): code is string => Boolean(code))
+          )
+        );
+
+        if (postalCodes.length === 0) return;
+
+        // Récupérer le mapping code postal -> ville
+        const mapping = await geoApiService.getPostalCodeToCityMapping(postalCodes);
+        setPostalCodeToCityMap(mapping);
+
+        // Extraire les noms de villes uniques et triés
+        const uniqueCities = Array.from(new Set(Object.values(mapping))).sort();
+        setCities(uniqueCities);
+      } catch (error) {
+        console.error("Erreur lors du chargement des villes:", error);
+      }
+    };
+
+    loadCities();
+  }, [teachers]);
+
+  // Préparer les données pour les filtres
+  const departments = FRENCH_DEPARTMENTS.map((d) => d.code);
+  const levels = getAllGrades();
 
   const handleAddTeacher = () => {
     setIsCreateTeacherModalOpen(true);
@@ -108,6 +158,9 @@ export const Professeurs: React.FC = () => {
         postalCode: prof.postalCode,
         createdAt: prof.createdAt,
         status: prof.status,
+        bio: prof.bio,
+        notes: prof.notes,
+        subjects: prof.subjects,
       }));
 
       setTeachers(mappedTeachers);
@@ -119,9 +172,6 @@ export const Professeurs: React.FC = () => {
     }
   };
 
-  const handleSearch = () => {
-    console.log("Recherche:", searchTerm);
-  };
 
   const handleFilter = () => {
     console.log("Filtres appliqués");
@@ -256,17 +306,39 @@ export const Professeurs: React.FC = () => {
       const phone = teacher.phone || "";
       const email = teacher.email.toLowerCase();
       const postalCode = teacher.postalCode || "";
+      const bio = teacher.bio?.toLowerCase() || "";
+      const notes = teacher.notes?.toLowerCase() || "";
+      const subjectNames = teacher.subjects?.map((s) => s.name.toLowerCase()).join(" ") || "";
 
       const matchesSearch =
         fullName.includes(searchLower) ||
         phone.includes(searchLower) ||
         email.includes(searchLower) ||
-        postalCode.includes(searchLower);
+        postalCode.includes(searchLower) ||
+        bio.includes(searchLower) ||
+        notes.includes(searchLower) ||
+        subjectNames.includes(searchLower);
 
       const matchesDepartment =
         !filterDepartment || postalCode.substring(0, 2) === filterDepartment;
 
-      return matchesSearch && matchesDepartment;
+      // Filtre Ville : vérifier si la ville du prof correspond au filtre
+      const matchesCity = !filterCity ||
+        (teacher.postalCode && postalCodeToCityMap[teacher.postalCode] === filterCity);
+
+      // Filtre Matière : vérifier si le prof enseigne la matière sélectionnée
+      const matchesSubject = !filterSubject ||
+        teacher.subjects?.some((s) => s._id === filterSubject);
+
+      // Filtre Niveau : vérifier si le prof enseigne ce niveau (via les grades des matières)
+      const matchesLevel = !filterLevel ||
+        teacher.subjects?.some((s) => {
+          // Pour l'instant, on ne peut pas filtrer par niveau car les grades ne sont pas dans subjects
+          // On retournera true temporairement
+          return true;
+        });
+
+      return matchesSearch && matchesDepartment && matchesCity && matchesSubject && matchesLevel;
     })
     .sort((a, b) => {
       let comparison = 0;
@@ -421,14 +493,9 @@ export const Professeurs: React.FC = () => {
         {/* Barre de recherche */}
         <Container layout="flex">
           <Input
-            placeholder="Rechercher par nom, téléphone, email, ville..."
+            placeholder="Rechercher par nom, email, téléphone, code postal, matières, compétences, notes..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            button={
-              <Button variant="primary" onClick={handleSearch}>
-                Appliquer
-              </Button>
-            }
           />
         </Container>
 
@@ -493,9 +560,9 @@ export const Professeurs: React.FC = () => {
                 onChange={(e) => setFilterSubject(e.target.value)}
                 options={[
                   { value: "", label: "Toutes" },
-                  ...subjects.map((subject) => ({
-                    value: subject,
-                    label: subject,
+                  ...allSubjects.map((subject) => ({
+                    value: subject._id,
+                    label: subject.name,
                   })),
                 ]}
               />
@@ -508,7 +575,10 @@ export const Professeurs: React.FC = () => {
                 onChange={(e) => setFilterLevel(e.target.value)}
                 options={[
                   { value: "", label: "Tous" },
-                  ...levels.map((level) => ({ value: level, label: level })),
+                  ...levels.map((level) => ({
+                    value: level.value,
+                    label: level.label,
+                  })),
                 ]}
               />
             </div>
