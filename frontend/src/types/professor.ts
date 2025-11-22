@@ -26,10 +26,9 @@ export type CurrentSituation =
   | "enseignant_avec_activite_domicile"
   | "enseignant_activite_professionnelle"
   | "enseignant_formation_professionnelle"
-  | "etudiant"
-  | "autre";
+  | "etudiant";
 
-export type EmploymentStatus = "salarie" | "auto-entrepreneur";
+export type EmploymentStatus = "salarie" | "auto-entrepreneur" | "formation-professionnel";
 
 export type ProfessorStatus = "active" | "inactive" | "pending" | "suspended";
 
@@ -173,6 +172,7 @@ export interface ProfessorProfile extends Professor {
   courseLocation?: CourseLocation;
   secondaryAddress?: string;
   employmentStatus?: EmploymentStatus;
+  currentSituation?: CurrentSituation;
   siret?: string;
   bankName?: string;
   iban?: string;

@@ -303,6 +303,22 @@ class ProfessorService {
   }
 
   /**
+   * Met à jour les matières enseignées d'un professeur (admin uniquement)
+   * @param professorId - ID du professeur
+   * @param subjects - Liste des matières avec niveaux
+   * @returns Liste mise à jour
+   */
+  async updateProfessorSubjects(professorId: string, subjects: TeachingSubject[]): Promise<TeachingSubject[]> {
+    try {
+      const data = await apiClient.put<any>(`/api/professors/${professorId}/subjects`, { teachingSubjects: subjects });
+      return data.teachingSubjects || [];
+    } catch (error) {
+      console.error('Erreur updateProfessorSubjects:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Vérifie si le professeur a un RIB valide et complet
    * @returns true si le RIB est complet, false sinon
    */

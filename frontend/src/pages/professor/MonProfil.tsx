@@ -13,6 +13,8 @@ import { Label } from '../../components/ui/label';
 import { AvailabilityForm } from '../../components/professor/AvailabilityForm';
 import { FRENCH_DEPARTMENTS } from '../../constants/departments';
 import { TRANSPORT_MODES } from '../../constants/transportModes';
+import { getSimulatedProfessor } from '../../utils/professorSimulation';
+import { professorService } from '../../services/professorService';
 
 export const MonProfil: React.FC = () => {
   const user = useAuthStore((state) => state.user);
@@ -24,48 +26,67 @@ export const MonProfil: React.FC = () => {
   // État pour gérer l'édition par onglet
   const [editingTab, setEditingTab] = useState<string | null>(null);
 
+  // Détecter le mode simulation
+  const simulatedProfessor = getSimulatedProfessor();
+  const isSimulationMode = !!simulatedProfessor;
+
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [isSimulationMode, simulatedProfessor?.id]);
 
   const loadProfile = async () => {
     try {
       setIsLoading(true);
-      // TODO: Remplacer par un vrai appel API via professorService.getMyProfile()
-      // Pour l'instant, données mockées
-      const mockProfile: Partial<ProfessorProfile> = {
-        _id: user?._id || '',
-        gender: 'Mme' as Gender,
-        firstName: user?.firstName || '',
-        lastName: user?.lastName || '',
-        birthName: '',
-        birthDate: '1990-05-15',
-        socialSecurityNumber: '',
-        birthCountry: 'France',
-        email: user?.email || '',
-        phone: '0123456789',
-        secondaryPhone: '',
-        address: '123 Rue Exemple',
-        addressComplement: '',
-        postalCode: '75001',
-        city: 'Paris',
-        inseeCity: '',
-        distributionOffice: '',
-        transportMode: 'voiture',
-        courseLocation: 'domicile',
-        secondaryAddress: '',
-        // RIB fields
-        employmentStatus: undefined,
-        siret: '',
-        bankName: '',
-        iban: '',
-        bic: '',
-        // Déplacements
-        availableDepartments: [],
-        // Disponibilités
-        weeklyAvailability: {},
-      };
-      setFormData(mockProfile);
+
+      console.log('[MonProfil] loadProfile - isSimulationMode:', isSimulationMode);
+      console.log('[MonProfil] loadProfile - simulatedProfessor:', simulatedProfessor);
+
+      // En mode simulation, charger les données du professeur simulé
+      if (isSimulationMode && simulatedProfessor) {
+        console.log('[MonProfil] Chargement du professeur simulé, ID:', simulatedProfessor.id);
+        const professor = await professorService.getProfessorById(simulatedProfessor.id);
+        console.log('[MonProfil] Professeur chargé:', professor);
+        setFormData(professor as Partial<ProfessorProfile>);
+      } else {
+        console.log('[MonProfil] Mode normal - chargement mock data');
+
+        // Sinon, charger le profil de l'utilisateur connecté
+        // TODO: Remplacer par un vrai appel API via professorService.getMyProfile()
+        // Pour l'instant, données mockées
+        const mockProfile: Partial<ProfessorProfile> = {
+          _id: user?._id || '',
+          gender: 'Mme' as Gender,
+          firstName: user?.firstName || '',
+          lastName: user?.lastName || '',
+          birthName: '',
+          birthDate: '1990-05-15',
+          socialSecurityNumber: '',
+          birthCountry: 'France',
+          email: user?.email || '',
+          phone: '0123456789',
+          secondaryPhone: '',
+          address: '123 Rue Exemple',
+          addressComplement: '',
+          postalCode: '75001',
+          city: 'Paris',
+          inseeCity: '',
+          distributionOffice: '',
+          transportMode: 'voiture',
+          courseLocation: 'domicile',
+          secondaryAddress: '',
+          // RIB fields
+          employmentStatus: undefined,
+          siret: '',
+          bankName: '',
+          iban: '',
+          bic: '',
+          // Déplacements
+          availableDepartments: [],
+          // Disponibilités
+          weeklyAvailability: {},
+        };
+        setFormData(mockProfile);
+      }
     } catch (err) {
       console.error('Erreur lors du chargement du profil:', err);
     } finally {
@@ -237,7 +258,7 @@ export const MonProfil: React.FC = () => {
                   Vos informations personnelles
                 </p>
               </div>
-              {editingTab !== 'identite' && (
+              {!isSimulationMode && editingTab !== 'identite' && (
                 <button
                   onClick={() => setEditingTab('identite')}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
@@ -306,7 +327,7 @@ export const MonProfil: React.FC = () => {
                   Informations de contact et adresse
                 </p>
               </div>
-              {editingTab !== 'coordonnees' && (
+              {!isSimulationMode && editingTab !== 'coordonnees' && (
                 <button
                   onClick={() => setEditingTab('coordonnees')}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
@@ -384,7 +405,7 @@ export const MonProfil: React.FC = () => {
                   Informations bancaires et statut professionnel
                 </p>
               </div>
-              {editingTab !== 'rib' && (
+              {!isSimulationMode && editingTab !== 'rib' && (
                 <button
                   onClick={() => setEditingTab('rib')}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
@@ -549,7 +570,7 @@ export const MonProfil: React.FC = () => {
                   Départements où vous pouvez vous déplacer pour donner des cours
                 </p>
               </div>
-              {editingTab !== 'deplacements' && (
+              {!isSimulationMode && editingTab !== 'deplacements' && (
                 <button
                   onClick={() => setEditingTab('deplacements')}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
@@ -631,7 +652,7 @@ export const MonProfil: React.FC = () => {
                   Vos créneaux horaires disponibles dans la semaine
                 </p>
               </div>
-              {editingTab !== 'disponibilites' && (
+              {!isSimulationMode && editingTab !== 'disponibilites' && (
                 <button
                   onClick={() => setEditingTab('disponibilites')}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"

@@ -20,7 +20,7 @@ interface ModalProps {
   onClose: () => void;
   type: "student" | "rdv" | "teacher" | "family";
   data?: any;
-  onSuccess?: () => void;
+  onSuccess?: (createdEntity?: any) => void;
   mode?: "edit" | "view";
   // Props RDV
   onSubmit?: (data: any) => void;
@@ -175,7 +175,6 @@ const ENTITY_HANDLERS = {
         email: formData.email.trim(),
         postalCode: formData.postalCode.trim(),
         identifier: formData.identifier,
-        notifyEmail: formData.notifyEmail?.trim() || "",
       };
 
       console.log("[TEACHER PREPARE] ✅ Données nettoyées et préparées:", prepared);
@@ -506,12 +505,6 @@ export const Modal: React.FC<ModalProps> = ({
             { key: "identifier", label: "Identifiant", type: "text" },
           ],
         },
-        {
-          title: "Notification",
-          fields: [
-            { key: "notifyEmail", label: "Notifier à", type: "email" },
-          ],
-        },
       ],
     },
     family: {
@@ -738,7 +731,6 @@ export const Modal: React.FC<ModalProps> = ({
     studentId: "",
     // Champs teacher
     identifier: "",
-    notifyEmail: "",
     // Champs family
     familyNotes: "",
     primaryFirstName: "",
@@ -901,6 +893,7 @@ export const Modal: React.FC<ModalProps> = ({
       const preparedData = handler.prepareData(formData, data);
 
       // 2. Sauvegarde
+      let createdOrUpdatedEntity = null;
       if (entityId) {
         // Mode UPDATE
         console.log("[HANDLESAVE] 2️⃣ Mode UPDATE - ID:", entityId);
@@ -909,8 +902,8 @@ export const Modal: React.FC<ModalProps> = ({
         // Mode CREATE
         console.log("[HANDLESAVE] 2️⃣ Mode CREATE - Aucun ID");
         const additionalData = type === "rdv" ? admins : undefined;
-        const result = await handler.create(familyId, preparedData, additionalData);
-        console.log("[HANDLESAVE] ✅ Résultat CREATE:", result);
+        createdOrUpdatedEntity = await handler.create(familyId, preparedData, additionalData);
+        console.log("[HANDLESAVE] ✅ Résultat CREATE:", createdOrUpdatedEntity);
       }
 
       // 3. Gestion du mode selon le contexte (création vs édition)
@@ -922,9 +915,9 @@ export const Modal: React.FC<ModalProps> = ({
           onSuccess();
         }
       } else {
-        // Mode CREATE : fermer directement la modal
+        // Mode CREATE : passer l'entité créée au callback
         if (onSuccess) {
-          onSuccess();
+          onSuccess(createdOrUpdatedEntity);
         }
       }
     } catch (error) {
@@ -1196,7 +1189,6 @@ export const Modal: React.FC<ModalProps> = ({
       studentId: "",
       // Champs teacher
       identifier: "",
-      notifyEmail: "",
       // Champs family
       familyNotes: "",
       primaryFirstName: "",

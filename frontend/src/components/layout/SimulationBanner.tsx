@@ -12,14 +12,11 @@ export const SimulationBanner: React.FC = () => {
   }
 
   const handleExitSimulation = () => {
-    // Restaurer l'ID du professeur dans localStorage pour ProfesseurDetails
-    localStorage.setItem('professorId', simulatedProfessor.id);
-
     // Désactiver le mode simulation
     exitProfessorView();
 
-    // Rediriger vers la page de détails du professeur
-    navigate('/admin/professeur-details');
+    // Rediriger vers la page de détails du professeur avec l'ID dans l'URL
+    navigate(`/admin/professeur-details/${simulatedProfessor.id}`);
   };
 
   return (

@@ -2,7 +2,12 @@ const mongoose = require("mongoose");
 
 const professorSchema = new mongoose.Schema(
   {
-    // Informations personnelles
+    // Informations personnelles - Identité
+    gender: {
+      type: String,
+      enum: ['M.', 'Mme', ''],
+      trim: true,
+    },
     firstName: {
       type: String,
       required: [true, "Prénom requis"],
@@ -13,6 +18,22 @@ const professorSchema = new mongoose.Schema(
       required: [true, "Nom requis"],
       trim: true,
     },
+    birthName: {
+      type: String,
+      trim: true,
+    },
+    birthDate: {
+      type: Date,
+    },
+    socialSecurityNumber: {
+      type: String,
+      trim: true,
+    },
+    birthCountry: {
+      type: String,
+      trim: true,
+    },
+    // Informations de contact - Coordonnées
     email: {
       type: String,
       required: [true, "Email requis"],
@@ -24,10 +45,44 @@ const professorSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    birthDate: {
-      type: Date,
+    secondaryPhone: {
+      type: String,
+      trim: true,
     },
     postalCode: {
+      type: String,
+      trim: true,
+    },
+    address: {
+      type: String,
+      trim: true,
+    },
+    addressComplement: {
+      type: String,
+      trim: true,
+    },
+    city: {
+      type: String,
+      trim: true,
+    },
+    inseeCity: {
+      type: String,
+      trim: true,
+    },
+    distributionOffice: {
+      type: String,
+      trim: true,
+    },
+    transportMode: {
+      type: String,
+      trim: true,
+    },
+    courseLocation: {
+      type: String,
+      enum: ['domicile', 'visio', ''],
+      trim: true,
+    },
+    secondaryAddress: {
       type: String,
       trim: true,
     },
@@ -35,16 +90,80 @@ const professorSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    notifyEmail: {
+    // Informations bancaires - RIB
+    employmentStatus: {
+      type: String,
+      enum: ['salarie', 'auto-entrepreneur', 'formation-professionnel', ''],
+      trim: true,
+    },
+    currentSituation: {
+      type: String,
+      enum: [
+        'enseignant_education_nationale',
+        'enseignant_vacataire_contractuel',
+        'etudiant_master_professorat',
+        'enseignant_avec_activite_domicile',
+        'enseignant_activite_professionnelle',
+        'enseignant_formation_professionnelle',
+        'etudiant',
+        ''
+      ],
+      trim: true,
+    },
+    siret: {
       type: String,
       trim: true,
-      lowercase: true,
+    },
+    bankName: {
+      type: String,
+      trim: true,
+    },
+    iban: {
+      type: String,
+      trim: true,
+    },
+    bic: {
+      type: String,
+      trim: true,
+    },
+    // Déplacements
+    availableDepartments: [{
+      type: String,
+      trim: true,
+    }],
+    // Disponibilités hebdomadaires
+    weeklyAvailability: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
     // Matières enseignées (références au modèle Subject)
     subjects: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Subject",
+      },
+    ],
+    // Matières enseignées avec niveaux détaillés
+    teachingSubjects: [
+      {
+        subjectId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Subject",
+          required: true,
+        },
+        subjectName: {
+          type: String,
+          required: true,
+        },
+        grades: {
+          type: [String],
+          default: [],
+        },
+        levels: {
+          type: [String],
+          enum: ["primaire", "college", "lycee", "superieur"],
+          default: [],
+        },
       },
     ],
     availability: [
