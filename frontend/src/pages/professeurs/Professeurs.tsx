@@ -19,6 +19,13 @@ import { geoApiService } from "../../services/geoApiService";
 import { FRENCH_DEPARTMENTS } from "../../constants/departments";
 import { getAllGrades } from "../../constants/schoolLevels";
 import type { Subject } from "../../types/subject";
+import { formatPhoneNumber } from "../../utils";
+import {
+  GENDER_OPTIONS,
+  ACTIVE_STATUS_OPTIONS,
+  CURRENT_SITUATION_OPTIONS,
+  EMPLOYMENT_STATUS_OPTIONS,
+} from "../../constants/professorFilters";
 
 // Type pour les données du tableau avec l'id requis (adapté au modèle Professor)
 interface ProfessorTableRow {
@@ -33,6 +40,9 @@ interface ProfessorTableRow {
   bio?: string;
   notes?: string;
   subjects?: Array<{ _id: string; name: string; category?: string }>;
+  gender?: string;
+  currentSituation?: string;
+  employmentStatus?: string;
 }
 
 export const Professeurs: React.FC = () => {
@@ -48,6 +58,10 @@ export const Professeurs: React.FC = () => {
   const [filterCity, setFilterCity] = useState<string>("");
   const [filterSubject, setFilterSubject] = useState<string>("");
   const [filterLevel, setFilterLevel] = useState<string>("");
+  const [filterGender, setFilterGender] = useState<string>("");
+  const [filterActiveStatus, setFilterActiveStatus] = useState<string>("");
+  const [filterCurrentSituation, setFilterCurrentSituation] = useState<string>("");
+  const [filterEmploymentStatus, setFilterEmploymentStatus] = useState<string>("");
   const [isCreateTeacherModalOpen, setIsCreateTeacherModalOpen] =
     useState(false);
 
@@ -81,6 +95,9 @@ export const Professeurs: React.FC = () => {
           bio: prof.bio,
           notes: prof.notes,
           subjects: prof.subjects,
+          gender: prof.gender,
+          currentSituation: prof.currentSituation,
+          employmentStatus: prof.employmentStatus,
         }));
 
         setTeachers(mappedTeachers);
@@ -136,39 +153,69 @@ export const Professeurs: React.FC = () => {
     setIsCreateTeacherModalOpen(true);
   };
 
-  const handleCreateTeacherSuccess = async () => {
+  const handleCreateTeacherSuccess = async (createdProfessor?: any) => {
     console.log("[PROFESSEURS PAGE] 🎉 Callback onSuccess appelé après création de professeur");
 
     // Fermer la modal
     setIsCreateTeacherModalOpen(false);
     console.log("[PROFESSEURS PAGE] 🚪 Modal fermée");
 
-    // Recharger les données depuis la DB
-    try {
-      console.log("[PROFESSEURS PAGE] 🔄 Rechargement des données depuis la DB...");
-      const professors = await professorService.getAllProfessors();
+    // Si on a reçu le professeur créé, l'ajouter directement au state (optimistic update)
+    if (createdProfessor) {
+      console.log("[PROFESSEURS PAGE] ✨ Ajout optimiste du nouveau professeur:", createdProfessor);
 
-      // Mapper les Professor vers ProfessorTableRow (adapter la structure)
-      const mappedTeachers: ProfessorTableRow[] = professors.map((prof: any) => ({
-        _id: prof._id,
-        firstName: prof.firstName,
-        lastName: prof.lastName,
-        email: prof.email,
-        phone: prof.phone,
-        postalCode: prof.postalCode,
-        createdAt: prof.createdAt,
-        status: prof.status,
-        bio: prof.bio,
-        notes: prof.notes,
-        subjects: prof.subjects,
-      }));
+      // Mapper le Professor vers ProfessorTableRow
+      const newTeacher: ProfessorTableRow = {
+        _id: createdProfessor._id,
+        firstName: createdProfessor.firstName,
+        lastName: createdProfessor.lastName,
+        email: createdProfessor.email,
+        phone: createdProfessor.phone,
+        postalCode: createdProfessor.postalCode,
+        createdAt: createdProfessor.createdAt,
+        status: createdProfessor.status,
+        bio: createdProfessor.bio,
+        notes: createdProfessor.notes,
+        subjects: createdProfessor.subjects,
+        gender: createdProfessor.gender,
+        currentSituation: createdProfessor.currentSituation,
+        employmentStatus: createdProfessor.employmentStatus,
+      };
 
-      setTeachers(mappedTeachers);
-      console.log("[PROFESSEURS PAGE] ✅ Données rechargées avec succès:", mappedTeachers.length, "professeurs");
+      // Ajouter le nouveau professeur au début de la liste
+      setTeachers((prev) => [newTeacher, ...prev]);
+      console.log("[PROFESSEURS PAGE] ✅ Professeur ajouté à la liste");
       toast.success("Professeur créé avec succès");
-    } catch (error) {
-      console.error("[PROFESSEURS PAGE] ❌ Erreur au rechargement des données:", error);
-      toast.error("Erreur lors du rechargement des professeurs");
+    } else {
+      // Fallback : recharger depuis la DB si le professeur n'est pas fourni
+      console.log("[PROFESSEURS PAGE] ⚠️ Professeur non fourni, rechargement depuis la DB...");
+      try {
+        const professors = await professorService.getAllProfessors();
+
+        const mappedTeachers: ProfessorTableRow[] = professors.map((prof: any) => ({
+          _id: prof._id,
+          firstName: prof.firstName,
+          lastName: prof.lastName,
+          email: prof.email,
+          phone: prof.phone,
+          postalCode: prof.postalCode,
+          createdAt: prof.createdAt,
+          status: prof.status,
+          bio: prof.bio,
+          notes: prof.notes,
+          subjects: prof.subjects,
+          gender: prof.gender,
+          currentSituation: prof.currentSituation,
+          employmentStatus: prof.employmentStatus,
+        }));
+
+        setTeachers(mappedTeachers);
+        console.log("[PROFESSEURS PAGE] ✅ Données rechargées avec succès:", mappedTeachers.length, "professeurs");
+        toast.success("Professeur créé avec succès");
+      } catch (error) {
+        console.error("[PROFESSEURS PAGE] ❌ Erreur au rechargement des données:", error);
+        toast.error("Erreur lors du rechargement des professeurs");
+      }
     }
   };
 
@@ -185,6 +232,10 @@ export const Professeurs: React.FC = () => {
     setFilterCity("");
     setFilterSubject("");
     setFilterLevel("");
+    setFilterGender("");
+    setFilterActiveStatus("");
+    setFilterCurrentSituation("");
+    setFilterEmploymentStatus("");
   };
 
   // Handler pour cliquer sur une ligne du tableau
@@ -332,13 +383,30 @@ export const Professeurs: React.FC = () => {
 
       // Filtre Niveau : vérifier si le prof enseigne ce niveau (via les grades des matières)
       const matchesLevel = !filterLevel ||
-        teacher.subjects?.some((s) => {
+        teacher.subjects?.some(() => {
           // Pour l'instant, on ne peut pas filtrer par niveau car les grades ne sont pas dans subjects
           // On retournera true temporairement
           return true;
         });
 
-      return matchesSearch && matchesDepartment && matchesCity && matchesSubject && matchesLevel;
+      // Filtre Sexe : vérifier si le sexe correspond
+      const matchesGender = !filterGender || teacher.gender === filterGender;
+
+      // Filtre Actif/Inactif : vérifier si le statut correspond
+      const matchesActiveStatus = !filterActiveStatus ||
+        (filterActiveStatus === "active" && teacher.status === "active") ||
+        (filterActiveStatus === "inactive" && teacher.status === "inactive");
+
+      // Filtre Situation actuelle : vérifier si la situation correspond
+      const matchesCurrentSituation = !filterCurrentSituation ||
+        teacher.currentSituation === filterCurrentSituation;
+
+      // Filtre Statut d'emploi : vérifier si le statut d'emploi correspond
+      const matchesEmploymentStatus = !filterEmploymentStatus ||
+        teacher.employmentStatus === filterEmploymentStatus;
+
+      return matchesSearch && matchesDepartment && matchesCity && matchesSubject && matchesLevel &&
+        matchesGender && matchesActiveStatus && matchesCurrentSituation && matchesEmploymentStatus;
     })
     .sort((a, b) => {
       let comparison = 0;
@@ -403,7 +471,7 @@ export const Professeurs: React.FC = () => {
       label: "Téléphone",
       render: (_: unknown, row: ProfessorTableRow) => (
         <div className={row.status === "inactive" ? "text-sm text-gray-400" : "text-sm"}>
-          {row.phone}
+          {formatPhoneNumber(row.phone)}
         </div>
       ),
     },
@@ -579,6 +647,54 @@ export const Professeurs: React.FC = () => {
                     value: level.value,
                     label: level.label,
                   })),
+                ]}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Sexe:</label>
+              <Select
+                value={filterGender}
+                onChange={(e) => setFilterGender(e.target.value)}
+                options={[
+                  { value: "", label: "Tous" },
+                  ...GENDER_OPTIONS,
+                ]}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Statut:</label>
+              <Select
+                value={filterActiveStatus}
+                onChange={(e) => setFilterActiveStatus(e.target.value)}
+                options={[
+                  { value: "", label: "Tous" },
+                  ...ACTIVE_STATUS_OPTIONS,
+                ]}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Situation actuelle:</label>
+              <Select
+                value={filterCurrentSituation}
+                onChange={(e) => setFilterCurrentSituation(e.target.value)}
+                options={[
+                  { value: "", label: "Toutes" },
+                  ...CURRENT_SITUATION_OPTIONS,
+                ]}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Statut d'emploi:</label>
+              <Select
+                value={filterEmploymentStatus}
+                onChange={(e) => setFilterEmploymentStatus(e.target.value)}
+                options={[
+                  { value: "", label: "Tous" },
+                  ...EMPLOYMENT_STATUS_OPTIONS,
                 ]}
               />
             </div>
