@@ -385,7 +385,7 @@ export const Eleves: React.FC = () => {
       <PageHeader title="Mes Élèves" />
 
       <div className="container mx-auto px-4 max-w-6xl py-8">
-        <Tabs value={activeTab} onValueChange={(tab) => {
+        <Tabs value={activeTab} onValueChange={(tab: string) => {
           setActiveTab(tab);
           navigate(`?tab=${tab}`, { replace: true });
         }} className="w-full">

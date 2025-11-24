@@ -439,7 +439,7 @@ export const MonProfil: React.FC = () => {
     <div className="container mx-auto px-4 max-w-6xl py-8">
       <h1 className="text-2xl font-bold mb-6">Mon Profil</h1>
 
-      <Tabs value={activeTab} onValueChange={(tab) => {
+      <Tabs value={activeTab} onValueChange={(tab: string) => {
         setActiveTab(tab);
         navigate(`?tab=${tab}`, { replace: true });
       }} className="w-full">
