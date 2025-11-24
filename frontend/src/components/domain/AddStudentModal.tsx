@@ -70,7 +70,12 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
 
   const handleSave = async () => {
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      toast.error("Veuillez remplir les champs obligatoires");
+      toast.error("Veuillez remplir les champs obligatoires (prénom, nom)");
+      return;
+    }
+
+    if (!formData.grade.trim()) {
+      toast.error("Veuillez sélectionner une classe");
       return;
     }
 
@@ -217,7 +222,9 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="grade">Classe</Label>
+              <Label htmlFor="grade">
+                Classe <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.grade}
                 onValueChange={(value: string) =>
@@ -327,7 +334,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
               type="button"
               variant="default"
               onClick={handleSave}
-              disabled={isSaving || !formData.firstName || !formData.lastName}
+              disabled={isSaving || !formData.firstName || !formData.lastName || !formData.grade}
             >
               {isSaving ? "Enregistrement..." : "Ajouter"}
             </Button>

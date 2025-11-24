@@ -28,6 +28,8 @@
   overflow: hidden;
   position: relative;
   animation: modalFadeIn 0.2s ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes modalFadeIn {
@@ -67,9 +69,10 @@
 /* Content du modal */
 .modal-content {
   padding: 24px;
-  max-height: 60vh;
+  flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  min-height: 0;
 }
 
 .modal-content::-webkit-scrollbar {
@@ -98,6 +101,7 @@
   padding: 16px 24px;
   border-top: 1px solid #e5e7eb;
   background-color: #f9fafb;
+  flex-shrink: 0;
 }
 
 /* Classes utilitaires pour le contenu */
@@ -160,20 +164,133 @@
   .modal-overlay {
     padding: 4px;
   }
-  
+
   .modal-content {
     max-height: 70vh;
     padding: 12px;
   }
-  
+
   .modal-header,
   .modal-footer {
     padding: 12px;
   }
-  
+
   .modal-footer {
     flex-direction: column-reverse;
     gap: 8px;
+  }
+}
+
+/* Media query pour les écrans bas en hauteur (ex: 1245x480) */
+@media (max-height: 600px) {
+  .modal-overlay {
+    padding: 4px;
+    align-items: flex-start;
+  }
+
+  .modal-container {
+    max-height: 96vh;
+    margin-top: 4px;
+  }
+
+  .modal-content {
+    padding: 8px 12px;
+  }
+
+  .modal-footer {
+    padding: 8px 12px;
+  }
+
+  /* Réduire les espacements dans les DataCard */
+  .modal-container .data-card {
+    margin-bottom: 8px;
+  }
+
+  .modal-container .data-card__header {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  .modal-container .data-card__content {
+    padding: 8px;
+  }
+
+  .modal-container .data-card__grid {
+    gap: 6px;
+  }
+
+  .modal-note {
+    margin-top: 6px;
+    padding: 6px;
+    font-size: 13px;
+  }
+
+  /* Réduire le PageHeader dans la modal */
+  .modal-container .page-header {
+    padding: 8px 12px;
+    min-height: auto;
+  }
+
+  .modal-container .page-header__title {
+    font-size: 16px;
+  }
+
+  .modal-container .page-header__actions {
+    gap: 4px;
+  }
+}
+
+/* Cas extrême: écrans très bas (< 500px de hauteur) */
+@media (max-height: 500px) {
+  .modal-overlay {
+    padding: 2px;
+  }
+
+  .modal-container {
+    max-height: 98vh;
+    margin-top: 2px;
+  }
+
+  .modal-content {
+    padding: 6px 10px;
+  }
+
+  .modal-footer {
+    padding: 6px 10px;
+  }
+
+  .modal-container .data-card {
+    margin-bottom: 6px;
+  }
+
+  .modal-container .data-card__header {
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  .modal-container .data-card__content {
+    padding: 6px;
+  }
+
+  .modal-container .data-card__grid {
+    gap: 4px;
+  }
+
+  .modal-container .page-header {
+    padding: 6px 10px;
+  }
+
+  .modal-container .page-header__title {
+    font-size: 14px;
+  }
+
+  .modal-container .page-header__actions {
+    gap: 3px;
+  }
+
+  .modal-container .page-header__actions button {
+    padding: 4px 8px;
+    font-size: 12px;
   }
 }
 

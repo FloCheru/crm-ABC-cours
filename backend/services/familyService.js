@@ -480,36 +480,33 @@ class FamilyService {
   }
 
   static validateStudentData(data) {
-    // Validation métier : si un objet est fourni, ses champs obligatoires doivent être présents
+    // Validation métier : vérifications des champs selon les règles métier
 
-    // School : si fourni, name et grade obligatoires
-    if (
-      data.school &&
-      (!data.school.name?.trim() || !data.school.grade?.trim())
-    ) {
-      throw new Error("Si school est fourni, name et grade sont obligatoires");
+    // Grade (classe) : OBLIGATOIRE
+    const schoolGrade = data.school?.grade?.trim() || "";
+    if (!schoolGrade || schoolGrade.length === 0) {
+      throw new Error("La classe de l'élève est obligatoire");
     }
 
-    // Contact : si fourni, au moins phone ou email obligatoire
-    if (
-      data.contact &&
-      !data.contact.phone?.trim() &&
-      !data.contact.email?.trim()
-    ) {
+    // School name (école) : OPTIONNEL - pas de validation requise
+
+    // Contact : si l'objet contact existe avec des données, au moins phone ou email obligatoire
+    const hasContactPhone = data.contact?.phone?.trim();
+    const hasContactEmail = data.contact?.email?.trim();
+    if (data.contact && !hasContactPhone && !hasContactEmail) {
       throw new Error(
         "Si contact est fourni, au moins phone ou email est obligatoire"
       );
     }
 
-    // Address : si fourni, street, city et postalCode obligatoires
-    if (
-      data.address &&
-      (!data.address.street?.trim() ||
-        !data.address.city?.trim() ||
-        !data.address.postalCode?.trim())
-    ) {
+    // Address : si au moins un champ est rempli, tous doivent l'être
+    const hasStreet = data.address?.street?.trim();
+    const hasCity = data.address?.city?.trim();
+    const hasPostalCode = data.address?.postalCode?.trim();
+    const hasAnyAddress = hasStreet || hasCity || hasPostalCode;
+    if (hasAnyAddress && !(hasStreet && hasCity && hasPostalCode)) {
       throw new Error(
-        "Si address est fourni, street, city et postalCode sont obligatoires"
+        "Si une partie de l'adresse est fournie, street, city et postalCode sont tous obligatoires"
       );
     }
 

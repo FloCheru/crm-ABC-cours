@@ -510,18 +510,6 @@ export const Modal: React.FC<ModalProps> = ({
     family: {
       sections: [
         {
-          title: "Notes générales",
-          fields: [
-            {
-              key: "familyNotes",
-              label: "Notes",
-              type: "textarea",
-              placeholder: "Notes générales sur la famille...",
-              rows: 3,
-            },
-          ],
-        },
-        {
           title: "Contact principal",
           fields: [
             { key: "primaryFirstName", label: "Prénom", type: "text", required: true },
@@ -659,6 +647,18 @@ export const Modal: React.FC<ModalProps> = ({
               label: "Nom du professeur",
               type: "text",
               placeholder: "Nom du professeur prévu (optionnel)",
+            },
+          ],
+        },
+        {
+          title: "Notes générales",
+          fields: [
+            {
+              key: "familyNotes",
+              label: "Notes",
+              type: "textarea",
+              placeholder: "Notes générales sur la famille...",
+              rows: 3,
             },
           ],
         },

@@ -550,30 +550,6 @@ export const ProspectDetails: React.FC = () => {
       <StatusBanner status={prospect.prospectStatus as ProspectStatus} />
 
       <main className="space-y-8">
-        {/* Notes */}
-        <DataCard
-          title="Notes"
-          fields={[
-            {
-              key: "notes",
-              label: "Notes sur la demande",
-              value: prospect.notes || "",
-              type: "textarea",
-              placeholder: "Ajouter des notes sur la demande",
-            },
-          ]}
-          onSave={async (data) => {
-            await familyService.updateFamily(prospectId!, {
-              notes: data.notes as string,
-            });
-
-            // Recharger les données depuis la base
-            const updated = await familyService.getFamily(prospectId!);
-            setProspect(updated);
-          }}
-          className="mb-8"
-        />
-
         {/* Informations personnelles */}
         <DataCard
           title="Contact principal"
@@ -1136,6 +1112,30 @@ export const ProspectDetails: React.FC = () => {
             </div>
           </div>
         </DataCard>
+
+        {/* Notes */}
+        <DataCard
+          title="Notes"
+          fields={[
+            {
+              key: "notes",
+              label: "Notes sur la demande",
+              value: prospect.notes || "",
+              type: "textarea",
+              placeholder: "Ajouter des notes sur la demande",
+            },
+          ]}
+          onSave={async (data) => {
+            await familyService.updateFamily(prospectId!, {
+              notes: data.notes as string,
+            });
+
+            // Recharger les données depuis la base
+            const updated = await familyService.getFamily(prospectId!);
+            setProspect(updated);
+          }}
+          className="mb-8"
+        />
       </main>
 
       {/* Actions */}
