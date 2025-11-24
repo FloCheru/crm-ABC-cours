@@ -136,27 +136,54 @@ class NdrService {
   static async getAllNDRs() {
     try {
       const ndrs = await NDR.find()
-        .populate("familyId", "primaryContact address")
+        .populate("familyId", "primaryContact address students")
         .populate("subjects.id", "name category")
         .populate("createdBy.userId", "firstName lastName")
         .sort({ createdAt: -1 })
         .lean();
 
-      // Aplatir la structure subjects pour chaque NDR et renommer _id en id
-      return ndrs.map(ndr => ({
-        ...ndr,
-        subjects: ndr.subjects?.map(subject => {
-          const subjectData = subject.id;
-          if (subjectData && typeof subjectData === 'object') {
-            return {
-              id: subjectData._id,
-              name: subjectData.name,
-              category: subjectData.category
-            };
-          }
-          return subjectData;
-        }) || []
-      }));
+      // Aplatir la structure subjects et enrichir beneficiaries.students pour chaque NDR
+      return ndrs.map(ndr => {
+        const enrichedNdr = {
+          ...ndr,
+          subjects: ndr.subjects?.map(subject => {
+            const subjectData = subject.id;
+            if (subjectData && typeof subjectData === 'object') {
+              return {
+                id: subjectData._id,
+                name: subjectData.name,
+                category: subjectData.category
+              };
+            }
+            return subjectData;
+          }) || []
+        };
+
+        // Enrichir beneficiaries.students avec firstName et lastName depuis familyId.students
+        if (ndr.beneficiaries?.students && Array.isArray(ndr.beneficiaries.students) && ndr.familyId?.students) {
+          enrichedNdr.beneficiaries = {
+            ...ndr.beneficiaries,
+            students: ndr.beneficiaries.students.map(beneficiary => {
+              // Trouver l'étudiant correspondant dans familyId.students
+              const studentData = ndr.familyId.students.find(
+                s => s.id.toString() === beneficiary.id.toString()
+              );
+
+              if (studentData) {
+                return {
+                  id: beneficiary.id,
+                  firstName: studentData.firstName,
+                  lastName: studentData.lastName
+                };
+              }
+
+              return beneficiary;
+            })
+          };
+        }
+
+        return enrichedNdr;
+      });
     } catch (error) {
       console.error("Erreur lors de la récupération des NDRs:", error);
       throw error;

@@ -60,25 +60,6 @@ export const BeneficiariesSubjects: React.FC = () => {
     professor: null,
   });
 
-  // Fonction helper pour récupérer l'ID de famille de manière fiable
-  const getFamilyId = (): string => {
-    // 1. Priorité à l'état chargé
-    if (family?._id) return family._id;
-
-    // 2. Fallback sur localStorage si le state n'est pas encore chargé
-    try {
-      const cachedFamily = localStorage.getItem("selectedFamily");
-      if (cachedFamily) {
-        const parsed = JSON.parse(cachedFamily);
-        return parsed._id || "";
-      }
-    } catch (error) {
-      console.error("Erreur lors de la lecture du localStorage:", error);
-    }
-
-    return "";
-  };
-
   //Pour set l'id family dans ndr data et charger les données à jour
   useEffect(() => {
     const loadFamily = async () => {
@@ -558,7 +539,7 @@ export const BeneficiariesSubjects: React.FC = () => {
       <AddStudentModal
         isOpen={showAddStudentModal}
         onClose={() => setShowAddStudentModal(false)}
-        familyId={getFamilyId()}
+        familyId={family._id}
         onSaveSuccess={handleStudentAdded}
         onPrefillTest={handlePrefillTest}
       />
