@@ -20,14 +20,10 @@ import {
   ProfesseurDetails,
   ProfesseurDocuments,
   ProfesseurDashboard,
-  MesRendezVous,
-  MesDocuments,
   MonProfil,
-  MesChoix,
-  MesCoupons,
-  FichePaie,
-  MaDeclaration,
-  MesEleves,
+  SaisieCoupons,
+  Attestations,
+  Eleves,
   ProfessorLayout,
   AdminLayout,
 } from "./pages";
@@ -117,13 +113,9 @@ function AppRoutes() {
             }
           >
             <Route path="profil" element={<MonProfil />} />
-            <Route path="choix" element={<MesChoix />} />
-            <Route path="coupons" element={<MesCoupons />} />
-            <Route path="paie" element={<FichePaie />} />
-            <Route path="declaration" element={<MaDeclaration />} />
-            <Route path="eleves" element={<MesEleves />} />
-            <Route path="rendez-vous" element={<MesRendezVous />} />
-            <Route path="documents" element={<MesDocuments />} />
+            <Route path="coupons" element={<SaisieCoupons />} />
+            <Route path="attestations" element={<Attestations />} />
+            <Route path="eleves" element={<Eleves />} />
           </Route>
         </Routes>
       </>

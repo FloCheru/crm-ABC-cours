@@ -1,43 +1,92 @@
-::1 - - [20/Nov/2025:16:49:30 +0000] "PUT /api/professors/691f051759f15f2665c08c0c/status HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-[0] Erreur lors de la mise à jour du statut: StrictPopulateError: Cannot populate path `user` because it is not in your schema. Set the `strictPopulate` option to false to override.
-[0]     at getModelsMapForPopulate (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\helpers\populate\getModelsMapForPopulate.js:50:12)
-[0]     at _populatePath (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\model.js:4471:21)
-[0]     at Function.populate (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\model.js:4438:21)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2654:11
-[0]     at _init (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:3330:5)     
-[0]     at Document.init (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\document.js:654:5)
-[0]     at Document.$init (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\document.js:667:42)
-[0]     at Object.createModelAndInit (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\queryHelpers.js:119:12)
-[0]     at completeOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:3308:11)
-[0]     at Query._completeOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2650:3) {
-[0]   path: 'user'
-[0] }
-[0] ::1 - - [20/Nov/2025:16:49:31 +0000] "PUT /api/professors/691f051759f15f2665c08c0c/status HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-[0] Erreur lors de la mise à jour du statut: StrictPopulateError: Cannot populate path `user` because it is not in your schema. Set the `strictPopulate` option to false to override.
-[0]     at getModelsMapForPopulate (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\helpers\populate\getModelsMapForPopulate.js:50:12)
-[0]     at _populatePath (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\model.js:4471:21)
-[0]     at Function.populate (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\model.js:4438:21)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2654:11
-[0]     at _init (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:3330:5)     
-[0]     at Document.init (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\document.js:654:5)
-[0]     at Document.$init (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\document.js:667:42)
-[0]     at Object.createModelAndInit (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\queryHelpers.js:119:12)
-[0]     at completeOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:3308:11)
-[0]     at Query._completeOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2650:3) {
-[0]   path: 'user'
-[0] }
-[0] ::1 - - [20/Nov/2025:16:49:33 +0000] "PUT /api/professors/691f051759f15f2665c08c0c/status HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-[0] Erreur lors de la mise à jour du statut: StrictPopulateError: Cannot populate path `user` because it is not in your schema. Set the `strictPopulate` option to false to override.
-[0]     at getModelsMapForPopulate (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\helpers\populate\getModelsMapForPopulate.js:50:12)
-[0]     at _populatePath (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\model.js:4471:21)
-[0]     at Function.populate (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\model.js:4438:21)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2654:11
-[0]     at _init (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:3330:5)     
-[0]     at Document.init (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\document.js:654:5)
-[0]     at Document.$init (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\document.js:667:42)
-[0]     at Object.createModelAndInit (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\queryHelpers.js:119:12)
-[0]     at completeOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:3308:11)
-[0]     at Query._completeOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2650:3) {
-[0]   path: 'user'
-[0] }
-[0] ::1 - - [20/Nov/2025:16:49:37 +0000] "PUT /api/professors/691f051759f15f2665c08c0c/status HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+ Erreur dans FamilyService.addStudent: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
+[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
+[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0] Erreur lors de l'ajout de l'élève: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
+[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
+[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0] ::1 - - [23/Nov/2025:21:47:39 +0000] "POST /api/families/69237bda8b29ccda2ae39901/students HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] Erreur dans FamilyService.addStudent: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
+[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
+[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0] Erreur lors de l'ajout de l'élève: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
+[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
+[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0] ::1 - - [23/Nov/2025:21:47:40 +0000] "POST /api/families/69237bda8b29ccda2ae39901/students HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] Erreur dans FamilyService.addStudent: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
+[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
+[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0] ::1 - - [23/Nov/2025:21:47:42 +0000] "POST /api/families/69237bda8b29ccda2ae39901/students HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] Erreur lors de l'ajout de l'élève: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
+[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
+[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0] Erreur dans FamilyService.addStudent: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
+[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
+[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0] ::1 - - [23/Nov/2025:21:47:47 +0000] "POST /api/families/69237bda8b29ccda2ae39901/students HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] Erreur lors de l'ajout de l'élève: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
+[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
+[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
+[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
+[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
