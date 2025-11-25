@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import type { ProfessorProfile, EmploymentStatus } from "../../types/professor";
+import type { ProfessorProfile, EmploymentStatus, EducationInfo, ExperienceInfo } from "../../types/professor";
 import {
   Tabs,
   TabsContent,
@@ -87,6 +87,10 @@ export const MonProfil: React.FC = () => {
   // États pour matières personnalisées
   const [customSubjectName, setCustomSubjectName] = useState("");
   const [isAddingCustomSubject, setIsAddingCustomSubject] = useState(false);
+
+  // États pour CV (Formations et Expériences)
+  const [newEducation, setNewEducation] = useState<Partial<EducationInfo>>({});
+  const [newExperience, setNewExperience] = useState<Partial<ExperienceInfo>>({});
 
   // Détecter le mode simulation
   const simulatedProfessor = getSimulatedProfessor();
@@ -454,6 +458,55 @@ export const MonProfil: React.FC = () => {
         [field]: value,
       }));
     }
+  };
+
+  // Handlers pour CV (Formations et Expériences)
+  const handleAddEducation = () => {
+    if (
+      !newEducation.degree ||
+      !newEducation.institution ||
+      !newEducation.year
+    ) {
+      alert("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    const currentEducation = formData.education || [];
+    handleInputChange("education", [
+      ...currentEducation,
+      newEducation as EducationInfo,
+    ]);
+    setNewEducation({});
+  };
+
+  const handleRemoveEducation = (index: number) => {
+    const currentEducation = formData.education || [];
+    const updated = currentEducation.filter((_, i) => i !== index);
+    handleInputChange("education", updated);
+  };
+
+  const handleAddExperience = () => {
+    if (
+      !newExperience.position ||
+      !newExperience.company ||
+      !newExperience.startDate
+    ) {
+      alert("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    const currentExperience = formData.experience || [];
+    handleInputChange("experience", [
+      ...currentExperience,
+      newExperience as ExperienceInfo,
+    ]);
+    setNewExperience({});
+  };
+
+  const handleRemoveExperience = (index: number) => {
+    const currentExperience = formData.experience || [];
+    const updated = currentExperience.filter((_, i) => i !== index);
+    handleInputChange("experience", updated);
   };
 
   const toggleDepartment = (code: string) => {
@@ -919,6 +972,263 @@ export const MonProfil: React.FC = () => {
                   )}
                   {renderEditField("Commune", "secondaryAddress.city")}
                 </div>
+
+                {/* Profil Académique - Section CV */}
+                <div className="col-span-2 my-6">
+                  <Separator />
+                  <div className="text-sm font-medium text-gray-700 mt-4 mb-4">
+                    Mon Profil Académique
+                  </div>
+
+                  {/* Activité Actuelle */}
+                  <div className="mb-6">
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      Activité Actuelle
+                    </label>
+                    <select
+                      value={formData.currentSituation || ""}
+                      onChange={(e) =>
+                        handleInputChange("currentSituation", e.target.value)
+                      }
+                      className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    >
+                      <option value="">Sélectionner...</option>
+                      <option value="enseignant_education_nationale">
+                        Enseignant en Éducation Nationale
+                      </option>
+                      <option value="enseignant_vacataire_contractuel">
+                        Enseignant Vacataire/Contractuel
+                      </option>
+                      <option value="etudiant_master_professorat">
+                        Étudiant Master Professorat
+                      </option>
+                      <option value="enseignant_avec_activite_domicile">
+                        Enseignant avec Activité à Domicile
+                      </option>
+                      <option value="enseignant_activite_professionnelle">
+                        Enseignant avec Autre Activité
+                      </option>
+                      <option value="enseignant_formation_professionnelle">
+                        En Formation Professionnelle
+                      </option>
+                      <option value="etudiant">Étudiant</option>
+                    </select>
+                  </div>
+
+                  {/* Formations */}
+                  <div className="mb-6">
+                    <div className="text-sm font-medium text-gray-700 mb-3">
+                      Formations
+                    </div>
+
+                    {/* Liste des formations existantes */}
+                    {formData.education && formData.education.length > 0 && (
+                      <div className="space-y-2 mb-3">
+                        {formData.education.map((edu, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start justify-between bg-gray-50 p-3 rounded-md"
+                          >
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-900">
+                                {edu.degree} • {edu.institution}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {edu.year}
+                                {edu.description && ` • ${edu.description}`}
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveEducation(idx)}
+                              className="h-6 w-6 p-0 ml-2"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Formulaire d'ajout */}
+                    <div className="border border-gray-200 rounded-md p-3 bg-gray-50 space-y-2">
+                      <Input
+                        placeholder="Diplôme (ex: Master, Licence, Bac)"
+                        value={newEducation.degree || ""}
+                        onChange={(e) =>
+                          setNewEducation({
+                            ...newEducation,
+                            degree: e.target.value,
+                          })
+                        }
+                      />
+                      <Input
+                        placeholder="Établissement (ex: Université de Paris)"
+                        value={newEducation.institution || ""}
+                        onChange={(e) =>
+                          setNewEducation({
+                            ...newEducation,
+                            institution: e.target.value,
+                          })
+                        }
+                      />
+                      <input
+                        type="number"
+                        placeholder="Année"
+                        value={newEducation.year || ""}
+                        onChange={(e) =>
+                          setNewEducation({
+                            ...newEducation,
+                            year: e.target.value ? parseInt(e.target.value) : 0,
+                          })
+                        }
+                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      />
+                      <textarea
+                        placeholder="Description (optionnel)"
+                        value={newEducation.description || ""}
+                        onChange={(e) =>
+                          setNewEducation({
+                            ...newEducation,
+                            description: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        rows={2}
+                      />
+                      <Button
+                        onClick={handleAddEducation}
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Ajouter une formation
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Expériences */}
+                  <div className="mb-6">
+                    <div className="text-sm font-medium text-gray-700 mb-3">
+                      Expériences Professionnelles
+                    </div>
+
+                    {/* Liste des expériences existantes */}
+                    {formData.experience && formData.experience.length > 0 && (
+                      <div className="space-y-2 mb-3">
+                        {formData.experience.map((exp, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start justify-between bg-gray-50 p-3 rounded-md"
+                          >
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-900">
+                                {exp.position} chez {exp.company}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {exp.startDate}
+                                {exp.endDate && ` - ${exp.endDate}`}
+                                {exp.description && ` • ${exp.description}`}
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveExperience(idx)}
+                              className="h-6 w-6 p-0 ml-2"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Formulaire d'ajout */}
+                    <div className="border border-gray-200 rounded-md p-3 bg-gray-50 space-y-2">
+                      <Input
+                        placeholder="Poste (ex: Développeur, Professeur)"
+                        value={newExperience.position || ""}
+                        onChange={(e) =>
+                          setNewExperience({
+                            ...newExperience,
+                            position: e.target.value,
+                          })
+                        }
+                      />
+                      <Input
+                        placeholder="Entreprise/Organisation"
+                        value={newExperience.company || ""}
+                        onChange={(e) =>
+                          setNewExperience({
+                            ...newExperience,
+                            company: e.target.value,
+                          })
+                        }
+                      />
+                      <Input
+                        placeholder="Date début (ex: 01/2020)"
+                        value={newExperience.startDate || ""}
+                        onChange={(e) =>
+                          setNewExperience({
+                            ...newExperience,
+                            startDate: e.target.value,
+                          })
+                        }
+                      />
+                      <Input
+                        placeholder="Date fin (ex: 12/2023, ou laisser vide)"
+                        value={newExperience.endDate || ""}
+                        onChange={(e) =>
+                          setNewExperience({
+                            ...newExperience,
+                            endDate: e.target.value,
+                          })
+                        }
+                      />
+                      <textarea
+                        placeholder="Description (optionnel)"
+                        value={newExperience.description || ""}
+                        onChange={(e) =>
+                          setNewExperience({
+                            ...newExperience,
+                            description: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        rows={2}
+                      />
+                      <Button
+                        onClick={handleAddExperience}
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Ajouter une expérience
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Informations Complémentaires */}
+                  <div className="mb-6">
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      Informations Complémentaires
+                    </label>
+                    <textarea
+                      value={formData.notes || ""}
+                      onChange={(e) =>
+                        handleInputChange("notes", e.target.value)
+                      }
+                      placeholder="Expériences particulières, distinctions, etc."
+                      className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      rows={4}
+                    />
+                  </div>
+                </div>
+
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={() => handleSave("informations")}
@@ -1002,6 +1312,101 @@ export const MonProfil: React.FC = () => {
                   true
                 )}
                 {renderField("Commune", "secondaryAddress.city")}
+
+                {/* Profil Académique - Section CV */}
+                <div className="col-span-2 my-6">
+                  <Separator />
+                  <div className="text-sm font-medium text-gray-700 mt-4 mb-4">
+                    Mon Profil Académique
+                  </div>
+
+                  {/* Activité Actuelle */}
+                  {formData.currentSituation && (
+                    <div className="mb-4">
+                      <div className="text-xs text-gray-500 mb-1">
+                        Activité Actuelle
+                      </div>
+                      <div className="text-base text-gray-900">
+                        {formData.currentSituation === "enseignant_education_nationale"
+                          ? "Enseignant en Éducation Nationale"
+                          : formData.currentSituation === "enseignant_vacataire_contractuel"
+                          ? "Enseignant Vacataire/Contractuel"
+                          : formData.currentSituation === "etudiant_master_professorat"
+                          ? "Étudiant Master Professorat"
+                          : formData.currentSituation === "enseignant_avec_activite_domicile"
+                          ? "Enseignant avec Activité à Domicile"
+                          : formData.currentSituation === "enseignant_activite_professionnelle"
+                          ? "Enseignant avec Autre Activité"
+                          : formData.currentSituation === "enseignant_formation_professionnelle"
+                          ? "En Formation Professionnelle"
+                          : formData.currentSituation === "etudiant"
+                          ? "Étudiant"
+                          : formData.currentSituation}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Formations */}
+                  {formData.education && formData.education.length > 0 && (
+                    <div className="mb-4">
+                      <div className="text-xs text-gray-500 mb-2">Formations</div>
+                      <div className="space-y-2">
+                        {formData.education.map((edu, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-gray-50 p-3 rounded-md border-l-4 border-blue-500"
+                          >
+                            <div className="text-sm font-medium text-gray-900">
+                              {edu.degree} • {edu.institution}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {edu.year}
+                              {edu.description && ` • ${edu.description}`}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Expériences */}
+                  {formData.experience && formData.experience.length > 0 && (
+                    <div className="mb-4">
+                      <div className="text-xs text-gray-500 mb-2">
+                        Expériences Professionnelles
+                      </div>
+                      <div className="space-y-2">
+                        {formData.experience.map((exp, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-gray-50 p-3 rounded-md border-l-4 border-blue-500"
+                          >
+                            <div className="text-sm font-medium text-gray-900">
+                              {exp.position} chez {exp.company}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {exp.startDate}
+                              {exp.endDate && ` - ${exp.endDate}`}
+                              {exp.description && ` • ${exp.description}`}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Informations Complémentaires */}
+                  {formData.notes && (
+                    <div className="mb-4">
+                      <div className="text-xs text-gray-500 mb-1">
+                        Informations Complémentaires
+                      </div>
+                      <div className="text-base text-gray-900 whitespace-pre-wrap">
+                        {formData.notes}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
