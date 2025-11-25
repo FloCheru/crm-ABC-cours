@@ -441,7 +441,7 @@ export const ProfesseurDetails: React.FC = () => {
       {mainTab === 'profil' && (
         <div className="container mx-auto px-4 py-12 max-w-6xl">
           <Tabs defaultValue="identite" className="w-full">
-          <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
+            <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
             <TabsTrigger
               value="identite"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
@@ -495,783 +495,412 @@ export const ProfesseurDetails: React.FC = () => {
           {/* Tab 1: Identité */}
           <TabsContent value="identite" className="mt-6">
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Identité</h3>
-                  <p className="text-sm text-gray-500">
-                    Informations personnelles du professeur
-                  </p>
-                </div>
-                {editingTab !== 'identite' && (
-                  <button
-                    onClick={() => setEditingTab('identite')}
-                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Modifier ✏️
-                  </button>
-                )}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Identité</h3>
+                <p className="text-sm text-gray-500">
+                  Informations personnelles du professeur
+                </p>
               </div>
 
-              {editingTab === 'identite' ? (
-                <>
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                    {renderEditField('Genre *', 'gender', 'select', [
-                      { value: 'M.', label: 'M.' },
-                      { value: 'Mme', label: 'Mme' },
-                    ])}
-                    {renderEditField('Prénom *', 'firstName')}
-                    {renderEditField('Nom *', 'lastName')}
-                    {renderEditField('Nom de naissance (si différent)', 'birthName')}
-                    {renderEditField('Date de naissance *', 'birthDate', 'date')}
-                    {renderEditField('N° de sécurité sociale', 'socialSecurityNumber')}
-                    {renderEditField('Pays de naissance', 'birthCountry', 'text', undefined, true)}
-                  </div>
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                  {renderField('Genre *', formData.gender)}
-                  {renderField('Prénom *', formData.firstName)}
-                  {renderField('Nom *', formData.lastName)}
-                  {renderField('Nom de naissance (si différent)', formData.birthName)}
-                  {renderField(
-                    'Date de naissance *',
-                    formData.birthDate
-                      ? new Date(formData.birthDate).toLocaleDateString('fr-FR')
-                      : undefined
-                  )}
-                  {renderField('N° de sécurité sociale', formData.socialSecurityNumber)}
-                  {renderField('Pays de naissance', formData.birthCountry, true)}
-                </div>
-              )}
+              <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                {renderEditField('Genre *', 'gender', 'select', [
+                  { value: 'M.', label: 'M.' },
+                  { value: 'Mme', label: 'Mme' },
+                ])}
+                {renderEditField('Prénom *', 'firstName')}
+                {renderEditField('Nom *', 'lastName')}
+                {renderEditField('Nom de naissance (si différent)', 'birthName')}
+                {renderEditField('Date de naissance *', 'birthDate', 'date')}
+                {renderEditField('N° de sécurité sociale', 'socialSecurityNumber')}
+                {renderEditField('Pays de naissance', 'birthCountry', 'text', undefined, true)}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+                </button>
+              </div>
             </div>
           </TabsContent>
 
           {/* Tab 2: Coordonnées */}
           <TabsContent value="coordonnees" className="mt-6">
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Coordonnées</h3>
-                  <p className="text-sm text-gray-500">
-                    Informations de contact et adresse
-                  </p>
-                </div>
-                {editingTab !== 'coordonnees' && (
-                  <button
-                    onClick={() => setEditingTab('coordonnees')}
-                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Modifier ✏️
-                  </button>
-                )}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Coordonnées</h3>
+                <p className="text-sm text-gray-500">
+                  Informations de contact et adresse
+                </p>
               </div>
 
-              {editingTab === 'coordonnees' ? (
-                <>
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                    {renderEditField('Email *', 'email', 'email')}
-                    {renderEditField('Tél principal *', 'phone', 'tel')}
-                    {renderEditField('Tél secondaire', 'secondaryPhone', 'tel')}
-                    {renderEditField('Code postal *', 'postalCode')}
-                    {renderEditField('Adresse', 'address', 'text', undefined, true)}
-                    {renderEditField('Complément d\'adresse', 'addressComplement', 'text', undefined, true)}
-                    {renderEditField('Commune', 'city')}
-                    {renderEditField('Commune INSEE', 'inseeCity')}
-                    {renderEditField('Bureau distributeur', 'distributionOffice', 'text', undefined, true)}
-                    {renderEditField('Déplacement', 'transportMode', 'select', [
-                      { value: '', label: 'Sélectionner...' },
-                      ...TRANSPORT_MODES
-                    ])}
-                    {renderEditField('Cours', 'courseLocation', 'select', [
-                      { value: '', label: 'Sélectionner...' },
-                      { value: 'domicile', label: 'À domicile' },
-                      { value: 'visio', label: 'En visio' },
-                    ])}
-                    {renderEditField('Adresse secondaire', 'secondaryAddress', 'text', undefined, true)}
-                  </div>
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                  {renderField('Email *', formData.email)}
-                  {renderField('Tél principal *', formData.phone)}
-                  {renderField('Tél secondaire', formData.secondaryPhone)}
-                  {renderField('Code postal *', formData.postalCode)}
-                  {renderField('Adresse', formData.address, true)}
-                  {renderField('Complément d\'adresse', formData.addressComplement, true)}
-                  {renderField('Commune', formData.city)}
-                  {renderField('Commune INSEE', formData.inseeCity)}
-                  {renderField('Bureau distributeur', formData.distributionOffice, true)}
-                  {renderField('Déplacement', formData.transportMode)}
-                  {renderField('Cours', formData.courseLocation)}
-                  {renderField('Adresse secondaire', formData.secondaryAddress, true)}
-                </div>
-              )}
+              <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                {renderEditField('Email *', 'email', 'email')}
+                {renderEditField('Tél principal *', 'phone', 'tel')}
+                {renderEditField('Tél secondaire', 'secondaryPhone', 'tel')}
+                {renderEditField('Code postal *', 'postalCode')}
+                {renderEditField('Adresse', 'primaryAddress.street', 'text', undefined, true)}
+                {renderEditField('Complément d\'adresse', 'primaryAddress.complement', 'text', undefined, true)}
+                {renderEditField('Commune', 'primaryAddress.city')}
+                {renderEditField('Commune INSEE', 'primaryAddress.inseeCode')}
+                {renderEditField('Bureau distributeur', 'primaryAddress.distributionOffice', 'text', undefined, true)}
+                {renderEditField('Déplacement', 'transportMode', 'select', [
+                  { value: '', label: 'Sélectionner...' },
+                  ...TRANSPORT_MODES
+                ])}
+                {renderEditField('Cours', 'courseLocation', 'select', [
+                  { value: '', label: 'Sélectionner...' },
+                  { value: 'domicile', label: 'À domicile' },
+                  { value: 'visio', label: 'En visio' },
+                ])}
+                {renderEditField('Adresse secondaire', 'secondaryAddress.street', 'text', undefined, true)}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+                </button>
+              </div>
             </div>
           </TabsContent>
 
           {/* Tab 3: Mon RIB */}
           <TabsContent value="rib" className="mt-6">
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Mon RIB</h3>
-                  <p className="text-sm text-gray-500">
-                    Informations bancaires et statut professionnel
-                  </p>
-                </div>
-                {editingTab !== 'rib' && (
-                  <button
-                    onClick={() => setEditingTab('rib')}
-                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Modifier ✏️
-                  </button>
-                )}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Mon RIB</h3>
+                <p className="text-sm text-gray-500">
+                  Informations bancaires et statut professionnel
+                </p>
               </div>
 
-              {editingTab === 'rib' ? (
-                <>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">
-                        Statut professionnel *
-                      </label>
-                      <select
-                        value={formData.employmentStatus || ''}
-                        onChange={(e) =>
-                          handleInputChange('employmentStatus', e.target.value as EmploymentStatus)
-                        }
-                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      >
-                        <option value="">Sélectionner...</option>
-                        <option value="salarie">Salarié</option>
-                        <option value="auto-entrepreneur">Auto-entrepreneur</option>
-                      </select>
-                    </div>
-
-                    {formData.employmentStatus === 'auto-entrepreneur' && (
-                      <div>
-                        <label className="text-xs text-gray-500 mb-1 block">
-                          SIRET * (14 chiffres)
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.siret || ''}
-                          onChange={(e) => handleInputChange('siret', e.target.value)}
-                          pattern="[0-9]{14}"
-                          title="14 chiffres requis"
-                          maxLength={14}
-                          className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                          placeholder="12345678901234"
-                        />
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">
-                        Nom de la banque
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.bankName || ''}
-                        onChange={(e) => handleInputChange('bankName', e.target.value)}
-                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        placeholder="Ex: Crédit Agricole"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">
-                        IBAN * (27 caractères pour la France)
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.iban || ''}
-                        onChange={(e) => handleInputChange('iban', e.target.value.toUpperCase())}
-                        pattern="FR[0-9]{25}"
-                        title="Format IBAN français: FR suivi de 25 chiffres"
-                        maxLength={27}
-                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono"
-                        placeholder="FR7612345678901234567890123"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">
-                        BIC/SWIFT (8 ou 11 caractères)
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.bic || ''}
-                        onChange={(e) => handleInputChange('bic', e.target.value.toUpperCase())}
-                        pattern="[A-Z]{6}[A-Z0-9]{2,5}"
-                        title="Format BIC: 8 ou 11 caractères alphanumériques"
-                        maxLength={11}
-                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono"
-                        placeholder="AGRIFRPP"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-6">
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Statut professionnel</div>
-                    <div className="text-base text-gray-900">
-                      {formData.employmentStatus === 'salarie'
-                        ? 'Salarié'
-                        : formData.employmentStatus === 'auto-entrepreneur'
-                        ? 'Auto-entrepreneur'
-                        : '-'}
-                    </div>
-                  </div>
-
-                  {formData.employmentStatus === 'auto-entrepreneur' && (
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">SIRET</div>
-                      <div className="text-base text-gray-900 font-mono">
-                        {formData.siret || '-'}
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Nom de la banque</div>
-                    <div className="text-base text-gray-900">{formData.bankName || '-'}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">IBAN</div>
-                    <div className="text-base text-gray-900 font-mono">
-                      {formData.iban || '-'}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">BIC/SWIFT</div>
-                    <div className="text-base text-gray-900 font-mono">
-                      {formData.bic || '-'}
-                    </div>
-                  </div>
+              <div className="space-y-6">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    Statut professionnel *
+                  </label>
+                  <select
+                    value={formData.employmentStatus || ''}
+                    onChange={(e) =>
+                      handleInputChange('employmentStatus', e.target.value as EmploymentStatus)
+                    }
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
+                    <option value="">Sélectionner...</option>
+                    <option value="salarie">Salarié</option>
+                    <option value="auto-entrepreneur">Auto-entrepreneur</option>
+                  </select>
                 </div>
-              )}
+
+                {formData.employmentStatus === 'auto-entrepreneur' && (
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      SIRET * (14 chiffres)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.siret || ''}
+                      onChange={(e) => handleInputChange('siret', e.target.value)}
+                      pattern="[0-9]{14}"
+                      title="14 chiffres requis"
+                      maxLength={14}
+                      className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      placeholder="12345678901234"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    Nom de la banque
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.bankName || ''}
+                    onChange={(e) => handleInputChange('bankName', e.target.value)}
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    placeholder="Ex: Crédit Agricole"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    IBAN * (27 caractères pour la France)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.iban || ''}
+                    onChange={(e) => handleInputChange('iban', e.target.value.toUpperCase())}
+                    pattern="FR[0-9]{25}"
+                    title="Format IBAN français: FR suivi de 25 chiffres"
+                    maxLength={27}
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono"
+                    placeholder="FR7612345678901234567890123"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    BIC/SWIFT (8 ou 11 caractères)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.bic || ''}
+                    onChange={(e) => handleInputChange('bic', e.target.value.toUpperCase())}
+                    pattern="[A-Z]{6}[A-Z0-9]{2,5}"
+                    title="Format BIC: 8 ou 11 caractères alphanumériques"
+                    maxLength={11}
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono"
+                    placeholder="AGRIFRPP"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+                </button>
+              </div>
             </div>
           </TabsContent>
 
           {/* Tab 4: Statut */}
           <TabsContent value="statut" className="mt-6">
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Statut</h3>
-                  <p className="text-sm text-gray-500">
-                    Informations sur le statut professionnel et administratif
-                  </p>
-                </div>
-                {editingTab !== 'statut' && (
-                  <button
-                    onClick={() => setEditingTab('statut')}
-                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Modifier ✏️
-                  </button>
-                )}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Statut</h3>
+                <p className="text-sm text-gray-500">
+                  Informations sur le statut professionnel et administratif
+                </p>
               </div>
 
-              {editingTab === 'statut' ? (
-                <>
-                  <div className="space-y-6">
-                    {/* Encart 1: Statut d'emploi */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="text-sm font-medium text-gray-900 mb-3 block">
-                        Statut d'emploi
-                      </label>
-                      <select
-                        value={formData.employmentStatus || ''}
-                        onChange={(e) =>
-                          handleInputChange('employmentStatus', e.target.value as EmploymentStatus)
-                        }
-                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      >
-                        <option value="">Sélectionner...</option>
-                        {EMPLOYMENT_STATUS_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Encart 2: Statut (active/inactive/pending/suspended) */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="text-sm font-medium text-gray-900 mb-3 block">
-                        Statut du professeur
-                      </label>
-                      <select
-                        value={formData.status || 'pending'}
-                        onChange={(e) =>
-                          handleInputChange('status', e.target.value)
-                        }
-                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      >
-                        <option value="active">Actif</option>
-                        <option value="inactive">Inactif</option>
-                        <option value="pending">En attente</option>
-                        <option value="suspended">Suspendu</option>
-                      </select>
-                    </div>
-
-                    {/* Encart 3: Situation professionnelle */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="text-sm font-medium text-gray-900 mb-3 block">
-                        Situation professionnelle
-                      </label>
-                      <select
-                        value={formData.currentSituation || ''}
-                        onChange={(e) =>
-                          handleInputChange('currentSituation', e.target.value)
-                        }
-                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      >
-                        <option value="">Sélectionner...</option>
-                        {CURRENT_SITUATION_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-6">
-                  {/* Encart 1: Statut d'emploi - Lecture */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="text-sm font-medium text-gray-900 mb-3">
-                      Statut d'emploi
-                    </div>
-                    <div>
-                      {formData.employmentStatus ? (
-                        <Badge
-                          style={{
-                            backgroundColor: formData.employmentStatus === 'salarie'
-                              ? '#2354a2'
-                              : formData.employmentStatus === 'auto-entrepreneur'
-                              ? '#d97706'
-                              : '#0891b2',
-                            color: '#ffffff'
-                          }}
-                        >
-                          {getFilterOptionByValue(EMPLOYMENT_STATUS_OPTIONS, formData.employmentStatus)?.label || formData.employmentStatus}
-                        </Badge>
-                      ) : (
-                        <Badge style={{ backgroundColor: '#e5e7eb', color: '#374151' }}>
-                          Non renseigné
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Encart 2: Statut - Lecture */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="text-sm font-medium text-gray-900 mb-3">
-                      Statut du professeur
-                    </div>
-                    <div>
-                      <Badge
-                        style={{
-                          backgroundColor: formData.status === 'active'
-                            ? '#059669'
-                            : formData.status === 'inactive'
-                            ? '#6b7280'
-                            : formData.status === 'suspended'
-                            ? '#dc2626'
-                            : '#d97706',
-                          color: '#ffffff'
-                        }}
-                      >
-                        {formData.status === 'active'
-                          ? 'Actif'
-                          : formData.status === 'inactive'
-                          ? 'Inactif'
-                          : formData.status === 'suspended'
-                          ? 'Suspendu'
-                          : 'En attente'}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {/* Encart 3: Situation professionnelle - Lecture */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="text-sm font-medium text-gray-900 mb-3">
-                      Situation professionnelle
-                    </div>
-                    <div>
-                      {formData.currentSituation ? (
-                        <Badge style={{ backgroundColor: '#60a5fa', color: '#ffffff' }}>
-                          {getFilterOptionByValue(CURRENT_SITUATION_OPTIONS, formData.currentSituation)?.label || formData.currentSituation}
-                        </Badge>
-                      ) : (
-                        <Badge style={{ backgroundColor: '#e5e7eb', color: '#374151' }}>
-                          Non renseigné
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+              <div className="space-y-6">
+                {/* Encart 1: Statut d'emploi */}
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <label className="text-sm font-medium text-gray-900 mb-3 block">
+                    Statut d'emploi
+                  </label>
+                  <select
+                    value={formData.employmentStatus || ''}
+                    onChange={(e) =>
+                      handleInputChange('employmentStatus', e.target.value as EmploymentStatus)
+                    }
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
+                    <option value="">Sélectionner...</option>
+                    {EMPLOYMENT_STATUS_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
+
+                {/* Encart 2: Statut (active/inactive/pending/suspended) */}
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <label className="text-sm font-medium text-gray-900 mb-3 block">
+                    Statut du professeur
+                  </label>
+                  <select
+                    value={formData.status || 'pending'}
+                    onChange={(e) =>
+                      handleInputChange('status', e.target.value)
+                    }
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
+                    <option value="active">Actif</option>
+                    <option value="inactive">Inactif</option>
+                    <option value="pending">En attente</option>
+                    <option value="suspended">Suspendu</option>
+                  </select>
+                </div>
+
+                {/* Encart 3: Situation professionnelle */}
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <label className="text-sm font-medium text-gray-900 mb-3 block">
+                    Situation professionnelle
+                  </label>
+                  <select
+                    value={formData.currentSituation || ''}
+                    onChange={(e) =>
+                      handleInputChange('currentSituation', e.target.value)
+                    }
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
+                    <option value="">Sélectionner...</option>
+                    {CURRENT_SITUATION_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+                </button>
+              </div>
             </div>
           </TabsContent>
 
           {/* Tab 5: Déplacements */}
           <TabsContent value="deplacements" className="mt-6">
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Déplacements</h3>
-                  <p className="text-sm text-gray-500">
-                    Départements où le professeur peut se déplacer pour donner des cours
-                  </p>
-                </div>
-                {editingTab !== 'deplacements' && (
-                  <button
-                    onClick={() => setEditingTab('deplacements')}
-                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Modifier ✏️
-                  </button>
-                )}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Déplacements</h3>
+                <p className="text-sm text-gray-500">
+                  Départements où le professeur peut se déplacer pour donner des cours
+                </p>
               </div>
 
-              {editingTab === 'deplacements' ? (
-                <>
-                  <div className="grid grid-flow-col grid-rows-[repeat(101,minmax(0,1fr))] sm:grid-rows-[repeat(51,minmax(0,1fr))] lg:grid-rows-[repeat(34,minmax(0,1fr))] gap-3 auto-cols-fr">
-                    {FRENCH_DEPARTMENTS.map((dept) => (
-                      <div key={dept.code} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`dept-${dept.code}`}
-                          checked={formData.availableDepartments?.includes(dept.code) || false}
-                          onCheckedChange={() => toggleDepartment(dept.code)}
-                        />
-                        <Label
-                          htmlFor={`dept-${dept.code}`}
-                          className="text-sm cursor-pointer"
-                        >
-                          {dept.code} - {dept.name}
-                        </Label>
-                      </div>
-                    ))}
+              <div className="grid grid-flow-col grid-rows-[repeat(101,minmax(0,1fr))] sm:grid-rows-[repeat(51,minmax(0,1fr))] lg:grid-rows-[repeat(34,minmax(0,1fr))] gap-3 auto-cols-fr">
+                {FRENCH_DEPARTMENTS.map((dept) => (
+                  <div key={dept.code} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`dept-${dept.code}`}
+                      checked={formData.availableDepartments?.includes(dept.code) || false}
+                      onCheckedChange={() => toggleDepartment(dept.code)}
+                    />
+                    <Label
+                      htmlFor={`dept-${dept.code}`}
+                      className="text-sm cursor-pointer"
+                    >
+                      {dept.code} - {dept.name}
+                    </Label>
                   </div>
+                ))}
+              </div>
 
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div>
-                  {formData.availableDepartments && formData.availableDepartments.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {formData.availableDepartments.map((code) => {
-                        const dept = FRENCH_DEPARTMENTS.find((d) => d.code === code);
-                        return (
-                          <div key={code} className="flex items-center space-x-2">
-                            <span className="text-blue-600">✓</span>
-                            <span className="text-sm text-gray-900">
-                              {code} - {dept?.name || 'Inconnu'}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      Aucun département sélectionné
-                    </p>
-                  )}
-                </div>
-              )}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+                </button>
+              </div>
             </div>
           </TabsContent>
 
           {/* Tab 6: Disponibilités */}
           <TabsContent value="disponibilites" className="mt-6">
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Disponibilités</h3>
-                  <p className="text-sm text-gray-500">
-                    Créneaux horaires disponibles dans la semaine
-                  </p>
-                </div>
-                {editingTab !== 'disponibilites' && (
-                  <button
-                    onClick={() => setEditingTab('disponibilites')}
-                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Modifier ✏️
-                  </button>
-                )}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Disponibilités</h3>
+                <p className="text-sm text-gray-500">
+                  Créneaux horaires disponibles dans la semaine
+                </p>
               </div>
 
-              {editingTab === 'disponibilites' ? (
-                <>
-                  <AvailabilityForm
-                    value={formData.weeklyAvailability || {}}
-                    onChange={handleAvailabilityChange}
-                  />
+              <AvailabilityForm
+                value={formData.weeklyAvailability || {}}
+                onChange={handleAvailabilityChange}
+              />
 
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-3">
-                  {formData.weeklyAvailability &&
-                  Object.keys(formData.weeklyAvailability).length > 0 ? (
-                    Object.entries(formData.weeklyAvailability).map(([day, schedule]) => {
-                      if (!schedule?.enabled || schedule.timeSlots.length === 0) return null;
-
-                      const dayLabels: Record<string, string> = {
-                        lundi: 'Lundi',
-                        mardi: 'Mardi',
-                        mercredi: 'Mercredi',
-                        jeudi: 'Jeudi',
-                        vendredi: 'Vendredi',
-                        samedi: 'Samedi',
-                        dimanche: 'Dimanche',
-                      };
-
-                      return (
-                        <div key={day} className="border-l-4 border-blue-500 pl-4 py-2">
-                          <div className="font-medium text-gray-900 mb-1">
-                            {dayLabels[day]}
-                          </div>
-                          <div className="space-y-1">
-                            {schedule.timeSlots.map((slot, index) => (
-                              <div key={index} className="text-sm text-gray-600">
-                                {slot.start} - {slot.end}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      Aucune disponibilité configurée
-                    </p>
-                  )}
-                </div>
-              )}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+                </button>
+              </div>
             </div>
           </TabsContent>
 
           {/* Tab 7: Choix */}
           <TabsContent value="choix" className="mt-6">
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Matières enseignées</h3>
-                  <p className="text-sm text-gray-500">
-                    Matières et niveaux scolaires enseignés par le professeur
-                  </p>
-                </div>
-                {editingTab !== 'choix' && (
-                  <button
-                    onClick={() => setEditingTab('choix')}
-                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Modifier ✏️
-                  </button>
-                )}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Matières enseignées</h3>
+                <p className="text-sm text-gray-500">
+                  Matières et niveaux scolaires enseignés par le professeur
+                </p>
               </div>
 
-              {editingTab === 'choix' ? (
-                <>
-                  {teachingSubjects.length === 0 && (
-                    <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        Sélectionnez au moins une matière avec ses niveaux
-                      </p>
-                    </div>
-                  )}
-
-                  {teachingSubjects.filter(ts => ts.grades.length === 0).length > 0 && (
-                    <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-800">
-                        {teachingSubjects.filter(ts => ts.grades.length === 0).length} matière(s) sélectionnée(s) sans niveaux.
-                        Veuillez sélectionner au moins un niveau par matière.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="space-y-4">
-                    {allSubjects.map(subject => {
-                      const isSelected = isSubjectSelected(subject._id);
-                      const selectedGrades = getGradesForSubject(subject._id);
-
-                      return (
-                        <div
-                          key={subject._id}
-                          className={`border rounded-lg p-4 transition-colors ${
-                            isSelected ? 'border-blue-600 bg-blue-50' : 'border-gray-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-4">
-                            <Checkbox
-                              id={`subject-${subject._id}`}
-                              checked={isSelected}
-                              onCheckedChange={() => handleToggleSubject(subject)}
-                            />
-                            <Label
-                              htmlFor={`subject-${subject._id}`}
-                              className="text-base font-medium cursor-pointer flex-1"
-                            >
-                              {subject.name}
-                            </Label>
-                            {isSelected && selectedGrades.length > 0 && (
-                              <Badge variant="secondary">{selectedGrades.length} niveau(x)</Badge>
-                            )}
-                          </div>
-
-                          {isSelected && (
-                            <SubjectLevelsSelector
-                              selectedGrades={selectedGrades}
-                              onChange={grades => handleGradesChange(subject._id, grades)}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleSaveSubjects}
-                      disabled={isSaving || teachingSubjects.some(ts => ts.grades.length === 0)}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setTeachingSubjects((professor as any).teachingSubjects || []);
-                        setEditingTab(null);
-                      }}
-                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div>
-                  {teachingSubjects.length > 0 ? (
-                    <div className="space-y-3">
-                      {teachingSubjects.map(subject => (
-                        <div key={subject.subjectId} className="border-l-4 border-blue-500 pl-4 py-2">
-                          <div className="font-medium text-gray-900 mb-1">
-                            {subject.subjectName}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {subject.grades.length > 0 ? subject.grades.join(', ') : 'Aucun niveau sélectionné'}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      Aucune matière sélectionnée
-                    </p>
-                  )}
+              {teachingSubjects.length === 0 && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    Sélectionnez au moins une matière avec ses niveaux
+                  </p>
                 </div>
               )}
+
+              {teachingSubjects.filter(ts => ts.grades.length === 0).length > 0 && (
+                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    {teachingSubjects.filter(ts => ts.grades.length === 0).length} matière(s) sélectionnée(s) sans niveaux.
+                    Veuillez sélectionner au moins un niveau par matière.
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {allSubjects.map(subject => {
+                  const isSelected = isSubjectSelected(subject._id);
+                  const selectedGrades = getGradesForSubject(subject._id);
+
+                  return (
+                    <div
+                      key={subject._id}
+                      className={`border rounded-lg p-4 transition-colors ${
+                        isSelected ? 'border-blue-600 bg-blue-50' : 'border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Checkbox
+                          id={`subject-${subject._id}`}
+                          checked={isSelected}
+                          onCheckedChange={() => handleToggleSubject(subject)}
+                        />
+                        <Label
+                          htmlFor={`subject-${subject._id}`}
+                          className="text-base font-medium cursor-pointer flex-1"
+                        >
+                          {subject.name}
+                        </Label>
+                        {isSelected && selectedGrades.length > 0 && (
+                          <Badge variant="secondary">{selectedGrades.length} niveau(x)</Badge>
+                        )}
+                      </div>
+
+                      {isSelected && (
+                        <SubjectLevelsSelector
+                          selectedGrades={selectedGrades}
+                          onChange={grades => handleGradesChange(subject._id, grades)}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSaveSubjects}
+                  disabled={isSaving || teachingSubjects.some(ts => ts.grades.length === 0)}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+                </button>
+              </div>
             </div>
           </TabsContent>
 
