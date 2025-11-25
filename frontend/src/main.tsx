@@ -43,7 +43,6 @@ import { useAuthStore } from "./stores";
 import { useAuthInitialization } from "./hooks/useAuthInitialization";
 import { useActivityReset } from "./hooks/useActivityReset";
 import { useEffect } from "react";
-import { SimulationBanner } from "./components/layout/SimulationBanner";
 
 // Basename vide pour Vercel (domaine dédié)
 const basename = "";
@@ -55,7 +54,6 @@ function AppRoutes() {
 
   return (
     <>
-      <SimulationBanner />
       <Navbar />
       <Routes>
           <Route path="/" element={<Login />} />

@@ -14,8 +14,6 @@ import type { RendezVous } from "../../types/rdv";
 import rdvService from "../../services/rdvService";
 import { professorService } from "../../services/professorService";
 import { useAuthStore } from "../../stores";
-import { enterProfessorView } from "../../utils/professorSimulation";
-import { Eye } from "lucide-react";
 import { FRENCH_DEPARTMENTS } from "../../constants/departments";
 import { TRANSPORT_MODES } from "../../constants/transportModes";
 import { AvailabilityForm } from "../../components/professor/AvailabilityForm";
@@ -268,17 +266,6 @@ export const ProfesseurDetails: React.FC = () => {
     return "-";
   };
 
-  const handleEnterProfessorView = () => {
-    if (professor && professorId) {
-      enterProfessorView({
-        id: professorId,
-        firstName: professor.firstName,
-        lastName: professor.lastName,
-      });
-      navigate("/professor/profil");
-    }
-  };
-
   const renderField = (
     label: string,
     value: string | undefined,
@@ -388,27 +375,6 @@ export const ProfesseurDetails: React.FC = () => {
           href: "/admin/professeurs",
         }}
       />
-
-      {/* Boutons d'action */}
-      <div className="container mx-auto px-4 pt-12 max-w-6xl">
-        <div className="flex gap-md">
-          <button
-            onClick={() =>
-              navigate(`/admin/professeur-details/${professorId}/documents`)
-            }
-            className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 flex items-center gap-2"
-          >
-            📄 Voir les documents
-          </button>
-          <button
-            onClick={handleEnterProfessorView}
-            className="px-4 py-2 bg-secondary text-white text-sm rounded-md hover:bg-secondary-hover flex items-center gap-2"
-          >
-            <Eye size={16} />
-            Voir comme professeur
-          </button>
-        </div>
-      </div>
 
       {/* Alerte RIB manquant */}
       {professor && (!professor.iban || !professor.employmentStatus) && (
