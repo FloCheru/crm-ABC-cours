@@ -37,8 +37,8 @@ export const ProfesseurDetails: React.FC = () => {
   const [formData, setFormData] = useState<Partial<ProfessorProfile>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  // État pour gérer l'édition par onglet
-  const [editingTab, setEditingTab] = useState<string | null>(null);
+  // État pour la navigation principale (navbar horizontale professeur)
+  const [mainTab, setMainTab] = useState<'profil' | 'coupons' | 'attestations' | 'eleves'>('profil');
 
   // États pour les rendez-vous
   const [rdvs, setRdvs] = useState<RendezVous[]>([]);
@@ -107,18 +107,12 @@ export const ProfesseurDetails: React.FC = () => {
       // Mettre à jour l'état local avec les données retournées par le serveur
       setProfessor(updatedProfessor as ProfessorProfile);
       setFormData(updatedProfessor as ProfessorProfile);
-      setEditingTab(null);
     } catch (err) {
       console.error("Erreur lors de la sauvegarde:", err);
       alert("Erreur lors de la sauvegarde");
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleCancel = () => {
-    setFormData(professor || {});
-    setEditingTab(null);
   };
 
   const handleInputChange = (field: keyof ProfessorProfile, value: any) => {
@@ -195,7 +189,6 @@ export const ProfesseurDetails: React.FC = () => {
     try {
       setIsSaving(true);
       await professorService.updateProfessorSubjects(professorId!, teachingSubjects);
-      setEditingTab(null);
     } catch (err) {
       console.error("Erreur lors de la sauvegarde des matières:", err);
       alert("Erreur lors de la sauvegarde des matières");
@@ -376,6 +369,54 @@ export const ProfesseurDetails: React.FC = () => {
         }}
       />
 
+      {/* Navbar horizontale professeur */}
+      <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <nav className="flex gap-1">
+            <button
+              onClick={() => setMainTab('profil')}
+              className={`px-6 py-4 text-sm font-medium transition-all ${
+                mainTab === 'profil'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-200'
+              }`}
+            >
+              Mon profil
+            </button>
+            <button
+              onClick={() => setMainTab('coupons')}
+              className={`px-6 py-4 text-sm font-medium transition-all ${
+                mainTab === 'coupons'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-200'
+              }`}
+            >
+              Mes coupons
+            </button>
+            <button
+              onClick={() => setMainTab('attestations')}
+              className={`px-6 py-4 text-sm font-medium transition-all ${
+                mainTab === 'attestations'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-200'
+              }`}
+            >
+              Mes Attestations
+            </button>
+            <button
+              onClick={() => setMainTab('eleves')}
+              className={`px-6 py-4 text-sm font-medium transition-all ${
+                mainTab === 'eleves'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-200'
+              }`}
+            >
+              Mes élèves
+            </button>
+          </nav>
+        </div>
+      </div>
+
       {/* Alerte RIB manquant */}
       {professor && (!professor.iban || !professor.employmentStatus) && (
         <div className="container mx-auto px-4 max-w-6xl mb-6">
@@ -396,8 +437,10 @@ export const ProfesseurDetails: React.FC = () => {
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-12 max-w-6xl">
-        <Tabs defaultValue="identite" className="w-full">
+      {/* Section Mon profil */}
+      {mainTab === 'profil' && (
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+          <Tabs defaultValue="identite" className="w-full">
           <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
             <TabsTrigger
               value="identite"
@@ -1364,7 +1407,38 @@ export const ProfesseurDetails: React.FC = () => {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
+        </div>
+      )}
+
+      {/* Section Mes coupons */}
+      {mainTab === 'coupons' && (
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Mes coupons</h2>
+            <p className="text-gray-600">Section en cours de développement...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Section Mes Attestations */}
+      {mainTab === 'attestations' && (
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Mes Attestations</h2>
+            <p className="text-gray-600">Section en cours de développement...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Section Mes élèves */}
+      {mainTab === 'eleves' && (
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Mes élèves</h2>
+            <p className="text-gray-600">Section en cours de développement...</p>
+          </div>
+        </div>
+      )}
     </main>
   );
 };
