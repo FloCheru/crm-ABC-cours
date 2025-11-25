@@ -12,7 +12,6 @@ import { Checkbox } from '../../components/ui/checkbox';
 import { Label } from '../../components/ui/label';
 import { FRENCH_DEPARTMENTS } from '../../constants/departments';
 import { TRANSPORT_MODES } from '../../constants/transportModes';
-import { getSimulatedProfessor } from '../../utils/professorSimulation';
 import { professorService } from '../../services/professorService';
 import { DocumentUpload } from '../../components/documents/DocumentUpload';
 import { Download, Trash2, FileIcon, Eye } from 'lucide-react';
@@ -60,10 +59,6 @@ export const MonProfil: React.FC = () => {
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
   const [teachingSubjects, setTeachingSubjects] = useState<TeachingSubject[]>([]);
 
-  // Détecter le mode simulation
-  const simulatedProfessor = getSimulatedProfessor();
-  const isSimulationMode = !!simulatedProfessor;
-
   // Synchroniser activeTab avec l'URL quand elle change
   useEffect(() => {
     const tab = searchParams.get('tab') || 'informations';
@@ -74,58 +69,45 @@ export const MonProfil: React.FC = () => {
     loadProfile();
     loadDocuments();
     loadChoixData();
-  }, [isSimulationMode, simulatedProfessor?.id]);
+  }, []);
 
   const loadProfile = async () => {
     try {
       setIsLoading(true);
 
-      console.log('[MonProfil] loadProfile - isSimulationMode:', isSimulationMode);
-      console.log('[MonProfil] loadProfile - simulatedProfessor:', simulatedProfessor);
-
-      // En mode simulation, charger les données du professeur simulé
-      if (isSimulationMode && simulatedProfessor) {
-        console.log('[MonProfil] Chargement du professeur simulé, ID:', simulatedProfessor.id);
-        const professor = await professorService.getProfessorById(simulatedProfessor.id);
-        console.log('[MonProfil] Professeur chargé:', professor);
-        setFormData(professor as Partial<ProfessorProfile>);
-      } else {
-        console.log('[MonProfil] Mode normal - chargement mock data');
-
-        // Sinon, charger le profil de l'utilisateur connecté
-        // TODO: Remplacer par un vrai appel API via professorService.getMyProfile()
-        // Pour l'instant, données mockées
-        const mockProfile: Partial<ProfessorProfile> = {
-          _id: user?._id || '',
-          gender: 'Mme' as Gender,
-          firstName: user?.firstName || '',
-          lastName: user?.lastName || '',
-          birthName: '',
-          birthDate: '1990-05-15',
-          socialSecurityNumber: '',
-          birthCountry: 'France',
-          email: user?.email || '',
-          phone: '0123456789',
-          secondaryPhone: '',
-          address: '123 Rue Exemple',
-          addressComplement: '',
-          postalCode: '75001',
-          city: 'Paris',
-          inseeCity: '',
-          distributionOffice: '',
-          transportMode: 'voiture',
-          courseLocation: 'domicile',
-          secondaryAddress: '',
-          // Status fields
-          employmentStatus: undefined,
-          siret: '',
-          // Déplacements
-          availableDepartments: [],
-          // Disponibilités
-          weeklyAvailability: {},
-        };
-        setFormData(mockProfile);
-      }
+      // Charger le profil de l'utilisateur connecté
+      // TODO: Remplacer par un vrai appel API via professorService.getMyProfile()
+      // Pour l'instant, données mockées
+      const mockProfile: Partial<ProfessorProfile> = {
+        _id: user?._id || '',
+        gender: 'Mme' as Gender,
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
+        birthName: '',
+        birthDate: '1990-05-15',
+        socialSecurityNumber: '',
+        birthCountry: 'France',
+        email: user?.email || '',
+        phone: '0123456789',
+        secondaryPhone: '',
+        address: '123 Rue Exemple',
+        addressComplement: '',
+        postalCode: '75001',
+        city: 'Paris',
+        inseeCity: '',
+        distributionOffice: '',
+        transportMode: 'voiture',
+        courseLocation: 'domicile',
+        secondaryAddress: '',
+        // Status fields
+        employmentStatus: undefined,
+        siret: '',
+        // Déplacements
+        availableDepartments: [],
+        // Disponibilités
+        weeklyAvailability: {},
+      };
+      setFormData(mockProfile);
     } catch (err) {
       console.error('Erreur lors du chargement du profil:', err);
     } finally {
@@ -486,7 +468,7 @@ export const MonProfil: React.FC = () => {
                   Vos informations d'identité et coordonnées
                 </p>
               </div>
-              {!isSimulationMode && editingTab !== 'informations' && (
+              {editingTab !== 'informations' && (
                 <button
                   onClick={() => setEditingTab('informations')}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
@@ -876,7 +858,7 @@ export const MonProfil: React.FC = () => {
                   Départements où vous pouvez vous déplacer pour donner des cours
                 </p>
               </div>
-              {!isSimulationMode && editingTab !== 'deplacements' && (
+              {editingTab !== 'deplacements' && (
                 <button
                   onClick={() => setEditingTab('deplacements')}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
@@ -958,7 +940,7 @@ export const MonProfil: React.FC = () => {
                   Votre statut professionnel
                 </p>
               </div>
-              {!isSimulationMode && editingTab !== 'status' && (
+              {editingTab !== 'status' && (
                 <button
                   onClick={() => setEditingTab('status')}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
