@@ -1,32 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuthStore } from '../../stores';
-import type { ProfessorProfile, EmploymentStatus, Gender } from '../../types/professor';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import type { ProfessorProfile, EmploymentStatus } from "../../types/professor";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../components/ui/tabs';
-import { Checkbox } from '../../components/ui/checkbox';
-import { Label } from '../../components/ui/label';
-import { FRENCH_DEPARTMENTS } from '../../constants/departments';
-import { TRANSPORT_MODES } from '../../constants/transportModes';
-import { getSimulatedProfessor } from '../../utils/professorSimulation';
-import { professorService } from '../../services/professorService';
-import { DocumentUpload } from '../../components/documents/DocumentUpload';
-import { Download, Trash2, FileIcon, Eye } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Alert, AlertDescription } from '../../components/ui/alert';
-import { Badge } from '../../components/ui/badge';
-import { Separator } from '../../components/ui/separator';
-import { AlertCircle, Save, X } from 'lucide-react';
-import { SubjectLevelsSelector } from '../../components/professor/SubjectLevelsSelector';
-import { subjectService } from '../../services/subjectService';
-import type { Subject } from '../../types/subject';
-import type { TeachingSubject } from '../../types/professor';
-import type { SchoolCategory } from '../../constants/schoolLevels';
+} from "../../components/ui/tabs";
+import { Checkbox } from "../../components/ui/checkbox";
+import { Label } from "../../components/ui/label";
+import { FRENCH_DEPARTMENTS } from "../../constants/departments";
+import { TRANSPORT_MODES } from "../../constants/transportModes";
+import { getSimulatedProfessor } from "../../utils/professorSimulation";
+import { professorService } from "../../services/professorService";
+import { DocumentUpload } from "../../components/documents/DocumentUpload";
+import { Download, Trash2, FileIcon, Eye } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Badge } from "../../components/ui/badge";
+import { Separator } from "../../components/ui/separator";
+import { AlertCircle, Save, X, Plus } from "lucide-react";
+import { Input } from "../../components/ui/input";
+import { SubjectLevelsSelector } from "../../components/professor/SubjectLevelsSelector";
+import { subjectService } from "../../services/subjectService";
+import type { Subject } from "../../types/subject";
+import type { TeachingSubject } from "../../types/professor";
+import type { SchoolCategory } from "../../constants/schoolLevels";
+import { getDepartmentFromPostalCode } from "../../utils/postalCodeUtils";
+import { DepartmentCombobox } from "../../components/professor/DepartmentCombobox";
+import { CommuneCombobox } from "../../components/professor/CommuneCombobox";
+import { geoApiService, type Commune } from "../../services/geoApiService";
+import { X as XIcon } from "lucide-react";
 
 interface Document {
   _id: string;
@@ -40,16 +50,28 @@ interface Document {
 export const MonProfil: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const user = useAuthStore((state) => state.user);
 
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState<Partial<ProfessorProfile>>({});
-  const tabFromUrl = searchParams.get('tab') || 'informations';
+  const tabFromUrl = searchParams.get("tab") || "informations";
   const [activeTab, setActiveTab] = useState(tabFromUrl);
   const [isSaving, setIsSaving] = useState(false);
 
   // État pour gérer l'édition par onglet
   const [editingTab, setEditingTab] = useState<string | null>(null);
+
+  // État pour afficher le combobox de départements
+  const [showDepartmentCombobox, setShowDepartmentCombobox] = useState(false);
+
+  // États pour gérer l'affichage des combobox de communes (un par département)
+  const [showCommuneCombobox, setShowCommuneCombobox] = useState<
+    Record<string, boolean>
+  >({});
+
+  // Cache des communes chargées par département
+  const [communesByDept, setCommunesByDept] = useState<
+    Record<string, Commune[]>
+  >({});
 
   // États pour Documents
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -58,7 +80,13 @@ export const MonProfil: React.FC = () => {
 
   // États pour Choix (Matières)
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
-  const [teachingSubjects, setTeachingSubjects] = useState<TeachingSubject[]>([]);
+  const [teachingSubjects, setTeachingSubjects] = useState<TeachingSubject[]>(
+    []
+  );
+
+  // États pour matières personnalisées
+  const [customSubjectName, setCustomSubjectName] = useState("");
+  const [isAddingCustomSubject, setIsAddingCustomSubject] = useState(false);
 
   // Détecter le mode simulation
   const simulatedProfessor = getSimulatedProfessor();
@@ -66,7 +94,7 @@ export const MonProfil: React.FC = () => {
 
   // Synchroniser activeTab avec l'URL quand elle change
   useEffect(() => {
-    const tab = searchParams.get('tab') || 'informations';
+    const tab = searchParams.get("tab") || "informations";
     setActiveTab(tab);
   }, [searchParams]);
 
@@ -76,58 +104,190 @@ export const MonProfil: React.FC = () => {
     loadChoixData();
   }, [isSimulationMode, simulatedProfessor?.id]);
 
+  // Présélectionner les départements quand on arrive sur l'onglet Déplacement
+  useEffect(() => {
+    if (activeTab === "deplacement") {
+      console.log("[MonProfil] Onglet Déplacement activé");
+      console.log(
+        "[MonProfil] formData.primaryAddress:",
+        formData.primaryAddress
+      );
+      console.log(
+        "[MonProfil] formData.secondaryAddress:",
+        formData.secondaryAddress
+      );
+      console.log(
+        "[MonProfil] formData.availableDepartments avant présélection:",
+        formData.availableDepartments
+      );
+
+      // Présélectionner les départements basés sur les adresses actuelles
+      const preselectedDepts = preselectDepartmentsFromAddresses(
+        formData.primaryAddress?.postalCode,
+        formData.secondaryAddress?.postalCode
+      );
+
+      console.log(
+        "[MonProfil] Départements présélectionnés à partir des adresses:",
+        preselectedDepts
+      );
+
+      // Fusionner avec les départements existants
+      if (preselectedDepts.length > 0) {
+        const updatedDepts = Array.from(
+          new Set([
+            ...(formData.availableDepartments || []),
+            ...preselectedDepts,
+          ])
+        );
+
+        console.log(
+          "[MonProfil] Départements après fusion (tab deplacement):",
+          updatedDepts
+        );
+
+        setFormData((prev) => ({
+          ...prev,
+          availableDepartments: updatedDepts,
+        }));
+      }
+    }
+  }, [activeTab]);
+
+  // Fonction helper pour présélectionner les départements depuis les adresses
+  const preselectDepartmentsFromAddresses = (
+    primaryPostalCode?: string,
+    secondaryPostalCode?: string
+  ): string[] => {
+    const preselectedDepts: string[] = [];
+
+    console.log("[preselectDepartments] Début de la présélection");
+    console.log("[preselectDepartments] primaryPostalCode:", primaryPostalCode);
+    console.log(
+      "[preselectDepartments] secondaryPostalCode:",
+      secondaryPostalCode
+    );
+
+    // Adresse principale
+    if (primaryPostalCode) {
+      const deptCode = getDepartmentFromPostalCode(primaryPostalCode);
+      console.log(
+        "[preselectDepartments] Département de l'adresse principale:",
+        deptCode
+      );
+      if (deptCode) {
+        // Cas spécial Corse : code postal "20xxx" → présélectionner 2A et 2B
+        if (deptCode === "20") {
+          console.log(
+            "[preselectDepartments] Corse détectée (adresse principale), ajout de 2A et 2B"
+          );
+          preselectedDepts.push("2A", "2B");
+        } else {
+          console.log("[preselectDepartments] Ajout du département:", deptCode);
+          preselectedDepts.push(deptCode);
+        }
+      }
+    } else {
+      console.log(
+        "[preselectDepartments] Pas de code postal pour l'adresse principale"
+      );
+    }
+
+    // Adresse secondaire
+    if (secondaryPostalCode) {
+      const deptCode = getDepartmentFromPostalCode(secondaryPostalCode);
+      console.log(
+        "[preselectDepartments] Département de l'adresse secondaire:",
+        deptCode
+      );
+      if (deptCode) {
+        // Cas spécial Corse
+        if (deptCode === "20") {
+          console.log(
+            "[preselectDepartments] Corse détectée (adresse secondaire), ajout de 2A et 2B"
+          );
+          preselectedDepts.push("2A", "2B");
+        } else {
+          console.log("[preselectDepartments] Ajout du département:", deptCode);
+          preselectedDepts.push(deptCode);
+        }
+      }
+    } else {
+      console.log(
+        "[preselectDepartments] Pas de code postal pour l'adresse secondaire"
+      );
+    }
+
+    console.log(
+      "[preselectDepartments] Départements présélectionnés:",
+      preselectedDepts
+    );
+    return preselectedDepts;
+  };
+
   const loadProfile = async () => {
     try {
       setIsLoading(true);
 
-      console.log('[MonProfil] loadProfile - isSimulationMode:', isSimulationMode);
-      console.log('[MonProfil] loadProfile - simulatedProfessor:', simulatedProfessor);
+      console.log(
+        "[MonProfil] loadProfile - isSimulationMode:",
+        isSimulationMode
+      );
+      console.log(
+        "[MonProfil] loadProfile - simulatedProfessor:",
+        simulatedProfessor
+      );
 
-      // En mode simulation, charger les données du professeur simulé
-      if (isSimulationMode && simulatedProfessor) {
-        console.log('[MonProfil] Chargement du professeur simulé, ID:', simulatedProfessor.id);
-        const professor = await professorService.getProfessorById(simulatedProfessor.id);
-        console.log('[MonProfil] Professeur chargé:', professor);
-        setFormData(professor as Partial<ProfessorProfile>);
-      } else {
-        console.log('[MonProfil] Mode normal - chargement mock data');
+      // Charger le professeur : simulé ou connecté
+      const professor =
+        isSimulationMode && simulatedProfessor
+          ? await professorService.getProfessorById(simulatedProfessor.id)
+          : await professorService.getMyProfile();
 
-        // Sinon, charger le profil de l'utilisateur connecté
-        // TODO: Remplacer par un vrai appel API via professorService.getMyProfile()
-        // Pour l'instant, données mockées
-        const mockProfile: Partial<ProfessorProfile> = {
-          _id: user?._id || '',
-          gender: 'Mme' as Gender,
-          firstName: user?.firstName || '',
-          lastName: user?.lastName || '',
-          birthName: '',
-          birthDate: '1990-05-15',
-          socialSecurityNumber: '',
-          birthCountry: 'France',
-          email: user?.email || '',
-          phone: '0123456789',
-          secondaryPhone: '',
-          address: '123 Rue Exemple',
-          addressComplement: '',
-          postalCode: '75001',
-          city: 'Paris',
-          inseeCity: '',
-          distributionOffice: '',
-          transportMode: 'voiture',
-          courseLocation: 'domicile',
-          secondaryAddress: '',
-          // Status fields
-          employmentStatus: undefined,
-          siret: '',
-          // Déplacements
-          availableDepartments: [],
-          // Disponibilités
-          weeklyAvailability: {},
-        };
-        setFormData(mockProfile);
-      }
+      console.log(
+        "[MonProfil] Professeur chargé (",
+        isSimulationMode ? "simulation" : "connecté",
+        "):",
+        professor
+      );
+
+      // Cast en ProfessorProfile pour accéder aux champs d'adresse
+      const professorProfile = professor as unknown as ProfessorProfile;
+
+      console.log(
+        "[MonProfil] Adresse principale:",
+        professorProfile.primaryAddress
+      );
+      console.log(
+        "[MonProfil] Adresse secondaire:",
+        professorProfile.secondaryAddress
+      );
+      console.log(
+        "[MonProfil] availableDepartments avant présélection:",
+        professorProfile.availableDepartments
+      );
+
+      // Présélectionner les départements basés sur les adresses du professeur
+      const preselectedDepts = preselectDepartmentsFromAddresses(
+        professorProfile.primaryAddress?.postalCode,
+        professorProfile.secondaryAddress?.postalCode
+      );
+
+      const mergedDepartments = Array.from(
+        new Set([
+          ...(professorProfile.availableDepartments || []),
+          ...preselectedDepts,
+        ])
+      );
+
+      console.log("[MonProfil] Départements après fusion:", mergedDepartments);
+
+      setFormData({
+        ...professorProfile,
+        availableDepartments: mergedDepartments,
+      } as Partial<ProfessorProfile>);
     } catch (err) {
-      console.error('Erreur lors du chargement du profil:', err);
+      console.error("Erreur lors du chargement du profil:", err);
     } finally {
       setIsLoading(false);
     }
@@ -144,35 +304,35 @@ export const MonProfil: React.FC = () => {
       // Données mockées pour le moment
       const mockDocuments: Document[] = [
         {
-          _id: '1',
-          filename: 'Mon_CV.pdf',
-          category: 'CV',
-          uploadDate: new Date('2024-01-15').toISOString(),
+          _id: "1",
+          filename: "Mon_CV.pdf",
+          category: "CV",
+          uploadDate: new Date("2024-01-15").toISOString(),
           size: 245000,
-          contentType: 'application/pdf'
+          contentType: "application/pdf",
         },
         {
-          _id: '2',
-          filename: 'Diplome_Master_Mathematiques.pdf',
-          category: 'Diplôme',
-          uploadDate: new Date('2024-01-20').toISOString(),
+          _id: "2",
+          filename: "Diplome_Master_Mathematiques.pdf",
+          category: "Diplôme",
+          uploadDate: new Date("2024-01-20").toISOString(),
           size: 1200000,
-          contentType: 'application/pdf'
+          contentType: "application/pdf",
         },
         {
-          _id: '3',
-          filename: 'RIB_Banque_Postale.pdf',
-          category: 'RIB',
-          uploadDate: new Date('2024-02-01').toISOString(),
+          _id: "3",
+          filename: "RIB_Banque_Postale.pdf",
+          category: "RIB",
+          uploadDate: new Date("2024-02-01").toISOString(),
           size: 89000,
-          contentType: 'application/pdf'
-        }
+          contentType: "application/pdf",
+        },
       ];
 
       setDocuments(mockDocuments);
     } catch (err) {
-      console.error('Erreur lors du chargement des documents:', err);
-      setError('Impossible de charger vos documents');
+      console.error("Erreur lors du chargement des documents:", err);
+      setError("Impossible de charger vos documents");
     } finally {
       setIsLoadingDocuments(false);
     }
@@ -185,21 +345,27 @@ export const MonProfil: React.FC = () => {
         professorService.getMySubjects(),
       ]);
 
-      console.log('Subjects loaded:', subjects);
-      console.log('My subjects loaded:', mySubjects);
+      console.log("Subjects loaded:", subjects);
+      console.log("My subjects loaded:", mySubjects);
 
       // Si aucune matière n'est retournée, utiliser des données de test
       if (!subjects || subjects.length === 0) {
-        console.warn('⚠️ Aucune matière trouvée - Utilisation de données de test');
+        console.warn(
+          "⚠️ Aucune matière trouvée - Utilisation de données de test"
+        );
         const mockSubjects: Subject[] = [
-          { _id: '1', name: 'Mathématiques', category: 'Sciences' },
-          { _id: '2', name: 'Français', category: 'Langues' },
-          { _id: '3', name: 'Anglais', category: 'Langues' },
-          { _id: '4', name: 'Histoire-Géographie', category: 'Sciences humaines' },
-          { _id: '5', name: 'Physique-Chimie', category: 'Sciences' },
-          { _id: '6', name: 'SVT', category: 'Sciences' },
-          { _id: '7', name: 'Philosophie', category: 'Lettres' },
-          { _id: '8', name: 'Espagnol', category: 'Langues' },
+          { _id: "1", name: "Mathématiques", category: "Sciences" },
+          { _id: "2", name: "Français", category: "Langues" },
+          { _id: "3", name: "Anglais", category: "Langues" },
+          {
+            _id: "4",
+            name: "Histoire-Géographie",
+            category: "Sciences humaines",
+          },
+          { _id: "5", name: "Physique-Chimie", category: "Sciences" },
+          { _id: "6", name: "SVT", category: "Sciences" },
+          { _id: "7", name: "Philosophie", category: "Lettres" },
+          { _id: "8", name: "Espagnol", category: "Langues" },
         ];
         setAllSubjects(mockSubjects);
       } else {
@@ -208,17 +374,21 @@ export const MonProfil: React.FC = () => {
 
       setTeachingSubjects(mySubjects || []);
     } catch (error) {
-      console.error('❌ Erreur de chargement des matières:', error);
+      console.error("❌ Erreur de chargement des matières:", error);
       // En cas d'erreur, utiliser des données de test
       const mockSubjects: Subject[] = [
-        { _id: '1', name: 'Mathématiques', category: 'Sciences' },
-        { _id: '2', name: 'Français', category: 'Langues' },
-        { _id: '3', name: 'Anglais', category: 'Langues' },
-        { _id: '4', name: 'Histoire-Géographie', category: 'Sciences humaines' },
-        { _id: '5', name: 'Physique-Chimie', category: 'Sciences' },
-        { _id: '6', name: 'SVT', category: 'Sciences' },
-        { _id: '7', name: 'Philosophie', category: 'Lettres' },
-        { _id: '8', name: 'Espagnol', category: 'Langues' },
+        { _id: "1", name: "Mathématiques", category: "Sciences" },
+        { _id: "2", name: "Français", category: "Langues" },
+        { _id: "3", name: "Anglais", category: "Langues" },
+        {
+          _id: "4",
+          name: "Histoire-Géographie",
+          category: "Sciences humaines",
+        },
+        { _id: "5", name: "Physique-Chimie", category: "Sciences" },
+        { _id: "6", name: "SVT", category: "Sciences" },
+        { _id: "7", name: "Philosophie", category: "Lettres" },
+        { _id: "8", name: "Espagnol", category: "Langues" },
       ];
       setAllSubjects(mockSubjects);
       setTeachingSubjects([]);
@@ -228,13 +398,16 @@ export const MonProfil: React.FC = () => {
   const handleSave = async (section: string) => {
     try {
       setIsSaving(true);
-      console.log('Sauvegarde des données:', section, formData);
-      // TODO: Appeler professorService.updateMyProfile(formData)
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simuler API call
+      console.log("[MonProfil] Sauvegarde du profil...", section, formData);
+
+      // Appeler le service pour mettre à jour le profil
+      await professorService.updateMyProfile(formData);
+
+      console.log("[MonProfil] ✅ Profil sauvegardé avec succès");
       setEditingTab(null);
     } catch (err) {
-      console.error('Erreur lors de la sauvegarde:', err);
-      alert('Erreur lors de la sauvegarde');
+      console.error("[MonProfil] ❌ Erreur lors de la sauvegarde:", err);
+      alert("Erreur lors de la sauvegarde");
     } finally {
       setIsSaving(false);
     }
@@ -246,11 +419,11 @@ export const MonProfil: React.FC = () => {
     try {
       setIsSaving(true);
       await professorService.updateMySubjects(teachingSubjects);
-      alert('Vos choix ont été enregistrés avec succès !');
+      alert("Vos choix ont été enregistrés avec succès !");
       setEditingTab(null);
     } catch (error) {
-      console.error('Erreur de sauvegarde:', error);
-      alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
+      console.error("Erreur de sauvegarde:", error);
+      alert("Erreur lors de la sauvegarde. Veuillez réessayer.");
     } finally {
       setIsSaving(false);
     }
@@ -261,8 +434,26 @@ export const MonProfil: React.FC = () => {
     loadProfile(); // Recharger les données originales
   };
 
-  const handleInputChange = (field: keyof ProfessorProfile, value: any) => {
-    setFormData((prev: Partial<ProfessorProfile>) => ({ ...prev, [field]: value }));
+  const handleInputChange = (
+    field: keyof ProfessorProfile | string,
+    value: any
+  ) => {
+    // Gérer les champs imbriqués (primaryAddress.*, secondaryAddress.*)
+    if (field.includes(".")) {
+      const [parent, child] = field.split(".") as [string, string];
+      setFormData((prev: Partial<ProfessorProfile>) => ({
+        ...prev,
+        [parent]: {
+          ...(prev[parent as keyof ProfessorProfile] as any),
+          [child]: value,
+        },
+      }));
+    } else {
+      setFormData((prev: Partial<ProfessorProfile>) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
   };
 
   const toggleDepartment = (code: string) => {
@@ -270,23 +461,105 @@ export const MonProfil: React.FC = () => {
     const updated = current.includes(code)
       ? current.filter((c) => c !== code)
       : [...current, code];
-    handleInputChange('availableDepartments', updated);
+    handleInputChange("availableDepartments", updated);
+  };
+
+  const getProtectedDepartments = (): string[] => {
+    const protectedDepts: string[] = [];
+
+    // Département de l'adresse principale
+    if (formData.primaryAddress?.postalCode) {
+      const dept = getDepartmentFromPostalCode(
+        formData.primaryAddress.postalCode
+      );
+      if (dept === "20") {
+        protectedDepts.push("2A", "2B"); // Cas Corse
+      } else if (dept) {
+        protectedDepts.push(dept);
+      }
+    }
+
+    // Département de l'adresse secondaire
+    if (formData.secondaryAddress?.postalCode) {
+      const dept = getDepartmentFromPostalCode(
+        formData.secondaryAddress.postalCode
+      );
+      if (dept === "20") {
+        protectedDepts.push("2A", "2B");
+      } else if (dept) {
+        protectedDepts.push(dept);
+      }
+    }
+
+    return [...new Set(protectedDepts)]; // Déduplique
+  };
+
+  const handleRemoveDepartment = (deptCode: string) => {
+    const protectedDepts = getProtectedDepartments();
+    if (protectedDepts.includes(deptCode)) {
+      alert("Impossible de supprimer ce département (lié à vos adresses)");
+      return;
+    }
+
+    const updated = (formData.availableDepartments || []).filter(
+      (code) => code !== deptCode
+    );
+
+    // Également supprimer les communes associées
+    const deptCommunes = communesByDept[deptCode]?.map((c) => c.code) || [];
+    const updatedCities = (formData.availableCities || []).filter(
+      (code) => !deptCommunes.includes(code)
+    );
+
+    handleInputChange("availableDepartments", updated);
+    handleInputChange("availableCities", updatedCities);
+  };
+
+  // Handlers pour les communes
+  const toggleCity = (cityCode: string) => {
+    const current = formData.availableCities || [];
+    const updated = current.includes(cityCode)
+      ? current.filter((c) => c !== cityCode)
+      : [...current, cityCode];
+    handleInputChange("availableCities", updated);
+  };
+
+  const loadCommunesForDepartment = async (deptCode: string) => {
+    if (communesByDept[deptCode]) return; // Déjà chargé
+
+    const communes = await geoApiService.getCommunesByDepartment(deptCode);
+    setCommunesByDept((prev) => ({ ...prev, [deptCode]: communes }));
+  };
+
+  const getCommunesForDepartment = (deptCode: string): string[] => {
+    const communes = communesByDept[deptCode] || [];
+    return (formData.availableCities || []).filter((cityCode) =>
+      communes.some((c) => c.code === cityCode)
+    );
+  };
+
+  const getCommuneDisplayName = (commune: Commune): string => {
+    return `${commune.nom} (${commune.codesPostaux?.[0] || commune.code})`;
   };
 
   // Handlers pour les matières (Choix)
   const isSubjectSelected = (subjectId: string): boolean => {
-    return teachingSubjects.some(ts => ts.subjectId === subjectId);
+    return teachingSubjects.some((ts) => ts.subjectId === subjectId);
   };
 
   const getGradesForSubject = (subjectId: string): string[] => {
-    return teachingSubjects.find(ts => ts.subjectId === subjectId)?.grades || [];
+    return (
+      teachingSubjects.find((ts) => ts.subjectId === subjectId)?.grades || []
+    );
   };
 
   const handleToggleSubject = (subject: Subject) => {
     if (isSubjectSelected(subject._id)) {
-      setTeachingSubjects(prev => prev.filter(ts => ts.subjectId !== subject._id));
+      setTeachingSubjects((prev) =>
+        prev.filter((ts) => ts.subjectId !== subject._id)
+      );
     } else {
-      setTeachingSubjects(prev => [
+      setTeachingSubjects((prev) => [
         ...prev,
         {
           subjectId: subject._id,
@@ -299,8 +572,8 @@ export const MonProfil: React.FC = () => {
   };
 
   const handleGradesChange = (subjectId: string, grades: string[]) => {
-    setTeachingSubjects(prev =>
-      prev.map(ts =>
+    setTeachingSubjects((prev) =>
+      prev.map((ts) =>
         ts.subjectId === subjectId
           ? { ...ts, grades, levels: deriveLevelsFromGrades(grades) }
           : ts
@@ -310,71 +583,104 @@ export const MonProfil: React.FC = () => {
 
   const deriveLevelsFromGrades = (grades: string[]): SchoolCategory[] => {
     const levels = new Set<SchoolCategory>();
-    grades.forEach(grade => {
-      if (['CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(grade)) {
-        levels.add('primaire');
+    grades.forEach((grade) => {
+      if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(grade)) {
+        levels.add("primaire");
       }
-      if (['6ème', '5ème', '4ème', '3ème'].includes(grade)) {
-        levels.add('college');
+      if (["6ème", "5ème", "4ème", "3ème"].includes(grade)) {
+        levels.add("college");
       }
-      if (['Seconde', 'Première', 'Terminale'].includes(grade)) {
-        levels.add('lycee');
+      if (["Seconde", "Première", "Terminale"].includes(grade)) {
+        levels.add("lycee");
       }
-      if (['L1', 'L2', 'L3', 'M1', 'M2', 'Doctorat', 'Autre'].includes(grade)) {
-        levels.add('superieur');
+      if (["L1", "L2", "L3", "M1", "M2", "Doctorat", "Autre"].includes(grade)) {
+        levels.add("superieur");
       }
     });
     return Array.from(levels);
   };
 
   const hasValidSelection = (): boolean => {
-    return teachingSubjects.length > 0 && teachingSubjects.every(ts => ts.grades.length > 0);
+    return (
+      teachingSubjects.length > 0 &&
+      teachingSubjects.every((ts) => ts.grades.length > 0)
+    );
+  };
+
+  // Handlers pour les matières personnalisées
+  const handleAddCustomSubject = () => {
+    if (!customSubjectName.trim()) {
+      alert("Veuillez saisir le nom de la matière");
+      return;
+    }
+
+    const tempId = `custom-${Date.now()}`;
+
+    setTeachingSubjects((prev) => [
+      ...prev,
+      {
+        subjectId: tempId,
+        subjectName: customSubjectName.trim(),
+        grades: [],
+        levels: [],
+        isCustom: true,
+      },
+    ]);
+
+    setCustomSubjectName("");
+    setIsAddingCustomSubject(false);
+  };
+
+  const handleRemoveCustomSubject = (subjectId: string) => {
+    setTeachingSubjects((prev) =>
+      prev.filter((ts) => ts.subjectId !== subjectId)
+    );
   };
 
   // Handlers pour les documents
   const handleFileUpload = async (file: File, category: string) => {
     try {
       setError(null);
-      console.log('Upload fichier:', file.name, 'Catégorie:', category);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log("Upload fichier:", file.name, "Catégorie:", category);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       await loadDocuments();
-      alert('Document uploadé avec succès !');
+      alert("Document uploadé avec succès !");
     } catch (err) {
-      console.error('Erreur lors de l\'upload:', err);
-      throw new Error('Erreur lors de l\'upload du document');
+      console.error("Erreur lors de l'upload:", err);
+      throw new Error("Erreur lors de l'upload du document");
     }
   };
 
   const handleDownload = async (documentId: string, filename: string) => {
-    console.log('Téléchargement du document:', documentId, filename);
-    alert('Fonctionnalité de téléchargement à implémenter avec le backend');
+    console.log("Téléchargement du document:", documentId, filename);
+    alert("Fonctionnalité de téléchargement à implémenter avec le backend");
   };
 
   const handleView = async (documentId: string) => {
-    console.log('Visualisation du document:', documentId);
-    alert('Fonctionnalité de visualisation à implémenter avec le backend');
+    console.log("Visualisation du document:", documentId);
+    alert("Fonctionnalité de visualisation à implémenter avec le backend");
   };
 
   const handleDelete = async (documentId: string, filename: string) => {
     if (!window.confirm(`Êtes-vous sûr de vouloir supprimer "${filename}" ?`)) {
       return;
     }
-    console.log('Suppression du document:', documentId);
+    console.log("Suppression du document:", documentId);
     await loadDocuments();
-    alert('Document supprimé avec succès !');
+    alert("Document supprimé avec succès !");
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
 
   const getFileIcon = (contentType: string) => {
-    if (contentType === 'application/pdf') {
+    if (contentType === "application/pdf") {
       return <FileIcon className="w-5 h-5 text-red-600" />;
     }
-    if (contentType.startsWith('image/')) {
+    if (contentType.startsWith("image/")) {
       return <FileIcon className="w-5 h-5 text-blue-600" />;
     }
     return <FileIcon className="w-5 h-5 text-gray-600" />;
@@ -382,18 +688,22 @@ export const MonProfil: React.FC = () => {
 
   const renderEditField = (
     label: string,
-    field: keyof ProfessorProfile,
-    type: 'text' | 'email' | 'tel' | 'date' | 'select' = 'text',
+    field: keyof ProfessorProfile | string,
+    type: "text" | "email" | "tel" | "date" | "select" = "text",
     options?: { value: string; label: string }[],
     isFullWidth = false
   ) => {
-    const fieldValue = formData[field];
+    // Supporter les champs imbriqués (ex: "primaryAddress.postalCode")
+    const fieldValue = field.includes(".")
+      ? field.split(".").reduce((obj, key) => obj?.[key], formData as any)
+      : formData[field as keyof ProfessorProfile];
+
     return (
-      <div className={isFullWidth ? 'col-span-2' : ''}>
+      <div className={isFullWidth ? "col-span-2" : ""}>
         <label className="text-xs text-gray-500 mb-1 block">{label}</label>
-        {type === 'select' ? (
+        {type === "select" ? (
           <select
-            value={String(fieldValue || '')}
+            value={String(fieldValue || "")}
             onChange={(e) => handleInputChange(field, e.target.value)}
             className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           >
@@ -406,7 +716,7 @@ export const MonProfil: React.FC = () => {
         ) : (
           <input
             type={type}
-            value={String(fieldValue || '')}
+            value={String(fieldValue || "")}
             onChange={(e) => handleInputChange(field, e.target.value)}
             className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           />
@@ -415,15 +725,25 @@ export const MonProfil: React.FC = () => {
     );
   };
 
-  const renderField = (label: string, value: string | undefined, isFullWidth = false) => (
-    <div className={isFullWidth ? 'col-span-2' : ''}>
-      <div className="text-xs text-gray-500 mb-1">{label}</div>
-      <div className="text-base text-gray-900">{value || '-'}</div>
-    </div>
-  );
+  const renderField = (label: string, field: string, isFullWidth = false) => {
+    const value = field.includes(".")
+      ? field.split(".").reduce((obj, key) => obj?.[key], formData as any)
+      : formData[field as keyof ProfessorProfile];
 
-  const selectedCount = teachingSubjects.filter(ts => ts.grades.length > 0).length;
-  const invalidCount = teachingSubjects.filter(ts => ts.grades.length === 0).length;
+    return (
+      <div className={isFullWidth ? "col-span-2" : ""}>
+        <div className="text-xs text-gray-500 mb-1">{label}</div>
+        <div className="text-base text-gray-900">{value || "-"}</div>
+      </div>
+    );
+  };
+
+  const selectedCount = teachingSubjects.filter(
+    (ts) => ts.grades.length > 0
+  ).length;
+  const invalidCount = teachingSubjects.filter(
+    (ts) => ts.grades.length === 0
+  ).length;
 
   if (isLoading) {
     return (
@@ -439,40 +759,44 @@ export const MonProfil: React.FC = () => {
     <div className="container mx-auto px-4 max-w-6xl py-8">
       <h1 className="text-2xl font-bold mb-6">Mon Profil</h1>
 
-      <Tabs value={activeTab} onValueChange={(tab: string) => {
-        setActiveTab(tab);
-        navigate(`?tab=${tab}`, { replace: true });
-      }} className="w-full">
+      <Tabs
+        value={activeTab}
+        onValueChange={(tab: string) => {
+          setActiveTab(tab);
+          navigate(`?tab=${tab}`, { replace: true });
+        }}
+        className="w-full"
+      >
         <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
           <TabsTrigger
             value="informations"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
           >
-            Informations
+            Mes Informations
           </TabsTrigger>
           <TabsTrigger
             value="documents"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
           >
-            Documents
+            Mes Documents
           </TabsTrigger>
           <TabsTrigger
             value="choix"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
           >
-            Choix
+            Mes Choix
           </TabsTrigger>
           <TabsTrigger
             value="deplacement"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
           >
-            Déplacement
+            Mes Déplacements
           </TabsTrigger>
           <TabsTrigger
             value="status"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
           >
-            Status
+            Mon Statut
           </TabsTrigger>
         </TabsList>
 
@@ -481,14 +805,16 @@ export const MonProfil: React.FC = () => {
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Informations personnelles</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Informations personnelles
+                </h3>
                 <p className="text-sm text-gray-500">
                   Vos informations d'identité et coordonnées
                 </p>
               </div>
-              {!isSimulationMode && editingTab !== 'informations' && (
+              {!isSimulationMode && editingTab !== "informations" && (
                 <button
-                  onClick={() => setEditingTab('informations')}
+                  onClick={() => setEditingTab("informations")}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
                 >
                   Modifier ✏️
@@ -496,53 +822,110 @@ export const MonProfil: React.FC = () => {
               )}
             </div>
 
-            {editingTab === 'informations' ? (
+            {editingTab === "informations" ? (
               <>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                   {/* Identité */}
-                  {renderEditField('Genre *', 'gender', 'select', [
-                    { value: 'M.', label: 'M.' },
-                    { value: 'Mme', label: 'Mme' },
+                  {renderEditField("Genre *", "gender", "select", [
+                    { value: "M.", label: "M." },
+                    { value: "Mme", label: "Mme" },
                   ])}
-                  {renderEditField('Prénom *', 'firstName')}
-                  {renderEditField('Nom *', 'lastName')}
-                  {renderEditField('Nom de naissance (si différent)', 'birthName')}
-                  {renderEditField('Date de naissance *', 'birthDate', 'date')}
-                  {renderEditField('N° de sécurité sociale', 'socialSecurityNumber')}
-                  {renderEditField('Pays de naissance', 'birthCountry', 'text', undefined, true)}
+                  {renderEditField("Prénom *", "firstName")}
+                  {renderEditField("Nom *", "lastName")}
+                  {renderEditField(
+                    "Nom de naissance (si différent)",
+                    "birthName"
+                  )}
+                  {renderEditField("Date de naissance *", "birthDate", "date")}
+                  {renderEditField(
+                    "N° de sécurité sociale",
+                    "socialSecurityNumber"
+                  )}
+                  {renderEditField(
+                    "Pays de naissance",
+                    "birthCountry",
+                    "text",
+                    undefined,
+                    true
+                  )}
 
                   <div className="col-span-2 my-4">
                     <Separator />
                   </div>
 
                   {/* Coordonnées */}
-                  {renderEditField('Email *', 'email', 'email')}
-                  {renderEditField('Tél principal *', 'phone', 'tel')}
-                  {renderEditField('Tél secondaire', 'secondaryPhone', 'tel')}
-                  {renderEditField('Code postal *', 'postalCode')}
-                  {renderEditField('Adresse', 'address', 'text', undefined, true)}
-                  {renderEditField('Complément d\'adresse', 'addressComplement', 'text', undefined, true)}
-                  {renderEditField('Commune', 'city')}
-                  {renderEditField('Commune INSEE', 'inseeCity')}
-                  {renderEditField('Bureau distributeur', 'distributionOffice', 'text', undefined, true)}
-                  {renderEditField('Déplacement', 'transportMode', 'select', [
-                    { value: '', label: 'Sélectionner...' },
-                    ...TRANSPORT_MODES
+                  {renderEditField("Email *", "email", "email")}
+                  {renderEditField("Tél principal *", "phone", "tel")}
+                  {renderEditField("Tél secondaire", "secondaryPhone", "tel")}
+                  {renderEditField(
+                    "Code postal *",
+                    "primaryAddress.postalCode"
+                  )}
+                  {renderEditField(
+                    "Adresse",
+                    "primaryAddress.street",
+                    "text",
+                    undefined,
+                    true
+                  )}
+                  {renderEditField(
+                    "Complément d'adresse",
+                    "primaryAddress.addressComplement",
+                    "text",
+                    undefined,
+                    true
+                  )}
+                  {renderEditField("Commune", "primaryAddress.city")}
+                  {renderEditField("Déplacement", "transportMode", "select", [
+                    { value: "", label: "Sélectionner..." },
+                    ...TRANSPORT_MODES,
                   ])}
-                  {renderEditField('Cours', 'courseLocation', 'select', [
-                    { value: '', label: 'Sélectionner...' },
-                    { value: 'domicile', label: 'À domicile' },
-                    { value: 'visio', label: 'En visio' },
+                  {renderEditField("Cours", "courseLocation", "select", [
+                    { value: "", label: "Sélectionner..." },
+                    { value: "domicile", label: "À domicile" },
+                    { value: "visio", label: "En visio" },
                   ])}
-                  {renderEditField('Adresse secondaire', 'secondaryAddress', 'text', undefined, true)}
+
+                  <div className="col-span-2 my-4">
+                    <Separator />
+                    <div className="text-sm font-medium text-gray-700 mt-4 mb-2">
+                      Adresse secondaire (optionnelle)
+                    </div>
+                    <Alert className="mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Remplir uniquement si vous souhaitez donner des cours dans un autre département
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+
+                  {renderEditField(
+                    "Code postal secondaire",
+                    "secondaryAddress.postalCode"
+                  )}
+                  {renderEditField(
+                    "Adresse secondaire",
+                    "secondaryAddress.street",
+                    "text",
+                    undefined,
+                    true
+                  )}
+                  {renderEditField(
+                    "Complément d'adresse",
+                    "secondaryAddress.addressComplement",
+                    "text",
+                    undefined,
+                    true
+                  )}
+                  {renderEditField("Commune", "secondaryAddress.city")}
                 </div>
                 <div className="flex gap-3 mt-6">
                   <button
-                    onClick={() => handleSave('informations')}
+                    onClick={() => handleSave("informations")}
                     disabled={isSaving}
                     className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
                   >
-                    {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+                    {isSaving ? "Enregistrement..." : "Sauvegarder"}
                   </button>
                   <button
                     onClick={handleCancel}
@@ -555,36 +938,70 @@ export const MonProfil: React.FC = () => {
             ) : (
               <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                 {/* Identité */}
-                {renderField('Genre *', formData.gender)}
-                {renderField('Prénom *', formData.firstName)}
-                {renderField('Nom *', formData.lastName)}
-                {renderField('Nom de naissance (si différent)', formData.birthName)}
-                {renderField(
-                  'Date de naissance *',
-                  formData.birthDate
-                    ? new Date(formData.birthDate).toLocaleDateString('fr-FR')
-                    : undefined
-                )}
-                {renderField('N° de sécurité sociale', formData.socialSecurityNumber)}
-                {renderField('Pays de naissance', formData.birthCountry, true)}
+                {renderField("Genre *", "gender")}
+                {renderField("Prénom *", "firstName")}
+                {renderField("Nom *", "lastName")}
+                {renderField("Nom de naissance (si différent)", "birthName")}
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">
+                    Date de naissance *
+                  </div>
+                  <div className="text-base text-gray-900">
+                    {formData.birthDate
+                      ? new Date(formData.birthDate).toLocaleDateString("fr-FR")
+                      : "-"}
+                  </div>
+                </div>
+                {renderField("N° de sécurité sociale", "socialSecurityNumber")}
+                {renderField("Pays de naissance", "birthCountry", true)}
 
                 <div className="col-span-2 my-4">
                   <Separator />
                 </div>
 
                 {/* Coordonnées */}
-                {renderField('Email *', formData.email)}
-                {renderField('Tél principal *', formData.phone)}
-                {renderField('Tél secondaire', formData.secondaryPhone)}
-                {renderField('Code postal *', formData.postalCode)}
-                {renderField('Adresse', formData.address, true)}
-                {renderField('Complément d\'adresse', formData.addressComplement, true)}
-                {renderField('Commune', formData.city)}
-                {renderField('Commune INSEE', formData.inseeCity)}
-                {renderField('Bureau distributeur', formData.distributionOffice, true)}
-                {renderField('Déplacement', formData.transportMode)}
-                {renderField('Cours', formData.courseLocation)}
-                {renderField('Adresse secondaire', formData.secondaryAddress, true)}
+                {renderField("Email *", "email")}
+                {renderField("Tél principal *", "phone")}
+                {renderField("Tél secondaire", "secondaryPhone")}
+                {renderField("Code postal *", "primaryAddress.postalCode")}
+                {renderField("Adresse", "primaryAddress.street", true)}
+                {renderField(
+                  "Complément d'adresse",
+                  "primaryAddress.addressComplement",
+                  true
+                )}
+                {renderField("Commune", "primaryAddress.city")}
+                {renderField("Mode de déplacement", "transportMode")}
+                {renderField("Cours", "courseLocation")}
+
+                <div className="col-span-2 my-4">
+                  <Separator />
+                  <div className="text-sm font-medium text-gray-700 mt-4 mb-2">
+                    Adresse secondaire
+                  </div>
+                  <Alert className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Remplir uniquement si vous souhaitez donner des cours dans un autre département
+                    </AlertDescription>
+                  </Alert>
+                </div>
+
+                {renderField(
+                  "Code postal secondaire",
+                  "secondaryAddress.postalCode"
+                )}
+                {renderField(
+                  "Adresse secondaire",
+                  "secondaryAddress.street",
+                  true
+                )}
+                {renderField(
+                  "Complément d'adresse",
+                  "secondaryAddress.addressComplement",
+                  true
+                )}
+                {renderField("Commune", "secondaryAddress.city")}
               </div>
             )}
           </div>
@@ -631,7 +1048,8 @@ export const MonProfil: React.FC = () => {
                 </div>
               ) : documents.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
-                  Vous n'avez pas encore de document. Commencez par en uploader un ci-dessus.
+                  Vous n'avez pas encore de document. Commencez par en uploader
+                  un ci-dessus.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -675,11 +1093,14 @@ export const MonProfil: React.FC = () => {
                             {formatFileSize(doc.size)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(doc.uploadDate).toLocaleDateString('fr-FR', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
+                            {new Date(doc.uploadDate).toLocaleDateString(
+                              "fr-FR",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                             <div className="flex justify-end gap-2">
@@ -692,7 +1113,9 @@ export const MonProfil: React.FC = () => {
                                 <Eye className="w-4 h-4" />
                               </Button>
                               <Button
-                                onClick={() => handleDownload(doc._id, doc.filename)}
+                                onClick={() =>
+                                  handleDownload(doc._id, doc.filename)
+                                }
                                 variant="outline"
                                 size="sm"
                                 title="Télécharger"
@@ -700,7 +1123,9 @@ export const MonProfil: React.FC = () => {
                                 <Download className="w-4 h-4" />
                               </Button>
                               <Button
-                                onClick={() => handleDelete(doc._id, doc.filename)}
+                                onClick={() =>
+                                  handleDelete(doc._id, doc.filename)
+                                }
                                 variant="outline"
                                 size="sm"
                                 title="Supprimer"
@@ -721,8 +1146,10 @@ export const MonProfil: React.FC = () => {
             {/* Note d'information */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-700">
-                💡 <strong>Astuce :</strong> Gardez vos documents à jour pour faciliter les démarches administratives.
-                Vos documents sont sécurisés et accessibles uniquement par vous et les administrateurs.
+                💡 <strong>Astuce :</strong> Gardez vos documents à jour pour
+                faciliter les démarches administratives. Vos documents sont
+                sécurisés et accessibles uniquement par vous et les
+                administrateurs.
               </p>
             </div>
           </div>
@@ -732,9 +1159,12 @@ export const MonProfil: React.FC = () => {
         <TabsContent value="choix" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Mes matières enseignées</CardTitle>
+              <CardTitle className="text-2xl">
+                Mes matières enseignées
+              </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Sélectionnez les matières que vous enseignez et les niveaux correspondants
+                Sélectionnez les matières que vous enseignez et les niveaux
+                correspondants
               </p>
             </CardHeader>
 
@@ -753,7 +1183,8 @@ export const MonProfil: React.FC = () => {
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    {invalidCount} matière(s) sélectionnée(s) sans niveaux. Veuillez sélectionner au moins un niveau par matière.
+                    {invalidCount} matière(s) sélectionnée(s) sans niveaux.
+                    Veuillez sélectionner au moins un niveau par matière.
                   </AlertDescription>
                 </Alert>
               )}
@@ -774,14 +1205,15 @@ export const MonProfil: React.FC = () => {
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Aucune matière disponible pour le moment. Veuillez contacter l'administrateur.
+                    Aucune matière disponible pour le moment. Veuillez contacter
+                    l'administrateur.
                   </AlertDescription>
                 </Alert>
               )}
 
               {/* Liste des matières */}
               <div className="space-y-4">
-                {allSubjects.map(subject => {
+                {allSubjects.map((subject) => {
                   const isSelected = isSubjectSelected(subject._id);
                   const selectedGrades = getGradesForSubject(subject._id);
 
@@ -789,7 +1221,9 @@ export const MonProfil: React.FC = () => {
                     <div
                       key={subject._id}
                       className={`border rounded-lg p-4 transition-colors ${
-                        isSelected ? 'border-primary bg-accent/50' : 'border-border'
+                        isSelected
+                          ? "border-primary bg-accent/50"
+                          : "border-border"
                       }`}
                     >
                       <div className="flex items-center gap-4">
@@ -805,7 +1239,9 @@ export const MonProfil: React.FC = () => {
                           {subject.name}
                         </Label>
                         {isSelected && selectedGrades.length > 0 && (
-                          <Badge variant="secondary">{selectedGrades.length} niveau(x)</Badge>
+                          <Badge variant="secondary">
+                            {selectedGrades.length} niveau(x)
+                          </Badge>
                         )}
                       </div>
 
@@ -813,13 +1249,140 @@ export const MonProfil: React.FC = () => {
                       {isSelected && (
                         <SubjectLevelsSelector
                           selectedGrades={selectedGrades}
-                          onChange={grades => handleGradesChange(subject._id, grades)}
+                          onChange={(grades) =>
+                            handleGradesChange(subject._id, grades)
+                          }
                         />
                       )}
                     </div>
                   );
                 })}
               </div>
+
+              {/* Matières personnalisées */}
+              {teachingSubjects.filter((ts) => ts.isCustom).length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-base font-medium">
+                      Matières personnalisées
+                    </Label>
+                    <Badge variant="outline" className="text-xs">
+                      {teachingSubjects.filter((ts) => ts.isCustom).length}
+                    </Badge>
+                  </div>
+
+                  {teachingSubjects
+                    .filter((ts) => ts.isCustom)
+                    .map((customSubject) => {
+                      const selectedGrades = getGradesForSubject(
+                        customSubject.subjectId
+                      );
+
+                      return (
+                        <div
+                          key={customSubject.subjectId}
+                          className="border border-primary rounded-lg p-4 bg-surface-tertiary"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base font-medium">
+                                {customSubject.subjectName}
+                              </span>
+                              <Badge variant="secondary" className="text-xs">
+                                Matière personnalisée
+                              </Badge>
+                              {selectedGrades.length > 0 && (
+                                <Badge variant="outline" className="text-xs">
+                                  {selectedGrades.length} niveau(x)
+                                </Badge>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                handleRemoveCustomSubject(
+                                  customSubject.subjectId
+                                )
+                              }
+                              className="h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+
+                          <SubjectLevelsSelector
+                            selectedGrades={selectedGrades}
+                            onChange={(grades) =>
+                              handleGradesChange(
+                                customSubject.subjectId,
+                                grades
+                              )
+                            }
+                          />
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+
+              {/* Formulaire d'ajout de matière personnalisée */}
+              {!isAddingCustomSubject ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAddingCustomSubject(true)}
+                  className="w-full"
+                >
+                  Autre
+                </Button>
+              ) : (
+                <div className="border border-border rounded-lg p-4 bg-surface-tertiary">
+                  <Label htmlFor="customSubjectName" className="text-base mb-2">
+                    Nom de la matière
+                  </Label>
+                  <Input
+                    id="customSubjectName"
+                    type="text"
+                    placeholder="Ex: Latin, Grec ancien, etc."
+                    value={customSubjectName}
+                    onChange={(e) => setCustomSubjectName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddCustomSubject();
+                      } else if (e.key === "Escape") {
+                        setIsAddingCustomSubject(false);
+                        setCustomSubjectName("");
+                      }
+                    }}
+                    className="mb-3"
+                    minLength={2}
+                    required
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleAddCustomSubject}
+                      disabled={!customSubjectName.trim()}
+                      size="sm"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Ajouter
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsAddingCustomSubject(false);
+                        setCustomSubjectName("");
+                      }}
+                      size="sm"
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Annuler
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <Separator />
 
@@ -838,7 +1401,7 @@ export const MonProfil: React.FC = () => {
                   disabled={!hasValidSelection() || isSaving}
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {isSaving ? 'Enregistrement...' : 'Enregistrer mes choix'}
+                  {isSaving ? "Enregistrement..." : "Enregistrer mes choix"}
                 </Button>
               </div>
             </CardContent>
@@ -850,14 +1413,17 @@ export const MonProfil: React.FC = () => {
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Déplacements</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Déplacements
+                </h3>
                 <p className="text-sm text-gray-500">
-                  Départements où vous pouvez vous déplacer pour donner des cours
+                  Départements où vous pouvez vous déplacer pour donner des
+                  cours
                 </p>
               </div>
-              {!isSimulationMode && editingTab !== 'deplacements' && (
+              {!isSimulationMode && editingTab !== "deplacements" && (
                 <button
-                  onClick={() => setEditingTab('deplacements')}
+                  onClick={() => setEditingTab("deplacements")}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
                 >
                   Modifier ✏️
@@ -865,33 +1431,138 @@ export const MonProfil: React.FC = () => {
               )}
             </div>
 
-            {editingTab === 'deplacements' ? (
+            {editingTab === "deplacements" ? (
               <>
-                <div className="grid grid-flow-col grid-rows-[repeat(101,minmax(0,1fr))] sm:grid-rows-[repeat(51,minmax(0,1fr))] lg:grid-rows-[repeat(34,minmax(0,1fr))] gap-3 auto-cols-fr">
-                  {FRENCH_DEPARTMENTS.map((dept) => (
-                    <div key={dept.code} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`dept-${dept.code}`}
-                        checked={formData.availableDepartments?.includes(dept.code) || false}
-                        onCheckedChange={() => toggleDepartment(dept.code)}
-                      />
-                      <Label
-                        htmlFor={`dept-${dept.code}`}
-                        className="text-sm cursor-pointer"
-                      >
-                        {dept.code} - {dept.name}
-                      </Label>
+                {/* Bouton pour afficher le combobox */}
+                {!showDepartmentCombobox && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDepartmentCombobox(true)}
+                    className="mb-4"
+                  >
+                    Ajouter d'autres départements
+                  </Button>
+                )}
+
+                {/* Combobox (affiché conditionnellement) */}
+                {showDepartmentCombobox && (
+                  <div className="mb-4">
+                    <DepartmentCombobox
+                      open={showDepartmentCombobox}
+                      onOpenChange={setShowDepartmentCombobox}
+                      onSelect={(code) => toggleDepartment(code)}
+                      selectedCodes={formData.availableDepartments || []}
+                    />
+                  </div>
+                )}
+
+                {/* Pour chaque département sélectionné, afficher les communes */}
+                {formData.availableDepartments?.map((deptCode) => {
+                  const dept = FRENCH_DEPARTMENTS.find(
+                    (d) => d.code === deptCode
+                  );
+                  const selectedCities = getCommunesForDepartment(deptCode);
+                  const communes = communesByDept[deptCode] || [];
+                  const isProtected = getProtectedDepartments().includes(
+                    deptCode
+                  );
+
+                  return (
+                    <div key={deptCode} className="border rounded-lg p-4 mb-4">
+                      {/* Titre du département */}
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium text-gray-900">
+                          {deptCode} - {dept?.name || "Inconnu"}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">
+                            {selectedCities.length} commune(s)
+                          </Badge>
+                          {!isProtected && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleRemoveDepartment(deptCode)}
+                              title="Supprimer ce département"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Communes sélectionnées */}
+                      {selectedCities.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {selectedCities.map((cityCode) => {
+                            const commune = communes.find(
+                              (c) => c.code === cityCode
+                            );
+                            return (
+                              <Badge
+                                key={cityCode}
+                                variant="secondary"
+                                className="flex items-center gap-1 pr-1"
+                              >
+                                {commune
+                                  ? getCommuneDisplayName(commune)
+                                  : cityCode}
+                                <button
+                                  onClick={() => toggleCity(cityCode)}
+                                  className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                                  title="Retirer cette commune"
+                                >
+                                  <XIcon className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Bouton "Sélection des communes" */}
+                      {!showCommuneCombobox[deptCode] && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            loadCommunesForDepartment(deptCode);
+                            setShowCommuneCombobox((prev) => ({
+                              ...prev,
+                              [deptCode]: true,
+                            }));
+                          }}
+                        >
+                          Sélection des communes
+                        </Button>
+                      )}
+
+                      {/* Combobox de communes */}
+                      {showCommuneCombobox[deptCode] && (
+                        <CommuneCombobox
+                          departmentCode={deptCode}
+                          open={showCommuneCombobox[deptCode]}
+                          onOpenChange={(open) =>
+                            setShowCommuneCombobox((prev) => ({
+                              ...prev,
+                              [deptCode]: open,
+                            }))
+                          }
+                          onSelect={(cityCode) => toggleCity(cityCode)}
+                          selectedCodes={selectedCities}
+                        />
+                      )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
 
                 <div className="flex gap-3 mt-6">
                   <button
-                    onClick={() => handleSave('deplacements')}
+                    onClick={() => handleSave("deplacements")}
                     disabled={isSaving}
                     className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
                   >
-                    {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+                    {isSaving ? "Enregistrement..." : "Sauvegarder"}
                   </button>
                   <button
                     onClick={handleCancel}
@@ -903,16 +1574,41 @@ export const MonProfil: React.FC = () => {
               </>
             ) : (
               <div>
-                {formData.availableDepartments && formData.availableDepartments.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {formData.availableDepartments.map((code) => {
-                      const dept = FRENCH_DEPARTMENTS.find((d) => d.code === code);
+                {formData.availableDepartments &&
+                formData.availableDepartments.length > 0 ? (
+                  <div className="space-y-4">
+                    {formData.availableDepartments.map((deptCode) => {
+                      const dept = FRENCH_DEPARTMENTS.find(
+                        (d) => d.code === deptCode
+                      );
+                      const selectedCities = getCommunesForDepartment(deptCode);
+                      const communes = communesByDept[deptCode] || [];
+
                       return (
-                        <div key={code} className="flex items-center space-x-2">
-                          <span className="text-blue-600">✓</span>
-                          <span className="text-sm text-gray-900">
-                            {code} - {dept?.name || 'Inconnu'}
-                          </span>
+                        <div key={deptCode} className="mb-4">
+                          <div className="text-sm font-medium text-gray-700 mb-2">
+                            {deptCode} - {dept?.name}
+                          </div>
+                          {selectedCities.length > 0 ? (
+                            <div className="flex flex-wrap gap-2 ml-4">
+                              {selectedCities.map((cityCode) => {
+                                const commune = communes.find(
+                                  (c) => c.code === cityCode
+                                );
+                                return (
+                                  <Badge key={cityCode} variant="default">
+                                    {commune
+                                      ? getCommuneDisplayName(commune)
+                                      : cityCode}
+                                  </Badge>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500 ml-4">
+                              Aucune commune sélectionnée
+                            </p>
+                          )}
                         </div>
                       );
                     })}
@@ -932,14 +1628,16 @@ export const MonProfil: React.FC = () => {
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Statut d'emploi</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Statut d'emploi
+                </h3>
                 <p className="text-sm text-gray-500">
                   Votre statut professionnel
                 </p>
               </div>
-              {!isSimulationMode && editingTab !== 'status' && (
+              {!isSimulationMode && editingTab !== "status" && (
                 <button
-                  onClick={() => setEditingTab('status')}
+                  onClick={() => setEditingTab("status")}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
                 >
                   Modifier ✏️
@@ -947,7 +1645,7 @@ export const MonProfil: React.FC = () => {
               )}
             </div>
 
-            {editingTab === 'status' ? (
+            {editingTab === "status" ? (
               <>
                 <div className="space-y-6">
                   <div>
@@ -955,27 +1653,34 @@ export const MonProfil: React.FC = () => {
                       Statut professionnel *
                     </label>
                     <select
-                      value={formData.employmentStatus || ''}
+                      value={formData.employmentStatus || ""}
                       onChange={(e) =>
-                        handleInputChange('employmentStatus', e.target.value as EmploymentStatus)
+                        handleInputChange(
+                          "employmentStatus",
+                          e.target.value as EmploymentStatus
+                        )
                       }
                       className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     >
                       <option value="">Sélectionner...</option>
                       <option value="salarie">Salarié</option>
-                      <option value="auto-entrepreneur">Auto-entrepreneur</option>
+                      <option value="auto-entrepreneur">
+                        Auto-entrepreneur
+                      </option>
                     </select>
                   </div>
 
-                  {formData.employmentStatus === 'auto-entrepreneur' && (
+                  {formData.employmentStatus === "auto-entrepreneur" && (
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">
                         SIRET * (14 chiffres)
                       </label>
                       <input
                         type="text"
-                        value={formData.siret || ''}
-                        onChange={(e) => handleInputChange('siret', e.target.value)}
+                        value={formData.siret || ""}
+                        onChange={(e) =>
+                          handleInputChange("siret", e.target.value)
+                        }
                         pattern="[0-9]{14}"
                         title="14 chiffres requis"
                         maxLength={14}
@@ -988,11 +1693,11 @@ export const MonProfil: React.FC = () => {
 
                 <div className="flex gap-3 mt-6">
                   <button
-                    onClick={() => handleSave('status')}
+                    onClick={() => handleSave("status")}
                     disabled={isSaving}
                     className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
                   >
-                    {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+                    {isSaving ? "Enregistrement..." : "Sauvegarder"}
                   </button>
                   <button
                     onClick={handleCancel}
@@ -1005,21 +1710,23 @@ export const MonProfil: React.FC = () => {
             ) : (
               <div className="space-y-6">
                 <div>
-                  <div className="text-xs text-gray-500 mb-1">Statut professionnel</div>
+                  <div className="text-xs text-gray-500 mb-1">
+                    Statut professionnel
+                  </div>
                   <div className="text-base text-gray-900">
-                    {formData.employmentStatus === 'salarie'
-                      ? 'Salarié'
-                      : formData.employmentStatus === 'auto-entrepreneur'
-                      ? 'Auto-entrepreneur'
-                      : '-'}
+                    {formData.employmentStatus === "salarie"
+                      ? "Salarié"
+                      : formData.employmentStatus === "auto-entrepreneur"
+                      ? "Auto-entrepreneur"
+                      : "-"}
                   </div>
                 </div>
 
-                {formData.employmentStatus === 'auto-entrepreneur' && (
+                {formData.employmentStatus === "auto-entrepreneur" && (
                   <div>
                     <div className="text-xs text-gray-500 mb-1">SIRET</div>
                     <div className="text-base text-gray-900 font-mono">
-                      {formData.siret || '-'}
+                      {formData.siret || "-"}
                     </div>
                   </div>
                 )}
