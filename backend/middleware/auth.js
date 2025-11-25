@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const Professor = require("../models/Professor");
+const Admin = require("../models/Admin");
 
 // Middleware pour vérifier le token JWT
 const authenticateToken = async (req, res, next) => {
@@ -12,7 +13,13 @@ const authenticateToken = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select("-password");
+
+    // Chercher dans Professor d'abord, puis dans Admin
+    let user = await Professor.findById(decoded.userId).select("-password");
+
+    if (!user) {
+      user = await Admin.findById(decoded.userId).select("-password");
+    }
 
     if (!user) {
       return res.status(401).json({ message: "Utilisateur non trouvé" });

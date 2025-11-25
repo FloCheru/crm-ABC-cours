@@ -1,92 +1,110 @@
- Erreur dans FamilyService.addStudent: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
-[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
-[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0] Erreur lors de l'ajout de l'élève: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
-[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
-[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0] ::1 - - [23/Nov/2025:21:47:39 +0000] "POST /api/families/69237bda8b29ccda2ae39901/students HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-[0] Erreur dans FamilyService.addStudent: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
-[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
-[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0] Erreur lors de l'ajout de l'élève: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
-[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
-[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0] ::1 - - [23/Nov/2025:21:47:40 +0000] "POST /api/families/69237bda8b29ccda2ae39901/students HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-[0] Erreur dans FamilyService.addStudent: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
-[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
-[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0] ::1 - - [23/Nov/2025:21:47:42 +0000] "POST /api/families/69237bda8b29ccda2ae39901/students HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-[0] Erreur lors de l'ajout de l'élève: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
-[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
-[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0] Erreur dans FamilyService.addStudent: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
-[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
-[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0] ::1 - - [23/Nov/2025:21:47:47 +0000] "POST /api/families/69237bda8b29ccda2ae39901/students HTTP/1.1" 500 28 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-[0] Erreur lors de l'ajout de l'élève: Error: Si l'école ou la classe est fournie, les deux champs sont obligatoires
-[0]     at FamilyService.validateStudentData (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:491:13)
-[0]     at FamilyService.addStudent (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\services\familyService.js:544:12)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\families.js:379:40
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\middleware\auth.js:82:5
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
-[0]     at next (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:149:13)
-[0]     at Route.dispatch (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\route.js:119:3)
-[0]     at Layer.handle [as handle_request] (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\express@4.21.2\node_modules\express\lib\router\layer.js:95:5)
+[MonProfil] Sauvegarde du profil... informations {rating: {…}, _id: '69257e5963045bd1a7de0208', email: 'prof@abc-cours.fr', role: 'professor', isActive: true, …}
+professorService.ts:230 [professorService] updateMyProfile - Envoi des données au backend
+logger.ts:36 [2025-11-25T10:12:29.624Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-11-25T10:12:29.625Z] [DEBUG] URL: http://localhost:3000/api/professors/me
+logger.ts:36 [2025-11-25T10:12:29.625Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-11-25T10:12:29.625Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+logger.ts:36 [2025-11-25T10:12:29.705Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-11-25T10:12:29.705Z] [DEBUG] Status: 200
+logger.ts:36 [2025-11-25T10:12:29.705Z] [DEBUG] Status Text: OK
+logger.ts:36 [2025-11-25T10:12:29.705Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
+logger.ts:36 [2025-11-25T10:12:29.705Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-11-25T10:12:29.707Z] [DEBUG] Réponse parsée: {professor: {…}}
+logger.ts:36 [2025-11-25T10:12:29.707Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-11-25T10:12:29.707Z] [DEBUG] URL: http://localhost:3000/api/professors/69257e5963045bd1a7de0208
+logger.ts:36 [2025-11-25T10:12:29.707Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-11-25T10:12:29.707Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+logger.ts:36 [2025-11-25T10:12:29.774Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-11-25T10:12:29.774Z] [DEBUG] Status: 200
+logger.ts:36 [2025-11-25T10:12:29.774Z] [DEBUG] Status Text: OK
+logger.ts:36 [2025-11-25T10:12:29.774Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
+logger.ts:36 [2025-11-25T10:12:29.775Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-11-25T10:12:29.776Z] [DEBUG] Réponse parsée: {message: 'Professeur mis à jour avec succès', professor: {…}}
+MonProfil.tsx:313 [MonProfil] ✅ Profil sauvegardé avec succès
+
+
+ 🔐 [LOGIN] Tentative de connexion pour: prof@abc-cours.fr
+[0] 🔑 [LOGIN] Mot de passe reçu: 123456
+[0] ✅ [LOGIN] Utilisateur trouvé: {
+[0]   type: 'Professor',
+[0]   email: 'prof@abc-cours.fr',
+[0]   id: new ObjectId('69257e5963045bd1a7de0208'),
+[0]   firstName: 'Prof',
+[0]   lastName: 'Test',
+[0]   isActive: true,
+[0]   hasPassword: true,
+[0]   passwordHash: '$2a$10$EY8vB81Hzi6Sv...'
+[0] }
+[0] 🔍 [LOGIN] Vérification du mot de passe...
+[0] 🔍 [LOGIN] Résultat de la comparaison: ✅ MATCH
+[0] ✅ [LOGIN] Connexion réussie pour: prof@abc-cours.fr - Token généré
+[0] ::1 - - [25/Nov/2025:10:12:01 +0000] "POST /api/auth/login HTTP/1.1" 200 382 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] ::1 - - [25/Nov/2025:10:12:01 +0000] "POST /api/auth/extend-session HTTP/1.1" 200 43 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] ::1 - - [25/Nov/2025:10:12:02 +0000] "POST /api/auth/extend-session HTTP/1.1" 200 43 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] [GET /me] 🔍 Route appelée
+[0] [GET /me] 👤 req.user: {
+[0]   _id: new ObjectId('69257e5963045bd1a7de0208'),
+[0]   email: 'prof@abc-cours.fr',
+[0]   role: 'professor',
+[0]   firstName: 'Prof',
+[0]   lastName: 'Test'
+[0] }
+[0] [GET /me] 🔑 req.user._id (type): object | valeur: new ObjectId('69257e5963045bd1a7de0208')
+[0] [GET /me] 📊 Résultat MongoDB: ✅ Professeur trouvé
+[0] [GET /me] 📋 Détails professor: {
+[0]   _id: new ObjectId('69257e5963045bd1a7de0208'),
+[0]   firstName: 'Prof',
+[0]   lastName: 'Test',
+[0]   email: 'prof@abc-cours.fr',
+[0]   subjects: 0
+[0] }
+[0] [GET /me] ✅ Retour 200 - Envoi du professeur au client
+[0] ::1 - - [25/Nov/2025:10:12:05 +0000] "GET /api/professors/me HTTP/1.1" 200 450 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] ::1 - - [25/Nov/2025:10:12:05 +0000] "POST /api/auth/extend-session HTTP/1.1" 200 43 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] 404 - Route non trouvée: GET /
+[0] ::1 - - [25/Nov/2025:10:12:05 +0000] "GET /api/professors/me/subjects HTTP/1.1" 404 32 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] [GET /me] 🔍 Route appelée
+[0] [GET /me] 👤 req.user: {
+[0]   _id: new ObjectId('69257e5963045bd1a7de0208'),
+[0]   email: 'prof@abc-cours.fr',
+[0]   role: 'professor',
+[0]   firstName: 'Prof',
+[0]   lastName: 'Test'
+[0] }
+[0] [GET /me] 🔑 req.user._id (type): object | valeur: new ObjectId('69257e5963045bd1a7de0208')
+[0] ::1 - - [25/Nov/2025:10:12:05 +0000] "GET /api/subjects HTTP/1.1" 304 - "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] [GET /me] 📊 Résultat MongoDB: ✅ Professeur trouvé
+[0] [GET /me] 📋 Détails professor: {
+[0]   _id: new ObjectId('69257e5963045bd1a7de0208'),
+[0]   firstName: 'Prof',
+[0]   lastName: 'Test',
+[0]   email: 'prof@abc-cours.fr',
+[0]   subjects: 0
+[0] }
+[0] [GET /me] ✅ Retour 200 - Envoi du professeur au client
+[0] ::1 - - [25/Nov/2025:10:12:05 +0000] "GET /api/professors/me HTTP/1.1" 200 450 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] 404 - Route non trouvée: GET /
+[0] ::1 - - [25/Nov/2025:10:12:05 +0000] "GET /api/professors/me/subjects HTTP/1.1" 404 32 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] ::1 - - [25/Nov/2025:10:12:05 +0000] "GET /api/subjects HTTP/1.1" 304 - "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] [GET /me] 🔍 Route appelée
+[0] [GET /me] 👤 req.user: {
+[0]   _id: new ObjectId('69257e5963045bd1a7de0208'),
+[0]   email: 'prof@abc-cours.fr',
+[0]   role: 'professor',
+[0]   firstName: 'Prof',
+[0]   lastName: 'Test'
+[0] }
+[0] [GET /me] 🔑 req.user._id (type): object | valeur: new ObjectId('69257e5963045bd1a7de0208')
+[0] [GET /me] 📊 Résultat MongoDB: ✅ Professeur trouvé
+[0] [GET /me] 📋 Détails professor: {
+[0]   _id: new ObjectId('69257e5963045bd1a7de0208'),
+[0]   firstName: 'Prof',
+[0]   lastName: 'Test',
+[0]   email: 'prof@abc-cours.fr',
+[0]   subjects: 0
+[0] }
+[0] [GET /me] ✅ Retour 200 - Envoi du professeur au client
+[0] ::1 - - [25/Nov/2025:10:12:29 +0000] "GET /api/professors/me HTTP/1.1" 304 - "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+[0] [PUT /professors/:id] Mise à jour du profil - ID: 69257e5963045bd1a7de0208
+[0] [PUT /professors/:id] ✅ Profil mis à jour avec succès
+[0] ::1 - - [25/Nov/2025:10:12:29 +0000] "PUT /api/professors/69257e5963045bd1a7de0208 HTTP/1.1" 200 582 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"

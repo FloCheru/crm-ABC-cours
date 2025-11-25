@@ -1,4 +1,5 @@
-const User = require("../models/User");
+const Professor = require("../models/Professor");
+const Admin = require("../models/Admin");
 
 class UserService {
   /**
@@ -8,11 +9,13 @@ class UserService {
    */
   static async checkEmailUniqueness(email) {
     try {
-      const existingUser = await User.findOne({
-        email: email.toLowerCase().trim()
-      });
+      const normalizedEmail = email.toLowerCase().trim();
 
-      return !existingUser; // Retourne true si aucun utilisateur trouvé (email unique)
+      // Vérifier dans Professor et Admin
+      const existingProfessor = await Professor.findOne({ email: normalizedEmail });
+      const existingAdmin = await Admin.findOne({ email: normalizedEmail });
+
+      return !existingProfessor && !existingAdmin; // Retourne true si aucun utilisateur trouvé (email unique)
     } catch (error) {
       console.error("Erreur lors de la vérification de l'unicité de l'email:", error);
       throw new Error("Erreur lors de la vérification de l'email");
@@ -25,7 +28,7 @@ class UserService {
    */
   static async getAdminUsers() {
     try {
-      const adminUsers = await User.find({ role: "admin" })
+      const adminUsers = await Admin.find({})
         .select("_id email firstName lastName role createdAt")
         .sort({ createdAt: -1 });
 

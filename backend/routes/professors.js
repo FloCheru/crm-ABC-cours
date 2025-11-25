@@ -3,7 +3,6 @@ const multer = require("multer");
 const path = require("path");
 const { body, validationResult } = require("express-validator");
 const Professor = require("../models/Professor");
-const User = require("../models/User");
 const { authenticate, authorize } = require("../middleware/auth");
 
 const router = express.Router();
@@ -101,6 +100,53 @@ router.get("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur lors de la récupération des professeurs:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// @route   GET /api/professors/me
+// @desc    Obtenir le profil du professeur connecté
+// @access  Private (Professor only)
+router.get("/me", authorize(["professor"]), async (req, res) => {
+  try {
+    console.log('[GET /me] 🔍 Route appelée');
+    console.log('[GET /me] 👤 req.user:', {
+      _id: req.user?._id,
+      email: req.user?.email,
+      role: req.user?.role,
+      firstName: req.user?.firstName,
+      lastName: req.user?.lastName
+    });
+    console.log('[GET /me] 🔑 req.user._id (type):', typeof req.user._id, '| valeur:', req.user._id);
+
+    const professor = await Professor.findById(req.user._id).populate(
+      "subjects",
+      "name category"
+    );
+
+    console.log('[GET /me] 📊 Résultat MongoDB:', professor ? '✅ Professeur trouvé' : '❌ Professeur NON trouvé');
+    if (professor) {
+      console.log('[GET /me] 📋 Détails professor:', {
+        _id: professor._id,
+        firstName: professor.firstName,
+        lastName: professor.lastName,
+        email: professor.email,
+        subjects: professor.subjects?.length || 0
+      });
+    } else {
+      console.log('[GET /me] ⚠️ Aucun professeur avec _id:', req.user._id);
+    }
+
+    if (!professor) {
+      console.log('[GET /me] 🚫 Retour 404 - Professeur non trouvé');
+      return res.status(404).json({ message: "Profil professeur non trouvé" });
+    }
+
+    console.log('[GET /me] ✅ Retour 200 - Envoi du professeur au client');
+    res.json({ professor });
+  } catch (error) {
+    console.error("[GET /me] ❌ Erreur catch:", error.message);
+    console.error("[GET /me] Stack:", error.stack);
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
@@ -239,6 +285,14 @@ router.put(
   ],
   async (req, res) => {
     try {
+      console.log("[PUT /professors/:id] Mise à jour du profil - ID:", req.params.id);
+
+      // Vérification de sécurité : un professeur ne peut modifier que son propre profil
+      if (req.user.role === "professor" && req.user._id.toString() !== req.params.id) {
+        console.log("[PUT /professors/:id] ❌ Accès refusé - Professeur:", req.user._id, "tentant de modifier:", req.params.id);
+        return res.status(403).json({ message: "Vous ne pouvez modifier que votre propre profil" });
+      }
+
       // Vérifier les erreurs de validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -258,12 +312,13 @@ router.put(
         return res.status(404).json({ message: "Professeur non trouvé" });
       }
 
+      console.log("[PUT /professors/:id] ✅ Profil mis à jour avec succès");
       res.json({
         message: "Professeur mis à jour avec succès",
         professor,
       });
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du professeur:", error);
+      console.error("[PUT /professors/:id] ❌ Erreur:", error.message);
       res.status(500).json({ message: "Erreur serveur" });
     }
   }
@@ -277,11 +332,23 @@ router.delete(
   authorize(["admin"]),
   async (req, res) => {
     try {
-      const professor = await Professor.findByIdAndDelete(req.params.id);
+      // Récupérer d'abord le professeur pour vérifier son email
+      const professor = await Professor.findById(req.params.id);
 
       if (!professor) {
         return res.status(404).json({ message: "Professeur non trouvé" });
       }
+
+      // Protection : bloquer la suppression du profil de test
+      if (professor.email === 'prof@abc-cours.fr') {
+        console.log("⚠️ Tentative de suppression du profil de test bloquée");
+        return res.status(403).json({
+          message: "Impossible de supprimer le profil de test. Ce profil est protégé."
+        });
+      }
+
+      // Supprimer le professeur
+      await Professor.findByIdAndDelete(req.params.id);
 
       res.json({
         message: "Professeur supprimé avec succès",

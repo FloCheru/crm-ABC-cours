@@ -510,6 +510,21 @@ export const MonProfil: React.FC = () => {
                   {renderEditField('Date de naissance *', 'birthDate', 'date')}
                   {renderEditField('N° de sécurité sociale', 'socialSecurityNumber')}
                   {renderEditField('Pays de naissance', 'birthCountry', 'text', undefined, true)}
+                  <div className="flex items-end gap-2">
+                    <Checkbox
+                      id="nativeLanguage"
+                      checked={formData.nativeLanguage || false}
+                      onCheckedChange={(checked) =>
+                        handleInputChange('nativeLanguage', checked)
+                      }
+                    />
+                    <Label
+                      htmlFor="nativeLanguage"
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      Langue maternelle
+                    </Label>
+                  </div>
 
                   <div className="col-span-2 my-4">
                     <Separator />
@@ -567,6 +582,12 @@ export const MonProfil: React.FC = () => {
                 )}
                 {renderField('N° de sécurité sociale', formData.socialSecurityNumber)}
                 {renderField('Pays de naissance', formData.birthCountry, true)}
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">Langue maternelle</div>
+                  <div className="text-base text-gray-900">
+                    {formData.nativeLanguage ? '✓ Oui' : '-'}
+                  </div>
+                </div>
 
                 <div className="col-span-2 my-4">
                   <Separator />

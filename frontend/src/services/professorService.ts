@@ -227,10 +227,15 @@ class ProfessorService {
    */
   async updateMyProfile(profileData: Partial<Professor>): Promise<Professor> {
     try {
-      const data = await apiClient.put<any>('/api/professors/me', profileData);
+      console.log('[professorService] updateMyProfile - Envoi des données au backend');
+
+      // Récupérer le profil actuel pour obtenir l'ID du professeur
+      const currentProfile = await this.getMyProfile();
+
+      const data = await apiClient.put<any>(`/api/professors/${currentProfile._id}`, profileData);
       return data.professor;
     } catch (error) {
-      console.error('Erreur updateMyProfile:', error);
+      console.error('[professorService] ❌ Erreur updateMyProfile:', error);
       throw error;
     }
   }

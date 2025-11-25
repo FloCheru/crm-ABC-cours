@@ -1,7 +1,37 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const professorSchema = new mongoose.Schema(
   {
+    // Authentification
+    email: {
+      type: String,
+      required: [true, "Email requis"],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Email invalide"],
+    },
+    password: {
+      type: String,
+      required: [true, "Mot de passe requis"],
+      minlength: [6, "Le mot de passe doit contenir au moins 6 caractères"],
+    },
+    role: {
+      type: String,
+      enum: ["professor"],
+      default: "professor",
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    lastLogin: {
+      type: Date,
+    },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
+
     // Informations personnelles - Identité
     gender: {
       type: String,
@@ -34,13 +64,6 @@ const professorSchema = new mongoose.Schema(
       trim: true,
     },
     // Informations de contact - Coordonnées
-    email: {
-      type: String,
-      required: [true, "Email requis"],
-      unique: true,
-      trim: true,
-      lowercase: true,
-    },
     phone: {
       type: String,
       trim: true,
@@ -49,29 +72,41 @@ const professorSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    postalCode: {
-      type: String,
-      trim: true,
+    primaryAddress: {
+      street: {
+        type: String,
+        trim: true,
+      },
+      addressComplement: {
+        type: String,
+        trim: true,
+      },
+      postalCode: {
+        type: String,
+        trim: true,
+      },
+      city: {
+        type: String,
+        trim: true,
+      },
     },
-    address: {
-      type: String,
-      trim: true,
-    },
-    addressComplement: {
-      type: String,
-      trim: true,
-    },
-    city: {
-      type: String,
-      trim: true,
-    },
-    inseeCity: {
-      type: String,
-      trim: true,
-    },
-    distributionOffice: {
-      type: String,
-      trim: true,
+    secondaryAddress: {
+      street: {
+        type: String,
+        trim: true,
+      },
+      addressComplement: {
+        type: String,
+        trim: true,
+      },
+      postalCode: {
+        type: String,
+        trim: true,
+      },
+      city: {
+        type: String,
+        trim: true,
+      },
     },
     transportMode: {
       type: String,
@@ -80,10 +115,6 @@ const professorSchema = new mongoose.Schema(
     courseLocation: {
       type: String,
       enum: ['domicile', 'visio', ''],
-      trim: true,
-    },
-    secondaryAddress: {
-      type: String,
       trim: true,
     },
     identifier: {
@@ -128,6 +159,10 @@ const professorSchema = new mongoose.Schema(
     },
     // Déplacements
     availableDepartments: [{
+      type: String,
+      trim: true,
+    }],
+    availableCities: [{
       type: String,
       trim: true,
     }],
@@ -272,6 +307,39 @@ const professorSchema = new mongoose.Schema(
 professorSchema.index({ email: 1 });
 professorSchema.index({ subjects: 1 });
 professorSchema.index({ status: 1 });
+professorSchema.index({ isActive: 1 });
+
+// Méthode pour hasher le mot de passe avant sauvegarde
+professorSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Méthode pour comparer les mots de passe
+professorSchema.methods.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Méthode pour obtenir le nom complet
+professorSchema.methods.getFullName = function () {
+  return `${this.firstName} ${this.lastName}`;
+};
+
+// Méthode pour masquer le mot de passe dans les réponses JSON
+professorSchema.methods.toJSON = function () {
+  const professor = this.toObject();
+  delete professor.password;
+  delete professor.resetPasswordToken;
+  delete professor.resetPasswordExpires;
+  return professor;
+};
 
 // Méthode pour calculer le rating moyen
 professorSchema.methods.updateRating = function (newRating) {

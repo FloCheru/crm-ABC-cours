@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 
 // Import du serveur backend et des utilitaires
 const NDR = require("../../../backend/models/NDR");
-const User = require("../../../backend/models/User");
+const Admin = require("../../../backend/models/Admin");
+const Professor = require("../../../backend/models/Professor");
 const Family = require("../../../backend/models/Family");
 const Subject = require("../../../backend/models/Subject");
 const testDataFactory = require("../../../backend/tests/utils/testDataFactory");
@@ -70,7 +71,7 @@ describe("E2E Integration: NdrService - Create NDR Workflow", () => {
     await TestSetup.beforeEach();
 
     const userData = testDataFactory.createTestAdmin();
-    testUser = await User.create(userData);
+    testUser = await Admin.create(userData);
 
     // Créer une famille de test avec étudiants
     const familyData = testDataFactory.createTestFamilyComplete(testUser._id);

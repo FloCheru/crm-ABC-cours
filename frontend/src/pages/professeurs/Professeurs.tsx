@@ -243,12 +243,23 @@ export const Professeurs: React.FC = () => {
     navigate(`/admin/professeur-details/${row._id}`);
   };
 
+  // Vérifier si un profil est protégé (profil de test)
+  const isTestProfile = (email: string) => email === 'prof@abc-cours.fr';
+
   // Gérer la suppression d'un professeur
   const handleDeleteTeacher = async (professorId: string) => {
     const teacher = teachers.find((t) => t._id === professorId);
     const fullName = teacher
       ? `${teacher.firstName} ${teacher.lastName}`
       : "ce professeur";
+
+    // Bloquer la suppression du profil de test
+    if (teacher && isTestProfile(teacher.email)) {
+      toast.error("Impossible de supprimer le profil de test", {
+        description: "Ce profil est protégé et ne peut pas être supprimé."
+      });
+      return;
+    }
 
     if (
       window.confirm(
@@ -531,7 +542,11 @@ export const Professeurs: React.FC = () => {
               e.stopPropagation();
               handleDeleteTeacher(row._id);
             }}
-            title="Supprimer le professeur"
+            disabled={isTestProfile(row.email)}
+            title={isTestProfile(row.email)
+              ? "Profil de test protégé - Suppression impossible"
+              : "Supprimer le professeur"
+            }
           >
             ✕
           </Button>

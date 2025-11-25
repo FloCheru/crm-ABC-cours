@@ -1,5 +1,6 @@
 const Family = require("../models/Family");
-const User = require("../models/User");
+const Professor = require("../models/Professor");
+const Admin = require("../models/Admin");
 const RendezVous = require("../models/RDV");
 const Ndr = require("../models/NDR");
 const Subject = require("../models/Subject");
@@ -45,11 +46,18 @@ class FamilyService {
       // Récupérer les IDs des matières pour populate
       const subjectIds = family.demande?.subjects?.map((s) => s.id) || [];
 
-      // Récupérer les données liées
-      const [createdByUser, rdvs, subjects] = await Promise.all([
-        User.findById(family.createdBy.userId)
+      // Récupérer l'utilisateur (Professor ou Admin)
+      let createdByUser = await Professor.findById(family.createdBy.userId)
+        .select("firstName lastName")
+        .lean();
+      if (!createdByUser) {
+        createdByUser = await Admin.findById(family.createdBy.userId)
           .select("firstName lastName")
-          .lean(),
+          .lean();
+      }
+
+      // Récupérer les données liées
+      const [rdvs, subjects] = await Promise.all([
         RendezVous.find({ familyId: family._id })
           .populate("assignedAdminId", "firstName lastName")
           .sort({ date: -1 })

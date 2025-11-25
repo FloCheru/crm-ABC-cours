@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 
 // Import du serveur backend et des utilitaires
 const Family = require("../../models/Family");
-const User = require("../../models/User");
+const Admin = require("../../models/Admin");
+const Professor = require("../../models/Professor");
 const testDataFactory = require("../utils/testDataFactory");
 const TestSetup = require("../utils/testSetup");
 
@@ -105,7 +106,7 @@ describe("E2E Integration: FamilyService Complete Workflow", () => {
     await TestSetup.beforeEach();
 
     const userData = testDataFactory.createTestAdmin();
-    testUser = await User.create(userData);
+    testUser = await Admin.create(userData);
   });
 
   describe("🔄 Complete Workflow: HTTP → Backend → MongoDB → Response", () => {

@@ -6,7 +6,8 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import { PageHeader } from "../../components";
+import { PageHeader, SummaryCard } from "../../components";
+import { CouponInputModal } from "../../components/domain/CouponInputModal";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -20,8 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import { Separator } from "../../components/ui/separator";
-import { Textarea } from "../../components/ui/textarea";
 import { professorService } from "../../services/professorService";
 import { couponService } from "../../services/couponService";
 import type { Coupon } from "../../types/coupon";
@@ -30,14 +29,14 @@ import type { UseCouponData } from "../../services/couponService";
 export const SaisieCoupons: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get('tab') || 'rib';
+  const tabFromUrl = searchParams.get("tab") || "rib";
   const [activeTab, setActiveTab] = useState(tabFromUrl);
 
   // États pour RIB
   const [ribData, setRibData] = useState({
-    bankName: '',
-    iban: '',
-    bic: '',
+    bankName: "",
+    iban: "",
+    bic: "",
   });
   const [isEditingRib, setIsEditingRib] = useState(false);
   const [isSavingRib, setIsSavingRib] = useState(false);
@@ -71,9 +70,12 @@ export const SaisieCoupons: React.FC = () => {
     status: "all" as "all" | "used" | "deleted",
   });
 
+  // État pour la modal de saisie
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Synchroniser l'onglet actif avec l'URL
   useEffect(() => {
-    const tab = searchParams.get('tab') || 'rib';
+    const tab = searchParams.get("tab") || "rib";
     setActiveTab(tab);
   }, [searchParams]);
 
@@ -93,13 +95,13 @@ export const SaisieCoupons: React.FC = () => {
 
       // Données mockées pour le moment
       const mockRibData = {
-        bankName: 'Banque Postale',
-        iban: 'FR76 1234 5678 9012 3456 7890 123',
-        bic: 'PSSTFRPPXXX',
+        bankName: "Banque Postale",
+        iban: "FR76 1234 5678 9012 3456 7890 123",
+        bic: "PSSTFRPPXXX",
       };
       setRibData(mockRibData);
     } catch (err) {
-      console.error('Erreur lors du chargement du RIB:', err);
+      console.error("Erreur lors du chargement du RIB:", err);
     }
   };
 
@@ -109,13 +111,13 @@ export const SaisieCoupons: React.FC = () => {
       // TODO: Appeler l'API pour sauvegarder le RIB
       // await professorService.updateMyRib(ribData);
 
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simuler API call
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Simuler API call
       setIsEditingRib(false);
       await checkRib(); // Revérifier le RIB après sauvegarde
-      alert('RIB enregistré avec succès !');
+      alert("RIB enregistré avec succès !");
     } catch (err) {
-      console.error('Erreur lors de la sauvegarde du RIB:', err);
-      alert('Erreur lors de la sauvegarde du RIB');
+      console.error("Erreur lors de la sauvegarde du RIB:", err);
+      alert("Erreur lors de la sauvegarde du RIB");
     } finally {
       setIsSavingRib(false);
     }
@@ -165,7 +167,16 @@ export const SaisieCoupons: React.FC = () => {
       if (filters.status !== "all") filterParams.status = filters.status;
 
       const coupons = await couponService.getMyCouponsHistory(filterParams);
-      setUsedCoupons(coupons);
+
+      // Filtrer pour afficher uniquement les coupons saisis aujourd'hui
+      const today = new Date().toISOString().split("T")[0]; // Format YYYY-MM-DD
+      const todayCoupons = coupons.filter((coupon) => {
+        if (!coupon.usedAt) return false;
+        const usedDate = new Date(coupon.usedAt).toISOString().split("T")[0];
+        return usedDate === today;
+      });
+
+      setUsedCoupons(todayCoupons);
     } catch (err) {
       console.error("Erreur lors du chargement de l'historique:", err);
       setUsedCoupons([]);
@@ -184,7 +195,9 @@ export const SaisieCoupons: React.FC = () => {
     e.preventDefault();
 
     if (!selectedCouponId || !sessionData.sessionDate) {
-      alert("Veuillez sélectionner un coupon et renseigner la date de la séance");
+      alert(
+        "Veuillez sélectionner un coupon et renseigner la date de la séance"
+      );
       return;
     }
 
@@ -211,6 +224,9 @@ export const SaisieCoupons: React.FC = () => {
       // Recharger les données
       await Promise.all([loadAvailableCoupons(), loadUsedCoupons()]);
 
+      // Fermer la modal
+      setIsModalOpen(false);
+
       alert("Coupon saisi avec succès !");
     } catch (err) {
       console.error("Erreur lors de la saisie du coupon:", err);
@@ -234,7 +250,9 @@ export const SaisieCoupons: React.FC = () => {
       await Promise.all([loadAvailableCoupons(), loadUsedCoupons()]);
     } catch (err) {
       console.error("Erreur lors de l'annulation:", err);
-      alert("Erreur lors de l'annulation. Ce coupon ne peut peut-être plus être annulé.");
+      alert(
+        "Erreur lors de l'annulation. Ce coupon ne peut peut-être plus être annulé."
+      );
     }
   };
 
@@ -288,10 +306,14 @@ export const SaisieCoupons: React.FC = () => {
       <PageHeader title="Saisie des coupons" />
 
       <div className="container mx-auto px-4 max-w-6xl py-8">
-        <Tabs value={activeTab} onValueChange={(tab: string) => {
-          setActiveTab(tab);
-          navigate(`?tab=${tab}`, { replace: true });
-        }} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(tab: string) => {
+            setActiveTab(tab);
+            navigate(`?tab=${tab}`, { replace: true });
+          }}
+          className="w-full"
+        >
           <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
             <TabsTrigger
               value="rib"
@@ -312,7 +334,9 @@ export const SaisieCoupons: React.FC = () => {
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Mon RIB</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Mon RIB
+                  </h3>
                   <p className="text-sm text-gray-500">
                     Vos coordonnées bancaires pour le paiement de vos cours
                   </p>
@@ -336,7 +360,9 @@ export const SaisieCoupons: React.FC = () => {
                         id="bankName"
                         type="text"
                         value={ribData.bankName}
-                        onChange={(e) => setRibData({ ...ribData, bankName: e.target.value })}
+                        onChange={(e) =>
+                          setRibData({ ...ribData, bankName: e.target.value })
+                        }
                         placeholder="Ex: Banque Postale"
                       />
                     </div>
@@ -347,7 +373,9 @@ export const SaisieCoupons: React.FC = () => {
                         id="iban"
                         type="text"
                         value={ribData.iban}
-                        onChange={(e) => setRibData({ ...ribData, iban: e.target.value })}
+                        onChange={(e) =>
+                          setRibData({ ...ribData, iban: e.target.value })
+                        }
                         placeholder="FR76 1234 5678 9012 3456 7890 123"
                         required
                       />
@@ -362,7 +390,9 @@ export const SaisieCoupons: React.FC = () => {
                         id="bic"
                         type="text"
                         value={ribData.bic}
-                        onChange={(e) => setRibData({ ...ribData, bic: e.target.value })}
+                        onChange={(e) =>
+                          setRibData({ ...ribData, bic: e.target.value })
+                        }
                         placeholder="PSSTFRPPXXX"
                         required
                       />
@@ -377,12 +407,9 @@ export const SaisieCoupons: React.FC = () => {
                       onClick={handleSaveRib}
                       disabled={isSavingRib || !ribData.iban || !ribData.bic}
                     >
-                      {isSavingRib ? 'Enregistrement...' : 'Sauvegarder'}
+                      {isSavingRib ? "Enregistrement..." : "Sauvegarder"}
                     </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleCancelRib}
-                    >
+                    <Button variant="outline" onClick={handleCancelRib}>
                       Annuler
                     </Button>
                   </div>
@@ -390,18 +417,28 @@ export const SaisieCoupons: React.FC = () => {
               ) : (
                 <div className="space-y-6">
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Nom de la banque</div>
-                    <div className="text-base text-gray-900">{ribData.bankName || '-'}</div>
+                    <div className="text-xs text-gray-500 mb-1">
+                      Nom de la banque
+                    </div>
+                    <div className="text-base text-gray-900">
+                      {ribData.bankName || "-"}
+                    </div>
                   </div>
 
                   <div>
                     <div className="text-xs text-gray-500 mb-1">IBAN</div>
-                    <div className="text-base text-gray-900 font-mono">{ribData.iban || '-'}</div>
+                    <div className="text-base text-gray-900 font-mono">
+                      {ribData.iban || "-"}
+                    </div>
                   </div>
 
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">BIC / SWIFT</div>
-                    <div className="text-base text-gray-900 font-mono">{ribData.bic || '-'}</div>
+                    <div className="text-xs text-gray-500 mb-1">
+                      BIC / SWIFT
+                    </div>
+                    <div className="text-base text-gray-900 font-mono">
+                      {ribData.bic || "-"}
+                    </div>
                   </div>
                 </div>
               )}
@@ -416,10 +453,10 @@ export const SaisieCoupons: React.FC = () => {
             ) : !hasValidRib ? (
               <Alert variant="destructive">
                 <AlertDescription>
-                  <strong>⚠️ RIB manquant</strong> : Vous devez renseigner votre RIB
-                  avant de pouvoir saisir des coupons.{" "}
+                  <strong>⚠️ RIB manquant</strong> : Vous devez renseigner votre
+                  RIB avant de pouvoir saisir des coupons.{" "}
                   <button
-                    onClick={() => setActiveTab('rib')}
+                    onClick={() => setActiveTab("rib")}
                     className="underline font-semibold"
                   >
                     → Ajouter mon RIB
@@ -429,232 +466,62 @@ export const SaisieCoupons: React.FC = () => {
             ) : null}
 
             {/* 📊 STATISTIQUES */}
-            <Card>
-              <CardHeader>
-                <h2 className="text-lg font-semibold">Statistiques</h2>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-3xl font-bold text-blue-600">
-                      {stats.availableCount}
-                    </div>
-                    <div className="text-sm text-gray-600">Coupons disponibles</div>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-3xl font-bold text-green-600">
-                      {stats.usedThisMonth}
-                    </div>
-                    <div className="text-sm text-gray-600">Saisis ce mois</div>
-                  </div>
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-3xl font-bold text-purple-600">
-                      {stats.totalAmountThisMonth.toFixed(2)} €
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      À facturer ce mois
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <SummaryCard
+              title="SUIVI"
+              metrics={[
+                {
+                  value: stats.usedThisMonth,
+                  label: "Coupons saisis",
+                  variant: "success",
+                },
+                {
+                  value: `${stats.totalAmountThisMonth.toFixed(2)} €`,
+                  label: "Montant à venir",
+                  variant: "primary",
+                },
+              ]}
+            />
 
-            {/* 🎟️ SECTION SAISIE */}
-            <Card>
-              <CardHeader>
-                <h2 className="text-lg font-semibold">Saisir un coupon</h2>
-              </CardHeader>
-              <CardContent>
-                {isLoadingAvailable ? (
-                  <div>Chargement des coupons disponibles...</div>
-                ) : availableCoupons.length === 0 ? (
-                  <div className="text-gray-500 text-center py-4">
-                    Aucun coupon disponible pour le moment.
-                  </div>
-                ) : (
-                  <form onSubmit={handleUseCoupon} className="space-y-4">
-                    {/* Sélection du coupon */}
-                    <div>
-                      <Label htmlFor="coupon-select">
-                        Sélectionner un coupon<span className="text-red-500">*</span>
-                      </Label>
-                      <Select
-                        value={selectedCouponId}
-                        onValueChange={setSelectedCouponId}
-                        disabled={!hasValidRib || isSubmitting}
-                      >
-                        <SelectTrigger id="coupon-select">
-                          <SelectValue placeholder="Choisir un coupon..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(groupedCoupons).map(([label, coupons]) => (
-                            <React.Fragment key={label}>
-                              <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100">
-                                {label} ({coupons.length} coupon{coupons.length > 1 ? "s" : ""})
-                              </div>
-                              {coupons.map((coupon) => (
-                                <SelectItem key={coupon._id} value={coupon._id}>
-                                  {coupon.code}
-                                </SelectItem>
-                              ))}
-                            </React.Fragment>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+            {/* 🎟️ BOUTON SAISIE */}
+            <div className="space-y-4">
+              {/* Case à cocher temporaire pour les tests */}
+              <div className="flex items-center space-x-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="force-rib-valid"
+                  checked={hasValidRib}
+                  onChange={(e) => setHasValidRib(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <Label
+                  htmlFor="force-rib-valid"
+                  className="text-sm font-medium text-gray-700 cursor-pointer"
+                >
+                  ⚠️ TEST : Rendre le RIB valide pour test
+                </Label>
+              </div>
 
-                    <Separator />
-
-                    {/* Date de la séance */}
-                    <div>
-                      <Label htmlFor="session-date">
-                        Date de la séance<span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="session-date"
-                        type="date"
-                        value={sessionData.sessionDate}
-                        onChange={(e) =>
-                          setSessionData({ ...sessionData, sessionDate: e.target.value })
-                        }
-                        min={sevenDaysAgo}
-                        max={today}
-                        required
-                        disabled={!hasValidRib || isSubmitting}
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Maximum 7 jours en arrière
-                      </p>
-                    </div>
-
-                    {/* Lieu de la séance */}
-                    <div>
-                      <Label htmlFor="session-location">
-                        Lieu de la séance<span className="text-red-500">*</span>
-                      </Label>
-                      <Select
-                        value={sessionData.sessionLocation}
-                        onValueChange={(value: "home" | "professor" | "online") =>
-                          setSessionData({ ...sessionData, sessionLocation: value })
-                        }
-                        disabled={!hasValidRib || isSubmitting}
-                      >
-                        <SelectTrigger id="session-location">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="home">Domicile de l'élève</SelectItem>
-                          <SelectItem value="professor">Mon domicile</SelectItem>
-                          <SelectItem value="online">En ligne</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Notes optionnelles */}
-                    <div>
-                      <Label htmlFor="session-notes">Notes (optionnel)</Label>
-                      <Textarea
-                        id="session-notes"
-                        value={sessionData.notes}
-                        onChange={(e) =>
-                          setSessionData({ ...sessionData, notes: e.target.value })
-                        }
-                        placeholder="Commentaires sur la séance..."
-                        rows={3}
-                        disabled={!hasValidRib || isSubmitting}
-                      />
-                    </div>
-
-                    {/* Bouton de validation */}
-                    <Button
-                      type="submit"
-                      disabled={
-                        !hasValidRib ||
-                        !selectedCouponId ||
-                        !sessionData.sessionDate ||
-                        isSubmitting
-                      }
-                      className="w-full"
-                    >
-                      {isSubmitting ? "Enregistrement..." : "Valider la saisie"}
-                    </Button>
-                  </form>
-                )}
-              </CardContent>
-            </Card>
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                disabled={!hasValidRib || isLoadingAvailable}
+                className="w-full md:w-auto"
+              >
+                Saisir un coupon
+              </Button>
+            </div>
 
             {/* 📋 SECTION HISTORIQUE */}
             <Card>
               <CardHeader>
-                <h2 className="text-lg font-semibold">Mes coupons saisis</h2>
+                <h2 className="text-lg font-semibold">Coupons saisis aujourd'hui</h2>
               </CardHeader>
               <CardContent>
-                {/* Filtres */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                  <div>
-                    <Label htmlFor="filter-start-date">Date de début</Label>
-                    <Input
-                      id="filter-start-date"
-                      type="date"
-                      value={filters.startDate}
-                      onChange={(e) =>
-                        setFilters({ ...filters, startDate: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="filter-end-date">Date de fin</Label>
-                    <Input
-                      id="filter-end-date"
-                      type="date"
-                      value={filters.endDate}
-                      onChange={(e) =>
-                        setFilters({ ...filters, endDate: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="filter-status">Statut</Label>
-                    <Select
-                      value={filters.status}
-                      onValueChange={(value: "all" | "used" | "deleted") =>
-                        setFilters({ ...filters, status: value })
-                      }
-                    >
-                      <SelectTrigger id="filter-status">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tous</SelectItem>
-                        <SelectItem value="used">Utilisés</SelectItem>
-                        <SelectItem value="deleted">Annulés</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-end">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setFilters({
-                          startDate: "",
-                          endDate: "",
-                          studentId: "",
-                          status: "all",
-                        });
-                      }}
-                      className="w-full"
-                    >
-                      Réinitialiser
-                    </Button>
-                  </div>
-                </div>
-
                 {/* Tableau */}
                 {isLoadingHistory ? (
                   <div>Chargement de l'historique...</div>
                 ) : usedCoupons.length === 0 ? (
                   <div className="text-gray-500 text-center py-8">
-                    Aucun coupon saisi pour le moment.
+                    Aucun coupon saisi aujourd'hui.
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -673,7 +540,10 @@ export const SaisieCoupons: React.FC = () => {
                       </thead>
                       <tbody>
                         {usedCoupons.map((coupon) => (
-                          <tr key={coupon._id} className="border-b hover:bg-gray-50">
+                          <tr
+                            key={coupon._id}
+                            className="border-b hover:bg-gray-50"
+                          >
                             <td className="p-3 font-mono">{coupon.code}</td>
                             <td className="p-3">{coupon.studentName || "-"}</td>
                             <td className="p-3">{coupon.subjectName || "-"}</td>
@@ -687,9 +557,11 @@ export const SaisieCoupons: React.FC = () => {
                             <td className="p-3">
                               {coupon.sessionData?.sessionLocation === "home"
                                 ? "Domicile élève"
-                                : coupon.sessionData?.sessionLocation === "professor"
+                                : coupon.sessionData?.sessionLocation ===
+                                  "professor"
                                 ? "Mon domicile"
-                                : coupon.sessionData?.sessionLocation === "online"
+                                : coupon.sessionData?.sessionLocation ===
+                                  "online"
                                 ? "En ligne"
                                 : "-"}
                             </td>
@@ -737,6 +609,24 @@ export const SaisieCoupons: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modal de saisie de coupon */}
+      <CouponInputModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        hasValidRib={hasValidRib}
+        availableCoupons={availableCoupons}
+        isLoadingAvailable={isLoadingAvailable}
+        selectedCouponId={selectedCouponId}
+        setSelectedCouponId={setSelectedCouponId}
+        sessionData={sessionData}
+        setSessionData={setSessionData}
+        isSubmitting={isSubmitting}
+        onSubmit={handleUseCoupon}
+        sevenDaysAgo={sevenDaysAgo}
+        today={today}
+        groupedCoupons={groupedCoupons}
+      />
     </>
   );
 };

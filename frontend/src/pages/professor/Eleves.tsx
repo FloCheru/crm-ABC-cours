@@ -39,16 +39,21 @@ import { useAuthStore } from "../../stores";
 export const Eleves: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get('tab') || 'liste';
+  const tabFromUrl = searchParams.get("tab") || "liste";
   const [activeTab, setActiveTab] = useState(tabFromUrl);
 
   // États pour l'onglet "Élèves"
   const [students, setStudents] = useState<StudentWithStats[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(true);
-  const [selectedStudent, setSelectedStudent] = useState<StudentWithStats | null>(null);
+  const [selectedStudent, setSelectedStudent] =
+    useState<StudentWithStats | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingComments, setEditingComments] = useState<Record<string, string>>({});
-  const [savingComments, setSavingComments] = useState<Record<string, boolean>>({});
+  const [editingComments, setEditingComments] = useState<
+    Record<string, string>
+  >({});
+  const [savingComments, setSavingComments] = useState<Record<string, boolean>>(
+    {}
+  );
 
   // États pour l'onglet "RDV"
   const [rdvs, setRdvs] = useState<RendezVous[]>([]);
@@ -59,7 +64,9 @@ export const Eleves: React.FC = () => {
 
   // États filtres RDV
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedStudentsFilter, setSelectedStudentsFilter] = useState<string[]>([]);
+  const [selectedStudentsFilter, setSelectedStudentsFilter] = useState<
+    string[]
+  >([]);
 
   // États modals RDV
   const [isRdvModalOpen, setIsRdvModalOpen] = useState(false);
@@ -80,7 +87,7 @@ export const Eleves: React.FC = () => {
 
   // Synchroniser l'onglet actif avec l'URL
   useEffect(() => {
-    const tab = searchParams.get('tab') || 'liste';
+    const tab = searchParams.get("tab") || "liste";
     setActiveTab(tab);
   }, [searchParams]);
 
@@ -133,7 +140,9 @@ export const Eleves: React.FC = () => {
   };
 
   // Formater le lieu du cours
-  const formatLocation = (location: "home" | "professor" | "online"): string => {
+  const formatLocation = (
+    location: "home" | "professor" | "online"
+  ): string => {
     const locations = {
       home: "À domicile",
       professor: "Chez le professeur",
@@ -278,16 +287,6 @@ export const Eleves: React.FC = () => {
     }
   };
 
-  const handleOpenDemandeModal = () => {
-    setDemandeData({
-      date: "",
-      time: "",
-      type: "physique",
-      notes: "",
-    });
-    setIsDemandeModalOpen(true);
-  };
-
   const handleCloseDemandeModal = () => {
     setIsDemandeModalOpen(false);
   };
@@ -385,10 +384,14 @@ export const Eleves: React.FC = () => {
       <PageHeader title="Mes Élèves" />
 
       <div className="container mx-auto px-4 max-w-6xl py-8">
-        <Tabs value={activeTab} onValueChange={(tab: string) => {
-          setActiveTab(tab);
-          navigate(`?tab=${tab}`, { replace: true });
-        }} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(tab: string) => {
+            setActiveTab(tab);
+            navigate(`?tab=${tab}`, { replace: true });
+          }}
+          className="w-full"
+        >
           <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
             <TabsTrigger
               value="liste"
@@ -417,17 +420,23 @@ export const Eleves: React.FC = () => {
               <CardContent className="pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div>
-                    <p className="text-sm text-muted-foreground">Nombre d'élèves</p>
+                    <p className="text-sm text-muted-foreground">
+                      Nombre d'élèves
+                    </p>
                     <p className="text-2xl font-bold">{students.length}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Élèves actifs</p>
+                    <p className="text-sm text-muted-foreground">
+                      Élèves actifs
+                    </p>
                     <p className="text-2xl font-bold text-green-600">
                       {students.filter((s) => s.isActive).length}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total de cours</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total de cours
+                    </p>
                     <p className="text-2xl font-bold">
                       {students.reduce((sum, s) => sum + s.totalSessions, 0)}
                     </p>
@@ -459,7 +468,9 @@ export const Eleves: React.FC = () => {
                           <TableHead>Prénom</TableHead>
                           <TableHead>Niveau</TableHead>
                           <TableHead>Matière(s)</TableHead>
-                          <TableHead className="text-center">Nb cours</TableHead>
+                          <TableHead className="text-center">
+                            Nb cours
+                          </TableHead>
                           <TableHead>Dernier cours</TableHead>
                           <TableHead className="text-center">Statut</TableHead>
                           <TableHead className="text-center">Actions</TableHead>
@@ -498,7 +509,10 @@ export const Eleves: React.FC = () => {
                             </TableCell>
                             <TableCell className="text-center">
                               {student.isActive ? (
-                                <Badge variant="default" className="bg-green-600">
+                                <Badge
+                                  variant="default"
+                                  className="bg-green-600"
+                                >
                                   Actif
                                 </Badge>
                               ) : (
@@ -529,9 +543,12 @@ export const Eleves: React.FC = () => {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center py-12 text-gray-500">
-                  <p className="text-lg font-semibold mb-2">Fonctionnalité en développement</p>
+                  <p className="text-lg font-semibold mb-2">
+                    Fonctionnalité en développement
+                  </p>
                   <p className="text-sm">
-                    Cette section permettra de consulter le bilan pédagogique de vos élèves.
+                    Cette section permettra de consulter le bilan pédagogique de
+                    vos élèves.
                   </p>
                 </div>
               </CardContent>
@@ -549,18 +566,14 @@ export const Eleves: React.FC = () => {
                 >
                   + Ajouter un RDV avec un élève
                 </button>
-                <button
-                  onClick={handleOpenDemandeModal}
-                  className="px-4 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 flex items-center gap-2"
-                >
-                  📩 Demander un RDV admin
-                </button>
               </div>
             </div>
 
             {/* Section Filtres */}
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Filtres</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Filtres
+              </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -598,7 +611,9 @@ export const Eleves: React.FC = () => {
                           <Checkbox
                             id={`student-${studentId}`}
                             checked={selectedStudentsFilter.includes(studentId)}
-                            onCheckedChange={() => toggleStudentFilter(studentId)}
+                            onCheckedChange={() =>
+                              toggleStudentFilter(studentId)
+                            }
                           />
                           <label
                             htmlFor={`student-${studentId}`}
@@ -846,7 +861,9 @@ export const Eleves: React.FC = () => {
                               <TableCell>
                                 <div className="space-y-2 min-w-[250px]">
                                   <Textarea
-                                    value={editingComments[session.couponId] || ""}
+                                    value={
+                                      editingComments[session.couponId] || ""
+                                    }
                                     onChange={(e) =>
                                       handleCommentChange(
                                         session.couponId,

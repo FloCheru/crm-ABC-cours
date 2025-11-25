@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const RendezVous = require('../models/RDV');
 const Family = require('../models/Family');
-const User = require('../models/User');
+const Admin = require('../models/Admin');
 const { authenticateToken, authorize } = require('../middleware/auth');
 
 // Middleware pour toutes les routes RDV
@@ -111,10 +111,10 @@ router.post('/', authorize(['admin']), async (req, res) => {
       return res.status(404).json({ message: 'Famille non trouvée' });
     }
 
-    // Vérifier que l'admin existe et a le bon rôle
-    const admin = await User.findById(assignedAdminId);
-    if (!admin || admin.role !== 'admin') {
-      return res.status(404).json({ message: 'Administrateur non trouvé ou rôle invalide' });
+    // Vérifier que l'admin existe
+    const admin = await Admin.findById(assignedAdminId);
+    if (!admin) {
+      return res.status(404).json({ message: 'Administrateur non trouvé' });
     }
 
     // Créer le RDV
