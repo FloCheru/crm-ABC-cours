@@ -14,8 +14,11 @@ const professorSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Mot de passe requis"],
       minlength: [6, "Le mot de passe doit contenir au moins 6 caractères"],
+    },
+    isPasswordSet: {
+      type: Boolean,
+      default: false,
     },
     role: {
       type: String,

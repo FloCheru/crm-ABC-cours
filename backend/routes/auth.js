@@ -180,6 +180,14 @@ router.post(
         return res.status(401).json({ message: "Compte désactivé" });
       }
 
+      // Vérifier que le mot de passe a été défini (pour les professeurs créés par admin)
+      if (!user.password) {
+        console.log("❌ [LOGIN] Compte sans mot de passe défini pour:", email);
+        return res.status(401).json({
+          message: "Compte non encore activé. Veuillez contacter l'administrateur pour définir votre mot de passe."
+        });
+      }
+
       // Vérifier le mot de passe
       console.log("🔍 [LOGIN] Vérification du mot de passe...");
       const isMatch = await user.comparePassword(password);

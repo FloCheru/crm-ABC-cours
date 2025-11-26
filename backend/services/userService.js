@@ -38,6 +38,34 @@ class UserService {
       throw new Error("Erreur lors de la récupération des utilisateurs admin");
     }
   }
+
+  /**
+   * Génère un mot de passe temporaire pour la première connexion
+   * Format: Abc123456 (mélange de majuscules, minuscules, chiffres)
+   * @returns {string} - Mot de passe temporaire (8 caractères)
+   */
+  static generateTemporaryPassword() {
+    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lowercase = "abcdefghijklmnopqrstuvwxyz";
+    const numbers = "0123456789";
+
+    let password = "";
+    // Au moins 1 majuscule
+    password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+    // Au moins 1 minuscule
+    password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+    // Au moins 1 chiffre
+    password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+
+    // Compléter avec 5 caractères aléatoires
+    const allChars = uppercase + lowercase + numbers;
+    for (let i = 0; i < 5; i++) {
+      password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+    }
+
+    // Mélanger les caractères
+    return password.split("").sort(() => Math.random() - 0.5).join("");
+  }
 }
 
 module.exports = UserService;

@@ -4,6 +4,7 @@ const path = require("path");
 const { body, validationResult } = require("express-validator");
 const Professor = require("../models/Professor");
 const { authenticate, authorize } = require("../middleware/auth");
+const UserService = require("../services/userService");
 
 const router = express.Router();
 
@@ -202,6 +203,18 @@ router.post(
       }
 
       console.log("[POST /professors] 💾 Création du document MongoDB...");
+
+      // Générer un mot de passe temporaire si aucun mot de passe fourni
+      let temporaryPassword = null;
+      if (!req.body.password) {
+        temporaryPassword = UserService.generateTemporaryPassword();
+        req.body.password = temporaryPassword;
+        req.body.isPasswordSet = false;
+        console.log("[POST /professors] 🔐 Mot de passe temporaire généré");
+      } else {
+        req.body.isPasswordSet = true;
+      }
+
       const professor = new Professor(req.body);
       await professor.save();
       console.log("[POST /professors] ✅ Document créé avec ID:", professor._id);
@@ -217,10 +230,19 @@ router.post(
         email: populatedProfessor.email,
       });
 
-      res.status(201).json({
+      const response = {
         message: "Professeur créé avec succès",
         professor: populatedProfessor,
-      });
+      };
+
+      // Inclure le mot de passe temporaire dans la réponse si généré
+      if (temporaryPassword) {
+        response.temporaryPassword = temporaryPassword;
+        response.message = "Professeur créé avec succès. Un mot de passe temporaire a été généré.";
+        console.log("[POST /professors] ⚠️  IMPORTANT: Communiquer ce mot de passe temporaire au professeur");
+      }
+
+      res.status(201).json(response);
     } catch (error) {
       console.error("[POST /professors] ❌ Erreur lors de la création:", error.message);
       console.error("[POST /professors] Stack:", error.stack);
