@@ -104,6 +104,8 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
   }, [formData.primaryAddress?.postalCode, formData.secondaryAddress?.postalCode]);
 
   const loadProfile = async () => {
+    if (!professorId) return;
+
     try {
       setIsLoading(true);
       const professor = await professorService.getProfessorById(professorId);
@@ -117,6 +119,8 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
   };
 
   const loadDocuments = async () => {
+    if (!professorId) return;
+
     try {
       setIsLoadingDocuments(true);
       setError(null);
