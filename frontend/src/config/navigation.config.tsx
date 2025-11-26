@@ -38,6 +38,7 @@ export const navigationItems: NavItem[] = [
       { label: 'Séries de coupons', path: '/admin/coupons' },
       { label: 'Coupons', path: '/admin/coupons/list' },
       { label: 'Aperçu Template', path: '/admin/template-preview' },
+      { label: 'Paramètres', path: '/admin/parametres' },
     ],
   },
   {

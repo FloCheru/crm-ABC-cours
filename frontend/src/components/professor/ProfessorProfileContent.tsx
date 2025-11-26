@@ -185,6 +185,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
 
       const timestamp = new Date().toLocaleTimeString('fr-FR');
       console.log(`\n📤 [${section.toUpperCase()}] Début de sauvegarde - ${timestamp}`);
+      console.log(`📊 [${section.toUpperCase()}] État formData complet:`, formData);
 
       // Préparer les données à envoyer selon la section
       let dataToSend = {};
@@ -203,7 +204,6 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
           email: formData.email,
           phone: formData.phone,
           secondaryPhone: formData.secondaryPhone,
-          postalCode: formData.postalCode,
           primaryAddress: formData.primaryAddress,
           secondaryAddress: formData.secondaryAddress,
           transportMode: formData.transportMode,
@@ -211,7 +211,13 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
           education: formData.education,
           experience: formData.experience,
         };
-        console.log(`✍️  [${section.toUpperCase()}] Données à envoyer:`, dataToSend);
+        console.log(`✍️  [${section.toUpperCase()}] Données à envoyer (objet préparé):`, dataToSend);
+        console.log(`🔍 [${section.toUpperCase()}] primaryAddress détails:`, {
+          street: formData.primaryAddress?.street,
+          postalCode: formData.primaryAddress?.postalCode,
+          city: formData.primaryAddress?.city,
+          full: formData.primaryAddress
+        });
       } else if (section === 'deplacements') {
         dataToSend = {
           availableDepartments: formData.availableDepartments,
@@ -221,12 +227,16 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
       }
 
       console.log(`🌐 [${section.toUpperCase()}] Envoi de la requête à l'API...`);
+      console.log(`🌐 [${section.toUpperCase()}] URL: /api/professors/${professorId}`);
+      console.log(`🌐 [${section.toUpperCase()}] Payload final:`, JSON.stringify(dataToSend, null, 2));
 
       const response = await professorService.updateMyProfile(professorId, dataToSend);
 
       console.log(`✅ [${section.toUpperCase()}] Réponse du serveur reçue:`, {
         status: 'succès',
         timestamp: new Date().toLocaleTimeString('fr-FR'),
+        professorId: response?._id,
+        primaryAddress: response?.primaryAddress,
         dataReturned: response
       });
 
@@ -702,7 +712,15 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
             {renderField('Email *', 'email', 'email')}
             {renderField('Tél principal *', 'phone', 'tel')}
             {renderField('Tél secondaire', 'secondaryPhone', 'tel')}
-            {renderField('Code postal *', 'postalCode')}
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Code postal *</label>
+              <input
+                type="text"
+                value={formData.primaryAddress?.postalCode || ''}
+                onChange={(e) => handleInputChange('primaryAddress', { ...formData.primaryAddress, postalCode: e.target.value })}
+                className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
             <div className="col-span-2">
               <label className="text-xs text-gray-500 mb-1 block">Adresse</label>
               <input

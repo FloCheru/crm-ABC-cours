@@ -76,7 +76,7 @@ export const DepartmentCombobox = ({
         <Button
           variant="outline"
           role="combobox"
-          aria-expanded={open}
+          aria-expanded={isOpen}
           className="w-full justify-between"
         >
           {placeholder}

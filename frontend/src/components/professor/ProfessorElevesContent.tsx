@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../components/ui/tabs";
-import { PageHeader, Modal } from "../../components";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader } from "../../components/ui/card";
+} from "../ui/tabs";
+import { Modal } from "../index";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader } from "../ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../components/ui/dialog";
+} from "../ui/dialog";
 import {
   Table,
   TableBody,
@@ -23,24 +23,29 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../components/ui/table";
-import { Textarea } from "../../components/ui/textarea";
-import { Separator } from "../../components/ui/separator";
-import { Checkbox } from "../../components/ui/checkbox";
-import { Label } from "../../components/ui/label";
+} from "../ui/table";
+import { Textarea } from "../ui/textarea";
+import { Separator } from "../ui/separator";
+import { Checkbox } from "../ui/checkbox";
+import { Label } from "../ui/label";
 import studentService from "../../services/studentService";
 import type { StudentWithStats } from "../../types/student";
 import type { RendezVous } from "../../types/rdv";
 import type { NDR } from "../../services/ndrService";
 import rdvService from "../../services/rdvService";
 import { ndrService } from "../../services/ndrService";
-import { useAuthStore } from "../../stores";
 
-export const Eleves: React.FC = () => {
+interface ProfessorElevesContentProps {
+  professorId: string;
+  defaultTab?: string;
+}
+
+export const ProfessorElevesContent: React.FC<ProfessorElevesContentProps> = ({
+  professorId,
+  defaultTab = 'liste'
+}) => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get("tab") || "liste";
-  const [activeTab, setActiveTab] = useState(tabFromUrl);
+  const [activeTab, setActiveTab] = useState(defaultTab);
 
   // États pour l'onglet "Élèves"
   const [students, setStudents] = useState<StudentWithStats[]>([]);
@@ -81,22 +86,17 @@ export const Eleves: React.FC = () => {
     notes: "",
   });
 
-  // User connecté
-  const user = useAuthStore((state) => state.user);
-  const professorId = user?._id || "";
-
-  // Synchroniser l'onglet actif avec l'URL
+  // Synchroniser l'onglet actif avec defaultTab
   useEffect(() => {
-    const tab = searchParams.get("tab") || "liste";
-    setActiveTab(tab);
-  }, [searchParams]);
+    setActiveTab(defaultTab);
+  }, [defaultTab]);
 
   // Charger les données au montage
   useEffect(() => {
     loadStudents();
     loadRdvs();
     loadMyNdrs();
-  }, []);
+  }, [professorId]);
 
   // Appliquer les filtres RDV quand rdvs ou filtres changent
   useEffect(() => {
@@ -381,357 +381,353 @@ export const Eleves: React.FC = () => {
 
   return (
     <>
-      <PageHeader title="Mes Élèves" />
+      <Tabs
+        value={activeTab}
+        onValueChange={(tab: string) => {
+          setActiveTab(tab);
+          navigate(`?tab=${tab}`, { replace: true });
+        }}
+        className="w-full"
+      >
+        <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
+          <TabsTrigger
+            value="liste"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
+          >
+            Élèves
+          </TabsTrigger>
+          <TabsTrigger
+            value="bilan"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
+          >
+            Bilan
+          </TabsTrigger>
+          <TabsTrigger
+            value="rdv"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
+          >
+            RDV
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="container mx-auto px-4 max-w-6xl py-8">
-        <Tabs
-          value={activeTab}
-          onValueChange={(tab: string) => {
-            setActiveTab(tab);
-            navigate(`?tab=${tab}`, { replace: true });
-          }}
-          className="w-full"
-        >
-          <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
-            <TabsTrigger
-              value="liste"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
-            >
-              Élèves
-            </TabsTrigger>
-            <TabsTrigger
-              value="bilan"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
-            >
-              Bilan
-            </TabsTrigger>
-            <TabsTrigger
-              value="rdv"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
-            >
-              RDV
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Tab 1: Liste des élèves */}
-          <TabsContent value="liste" className="mt-6 space-y-8">
-            {/* Statistiques */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Nombre d'élèves
-                    </p>
-                    <p className="text-2xl font-bold">{students.length}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Élèves actifs
-                    </p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {students.filter((s) => s.isActive).length}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Total de cours
-                    </p>
-                    <p className="text-2xl font-bold">
-                      {students.reduce((sum, s) => sum + s.totalSessions, 0)}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Tableau des élèves */}
-            <Card>
-              <CardHeader>
-                <h3 className="text-lg font-semibold">Liste de mes élèves</h3>
-              </CardHeader>
-              <CardContent>
-                {isLoadingStudents ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    Chargement des élèves...
-                  </p>
-                ) : students.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    Aucun élève pour le moment.
-                  </p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nom</TableHead>
-                          <TableHead>Prénom</TableHead>
-                          <TableHead>Niveau</TableHead>
-                          <TableHead>Matière(s)</TableHead>
-                          <TableHead className="text-center">
-                            Nb cours
-                          </TableHead>
-                          <TableHead>Dernier cours</TableHead>
-                          <TableHead className="text-center">Statut</TableHead>
-                          <TableHead className="text-center">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {students.map((student) => (
-                          <TableRow key={student._id}>
-                            <TableCell className="font-medium">
-                              {student.lastName}
-                            </TableCell>
-                            <TableCell>{student.firstName}</TableCell>
-                            <TableCell>
-                              {student.grade ? (
-                                <Badge variant="outline">{student.grade}</Badge>
-                              ) : (
-                                "-"
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {student.subjects.map((subject, idx) => (
-                                  <Badge key={idx} variant="secondary">
-                                    {subject}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {student.totalSessions}
-                            </TableCell>
-                            <TableCell>
-                              {student.lastSessionDate
-                                ? formatDate(student.lastSessionDate)
-                                : "-"}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {student.isActive ? (
-                                <Badge
-                                  variant="default"
-                                  className="bg-green-600"
-                                >
-                                  Actif
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary">Inactif</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewDetails(student)}
-                              >
-                                Voir détails
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab 2: Bilan */}
-          <TabsContent value="bilan" className="mt-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-12 text-gray-500">
-                  <p className="text-lg font-semibold mb-2">
-                    Fonctionnalité en développement
-                  </p>
-                  <p className="text-sm">
-                    Cette section permettra de consulter le bilan pédagogique de
-                    vos élèves.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab 3: RDV */}
-          <TabsContent value="rdv" className="mt-6 space-y-8">
-            {/* Section Actions */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => handleOpenRdvModal()}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 flex items-center gap-2"
-                >
-                  + Ajouter un RDV avec un élève
-                </button>
-              </div>
-            </div>
-
-            {/* Section Filtres */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Filtres
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Tab 1: Liste des élèves */}
+        <TabsContent value="liste" className="mt-6 space-y-8">
+          {/* Statistiques */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Statut
-                  </Label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="all">Tous</option>
-                    <option value="planifie">Planifié</option>
-                    <option value="realise">Réalisé</option>
-                    <option value="annule">Annulé</option>
-                    <option value="demande">En attente</option>
-                  </select>
+                  <p className="text-sm text-muted-foreground">
+                    Nombre d'élèves
+                  </p>
+                  <p className="text-2xl font-bold">{students.length}</p>
                 </div>
-
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Élèves
-                  </Label>
-                  {isLoadingNdrs ? (
-                    <p className="text-sm text-gray-500">Chargement...</p>
-                  ) : uniqueStudents.length === 0 ? (
-                    <p className="text-sm text-gray-500">Aucun élève</p>
-                  ) : (
-                    <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
-                      {uniqueStudents.map((studentId) => (
-                        <div
-                          key={studentId}
-                          className="flex items-center space-x-2"
-                        >
-                          <Checkbox
-                            id={`student-${studentId}`}
-                            checked={selectedStudentsFilter.includes(studentId)}
-                            onCheckedChange={() =>
-                              toggleStudentFilter(studentId)
-                            }
-                          />
-                          <label
-                            htmlFor={`student-${studentId}`}
-                            className="text-sm cursor-pointer"
-                          >
-                            Élève {studentId}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <p className="text-sm text-muted-foreground">
+                    Élèves actifs
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {students.filter((s) => s.isActive).length}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Total de cours
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {students.reduce((sum, s) => sum + s.totalSessions, 0)}
+                  </p>
                 </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Tableau des RDV */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Liste des rendez-vous
-              </h3>
-
-              {isLoadingRdvs ? (
-                <div className="text-center py-8 text-gray-500">
-                  Chargement des rendez-vous...
-                </div>
-              ) : filteredRdvs.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  Aucun rendez-vous à afficher
-                </div>
+          {/* Tableau des élèves */}
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Liste de mes élèves</h3>
+            </CardHeader>
+            <CardContent>
+              {isLoadingStudents ? (
+                <p className="text-center text-muted-foreground py-8">
+                  Chargement des élèves...
+                </p>
+              ) : students.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  Aucun élève pour le moment.
+                </p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Heure
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Type RDV
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Avec
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Statut
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Notes
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredRdvs.map((rdv) => (
-                        <tr key={rdv._id} className="hover:bg-gray-50">
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {new Date(rdv.date).toLocaleDateString("fr-FR")}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {rdv.time}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {getRdvTypeLabel(rdv)}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {getRdvPartnerName(rdv)}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            {getStatusBadge(rdv.status)}
-                          </td>
-                          <td className="px-4 py-4 text-sm text-gray-900 max-w-xs truncate">
-                            {rdv.notes || "-"}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm">
-                            <div className="flex gap-2">
-                              {canEditRdv(rdv) ? (
-                                <>
-                                  <button
-                                    onClick={() => handleOpenRdvModal(rdv)}
-                                    className="text-blue-600 hover:text-blue-900"
-                                    title="Modifier"
-                                  >
-                                    ✏️
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteRdv(rdv._id)}
-                                    className="text-red-600 hover:text-red-900"
-                                    title="Supprimer"
-                                  >
-                                    🗑️
-                                  </button>
-                                </>
-                              ) : (
-                                <button
-                                  onClick={() => handleOpenRdvModal(rdv)}
-                                  className="text-gray-600 hover:text-gray-900"
-                                  title="Consulter"
-                                >
-                                  👁️
-                                </button>
-                              )}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Prénom</TableHead>
+                        <TableHead>Niveau</TableHead>
+                        <TableHead>Matière(s)</TableHead>
+                        <TableHead className="text-center">
+                          Nb cours
+                        </TableHead>
+                        <TableHead>Dernier cours</TableHead>
+                        <TableHead className="text-center">Statut</TableHead>
+                        <TableHead className="text-center">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {students.map((student) => (
+                        <TableRow key={student._id}>
+                          <TableCell className="font-medium">
+                            {student.lastName}
+                          </TableCell>
+                          <TableCell>{student.firstName}</TableCell>
+                          <TableCell>
+                            {student.grade ? (
+                              <Badge variant="outline">{student.grade}</Badge>
+                            ) : (
+                              "-"
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {student.subjects.map((subject, idx) => (
+                                <Badge key={idx} variant="secondary">
+                                  {subject}
+                                </Badge>
+                              ))}
                             </div>
-                          </td>
-                        </tr>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {student.totalSessions}
+                          </TableCell>
+                          <TableCell>
+                            {student.lastSessionDate
+                              ? formatDate(student.lastSessionDate)
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {student.isActive ? (
+                              <Badge
+                                variant="default"
+                                className="bg-green-600"
+                              >
+                                Actif
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">Inactif</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDetails(student)}
+                            >
+                              Voir détails
+                            </Button>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab 2: Bilan */}
+        <TabsContent value="bilan" className="mt-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-12 text-gray-500">
+                <p className="text-lg font-semibold mb-2">
+                  Fonctionnalité en développement
+                </p>
+                <p className="text-sm">
+                  Cette section permettra de consulter le bilan pédagogique de
+                  vos élèves.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab 3: RDV */}
+        <TabsContent value="rdv" className="mt-6 space-y-8">
+          {/* Section Actions */}
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleOpenRdvModal()}
+                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 flex items-center gap-2"
+              >
+                + Ajouter un RDV avec un élève
+              </button>
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+          </div>
+
+          {/* Section Filtres */}
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Filtres
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Statut
+                </Label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">Tous</option>
+                  <option value="planifie">Planifié</option>
+                  <option value="realise">Réalisé</option>
+                  <option value="annule">Annulé</option>
+                  <option value="demande">En attente</option>
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Élèves
+                </Label>
+                {isLoadingNdrs ? (
+                  <p className="text-sm text-gray-500">Chargement...</p>
+                ) : uniqueStudents.length === 0 ? (
+                  <p className="text-sm text-gray-500">Aucun élève</p>
+                ) : (
+                  <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
+                    {uniqueStudents.map((studentId) => (
+                      <div
+                        key={studentId}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`student-${studentId}`}
+                          checked={selectedStudentsFilter.includes(studentId)}
+                          onCheckedChange={() =>
+                            toggleStudentFilter(studentId)
+                          }
+                        />
+                        <label
+                          htmlFor={`student-${studentId}`}
+                          className="text-sm cursor-pointer"
+                        >
+                          Élève {studentId}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Tableau des RDV */}
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Liste des rendez-vous
+            </h3>
+
+            {isLoadingRdvs ? (
+              <div className="text-center py-8 text-gray-500">
+                Chargement des rendez-vous...
+              </div>
+            ) : filteredRdvs.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                Aucun rendez-vous à afficher
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Heure
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type RDV
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Avec
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Statut
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Notes
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredRdvs.map((rdv) => (
+                      <tr key={rdv._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {new Date(rdv.date).toLocaleDateString("fr-FR")}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {rdv.time}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {getRdvTypeLabel(rdv)}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {getRdvPartnerName(rdv)}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          {getStatusBadge(rdv.status)}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-900 max-w-xs truncate">
+                          {rdv.notes || "-"}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm">
+                          <div className="flex gap-2">
+                            {canEditRdv(rdv) ? (
+                              <>
+                                <button
+                                  onClick={() => handleOpenRdvModal(rdv)}
+                                  className="text-blue-600 hover:text-blue-900"
+                                  title="Modifier"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteRdv(rdv._id)}
+                                  className="text-red-600 hover:text-red-900"
+                                  title="Supprimer"
+                                >
+                                  🗑️
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => handleOpenRdvModal(rdv)}
+                                className="text-gray-600 hover:text-gray-900"
+                                title="Consulter"
+                              >
+                                👁️
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Dialog détails élève */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

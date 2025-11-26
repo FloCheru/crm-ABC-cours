@@ -1,155 +1,64 @@
-[{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2559",
-	"severity": 8,
-	"message": "Type 'string' has no properties in common with type 'Address'.",
-	"source": "ts",
-	"startLineNumber": 101,
-	"startColumn": 9,
-	"endLineNumber": 101,
-	"endColumn": 25,
-	"relatedInformation": [
-		{
-			"startLineNumber": 176,
-			"startColumn": 3,
-			"endLineNumber": 176,
-			"endColumn": 19,
-			"message": "The expected type comes from property 'secondaryAddress' which is declared here on type 'Partial<ProfessorProfile>'",
-			"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/types/professor.ts"
-		}
-	],
-	"origin": "extHost2"
-},{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2345",
-	"severity": 8,
-	"message": "Argument of type '\"address\"' is not assignable to parameter of type 'keyof ProfessorProfile'.",
-	"source": "ts",
-	"startLineNumber": 520,
-	"startColumn": 47,
-	"endLineNumber": 520,
-	"endColumn": 56,
-	"origin": "extHost2"
-},{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2345",
-	"severity": 8,
-	"message": "Argument of type '\"addressComplement\"' is not assignable to parameter of type 'keyof ProfessorProfile'.",
-	"source": "ts",
-	"startLineNumber": 521,
-	"startColumn": 61,
-	"endLineNumber": 521,
-	"endColumn": 80,
-	"origin": "extHost2"
-},{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2345",
-	"severity": 8,
-	"message": "Argument of type '\"city\"' is not assignable to parameter of type 'keyof ProfessorProfile'.",
-	"source": "ts",
-	"startLineNumber": 522,
-	"startColumn": 47,
-	"endLineNumber": 522,
-	"endColumn": 53,
-	"origin": "extHost2"
-},{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2345",
-	"severity": 8,
-	"message": "Argument of type '\"inseeCity\"' is not assignable to parameter of type 'keyof ProfessorProfile'.",
-	"source": "ts",
-	"startLineNumber": 523,
-	"startColumn": 53,
-	"endLineNumber": 523,
-	"endColumn": 64,
-	"origin": "extHost2"
-},{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2345",
-	"severity": 8,
-	"message": "Argument of type '\"distributionOffice\"' is not assignable to parameter of type 'keyof ProfessorProfile'.",
-	"source": "ts",
-	"startLineNumber": 524,
-	"startColumn": 59,
-	"endLineNumber": 524,
-	"endColumn": 79,
-	"origin": "extHost2"
-},{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'address' does not exist on type 'Partial<ProfessorProfile>'.",
-	"source": "ts",
-	"startLineNumber": 583,
-	"startColumn": 50,
-	"endLineNumber": 583,
-	"endColumn": 57,
-	"origin": "extHost2"
-},{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'addressComplement' does not exist on type 'Partial<ProfessorProfile>'.",
-	"source": "ts",
-	"startLineNumber": 584,
-	"startColumn": 64,
-	"endLineNumber": 584,
-	"endColumn": 81,
-	"origin": "extHost2"
-},{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'city' does not exist on type 'Partial<ProfessorProfile>'.",
-	"source": "ts",
-	"startLineNumber": 585,
-	"startColumn": 50,
-	"endLineNumber": 585,
-	"endColumn": 54,
-	"origin": "extHost2"
-},{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'inseeCity' does not exist on type 'Partial<ProfessorProfile>'.",
-	"source": "ts",
-	"startLineNumber": 586,
-	"startColumn": 56,
-	"endLineNumber": 586,
-	"endColumn": 65,
-	"origin": "extHost2"
-},{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2339",
-	"severity": 8,
-	"message": "Property 'distributionOffice' does not exist on type 'Partial<ProfessorProfile>'.",
-	"source": "ts",
-	"startLineNumber": 587,
-	"startColumn": 62,
-	"endLineNumber": 587,
-	"endColumn": 80,
-	"origin": "extHost2"
-},{
-	"resource": "/c:/Users/flori/OneDrive/Bureau/ABC cours/Application/abc-cours-crm/frontend/src/pages/professor/MonProfil.tsx",
-	"owner": "typescript",
-	"code": "2345",
-	"severity": 8,
-	"message": "Argument of type 'Address | undefined' is not assignable to parameter of type 'string | undefined'.\n  Type 'Address' is not assignable to type 'string'.",
-	"source": "ts",
-	"startLineNumber": 590,
-	"startColumn": 52,
-	"endLineNumber": 590,
-	"endColumn": 77,
-	"origin": "extHost2"
-}]
+
+📤 [INFORMATIONS] Début de sauvegarde - 10:48:26
+ProfessorProfileContent.tsx:188 📊 [INFORMATIONS] État formData complet: {primaryAddress: {…}, rating: {…}, _id: '6926c71ffafa808c600219fb', email: 'prof@abc-cours.fr', password: '$2a$10$Hf1wAMvuB8hM4k6gE3pXyeuhbYbHysK.coyWYD9amYheJHv.eRMMS', …}
+ProfessorProfileContent.tsx:214 ✍️  [INFORMATIONS] Données à envoyer (objet préparé): {gender: undefined, firstName: 'Prof', lastName: 'Test', birthName: undefined, birthDate: undefined, …}
+ProfessorProfileContent.tsx:215 🔍 [INFORMATIONS] primaryAddress détails: {street: '12 rue Blanche', postalCode: undefined, city: 'Nantes', full: {…}}
+ProfessorProfileContent.tsx:229 🌐 [INFORMATIONS] Envoi de la requête à l'API...
+ProfessorProfileContent.tsx:230 🌐 [INFORMATIONS] URL: /api/professors/6926c71ffafa808c600219fb
+ProfessorProfileContent.tsx:231 🌐 [INFORMATIONS] Payload final: {
+  "firstName": "Prof",
+  "lastName": "Test",
+  "email": "prof@abc-cours.fr",
+  "primaryAddress": {
+    "street": "12 rue Blanche",
+    "city": "Nantes"
+  },
+  "transportMode": "voiture",
+  "education": [],
+  "experience": []
+}
+professorService.ts:252 
+🔗 [professorService] updateMyProfile - 10:48:26
+professorService.ts:253 📦 [professorService] Données à envoyer: {gender: undefined, firstName: 'Prof', lastName: 'Test', birthName: undefined, birthDate: undefined, …}
+professorService.ts:255 📤 [professorService] Envoi PUT à /api/professors/6926c71ffafa808c600219fb
+logger.ts:36 [2025-11-26T09:48:26.821Z] [DEBUG] API Request Debug:
+logger.ts:36 [2025-11-26T09:48:26.822Z] [DEBUG] URL: http://localhost:3000/api/professors/6926c71ffafa808c600219fb
+logger.ts:36 [2025-11-26T09:48:26.822Z] [DEBUG] Token présent: true
+logger.ts:36 [2025-11-26T09:48:26.822Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
+logger.ts:36 [2025-11-26T09:48:26.929Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-11-26T09:48:26.929Z] [DEBUG] Status: 200
+logger.ts:36 [2025-11-26T09:48:26.929Z] [DEBUG] Status Text: OK
+logger.ts:36 [2025-11-26T09:48:26.929Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
+logger.ts:36 [2025-11-26T09:48:26.929Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
+logger.ts:36 [2025-11-26T09:48:26.930Z] [DEBUG] Réponse parsée: {message: 'Professeur mis à jour avec succès', professor: {…}}
+professorService.ts:258 ✅ [professorService] Réponse reçue du backend: {status: 'succès', professorId: '6926c71ffafa808c600219fb', message: 'Professeur mis à jour avec succès'}
+ProfessorProfileContent.tsx:235 ✅ [INFORMATIONS] Réponse du serveur reçue: {status: 'succès', timestamp: '10:48:26', professorId: '6926c71ffafa808c600219fb', primaryAddress: {…}, dataReturned: {…}}
+
+ [PUT /professors/:id] 🔄 Mise à jour du profil - ID: 6926c71ffafa808c600219fb
+[0] [PUT /professors/:id] 👤 Utilisateur: {
+[0]   userId: new ObjectId('69257e5863045bd1a7de0202'),
+[0]   userRole: 'admin',
+[0]   userEmail: 'admin@abc-cours.fr'
+[0] }
+[0] [PUT /professors/:id] 📝 Avant modification: { fields: 'aucun changement', oldValues: {} }
+[0] [PUT /professors/:id] 🔍 Détails du body reçu:
+[0] [PUT /professors/:id] - primaryAddress: { street: '12 rue Blanche', city: 'Nantes' }
+[0] [PUT /professors/:id] - postalCode (racine): undefined
+[0] [PUT /professors/:id] - Body complet: {
+[0]   "firstName": "Prof",
+[0]   "lastName": "Test",
+[0]   "email": "prof@abc-cours.fr",
+[0]   "primaryAddress": {
+[0]     "street": "12 rue Blanche",
+[0]     "city": "Nantes"
+[0]   },
+[0]   "transportMode": "voiture",
+[0]   "education": [],
+[0]   "experience": []
+[0] }
+[0] [PUT /professors/:id] 📋 Professeur après mise à jour:
+[0] [PUT /professors/:id] - primaryAddress: { street: '12 rue Blanche', city: 'Nantes' }
+[0] [PUT /professors/:id] - postalCode (racine): undefined
+[0] [PUT /professors/:id] ✅ Profil mis à jour avec succès
+[0] [PUT /professors/:id] 📊 Champs modifiés: { count: 0, fields: [], newValues: {} }
+[0] ::1 - - [26/Nov/2025:09:48:26 +0000] "PUT /api/professors/6926c71ffafa808c600219fb HTTP/1.1" 200 606 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"

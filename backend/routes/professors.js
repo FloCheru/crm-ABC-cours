@@ -104,68 +104,23 @@ router.get("/", async (req, res) => {
   }
 });
 
-// @route   GET /api/professors/me
-// @desc    Obtenir le profil du professeur connecté
-// @access  Private (Professor only)
-router.get("/me", authorize(["professor"]), async (req, res) => {
-  try {
-    console.log('[GET /me] 🔍 Route appelée');
-    console.log('[GET /me] 👤 req.user:', {
-      _id: req.user?._id,
-      email: req.user?.email,
-      role: req.user?.role,
-      firstName: req.user?.firstName,
-      lastName: req.user?.lastName
-    });
-    console.log('[GET /me] 🔑 req.user._id (type):', typeof req.user._id, '| valeur:', req.user._id);
-
-    const professor = await Professor.findById(req.user._id).populate(
-      "subjects",
-      "name category"
-    );
-
-    console.log('[GET /me] 📊 Résultat MongoDB:', professor ? '✅ Professeur trouvé' : '❌ Professeur NON trouvé');
-    if (professor) {
-      console.log('[GET /me] 📋 Détails professor:', {
-        _id: professor._id,
-        firstName: professor.firstName,
-        lastName: professor.lastName,
-        email: professor.email,
-        subjects: professor.subjects?.length || 0
-      });
-    } else {
-      console.log('[GET /me] ⚠️ Aucun professeur avec _id:', req.user._id);
-    }
-
-    if (!professor) {
-      console.log('[GET /me] 🚫 Retour 404 - Professeur non trouvé');
-      return res.status(404).json({ message: "Profil professeur non trouvé" });
-    }
-
-    console.log('[GET /me] ✅ Retour 200 - Envoi du professeur au client');
-    res.json({ professor });
-  } catch (error) {
-    console.error("[GET /me] ❌ Erreur catch:", error.message);
-    console.error("[GET /me] Stack:", error.stack);
-    res.status(500).json({ message: "Erreur serveur" });
-  }
-});
-
 // @route   GET /api/professors/:id
 // @desc    Obtenir un professeur par ID
 // @access  Private
 router.get("/:id", async (req, res) => {
   try {
-    const professor = await Professor.findById(req.params.id).populate(
-      "subjects",
-      "name category"
-    );
+    const professor = await Professor.findById(req.params.id)
+      .populate("subjects", "name category");
 
     if (!professor) {
       return res.status(404).json({ message: "Professeur non trouvé" });
     }
 
-    res.json({ professor });
+    // Inclure teachingSubjects dans la réponse pour éviter un appel API séparé
+    const professorData = professor.toObject();
+    professorData.teachingSubjects = professor.teachingSubjects || [];
+
+    res.json({ professor: professorData });
   } catch (error) {
     console.error("Erreur lors de la récupération du professeur:", error);
     res.status(500).json({ message: "Erreur serveur" });
@@ -285,7 +240,12 @@ router.put(
   ],
   async (req, res) => {
     try {
-      console.log("[PUT /professors/:id] Mise à jour du profil - ID:", req.params.id);
+      console.log("[PUT /professors/:id] 🔄 Mise à jour du profil - ID:", req.params.id);
+      console.log("[PUT /professors/:id] 👤 Utilisateur:", {
+        userId: req.user._id,
+        userRole: req.user.role,
+        userEmail: req.user.email
+      });
 
       // Vérification de sécurité : un professeur ne peut modifier que son propre profil
       if (req.user.role === "professor" && req.user._id.toString() !== req.params.id) {
@@ -296,11 +256,39 @@ router.put(
       // Vérifier les erreurs de validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log("[PUT /professors/:id] ❌ Erreurs de validation:", errors.array());
         return res.status(400).json({
           message: "Données invalides",
           errors: errors.array(),
         });
       }
+
+      // Récupérer le professeur actuel pour comparer
+      const currentProfessor = await Professor.findById(req.params.id);
+
+      // Identifier les champs modifiés
+      const changedFields = [];
+      const oldValues = {};
+      const newValues = {};
+
+      for (const [key, value] of Object.entries(req.body)) {
+        if (JSON.stringify(currentProfessor?.[key]) !== JSON.stringify(value)) {
+          changedFields.push(key);
+          oldValues[key] = currentProfessor?.[key];
+          newValues[key] = value;
+        }
+      }
+
+      console.log("[PUT /professors/:id] 📝 Avant modification:", {
+        fields: changedFields.length > 0 ? changedFields : "aucun changement",
+        oldValues: changedFields.length > 0 ? oldValues : {}
+      });
+
+      // Log détaillé du body reçu
+      console.log("[PUT /professors/:id] 🔍 Détails du body reçu:");
+      console.log("[PUT /professors/:id] - primaryAddress:", req.body.primaryAddress);
+      console.log("[PUT /professors/:id] - postalCode (racine):", req.body.postalCode);
+      console.log("[PUT /professors/:id] - Body complet:", JSON.stringify(req.body, null, 2));
 
       const professor = await Professor.findByIdAndUpdate(
         req.params.id,
@@ -308,17 +296,30 @@ router.put(
         { new: true, runValidators: true }
       ).populate("subjects", "name category");
 
+      // Log après la mise à jour
+      console.log("[PUT /professors/:id] 📋 Professeur après mise à jour:");
+      console.log("[PUT /professors/:id] - primaryAddress:", professor?.primaryAddress);
+      console.log("[PUT /professors/:id] - postalCode (racine):", professor?.postalCode);
+
       if (!professor) {
+        console.log("[PUT /professors/:id] ❌ Professeur non trouvé");
         return res.status(404).json({ message: "Professeur non trouvé" });
       }
 
       console.log("[PUT /professors/:id] ✅ Profil mis à jour avec succès");
+      console.log("[PUT /professors/:id] 📊 Champs modifiés:", {
+        count: changedFields.length,
+        fields: changedFields,
+        newValues: newValues
+      });
+
       res.json({
         message: "Professeur mis à jour avec succès",
         professor,
       });
     } catch (error) {
       console.error("[PUT /professors/:id] ❌ Erreur:", error.message);
+      console.error("[PUT /professors/:id] Stack:", error.stack);
       res.status(500).json({ message: "Erreur serveur" });
     }
   }
@@ -442,17 +443,17 @@ router.put(
 
 // @route   PUT /api/professors/:id/subjects
 // @desc    Mettre à jour les matières enseignées d'un professeur
-// @access  Private (Admin)
+// @access  Private (Admin ou le professeur lui-même)
 router.put(
   "/:id/subjects",
   [
-    authorize(["admin"]),
+    authorize(["admin", "professor"]),
     body("teachingSubjects")
       .isArray()
       .withMessage("teachingSubjects doit être un tableau"),
     body("teachingSubjects.*.subjectId")
-      .isMongoId()
-      .withMessage("subjectId doit être un ID MongoDB valide"),
+      .notEmpty()
+      .withMessage("subjectId est requis"),
     body("teachingSubjects.*.subjectName")
       .trim()
       .notEmpty()
@@ -466,6 +467,11 @@ router.put(
   ],
   async (req, res) => {
     try {
+      // Vérification de sécurité : un professeur ne peut modifier que ses propres matières
+      if (req.user.role === "professor" && req.user._id.toString() !== req.params.id) {
+        return res.status(403).json({ message: "Vous ne pouvez modifier que vos propres matières" });
+      }
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
@@ -511,5 +517,6 @@ router.put(
     }
   }
 );
+
 
 module.exports = router;

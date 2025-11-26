@@ -8,20 +8,40 @@ const Subject = require("../models/Subject");
 // GET /api/subjects - Récupérer toutes les matières
 router.get("/", authenticateToken, async (req, res) => {
   try {
-    const { active } = req.query;
-    let query = {};
-
-    // Filtrer par statut actif si spécifié
-    if (active === "true") {
-      query.isActive = true;
-    } else if (active === "false") {
-      query.isActive = false;
-    }
-
-    const subjects = await Subject.find(query).sort({ name: 1 });
+    const subjects = await Subject.find({}).sort({ name: 1 });
     res.json(subjects);
   } catch (error) {
     console.error("Erreur lors de la récupération des matières:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// GET /api/subjects/categories - Récupérer toutes les catégories
+router.get("/categories", authenticateToken, async (req, res) => {
+  try {
+    const categories = await Subject.distinct("category");
+    res.json(categories.sort());
+  } catch (error) {
+    console.error("Erreur lors de la récupération des catégories:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// GET /api/subjects/check-usage/:id - Vérifier si une matière est utilisée
+router.get("/check-usage/:id", authenticateToken, async (req, res) => {
+  try {
+    const NDR = require("../models/NDR");
+    const ndrsUsingSubject = await NDR.find({ "subjects._id": req.params.id });
+    res.json({
+      isUsed: ndrsUsingSubject.length > 0,
+      count: ndrsUsingSubject.length,
+      ndrs: ndrsUsingSubject.map((ndr) => ({
+        _id: ndr._id,
+        familyId: ndr.familyId,
+      })),
+    });
+  } catch (error) {
+    console.error("Erreur lors de la vérification de l'usage:", error);
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
@@ -67,7 +87,6 @@ router.post("/", authenticateToken, authorize(["admin"]), async (req, res) => {
       name,
       description,
       category,
-      isActive: true,
     });
 
     await subject.save();
@@ -85,7 +104,7 @@ router.put(
   authorize(["admin"]),
   async (req, res) => {
     try {
-      const { name, description, category, isActive } = req.body;
+      const { name, description, category } = req.body;
 
       const subject = await Subject.findById(req.params.id);
       if (!subject) {
@@ -110,7 +129,6 @@ router.put(
       if (name !== undefined) subject.name = name;
       if (description !== undefined) subject.description = description;
       if (category !== undefined) subject.category = category;
-      if (isActive !== undefined) subject.isActive = isActive;
 
       await subject.save();
       res.json(subject);
@@ -128,6 +146,18 @@ router.delete(
   authorize(["admin"]),
   async (req, res) => {
     try {
+      // Vérifier l'usage avant suppression
+      const NDR = require("../models/NDR");
+      const ndrsUsingSubject = await NDR.find({ "subjects._id": req.params.id });
+
+      if (ndrsUsingSubject.length > 0) {
+        return res.status(400).json({
+          message: `Cette matière est utilisée dans ${ndrsUsingSubject.length} NDR(s) et ne peut pas être supprimée`,
+          isUsed: true,
+          count: ndrsUsingSubject.length,
+        });
+      }
+
       const subject = await Subject.findById(req.params.id);
       if (!subject) {
         return res.status(404).json({ message: "Matière non trouvée" });
@@ -141,16 +171,5 @@ router.delete(
     }
   }
 );
-
-// GET /api/subjects/categories - Récupérer toutes les catégories
-router.get("/categories", authenticateToken, async (req, res) => {
-  try {
-    const categories = await Subject.distinct("category");
-    res.json(categories);
-  } catch (error) {
-    console.error("Erreur lors de la récupération des catégories:", error);
-    res.status(500).json({ message: "Erreur serveur" });
-  }
-});
 
 module.exports = router;

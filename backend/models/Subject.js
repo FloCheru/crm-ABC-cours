@@ -8,6 +8,15 @@ const subjectSchema = new mongoose.Schema(
       trim: true,
       unique: true, // Note: name déjà indexé via unique: true dans le schéma
     },
+    description: {
+      type: String,
+      trim: true,
+    },
+    category: {
+      type: String,
+      required: [true, "La catégorie est requise"],
+      trim: true,
+    },
   },
   {
     timestamps: true,

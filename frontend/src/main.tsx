@@ -11,6 +11,7 @@ import {
   Dashboard,
   CouponSeriesCreate,
   CouponsList,
+  Parametres,
   PdfPreview,
   Prospects,
   ProspectDetails,
@@ -21,7 +22,7 @@ import {
   ProfesseurDocuments,
   ProfesseurDashboard,
   MonProfil,
-  SaisieCoupons,
+  MesCoupons,
   Attestations,
   Eleves,
   ProfessorLayout,
@@ -74,6 +75,7 @@ function AppRoutes() {
             <Route path="coupons/create" element={<CouponSeriesCreate />} />
             <Route path="coupons/list" element={<CouponsList />} />
             <Route path="coupons/:seriesId/coupons" element={<SeriesDetails />} />
+            <Route path="parametres" element={<Parametres />} />
             <Route path="professeurs" element={<Professeurs />} />
             <Route path="professeur-details/:professorId" element={<ProfesseurDetails />} />
             <Route path="professeur-details/:professorId/documents" element={<ProfesseurDocuments />} />
@@ -111,7 +113,7 @@ function AppRoutes() {
             }
           >
             <Route path="profil" element={<MonProfil />} />
-            <Route path="coupons" element={<SaisieCoupons />} />
+            <Route path="coupons" element={<MesCoupons />} />
             <Route path="attestations" element={<Attestations />} />
             <Route path="eleves" element={<Eleves />} />
           </Route>
