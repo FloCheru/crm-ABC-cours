@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Tabs,
   TabsContent,
@@ -14,7 +13,6 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { professorService } from '../../services/professorService';
 import { couponService } from '../../services/couponService';
 import type { Coupon } from '../../types/coupon';
 import type { UseCouponData } from '../../services/couponService';
@@ -32,7 +30,6 @@ export const ProfessorCouponsContent: React.FC<ProfessorCouponsContentProps> = (
   iban,
   employmentStatus,
 }) => {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(defaultTab);
 
   // États pour RIB
@@ -65,7 +62,7 @@ export const ProfessorCouponsContent: React.FC<ProfessorCouponsContentProps> = (
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // États filtres historique
-  const [filters, setFilters] = useState({
+  const [filters] = useState({
     startDate: '',
     endDate: '',
     studentId: '',

@@ -1,37 +1,8 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import { PageHeader } from "../../components";
-import type {
-  ProfessorProfile,
-  EmploymentStatus,
-  WeeklySchedule,
-  TeachingSubject,
-} from "../../types/professor";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui/tabs";
-import { Label } from "../../components/ui/label";
-import { Checkbox } from "../../components/ui/checkbox";
-import type { RendezVous } from "../../types/rdv";
-import rdvService from "../../services/rdvService";
+import type { ProfessorProfile, TeachingSubject } from "../../types/professor";
 import { professorService } from "../../services/professorService";
-import { useAuthStore } from "../../stores";
-import { FRENCH_DEPARTMENTS } from "../../constants/departments";
-import { TRANSPORT_MODES } from "../../constants/transportModes";
-import { AvailabilityForm } from "../../components/professor/AvailabilityForm";
-import { SubjectLevelsSelector } from "../../components/professor/SubjectLevelsSelector";
-import { subjectService } from "../../services/subjectService";
-import type { Subject } from "../../types/subject";
-import type { SchoolCategory } from "../../constants/schoolLevels";
-import { Badge } from "../../components/ui/badge";
-import {
-  EMPLOYMENT_STATUS_OPTIONS,
-  CURRENT_SITUATION_OPTIONS,
-  getFilterOptionByValue,
-} from "../../constants/professorFilters";
 import { ProfessorProfileContent } from "../../components/professor/ProfessorProfileContent";
 import { ProfessorCouponsContent } from "../../components/professor/ProfessorCouponsContent";
 import { ProfessorAttestationsContent } from "../../components/professor/ProfessorAttestationsContent";
@@ -42,36 +13,19 @@ export const ProfesseurDetails: React.FC = () => {
   const { professorId } = useParams<{ professorId: string }>();
   const [professor, setProfessor] = useState<ProfessorProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [, setError] = useState<string>("");
-  const [formData, setFormData] = useState<Partial<ProfessorProfile>>({});
-  const [isSaving, setIsSaving] = useState(false);
+  const [teachingSubjects, setTeachingSubjects] = useState<TeachingSubject[]>(
+    []
+  );
 
   // État pour la navigation principale (navbar horizontale professeur)
   const [mainTab, setMainTab] = useState<
     "profil" | "coupons" | "attestations" | "eleves"
   >("profil");
 
-  // États pour les rendez-vous
-  const [rdvs, setRdvs] = useState<RendezVous[]>([]);
-  const [isLoadingRdvs, setIsLoadingRdvs] = useState(false);
-
-  // États pour les matières
-  const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
-  const [teachingSubjects, setTeachingSubjects] = useState<TeachingSubject[]>(
-    []
-  );
-
-  // Récupérer le rôle de l'utilisateur connecté
-  const user = useAuthStore((state) => state.user);
-  const currentUserRole = user?.role || "admin";
-
   useEffect(() => {
     if (professorId) {
       loadProfessorData();
-      loadRdvs();
-      loadSubjects();
     } else {
-      setError("ID de professeur manquant");
       setIsLoading(false);
     }
   }, [professorId]);
@@ -81,23 +35,11 @@ export const ProfesseurDetails: React.FC = () => {
       setIsLoading(true);
       const professor = await professorService.getProfessorById(professorId!);
       setProfessor(professor);
-      setFormData(professor);
-      // Charger les matières du professeur
       setTeachingSubjects((professor as any).teachingSubjects || []);
     } catch (err) {
       console.error("Erreur lors du chargement du professeur:", err);
-      setError("Impossible de charger les détails du professeur");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const loadSubjects = async () => {
-    try {
-      const subjects = await subjectService.getActiveSubjects();
-      setAllSubjects(subjects);
-    } catch (err) {
-      console.error("Erreur lors du chargement des matières:", err);
     }
   };
 
@@ -106,237 +48,6 @@ export const ProfesseurDetails: React.FC = () => {
       navigate("/admin/professeurs", { replace: true });
     }
   }, [professorId, navigate]);
-
-  const handleSave = async () => {
-    try {
-      setIsSaving(true);
-
-      // Appel réel à l'API pour mettre à jour le professeur
-      const updatedProfessor = await professorService.updateProfessor(
-        professorId!,
-        formData
-      );
-
-      // Mettre à jour l'état local avec les données retournées par le serveur
-      setProfessor(updatedProfessor as ProfessorProfile);
-      setFormData(updatedProfessor as ProfessorProfile);
-    } catch (err) {
-      console.error("Erreur lors de la sauvegarde:", err);
-      alert("Erreur lors de la sauvegarde");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleInputChange = (field: keyof ProfessorProfile, value: any) => {
-    setFormData((prev: Partial<ProfessorProfile>) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const toggleDepartment = (code: string) => {
-    const current = formData.availableDepartments || [];
-    const updated = current.includes(code)
-      ? current.filter((c) => c !== code)
-      : [...current, code];
-    handleInputChange("availableDepartments", updated);
-  };
-
-  const handleAvailabilityChange = (schedule: WeeklySchedule) => {
-    handleInputChange("weeklyAvailability", schedule);
-  };
-
-  // Handlers pour les matières
-  const isSubjectSelected = (subjectId: string): boolean => {
-    return teachingSubjects.some((ts) => ts.subjectId === subjectId);
-  };
-
-  const getGradesForSubject = (subjectId: string): string[] => {
-    return (
-      teachingSubjects.find((ts) => ts.subjectId === subjectId)?.grades || []
-    );
-  };
-
-  const handleToggleSubject = (subject: Subject) => {
-    if (isSubjectSelected(subject._id)) {
-      setTeachingSubjects((prev) =>
-        prev.filter((ts) => ts.subjectId !== subject._id)
-      );
-    } else {
-      setTeachingSubjects((prev) => [
-        ...prev,
-        {
-          subjectId: subject._id,
-          subjectName: subject.name,
-          grades: [],
-          levels: [],
-        },
-      ]);
-    }
-  };
-
-  const handleGradesChange = (subjectId: string, grades: string[]) => {
-    setTeachingSubjects((prev) =>
-      prev.map((ts) =>
-        ts.subjectId === subjectId
-          ? { ...ts, grades, levels: deriveLevelsFromGrades(grades) }
-          : ts
-      )
-    );
-  };
-
-  const deriveLevelsFromGrades = (grades: string[]): SchoolCategory[] => {
-    const levels = new Set<SchoolCategory>();
-    grades.forEach((grade) => {
-      if (["CP", "CE1", "CE2", "CM1", "CM2"].includes(grade)) {
-        levels.add("primaire");
-      }
-      if (["6ème", "5ème", "4ème", "3ème"].includes(grade)) {
-        levels.add("college");
-      }
-      if (["Seconde", "Première", "Terminale"].includes(grade)) {
-        levels.add("lycee");
-      }
-      if (["L1", "L2", "L3", "M1", "M2", "Doctorat", "Autre"].includes(grade)) {
-        levels.add("superieur");
-      }
-    });
-    return Array.from(levels);
-  };
-
-  const handleSaveSubjects = async () => {
-    try {
-      setIsSaving(true);
-      await professorService.updateProfessorSubjects(
-        professorId!,
-        teachingSubjects
-      );
-    } catch (err) {
-      console.error("Erreur lors de la sauvegarde des matières:", err);
-      alert("Erreur lors de la sauvegarde des matières");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const loadRdvs = async () => {
-    if (!professorId) return;
-
-    try {
-      setIsLoadingRdvs(true);
-      const rdvsList = await rdvService.getRdvsByProfessor(professorId);
-      setRdvs(rdvsList);
-    } catch (err) {
-      console.error("Erreur lors du chargement des RDV:", err);
-    } finally {
-      setIsLoadingRdvs(false);
-    }
-  };
-
-  const handleDeleteRdv = async (rdvId: string) => {
-    if (
-      !window.confirm("Êtes-vous sûr de vouloir supprimer ce rendez-vous ?")
-    ) {
-      return;
-    }
-
-    try {
-      await rdvService.deleteRdv(rdvId);
-      loadRdvs();
-    } catch (err) {
-      console.error("Erreur lors de la suppression du RDV:", err);
-      alert("Impossible de supprimer le rendez-vous");
-    }
-  };
-
-  const canEditRdv = (rdv: RendezVous): boolean => {
-    if (currentUserRole === "admin") return true;
-    if (
-      currentUserRole === "professor" &&
-      rdv.entityType === "professor-student"
-    )
-      return true;
-    return false;
-  };
-
-  const getRdvTypeLabel = (rdv: RendezVous): string => {
-    switch (rdv.entityType) {
-      case "admin-professor":
-        return "Admin ↔ Prof";
-      case "professor-student":
-        return "Prof ↔ Élève";
-      case "admin-family":
-        return "Admin ↔ Famille";
-      default:
-        return "Autre";
-    }
-  };
-
-  const getRdvPartnerName = (rdv: RendezVous): string => {
-    if (rdv.entityType === "admin-professor") {
-      return "Admin ABC";
-    } else if (rdv.entityType === "professor-student") {
-      return "Élève";
-    }
-    return "-";
-  };
-
-  const renderField = (
-    label: string,
-    value: string | undefined,
-    isFullWidth = false
-  ) => {
-    // Déterminer le style selon le label
-    let textStyle = "text-base text-gray-900";
-    if (label === "Nom *") {
-      textStyle = "text-base text-gray-900 uppercase font-medium";
-    } else if (label === "Prénom *") {
-      textStyle = "text-base text-gray-900 capitalize font-medium";
-    }
-
-    return (
-      <div className={isFullWidth ? "col-span-2" : ""}>
-        <div className="text-xs text-gray-500 mb-1">{label}</div>
-        <div className={textStyle}>{value || "-"}</div>
-      </div>
-    );
-  };
-
-  const renderEditField = (
-    label: string,
-    field: keyof ProfessorProfile,
-    type: "text" | "email" | "tel" | "date" | "select" = "text",
-    options?: { value: string; label: string }[],
-    isFullWidth = false
-  ) => {
-    const fieldValue = formData[field];
-    return (
-      <div className={isFullWidth ? "col-span-2" : ""}>
-        <label className="text-xs text-gray-500 mb-1 block">{label}</label>
-        {type === "select" ? (
-          <select
-            value={String(fieldValue || "")}
-            onChange={(e) => handleInputChange(field, e.target.value)}
-            className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-          >
-            {options?.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            type={type}
-            value={String(fieldValue || "")}
-            onChange={(e) => handleInputChange(field, e.target.value)}
-            className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-          />
-        )}
-      </div>
-    );
-  };
 
   if (isLoading) {
     return (

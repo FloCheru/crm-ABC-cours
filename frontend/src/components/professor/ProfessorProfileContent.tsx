@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { ProfessorProfile, EmploymentStatus, Gender } from '../../types/professor';
+import type { ProfessorProfile } from '../../types/professor';
 import {
   Tabs,
   TabsContent,
@@ -235,8 +235,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
       console.log(`✅ [${section.toUpperCase()}] Réponse du serveur reçue:`, {
         status: 'succès',
         timestamp: new Date().toLocaleTimeString('fr-FR'),
-        professorId: response?._id,
-        primaryAddress: response?.primaryAddress,
+        professorId: (response as any)?._id,
         dataReturned: response
       });
 
@@ -535,7 +534,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
       });
 
       console.log(`🌐 [DOCUMENTS] Envoi du fichier au serveur...`);
-      const result = await professorService.uploadDocument(professorId, file, category);
+      await professorService.uploadDocument(professorId, file, category);
 
       console.log(`✅ [DOCUMENTS] Upload du fichier réussi`);
       console.log(`📋 [DOCUMENTS] Actualisation de la liste des documents...`);
@@ -1654,7 +1653,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
               <select
                 value={formData.employmentStatus || ''}
                 onChange={(e) =>
-                  handleInputChange('employmentStatus', e.target.value as EmploymentStatus)
+                  handleInputChange('employmentStatus', e.target.value)
                 }
                 className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               >
