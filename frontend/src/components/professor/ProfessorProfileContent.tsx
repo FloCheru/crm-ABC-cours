@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { ProfessorProfile, EmploymentStatus, Gender } from '../../types/professor';
 import {
   Tabs,
@@ -21,9 +20,12 @@ import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { AlertCircle, Save, X } from 'lucide-react';
 import { SubjectLevelsSelector } from './SubjectLevelsSelector';
+import { DepartmentCombobox } from './DepartmentCombobox';
+import { CommuneCombobox } from './CommuneCombobox';
 import { subjectService } from '../../services/subjectService';
+import { geoApiService, type Commune } from '../../services/geoApiService';
 import type { Subject } from '../../types/subject';
-import type { TeachingSubject } from '../../types/professor';
+import type { TeachingSubject, EducationInfo, ExperienceInfo } from '../../types/professor';
 import type { SchoolCategory } from '../../constants/schoolLevels';
 
 interface Document {
@@ -38,13 +40,14 @@ interface Document {
 interface ProfessorProfileContentProps {
   professorId: string;
   defaultTab?: string;
+  teachingSubjects?: TeachingSubject[];
 }
 
 export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = ({
   professorId,
   defaultTab = 'informations',
+  teachingSubjects: initialTeachingSubjects,
 }) => {
-  const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState<Partial<ProfessorProfile>>({});
@@ -59,6 +62,19 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
   // États pour Choix (Matières)
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
   const [teachingSubjects, setTeachingSubjects] = useState<TeachingSubject[]>([]);
+  const [customSubjectName, setCustomSubjectName] = useState('');
+  const [isAddingCustomSubject, setIsAddingCustomSubject] = useState(false);
+
+  // États pour CV (Éducation et Expérience)
+  const [newEducation, setNewEducation] = useState<Partial<EducationInfo>>({});
+  const [newExperience, setNewExperience] = useState<Partial<ExperienceInfo>>({});
+  const [showEducationForm, setShowEducationForm] = useState(false);
+  const [showExperienceForm, setShowExperienceForm] = useState(false);
+
+  // États pour Déplacements (Communes)
+  const [communesByDept, setCommunesByDept] = useState<Record<string, Commune[]>>({});
+  const [showDepartmentCombobox, setShowDepartmentCombobox] = useState(false);
+  const [showCommuneCombobox, setShowCommuneCombobox] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setActiveTab(defaultTab);
@@ -70,48 +86,31 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
     loadChoixData();
   }, [professorId]);
 
+  // Effet pour auto-sélectionner les départements depuis les adresses
+  useEffect(() => {
+    const protectedDepts = getProtectedDepartments();
+    const currentDepts = formData.availableDepartments || [];
+
+    // Fusionner les départements protégés avec ceux existants
+    const mergedDepts = Array.from(new Set([...currentDepts, ...protectedDepts]));
+
+    // Mettre à jour seulement si différent pour éviter boucles infinies
+    if (
+      mergedDepts.length !== currentDepts.length ||
+      !mergedDepts.every((d) => currentDepts.includes(d))
+    ) {
+      handleInputChange('availableDepartments', mergedDepts);
+    }
+  }, [formData.primaryAddress?.postalCode, formData.secondaryAddress?.postalCode]);
+
   const loadProfile = async () => {
     try {
       setIsLoading(true);
-
-      // Charger le profil du professeur par son ID
-      // TODO: Remplacer par un vrai appel API via professorService.getProfessorById(professorId)
-      // Pour l'instant, données mockées
-      const mockProfile: Partial<ProfessorProfile> = {
-        _id: professorId,
-        gender: 'Mme' as Gender,
-        firstName: 'Marie',
-        lastName: 'Dupont',
-        birthName: '',
-        birthDate: '1990-05-15',
-        socialSecurityNumber: '',
-        birthCountry: 'France',
-        email: 'marie.dupont@example.com',
-        phone: '0123456789',
-        secondaryPhone: '',
-        postalCode: '75001',
-        primaryAddress: {
-          street: '123 Rue Exemple',
-          addressComplement: '',
-          postalCode: '75001',
-          city: 'Paris',
-        },
-        secondaryAddress: {
-          street: '',
-        },
-        transportMode: 'voiture',
-        courseLocation: 'domicile',
-        // Status fields
-        employmentStatus: undefined,
-        siret: '',
-        // Déplacements
-        availableDepartments: [],
-        // Disponibilités
-        weeklyAvailability: {},
-      };
-      setFormData(mockProfile);
+      const professor = await professorService.getProfessorById(professorId);
+      setFormData(professor);
     } catch (err) {
       console.error('Erreur lors du chargement du profil:', err);
+      setError('Impossible de charger le profil du professeur');
     } finally {
       setIsLoading(false);
     }
@@ -121,39 +120,8 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
     try {
       setIsLoadingDocuments(true);
       setError(null);
-
-      // TODO: Remplacer par l'appel API réel
-      // const docs = await professorService.getDocuments(professorId);
-
-      // Données mockées pour le moment
-      const mockDocuments: Document[] = [
-        {
-          _id: '1',
-          filename: 'Mon_CV.pdf',
-          category: 'CV',
-          uploadDate: new Date('2024-01-15').toISOString(),
-          size: 245000,
-          contentType: 'application/pdf'
-        },
-        {
-          _id: '2',
-          filename: 'Diplome_Master_Mathematiques.pdf',
-          category: 'Diplôme',
-          uploadDate: new Date('2024-01-20').toISOString(),
-          size: 1200000,
-          contentType: 'application/pdf'
-        },
-        {
-          _id: '3',
-          filename: 'RIB_Banque_Postale.pdf',
-          category: 'RIB',
-          uploadDate: new Date('2024-02-01').toISOString(),
-          size: 89000,
-          contentType: 'application/pdf'
-        }
-      ];
-
-      setDocuments(mockDocuments);
+      const docs = await professorService.getDocuments(professorId);
+      setDocuments(docs);
     } catch (err) {
       console.error('Erreur lors du chargement des documents:', err);
       setError('Impossible de charger vos documents');
@@ -164,13 +132,10 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
 
   const loadChoixData = async () => {
     try {
-      const [subjects, mySubjects] = await Promise.all([
-        subjectService.getActiveSubjects(),
-        professorService.getMySubjects(),
-      ]);
+      const subjects = await subjectService.getActiveSubjects();
 
       console.log('Subjects loaded:', subjects);
-      console.log('My subjects loaded:', mySubjects);
+      console.log('Teaching subjects from props:', initialTeachingSubjects);
 
       // Si aucune matière n'est retournée, utiliser des données de test
       if (!subjects || subjects.length === 0) {
@@ -190,7 +155,8 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
         setAllSubjects(subjects);
       }
 
-      setTeachingSubjects(mySubjects || []);
+      // Utiliser les teachingSubjects passés en props
+      setTeachingSubjects(initialTeachingSubjects || []);
     } catch (error) {
       console.error('❌ Erreur de chargement des matières:', error);
       // En cas d'erreur, utiliser des données de test
@@ -205,20 +171,65 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
         { _id: '8', name: 'Espagnol', category: 'Langues' },
       ];
       setAllSubjects(mockSubjects);
-      setTeachingSubjects([]);
+      setTeachingSubjects(initialTeachingSubjects || []);
     }
   };
 
   const handleSave = async (section: string) => {
     try {
       setIsSaving(true);
-      console.log('Sauvegarde des données:', section, formData);
-      // TODO: Appeler professorService.updateProfessor(professorId, formData)
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simuler API call
+
+      const timestamp = new Date().toLocaleTimeString('fr-FR');
+      console.log(`\n📤 [${section.toUpperCase()}] Début de sauvegarde - ${timestamp}`);
+
+      // Préparer les données à envoyer selon la section
+      let dataToSend = {};
+
+      if (section === 'informations') {
+        // Pour la section informations, envoyer tous les champs sauf teachingSubjects
+        dataToSend = {
+          gender: formData.gender,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          birthName: formData.birthName,
+          birthDate: formData.birthDate,
+          socialSecurityNumber: formData.socialSecurityNumber,
+          birthCountry: formData.birthCountry,
+          nativeLanguage: formData.nativeLanguage,
+          email: formData.email,
+          phone: formData.phone,
+          secondaryPhone: formData.secondaryPhone,
+          postalCode: formData.postalCode,
+          primaryAddress: formData.primaryAddress,
+          secondaryAddress: formData.secondaryAddress,
+          transportMode: formData.transportMode,
+          courseLocation: formData.courseLocation,
+          education: formData.education,
+          experience: formData.experience,
+        };
+        console.log(`✍️  [${section.toUpperCase()}] Données à envoyer:`, dataToSend);
+      } else if (section === 'deplacements') {
+        dataToSend = {
+          availableDepartments: formData.availableDepartments,
+          availableCities: formData.availableCities,
+        };
+        console.log(`✍️  [${section.toUpperCase()}] Données à envoyer:`, dataToSend);
+      }
+
+      console.log(`🌐 [${section.toUpperCase()}] Envoi de la requête à l'API...`);
+
+      const response = await professorService.updateMyProfile(professorId, dataToSend);
+
+      console.log(`✅ [${section.toUpperCase()}] Réponse du serveur reçue:`, {
+        status: 'succès',
+        timestamp: new Date().toLocaleTimeString('fr-FR'),
+        dataReturned: response
+      });
+
       alert('Modifications enregistrées avec succès !');
     } catch (err) {
-      console.error('Erreur lors de la sauvegarde:', err);
-      alert('Erreur lors de la sauvegarde');
+      console.error(`\n❌ [${section.toUpperCase()}] Erreur lors de la sauvegarde:`, err);
+      alert('Erreur lors de la sauvegarde: ' + (err instanceof Error ? err.message : 'Erreur inconnue'));
     } finally {
       setIsSaving(false);
     }
@@ -229,10 +240,32 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
 
     try {
       setIsSaving(true);
-      await professorService.updateMySubjects(teachingSubjects);
+
+      const timestamp = new Date().toLocaleTimeString('fr-FR');
+      console.log(`\n📤 [CHOIX] Début de sauvegarde - ${timestamp}`);
+      console.log(`✍️  [CHOIX] Matières sélectionnées (${teachingSubjects.length}):`,
+        teachingSubjects.map(ts => ({
+          name: ts.subjectName,
+          grades: ts.grades,
+          levels: ts.levels,
+          isCustom: ts.isCustom
+        }))
+      );
+
+      console.log(`🌐 [CHOIX] Envoi de la requête à l'API...`);
+
+      const response = await professorService.updateMySubjects(professorId, teachingSubjects);
+
+      console.log(`✅ [CHOIX] Réponse du serveur reçue:`, {
+        status: 'succès',
+        timestamp: new Date().toLocaleTimeString('fr-FR'),
+        subjectsReturned: response.length,
+        subjects: response
+      });
+
       alert('Vos choix ont été enregistrés avec succès !');
     } catch (error) {
-      console.error('Erreur de sauvegarde:', error);
+      console.error(`\n❌ [CHOIX] Erreur de sauvegarde:`, error);
       alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
     } finally {
       setIsSaving(false);
@@ -241,14 +274,6 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
 
   const handleInputChange = (field: keyof ProfessorProfile, value: any) => {
     setFormData((prev: Partial<ProfessorProfile>) => ({ ...prev, [field]: value }));
-  };
-
-  const toggleDepartment = (code: string) => {
-    const current = formData.availableDepartments || [];
-    const updated = current.includes(code)
-      ? current.filter((c) => c !== code)
-      : [...current, code];
-    handleInputChange('availableDepartments', updated);
   };
 
   // Handlers pour les matières (Choix)
@@ -309,16 +334,204 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
     return teachingSubjects.length > 0 && teachingSubjects.every(ts => ts.grades.length > 0);
   };
 
+  // Handlers pour les matières personnalisées
+  const handleAddCustomSubject = () => {
+    if (!customSubjectName.trim()) {
+      alert('Veuillez entrer un nom de matière');
+      return;
+    }
+
+    const tempId = `custom-${Date.now()}`;
+    setTeachingSubjects((prev) => [
+      ...prev,
+      {
+        subjectId: tempId,
+        subjectName: customSubjectName.trim(),
+        grades: [],
+        levels: [],
+        isCustom: true,
+      },
+    ]);
+    setCustomSubjectName('');
+    setIsAddingCustomSubject(false);
+  };
+
+  const handleDeleteCustomSubject = (subjectId: string) => {
+    setTeachingSubjects((prev) =>
+      prev.filter((ts) => ts.subjectId !== subjectId)
+    );
+  };
+
+  // Handlers pour CV (Éducation)
+  const handleAddEducation = () => {
+    if (!newEducation.degree || !newEducation.institution || !newEducation.year) {
+      alert('Veuillez remplir les champs obligatoires');
+      return;
+    }
+
+    const currentEducation = formData.education || [];
+    handleInputChange('education', [
+      ...currentEducation,
+      newEducation as EducationInfo,
+    ]);
+    setNewEducation({});
+    setShowEducationForm(false);
+  };
+
+  const handleDeleteEducation = (index: number) => {
+    const currentEducation = formData.education || [];
+    handleInputChange(
+      'education',
+      currentEducation.filter((_, i) => i !== index)
+    );
+  };
+
+  // Handlers pour CV (Expérience)
+  const handleAddExperience = () => {
+    if (!newExperience.position || !newExperience.company || !newExperience.startDate) {
+      alert('Veuillez remplir les champs obligatoires');
+      return;
+    }
+
+    const currentExperience = formData.experience || [];
+    handleInputChange('experience', [
+      ...currentExperience,
+      newExperience as ExperienceInfo,
+    ]);
+    setNewExperience({});
+    setShowExperienceForm(false);
+  };
+
+  const handleDeleteExperience = (index: number) => {
+    const currentExperience = formData.experience || [];
+    handleInputChange(
+      'experience',
+      currentExperience.filter((_, i) => i !== index)
+    );
+  };
+
+  // Fonction helper pour extraire le département du code postal
+  const getDepartmentFromPostalCode = (postalCode: string): string | null => {
+    if (!postalCode || postalCode.length < 2) return null;
+    const deptCode = postalCode.substring(0, 2);
+    // Vérifier si c'est un code département valide
+    if (FRENCH_DEPARTMENTS.some((d) => d.code === deptCode)) {
+      return deptCode;
+    }
+    return null;
+  };
+
+  // Fonction pour obtenir les départements protégés (auto-sélectionnés depuis adresses)
+  const getProtectedDepartments = (): string[] => {
+    const protectedDepts: string[] = [];
+
+    // Département de l'adresse principale
+    if (formData.primaryAddress?.postalCode) {
+      const dept = getDepartmentFromPostalCode(formData.primaryAddress.postalCode);
+      if (dept === '20') {
+        // Cas Corse: postal codes 20xxx deviennent 2A et 2B
+        protectedDepts.push('2A', '2B');
+      } else if (dept) {
+        protectedDepts.push(dept);
+      }
+    }
+
+    // Département de l'adresse secondaire
+    if (formData.secondaryAddress?.postalCode) {
+      const dept = getDepartmentFromPostalCode(formData.secondaryAddress.postalCode);
+      if (dept === '20') {
+        // Cas Corse
+        if (!protectedDepts.includes('2A')) protectedDepts.push('2A');
+        if (!protectedDepts.includes('2B')) protectedDepts.push('2B');
+      } else if (dept && !protectedDepts.includes(dept)) {
+        protectedDepts.push(dept);
+      }
+    }
+
+    return protectedDepts;
+  };
+
+  // Handler pour charger les communes d'un département
+  const loadCommunesForDepartment = async (deptCode: string) => {
+    if (communesByDept[deptCode]) return; // Déjà chargées
+
+    try {
+      const communes = await geoApiService.getCommunesByDepartment(deptCode);
+      setCommunesByDept((prev) => ({ ...prev, [deptCode]: communes }));
+    } catch (error) {
+      console.error(`Erreur lors du chargement des communes du département ${deptCode}:`, error);
+    }
+  };
+
+  // Handler pour ajouter/supprimer une commune
+  const toggleCity = (cityCode: string) => {
+    const current = formData.availableCities || [];
+    const updated = current.includes(cityCode)
+      ? current.filter((c) => c !== cityCode)
+      : [...current, cityCode];
+    handleInputChange('availableCities', updated);
+  };
+
+  // Handler pour supprimer un département (avec vérification de protection)
+  const handleRemoveDepartment = (deptCode: string) => {
+    const protectedDepts = getProtectedDepartments();
+
+    // Vérifier si c'est un département protégé
+    if (protectedDepts.includes(deptCode)) {
+      alert('Vous ne pouvez pas supprimer un département correspondant à votre adresse');
+      return;
+    }
+
+    // Supprimer le département
+    const currentDepts = formData.availableDepartments || [];
+    const updatedDepts = currentDepts.filter((d) => d !== deptCode);
+    handleInputChange('availableDepartments', updatedDepts);
+
+    // Supprimer aussi les communes associées à ce département
+    const communes = communesByDept[deptCode] || [];
+    const communeCodes = communes.map((c) => c.code);
+    const currentCities = formData.availableCities || [];
+    const updatedCities = currentCities.filter((c) => !communeCodes.includes(c));
+    handleInputChange('availableCities', updatedCities);
+
+    // Fermer le combobox des communes pour ce département
+    setShowCommuneCombobox((prev) => ({
+      ...prev,
+      [deptCode]: false,
+    }));
+  };
+
+  // Handler pour obtenir les communes d'un département spécifique
+  const getCommunesForDepartment = (deptCode: string): Commune[] => {
+    return communesByDept[deptCode] || [];
+  };
+
   // Handlers pour les documents
   const handleFileUpload = async (file: File, category: string) => {
     try {
       setError(null);
-      console.log('Upload fichier:', file.name, 'Catégorie:', category);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const timestamp = new Date().toLocaleTimeString('fr-FR');
+      console.log(`\n📤 [DOCUMENTS] Début de l'upload - ${timestamp}`);
+      console.log(`✍️  [DOCUMENTS] Détails du fichier:`, {
+        name: file.name,
+        size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+        type: file.type,
+        category: category
+      });
+
+      console.log(`🌐 [DOCUMENTS] Envoi du fichier au serveur...`);
+      const result = await professorService.uploadDocument(professorId, file, category);
+
+      console.log(`✅ [DOCUMENTS] Upload du fichier réussi`);
+      console.log(`📋 [DOCUMENTS] Actualisation de la liste des documents...`);
       await loadDocuments();
+
+      console.log(`✅ [DOCUMENTS] Liste des documents actualisée`);
       alert('Document uploadé avec succès !');
     } catch (err) {
-      console.error('Erreur lors de l\'upload:', err);
+      console.error(`\n❌ [DOCUMENTS] Erreur lors de l'upload:`, err);
+      setError('Erreur lors de l\'upload du document');
       throw new Error('Erreur lors de l\'upload du document');
     }
   };
@@ -523,13 +736,262 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
               { value: 'visio', label: 'En visio' },
             ])}
             <div className="col-span-2">
-              <label className="text-xs text-gray-500 mb-1 block">Adresse secondaire</label>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-500">Adresse secondaire</label>
+                <Badge variant="outline" className="text-xs">
+                  Optionnel
+                </Badge>
+              </div>
+              <p className="text-xs text-gray-600 mb-2">
+                Remplir uniquement si vous souhaitez donner des cours dans un autre département
+              </p>
               <input
                 type="text"
                 value={formData.secondaryAddress?.street || ''}
                 onChange={(e) => handleInputChange('secondaryAddress', { ...formData.secondaryAddress, street: e.target.value })}
                 className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-gray-500 mb-1 block">Complément d'adresse</label>
+              <input
+                type="text"
+                value={formData.secondaryAddress?.addressComplement || ''}
+                onChange={(e) => handleInputChange('secondaryAddress', { ...formData.secondaryAddress, addressComplement: e.target.value })}
+                className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Code postal</label>
+              <input
+                type="text"
+                value={formData.secondaryAddress?.postalCode || ''}
+                onChange={(e) => handleInputChange('secondaryAddress', { ...formData.secondaryAddress, postalCode: e.target.value })}
+                className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Commune</label>
+              <input
+                type="text"
+                value={formData.secondaryAddress?.city || ''}
+                onChange={(e) => handleInputChange('secondaryAddress', { ...formData.secondaryAddress, city: e.target.value })}
+                className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+
+            <div className="col-span-2 my-4">
+              <Separator />
+            </div>
+
+            {/* Section CV - Formations */}
+            <div className="col-span-2">
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">Formations académiques</h4>
+
+              {/* Liste des formations existantes */}
+              {formData.education && formData.education.length > 0 && (
+                <div className="space-y-3 mb-4">
+                  {formData.education.map((edu, index) => (
+                    <div key={index} className="bg-gray-50 rounded-md p-3 flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">
+                          {edu.degree} • {edu.institution} ({edu.year})
+                        </div>
+                        {edu.description && (
+                          <div className="text-xs text-gray-600 mt-1">{edu.description}</div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteEducation(index)}
+                        className="ml-4 text-red-600 hover:text-red-700 text-xs font-medium"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Formulaire d'ajout de formation */}
+              {showEducationForm ? (
+                <div className="border border-gray-300 rounded-md p-4 space-y-3 mb-4">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Diplôme *</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Master, Licence, Bac..."
+                      value={newEducation.degree || ''}
+                      onChange={(e) => setNewEducation({ ...newEducation, degree: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Établissement *</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Université de Paris..."
+                      value={newEducation.institution || ''}
+                      onChange={(e) => setNewEducation({ ...newEducation, institution: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Année *</label>
+                    <input
+                      type="number"
+                      placeholder="Ex: 2020"
+                      value={newEducation.year || ''}
+                      onChange={(e) => setNewEducation({ ...newEducation, year: parseInt(e.target.value) })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Description</label>
+                    <textarea
+                      placeholder="Détails supplémentaires..."
+                      value={newEducation.description || ''}
+                      onChange={(e) => setNewEducation({ ...newEducation, description: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                      rows={2}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleAddEducation}
+                      className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                    >
+                      Ajouter
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowEducationForm(false);
+                        setNewEducation({});
+                      }}
+                      className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowEducationForm(true)}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium mb-4"
+                >
+                  + Ajouter une formation
+                </button>
+              )}
+            </div>
+
+            {/* Section CV - Expériences */}
+            <div className="col-span-2">
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">Expériences professionnelles</h4>
+
+              {/* Liste des expériences existantes */}
+              {formData.experience && formData.experience.length > 0 && (
+                <div className="space-y-3 mb-4">
+                  {formData.experience.map((exp, index) => (
+                    <div key={index} className="bg-gray-50 rounded-md p-3 flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">
+                          {exp.position} chez {exp.company}{' '}
+                          ({new Date(exp.startDate).getFullYear()}
+                          {exp.endDate ? ` - ${new Date(exp.endDate).getFullYear()}` : ' - Actuellement'})
+                        </div>
+                        {exp.description && (
+                          <div className="text-xs text-gray-600 mt-1">{exp.description}</div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteExperience(index)}
+                        className="ml-4 text-red-600 hover:text-red-700 text-xs font-medium"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Formulaire d'ajout d'expérience */}
+              {showExperienceForm ? (
+                <div className="border border-gray-300 rounded-md p-4 space-y-3 mb-4">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Poste *</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Professeur de mathématiques..."
+                      value={newExperience.position || ''}
+                      onChange={(e) => setNewExperience({ ...newExperience, position: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Entreprise/Établissement *</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Lycée Jean Moulin..."
+                      value={newExperience.company || ''}
+                      onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">Date de début *</label>
+                      <input
+                        type="date"
+                        value={newExperience.startDate || ''}
+                        onChange={(e) => setNewExperience({ ...newExperience, startDate: e.target.value })}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">Date de fin</label>
+                      <input
+                        type="date"
+                        value={newExperience.endDate || ''}
+                        onChange={(e) => setNewExperience({ ...newExperience, endDate: e.target.value })}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Description</label>
+                    <textarea
+                      placeholder="Détails supplémentaires..."
+                      value={newExperience.description || ''}
+                      onChange={(e) => setNewExperience({ ...newExperience, description: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                      rows={2}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleAddExperience}
+                      className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                    >
+                      Ajouter
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowExperienceForm(false);
+                        setNewExperience({});
+                      }}
+                      className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowExperienceForm(true)}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  + Ajouter une expérience
+                </button>
+              )}
             </div>
           </div>
 
@@ -774,6 +1236,107 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
               })}
             </div>
 
+            {/* Section Matières personnalisées */}
+            {teachingSubjects.filter((ts) => ts.isCustom).length > 0 && (
+              <>
+                <Separator className="my-6" />
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Matières personnalisées</h3>
+                  <div className="space-y-3 mb-4">
+                    {teachingSubjects
+                      .filter((ts) => ts.isCustom)
+                      .map((subject) => {
+                        const selectedGrades = subject.grades || [];
+                        return (
+                          <div
+                            key={subject.subjectId}
+                            className="border border-orange-200 rounded-lg p-4 bg-orange-50"
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-base font-medium text-gray-900">
+                                  {subject.subjectName}
+                                </span>
+                                <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300">
+                                  Matière personnalisée
+                                </Badge>
+                                {selectedGrades.length > 0 && (
+                                  <Badge variant="secondary">{selectedGrades.length} niveau(x)</Badge>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => handleDeleteCustomSubject(subject.subjectId)}
+                                className="text-red-600 hover:text-red-700 text-sm font-medium"
+                              >
+                                Supprimer
+                              </button>
+                            </div>
+                            {/* Sélecteur de niveaux pour matière personnalisée */}
+                            <SubjectLevelsSelector
+                              selectedGrades={selectedGrades}
+                              onChange={(grades) =>
+                                handleGradesChange(subject.subjectId, grades)
+                              }
+                            />
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Bouton pour ajouter une matière personnalisée */}
+            {!isAddingCustomSubject ? (
+              <div className="flex justify-center pt-4 pb-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAddingCustomSubject(true)}
+                  className="border-orange-300 text-orange-600 hover:bg-orange-50"
+                >
+                  Autre
+                </Button>
+              </div>
+            ) : (
+              <div className="border border-orange-300 rounded-lg p-4 bg-orange-50">
+                <label className="text-sm font-medium text-gray-900 mb-2 block">
+                  Ajouter une matière personnalisée
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Ex: Latin, Grec ancien, Poterie..."
+                    value={customSubjectName}
+                    onChange={(e) => setCustomSubjectName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleAddCustomSubject();
+                      if (e.key === 'Escape') {
+                        setIsAddingCustomSubject(false);
+                        setCustomSubjectName('');
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleAddCustomSubject}
+                    className="px-4 py-2 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-700"
+                  >
+                    Ajouter
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsAddingCustomSubject(false);
+                      setCustomSubjectName('');
+                    }}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
+
             <Separator />
 
             {/* Actions */}
@@ -808,22 +1371,236 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
             </p>
           </div>
 
-          <div className="grid grid-flow-col grid-rows-[repeat(101,minmax(0,1fr))] sm:grid-rows-[repeat(51,minmax(0,1fr))] lg:grid-rows-[repeat(34,minmax(0,1fr))] gap-3 auto-cols-fr">
-            {FRENCH_DEPARTMENTS.map((dept) => (
-              <div key={dept.code} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`dept-${dept.code}`}
-                  checked={formData.availableDepartments?.includes(dept.code) || false}
-                  onCheckedChange={() => toggleDepartment(dept.code)}
-                />
-                <Label
-                  htmlFor={`dept-${dept.code}`}
-                  className="text-sm cursor-pointer"
-                >
-                  {dept.code} - {dept.name}
-                </Label>
+          <div className="space-y-6">
+            {/* Départements auto-sélectionnés depuis les adresses */}
+            {getProtectedDepartments().length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">Départements liés à vos adresses</h4>
+                <div className="space-y-3">
+                    {getProtectedDepartments().map((deptCode) => {
+                      const dept = FRENCH_DEPARTMENTS.find((d) => d.code === deptCode);
+                      const communes = getCommunesForDepartment(deptCode);
+                      const selectedCityCodes = (formData.availableCities || []).filter((cityCode) =>
+                        communes.some((c) => c.code === cityCode)
+                      );
+
+                      return (
+                        <div key={deptCode} className="border border-gray-200 rounded-lg p-4">
+                          {/* En-tête du département (sans bouton de suppression) */}
+                          <h5 className="text-sm font-medium text-gray-900 mb-3">
+                            {deptCode} - {dept?.name || 'Département inconnu'}
+                          </h5>
+
+                          {/* Communes sélectionnées en badges */}
+                          {selectedCityCodes.length > 0 && (
+                            <div className="mb-3 flex flex-wrap gap-2">
+                              {communes
+                                .filter((c) => selectedCityCodes.includes(c.code))
+                                .map((commune) => (
+                                  <Badge
+                                    key={commune.code}
+                                    variant="secondary"
+                                    className="cursor-pointer hover:bg-gray-300"
+                                    onClick={() => toggleCity(commune.code)}
+                                  >
+                                    {commune.nom} ✕
+                                  </Badge>
+                                ))}
+                            </div>
+                          )}
+
+                          {/* Bouton pour sélectionner des communes */}
+                          {!showCommuneCombobox[deptCode] && (
+                            <div className="mt-3">
+                              <button
+                                onClick={async () => {
+                                  await loadCommunesForDepartment(deptCode);
+                                  setShowCommuneCombobox((prev) => ({
+                                    ...prev,
+                                    [deptCode]: true,
+                                  }));
+                                }}
+                                className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                              >
+                                Sélectionner les communes
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Combobox pour sélectionner des communes */}
+                          {showCommuneCombobox[deptCode] && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <CommuneCombobox
+                                departmentCode={deptCode}
+                                onSelect={toggleCity}
+                                selectedCodes={formData.availableCities || []}
+                                placeholder="Sélectionner des communes..."
+                                open={showCommuneCombobox[deptCode]}
+                                onOpenChange={(open) => {
+                                  setShowCommuneCombobox((prev) => ({
+                                    ...prev,
+                                    [deptCode]: open,
+                                  }));
+                                }}
+                              />
+                              <button
+                                onClick={() => {
+                                  setShowCommuneCombobox((prev) => ({
+                                    ...prev,
+                                    [deptCode]: false,
+                                  }));
+                                }}
+                                className="mt-2 text-xs text-gray-600 hover:text-gray-700"
+                              >
+                                Fermer
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
-            ))}
+            )}
+
+            {/* Section pour ajouter d'autres départements */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">Ajouter d'autres départements</h4>
+              <div className="space-y-3">
+                {/* Afficher les départements ajoutés manuellement */}
+                {(formData.availableDepartments || [])
+                  .filter((code) => !getProtectedDepartments().includes(code))
+                  .map((deptCode) => {
+                    const dept = FRENCH_DEPARTMENTS.find((d) => d.code === deptCode);
+                    const communes = getCommunesForDepartment(deptCode);
+                    const selectedCityCodes = (formData.availableCities || []).filter((cityCode) =>
+                      communes.some((c) => c.code === cityCode)
+                    );
+
+                    return (
+                      <div key={deptCode} className="border border-gray-200 rounded-lg p-4">
+                        {/* En-tête du département avec bouton de suppression */}
+                        <div className="flex items-center justify-between mb-4">
+                          <h5 className="text-sm font-medium text-gray-900">
+                            {deptCode} - {dept?.name || 'Département inconnu'}
+                          </h5>
+                          <button
+                            onClick={() => handleRemoveDepartment(deptCode)}
+                            className="text-red-600 hover:text-red-700 text-sm font-medium"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Communes sélectionnées en badges */}
+                        {selectedCityCodes.length > 0 && (
+                          <div className="mb-3 flex flex-wrap gap-2">
+                            {communes
+                              .filter((c) => selectedCityCodes.includes(c.code))
+                              .map((commune) => (
+                                <Badge
+                                  key={commune.code}
+                                  variant="secondary"
+                                  className="cursor-pointer hover:bg-gray-300"
+                                  onClick={() => toggleCity(commune.code)}
+                                >
+                                  {commune.nom} ✕
+                                </Badge>
+                              ))}
+                          </div>
+                        )}
+
+                        {/* Bouton pour sélectionner des communes */}
+                        {!showCommuneCombobox[deptCode] && (
+                          <div className="mt-3">
+                            <button
+                              onClick={async () => {
+                                await loadCommunesForDepartment(deptCode);
+                                setShowCommuneCombobox((prev) => ({
+                                  ...prev,
+                                  [deptCode]: true,
+                                }));
+                              }}
+                              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                            >
+                              Sélectionner les communes
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Combobox pour sélectionner des communes */}
+                        {showCommuneCombobox[deptCode] && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <CommuneCombobox
+                              departmentCode={deptCode}
+                              onSelect={toggleCity}
+                              selectedCodes={formData.availableCities || []}
+                              placeholder="Sélectionner des communes..."
+                              open={showCommuneCombobox[deptCode]}
+                              onOpenChange={(open) => {
+                                setShowCommuneCombobox((prev) => ({
+                                  ...prev,
+                                  [deptCode]: open,
+                                }));
+                              }}
+                            />
+                            <button
+                              onClick={() => {
+                                setShowCommuneCombobox((prev) => ({
+                                  ...prev,
+                                  [deptCode]: false,
+                                }));
+                              }}
+                              className="mt-2 text-xs text-gray-600 hover:text-gray-700"
+                            >
+                              Fermer
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                {/* Bouton pour ouvrir le combobox de sélection de départements */}
+                {!showDepartmentCombobox && (
+                  <div className="flex justify-center pt-2">
+                    <button
+                      onClick={() => setShowDepartmentCombobox(true)}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      + Ajouter un département
+                    </button>
+                  </div>
+                )}
+
+                {/* Combobox pour sélectionner des départements */}
+                {showDepartmentCombobox && (
+                  <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
+                    <p className="text-sm font-medium text-gray-900 mb-3">
+                      Sélectionner un ou plusieurs départements
+                    </p>
+                    <DepartmentCombobox
+                      onSelect={(deptCode) => {
+                        const current = formData.availableDepartments || [];
+                        if (!current.includes(deptCode)) {
+                          handleInputChange('availableDepartments', [...current, deptCode]);
+                        }
+                      }}
+                      selectedCodes={formData.availableDepartments || []}
+                      placeholder="Rechercher un département..."
+                      open={showDepartmentCombobox}
+                      onOpenChange={setShowDepartmentCombobox}
+                    />
+                    <button
+                      onClick={() => setShowDepartmentCombobox(false)}
+                      className="mt-3 text-xs text-gray-600 hover:text-gray-700"
+                    >
+                      Fermer
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="mt-6">
