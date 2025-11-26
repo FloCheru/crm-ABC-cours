@@ -149,6 +149,7 @@ export interface Professor {
   bio?: string;
   education?: EducationInfo[];
   experience?: ExperienceInfo[];
+  currentActivity?: string;
   notes?: string;
 
   // Champs système

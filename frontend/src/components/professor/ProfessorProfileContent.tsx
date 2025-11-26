@@ -208,8 +208,11 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
           secondaryAddress: formData.secondaryAddress,
           transportMode: formData.transportMode,
           courseLocation: formData.courseLocation,
+          employmentStatus: formData.employmentStatus,
+          siret: formData.siret,
           education: formData.education,
           experience: formData.experience,
+          currentActivity: formData.currentActivity,
         };
         console.log(`✍️  [${section.toUpperCase()}] Données à envoyer (objet préparé):`, dataToSend);
         console.log(`🔍 [${section.toUpperCase()}] primaryAddress détails:`, {
@@ -657,12 +660,6 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
         >
           Déplacement
         </TabsTrigger>
-        <TabsTrigger
-          value="status"
-          className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
-        >
-          Status
-        </TabsTrigger>
       </TabsList>
 
       {/* Tab 1: Informations (fusion Identité + Coordonnées) */}
@@ -799,6 +796,52 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                 onChange={(e) => handleInputChange('secondaryAddress', { ...formData.secondaryAddress, city: e.target.value })}
                 className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               />
+            </div>
+
+            <div className="col-span-2 my-4">
+              <Separator />
+            </div>
+
+            {/* Section Statut d'emploi */}
+            <div className="col-span-2">
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">Statut d'emploi</h4>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    Statut professionnel *
+                  </label>
+                  <select
+                    value={formData.employmentStatus || ''}
+                    onChange={(e) =>
+                      handleInputChange('employmentStatus', e.target.value)
+                    }
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
+                    <option value="">Sélectionner...</option>
+                    <option value="salarie">Salarié</option>
+                    <option value="auto-entrepreneur">Auto-entrepreneur</option>
+                  </select>
+                </div>
+
+                {formData.employmentStatus === 'auto-entrepreneur' && (
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      SIRET * (14 chiffres)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.siret || ''}
+                      onChange={(e) => handleInputChange('siret', e.target.value)}
+                      pattern="[0-9]{14}"
+                      title="14 chiffres requis"
+                      maxLength={14}
+                      className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      placeholder="12345678901234"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="col-span-2 my-4">
@@ -1013,6 +1056,27 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                   + Ajouter une expérience
                 </button>
               )}
+            </div>
+
+            {/* Section Activité actuelle */}
+            <div className="col-span-2">
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">Activité actuelle</h4>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">
+                  Décrivez votre activité professionnelle actuelle
+                </label>
+                <textarea
+                  value={formData.currentActivity || ''}
+                  onChange={(e) => handleInputChange('currentActivity', e.target.value)}
+                  placeholder="Ex: Professeur de mathématiques en lycée, formateur en entreprise..."
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                  rows={4}
+                  maxLength={1000}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Maximum 1000 caractères
+                </p>
+              </div>
             </div>
           </div>
 
@@ -1635,63 +1699,6 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
         </div>
       </TabsContent>
 
-      {/* Tab 5: Status */}
-      <TabsContent value="status" className="mt-6">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Statut d'emploi</h3>
-            <p className="text-sm text-gray-500">
-              Statut professionnel du professeur
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">
-                Statut professionnel *
-              </label>
-              <select
-                value={formData.employmentStatus || ''}
-                onChange={(e) =>
-                  handleInputChange('employmentStatus', e.target.value)
-                }
-                className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              >
-                <option value="">Sélectionner...</option>
-                <option value="salarie">Salarié</option>
-                <option value="auto-entrepreneur">Auto-entrepreneur</option>
-              </select>
-            </div>
-
-            {formData.employmentStatus === 'auto-entrepreneur' && (
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">
-                  SIRET * (14 chiffres)
-                </label>
-                <input
-                  type="text"
-                  value={formData.siret || ''}
-                  onChange={(e) => handleInputChange('siret', e.target.value)}
-                  pattern="[0-9]{14}"
-                  title="14 chiffres requis"
-                  maxLength={14}
-                  className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  placeholder="12345678901234"
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="mt-6">
-            <Button
-              onClick={() => handleSave('status')}
-              disabled={isSaving}
-            >
-              {isSaving ? 'Enregistrement...' : 'Sauvegarder les modifications'}
-            </Button>
-          </div>
-        </div>
-      </TabsContent>
     </Tabs>
   );
 };

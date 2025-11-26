@@ -293,6 +293,11 @@ const professorSchema = new mongoose.Schema(
         description: String,
       },
     ],
+    currentActivity: {
+      type: String,
+      trim: true,
+      maxlength: [1000, "L'activité actuelle ne peut pas dépasser 1000 caractères"],
+    },
     notes: {
       type: String,
       trim: true,
