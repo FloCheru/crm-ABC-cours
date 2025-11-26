@@ -691,8 +691,8 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
               <Checkbox
                 id="nativeLanguage"
                 checked={formData.nativeLanguage || false}
-                onCheckedChange={(checked) =>
-                  handleInputChange('nativeLanguage', checked)
+                onCheckedChange={(checked: boolean | string) =>
+                  handleInputChange('nativeLanguage', checked === true ? 'yes' : '')
                 }
               />
               <Label

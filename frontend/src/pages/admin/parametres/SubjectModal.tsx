@@ -189,7 +189,7 @@ export const SubjectModal: React.FC<SubjectModalProps> = ({
               <>
                 <Select
                   value={formData.category}
-                  onValueChange={(value) => {
+                  onValueChange={(value: string) => {
                     if (value === "__new__") {
                       setShowNewCategory(true);
                       setFormData({ ...formData, category: "" });
