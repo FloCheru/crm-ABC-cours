@@ -44,6 +44,40 @@ class SubjectService {
       throw error;
     }
   }
+
+  async createSubject(data: {
+    name: string;
+    description?: string;
+    category: string;
+  }): Promise<Subject> {
+    const response = await apiClient.post("/api/subjects", data);
+    return response as Subject;
+  }
+
+  async updateSubject(id: string, data: Partial<Subject>): Promise<Subject> {
+    const response = await apiClient.put(`/api/subjects/${id}`, data);
+    return response as Subject;
+  }
+
+  async deleteSubject(id: string): Promise<void> {
+    await apiClient.delete(`/api/subjects/${id}`);
+  }
+
+  async checkSubjectUsage(
+    id: string
+  ): Promise<{ isUsed: boolean; count: number; ndrs: any[] }> {
+    const response = await apiClient.get(`/api/subjects/check-usage/${id}`);
+    return response as { isUsed: boolean; count: number; ndrs: any[] };
+  }
+
+  async getCategories(): Promise<string[]> {
+    try {
+      const response = await apiClient.get("/api/subjects/categories");
+      return Array.isArray(response) ? response : [];
+    } catch (error) {
+      return [];
+    }
+  }
 }
 
 export const subjectService = new SubjectService();

@@ -157,6 +157,57 @@ class GeoApiService {
       return {};
     }
   }
+
+  /**
+   * Récupère toutes les communes d'un département
+   *
+   * @param departmentCode - Code du département (ex: "75", "2A", "971")
+   * @returns Promise<Commune[]> - Liste des communes triées par nom
+   *
+   * @example
+   * ```typescript
+   * const communes = await geoApiService.getCommunesByDepartment("75");
+   * // Retourne : [
+   * //   { nom: "Aubervilliers", code: "75056", codeDepartement: "75", ... },
+   * //   { nom: "Bagnolet", code: "75057", codeDepartement: "75", ... },
+   * //   ...
+   * // ]
+   * ```
+   *
+   * @remarks
+   * - Gère les codes de département spéciaux (Corse: "2A"/"2B", DOM-TOM: "971", etc.)
+   * - Les communes sont triées alphabétiquement par nom pour faciliter la recherche
+   */
+  async getCommunesByDepartment(departmentCode: string): Promise<Commune[]> {
+    try {
+      // Validation basique du code département
+      if (!departmentCode || departmentCode.trim().length === 0) {
+        console.warn(`[GeoApiService] Code département invalide : ${departmentCode}`);
+        return [];
+      }
+
+      const url = `${this.baseUrl}/departements/${departmentCode}/communes`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        console.error(
+          `[GeoApiService] Erreur API Geo (${response.status}) pour le département ${departmentCode}`
+        );
+        return [];
+      }
+
+      const data: Commune[] = await response.json();
+
+      // Trier par nom pour faciliter la recherche
+      return data.sort((a, b) => a.nom.localeCompare(b.nom, 'fr-FR'));
+    } catch (error) {
+      console.error(
+        `[GeoApiService] Erreur lors de la récupération des communes du département ${departmentCode}:`,
+        error
+      );
+      return [];
+    }
+  }
 }
 
 // Exporter une instance unique du service (singleton)

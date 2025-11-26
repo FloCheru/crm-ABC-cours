@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const RDV = require("../models/RDV");
-const User = require("../models/User");
+const Admin = require("../models/Admin");
+const Professor = require("../models/Professor");
 const Family = require("../models/Family");
 const Subject = require("../models/Subject");
 
@@ -13,7 +14,7 @@ const TestDataHelpers = {
   // Créer un admin de test
   async createAdmin(overrides = {}) {
     const adminData = testDataFactory.createTestAdmin(overrides);
-    return User.create(adminData);
+    return Admin.create(adminData);
   },
 
   // Créer une famille de test

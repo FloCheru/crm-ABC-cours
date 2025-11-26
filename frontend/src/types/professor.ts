@@ -32,6 +32,13 @@ export type EmploymentStatus = "salarie" | "auto-entrepreneur" | "formation-prof
 
 export type ProfessorStatus = "active" | "inactive" | "pending" | "suspended";
 
+export interface Address {
+  street?: string;
+  addressComplement?: string;
+  postalCode?: string;
+  city?: string;
+}
+
 export type TimeSlot = {
   start: string; // Format: "HH:mm" (ex: "09:00")
   end: string;   // Format: "HH:mm" (ex: "12:00")
@@ -60,6 +67,7 @@ export interface TeachingSubject {
   subjectName: string;        // Nom de la matière (ex: "Mathématiques")
   grades: string[];           // Classes précises (ex: ["6ème", "5ème", "3ème"])
   levels: SchoolCategory[];   // Catégories (ex: ["college", "lycee"])
+  isCustom?: boolean;         // Flag pour matières personnalisées
 }
 
 /**
@@ -162,15 +170,12 @@ export interface ProfessorProfile extends Professor {
   birthName?: string;
   socialSecurityNumber?: string;
   birthCountry?: string;
+  nativeLanguage?: boolean;
   secondaryPhone?: string;
-  address?: string;
-  addressComplement?: string;
-  city?: string;
-  inseeCity?: string;
-  distributionOffice?: string;
+  primaryAddress?: Address;
+  secondaryAddress?: Address;
   transportMode?: TransportMode;
   courseLocation?: CourseLocation;
-  secondaryAddress?: string;
   employmentStatus?: EmploymentStatus;
   currentSituation?: CurrentSituation;
   siret?: string;
@@ -178,5 +183,6 @@ export interface ProfessorProfile extends Professor {
   iban?: string;
   bic?: string;
   availableDepartments?: string[];
+  availableCities?: string[];
   weeklyAvailability?: WeeklySchedule;
 }

@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const userSchema = new mongoose.Schema(
+const adminSchema = new mongoose.Schema(
   {
     email: {
       type: String,
@@ -18,11 +18,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: {
-        values: ["admin", "professor"],
-        message: "Rôle invalide. Valeurs autorisées: admin, professor",
-      },
-      required: [true, "Rôle de l'utilisateur requis"],
+      enum: ["admin"],
+      default: "admin",
     },
     firstName: {
       type: String,
@@ -54,12 +51,11 @@ const userSchema = new mongoose.Schema(
 );
 
 // Index pour améliorer les performances
-// Note: email déjà indexé via unique: true dans le schéma
-userSchema.index({ role: 1 });
-userSchema.index({ isActive: 1 });
+adminSchema.index({ email: 1 });
+adminSchema.index({ isActive: 1 });
 
 // Méthode pour hasher le mot de passe avant sauvegarde
-userSchema.pre("save", async function (next) {
+adminSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   try {
@@ -72,22 +68,22 @@ userSchema.pre("save", async function (next) {
 });
 
 // Méthode pour comparer les mots de passe
-userSchema.methods.comparePassword = async function (candidatePassword) {
+adminSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
 // Méthode pour obtenir le nom complet
-userSchema.methods.getFullName = function () {
+adminSchema.methods.getFullName = function () {
   return `${this.firstName} ${this.lastName}`;
 };
 
 // Méthode pour masquer le mot de passe dans les réponses JSON
-userSchema.methods.toJSON = function () {
-  const user = this.toObject();
-  delete user.password;
-  delete user.resetPasswordToken;
-  delete user.resetPasswordExpires;
-  return user;
+adminSchema.methods.toJSON = function () {
+  const admin = this.toObject();
+  delete admin.password;
+  delete admin.resetPasswordToken;
+  delete admin.resetPasswordExpires;
+  return admin;
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("Admin", adminSchema);

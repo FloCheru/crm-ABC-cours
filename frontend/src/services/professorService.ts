@@ -119,6 +119,15 @@ class ProfessorService {
     category: string
   ): Promise<ProfessorDocument> {
     try {
+      const timestamp = new Date().toLocaleTimeString('fr-FR');
+      console.log(`\n📤 [DOCUMENTS] Début d'upload - ${timestamp}`);
+      console.log(`✍️  [DOCUMENTS] Fichier:`, {
+        name: file.name,
+        size: (file.size / 1024).toFixed(2) + ' KB',
+        type: file.type,
+        category: category
+      });
+
       const formData = new FormData();
       formData.append('file', file);
       formData.append('category', category);
@@ -127,6 +136,8 @@ class ProfessorService {
       // Récupérer le token pour les uploads de fichiers
       const token = localStorage.getItem('token');
       const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+      console.log(`🌐 [DOCUMENTS] Envoi du fichier à /api/professors/${professorId}/documents`);
 
       const response = await fetch(`http://localhost:3000/api/professors/${professorId}/documents`, {
         method: 'POST',
@@ -142,9 +153,17 @@ class ProfessorService {
       }
 
       const data = await response.json();
+
+      console.log(`✅ [DOCUMENTS] Upload réussi:`, {
+        status: 'succès',
+        timestamp: new Date().toLocaleTimeString('fr-FR'),
+        documentId: data.document?._id,
+        filename: data.document?.filename
+      });
+
       return data.document;
     } catch (error) {
-      console.error('Erreur uploadDocument:', error);
+      console.error(`\n❌ [DOCUMENTS] Erreur uploadDocument:`, error);
       throw error;
     }
   }
@@ -207,12 +226,13 @@ class ProfessorService {
   // ==================== GESTION DU PROFIL PROFESSEUR ====================
 
   /**
-   * Récupère le profil du professeur connecté
+   * Récupère le profil d'un professeur
+   * @param professorId - ID du professeur
    * @returns Profil complet du professeur
    */
-  async getMyProfile(): Promise<Professor> {
+  async getMyProfile(professorId: string): Promise<Professor> {
     try {
-      const data = await apiClient.get<any>('/api/professors/me');
+      const data = await apiClient.get<any>(`/api/professors/${professorId}`);
       return data.professor;
     } catch (error) {
       console.error('Erreur getMyProfile:', error);
@@ -221,26 +241,40 @@ class ProfessorService {
   }
 
   /**
-   * Met à jour le profil du professeur connecté
+   * Met à jour le profil d'un professeur
+   * @param professorId - ID du professeur
    * @param profileData - Données du profil à mettre à jour
    * @returns Profil mis à jour
    */
-  async updateMyProfile(profileData: Partial<Professor>): Promise<Professor> {
+  async updateMyProfile(professorId: string, profileData: Partial<Professor>): Promise<Professor> {
     try {
-      const data = await apiClient.put<any>('/api/professors/me', profileData);
+      const timestamp = new Date().toLocaleTimeString('fr-FR');
+      console.log(`\n🔗 [professorService] updateMyProfile - ${timestamp}`);
+      console.log(`📦 [professorService] Données à envoyer:`, profileData);
+
+      console.log(`📤 [professorService] Envoi PUT à /api/professors/${professorId}`);
+      const data = await apiClient.put<any>(`/api/professors/${professorId}`, profileData);
+
+      console.log(`✅ [professorService] Réponse reçue du backend:`, {
+        status: 'succès',
+        professorId: data.professor?._id,
+        message: data.message
+      });
+
       return data.professor;
     } catch (error) {
-      console.error('Erreur updateMyProfile:', error);
+      console.error(`\n❌ [professorService] Erreur updateMyProfile:`, error);
       throw error;
     }
   }
 
   /**
-   * Met à jour les informations RIB du professeur connecté
+   * Met à jour les informations RIB d'un professeur
+   * @param professorId - ID du professeur
    * @param ribData - Données bancaires (employmentStatus, siret, bankName, iban, bic)
    * @returns Profil mis à jour
    */
-  async updateMyRib(ribData: {
+  async updateMyRib(professorId: string, ribData: {
     employmentStatus?: string;
     siret?: string;
     bankName?: string;
@@ -248,7 +282,8 @@ class ProfessorService {
     bic?: string;
   }): Promise<Professor> {
     try {
-      const data = await apiClient.put<any>('/api/professors/me/rib', ribData);
+      // Fusionner les données RIB avec la mise à jour du profil
+      const data = await apiClient.put<any>(`/api/professors/${professorId}`, ribData);
       return data.professor;
     } catch (error) {
       console.error('Erreur updateMyRib:', error);
@@ -257,13 +292,14 @@ class ProfessorService {
   }
 
   /**
-   * Met à jour les disponibilités du professeur connecté
+   * Met à jour les disponibilités d'un professeur
+   * @param professorId - ID du professeur
    * @param availability - Planning hebdomadaire de disponibilités
    * @returns Profil mis à jour
    */
-  async updateMyAvailability(availability: any): Promise<Professor> {
+  async updateMyAvailability(professorId: string, availability: any): Promise<Professor> {
     try {
-      const data = await apiClient.put<any>('/api/professors/me/availability', { weeklyAvailability: availability });
+      const data = await apiClient.put<any>(`/api/professors/${professorId}`, { weeklyAvailability: availability });
       return data.professor;
     } catch (error) {
       console.error('Erreur updateMyAvailability:', error);
@@ -274,13 +310,14 @@ class ProfessorService {
   // ==================== GESTION DES MATIÈRES ENSEIGNÉES ====================
 
   /**
-   * Récupère les matières enseignées par le professeur connecté
+   * Récupère les matières enseignées par un professeur
+   * @param professorId - ID du professeur
    * @returns Liste des matières avec niveaux associés
    */
-  async getMySubjects(): Promise<TeachingSubject[]> {
+  async getMySubjects(professorId: string): Promise<TeachingSubject[]> {
     try {
-      const data = await apiClient.get<any>('/api/professors/me/subjects');
-      return data.subjects || [];
+      const data = await apiClient.get<any>(`/api/professors/${professorId}`);
+      return data.professor?.teachingSubjects || [];
     } catch (error) {
       console.error('Erreur getMySubjects:', error);
       throw error;
@@ -288,16 +325,29 @@ class ProfessorService {
   }
 
   /**
-   * Met à jour les matières enseignées par le professeur connecté
+   * Met à jour les matières enseignées d'un professeur
+   * @param professorId - ID du professeur
    * @param subjects - Liste des matières avec niveaux
    * @returns Liste mise à jour
    */
-  async updateMySubjects(subjects: TeachingSubject[]): Promise<TeachingSubject[]> {
+  async updateMySubjects(professorId: string, subjects: TeachingSubject[]): Promise<TeachingSubject[]> {
     try {
-      const data = await apiClient.put<any>('/api/professors/me/subjects', { subjects });
-      return data.subjects || [];
+      const timestamp = new Date().toLocaleTimeString('fr-FR');
+      console.log(`\n🔗 [professorService] updateMySubjects - ${timestamp}`);
+      console.log(`📦 [professorService] Matières à envoyer (${subjects.length}):`, subjects);
+
+      console.log(`📤 [professorService] Envoi PUT à /api/professors/${professorId}/subjects`);
+      const data = await apiClient.put<any>(`/api/professors/${professorId}/subjects`, { teachingSubjects: subjects });
+
+      console.log(`✅ [professorService] Réponse reçue du backend:`, {
+        status: 'succès',
+        subjectsCount: data.teachingSubjects?.length || 0,
+        message: data.message
+      });
+
+      return data.teachingSubjects || [];
     } catch (error) {
-      console.error('Erreur updateMySubjects:', error);
+      console.error(`\n❌ [professorService] Erreur updateMySubjects:`, error);
       throw error;
     }
   }
@@ -320,11 +370,12 @@ class ProfessorService {
 
   /**
    * Vérifie si le professeur a un RIB valide et complet
+   * @param professorId - ID du professeur
    * @returns true si le RIB est complet, false sinon
    */
-  async hasValidRib(): Promise<boolean> {
+  async hasValidRib(professorId: string): Promise<boolean> {
     try {
-      const profile = await this.getMyProfile();
+      const profile = await this.getMyProfile(professorId);
 
       // Vérifier que tous les champs essentiels du RIB sont présents
       const hasEmploymentStatus = !!(profile as any).employmentStatus;

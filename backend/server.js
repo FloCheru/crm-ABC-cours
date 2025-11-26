@@ -6,6 +6,7 @@ const rateLimit = require("express-rate-limit");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const dotenv = require("dotenv");
+const mongoose = require("mongoose");
 
 // Configuration d'environnement propre
 const envFile =

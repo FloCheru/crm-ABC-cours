@@ -2,7 +2,8 @@ const request = require("supertest");
 const mongoose = require("mongoose");
 const app = require("../server");
 const Family = require("../models/Family");
-const User = require("../models/User");
+const Admin = require("../models/Admin");
+const Professor = require("../models/Professor");
 const NDR = require("../models/NDR");
 const Subject = require("../models/Subject");
 
@@ -32,7 +33,7 @@ describe("Routes API - Families", () => {
 
     // Créer un utilisateur admin de test
     const adminData = testDataFactory.createTestAdmin();
-    testUser = await User.create(adminData);
+    testUser = await Admin.create(adminData);
 
     // Créer le token d'authentification
     authToken = testDataFactory.createAuthToken(testUser);
@@ -349,7 +350,7 @@ describe("Routes API - NDR", () => {
 
     // Créer un utilisateur admin de test
     const adminData = testDataFactory.createTestAdmin();
-    testUser = await User.create(adminData);
+    testUser = await Admin.create(adminData);
 
     // Créer le token d'authentification
     authToken = testDataFactory.createAuthToken(testUser);

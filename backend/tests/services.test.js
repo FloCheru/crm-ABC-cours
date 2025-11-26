@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const FamilyService = require("../services/familyService");
 const Family = require("../models/Family");
-const User = require("../models/User");
+const Admin = require("../models/Admin");
+const Professor = require("../models/Professor");
 const RendezVous = require("../models/RDV");
 
 // Import des utilitaires centralisés
@@ -30,7 +31,7 @@ describe("FamilyService", () => {
     it("should return families with correct dataFlow.md structure", async () => {
       // Créer un utilisateur de test
       const userData = testDataFactory.createTestAdmin();
-      const user = await User.create(userData);
+      const user = await Admin.create(userData);
 
       // Créer une famille complète de test
       const familyData = testDataFactory.createTestFamilyComplete(user._id);
@@ -114,7 +115,7 @@ describe("FamilyService", () => {
 
       // Créer un utilisateur de test
       const userData = testDataFactory.createTestAdmin();
-      const user = await User.create(userData);
+      const user = await Admin.create(userData);
 
       // Créer une famille avec seulement les champs obligatoires
       const familyData = testDataFactory.createTestFamilyBase(user._id);
@@ -138,7 +139,7 @@ describe("FamilyService", () => {
 
       // Créer un utilisateur de test
       const userData = testDataFactory.createTestAdmin();
-      const user = await User.create(userData);
+      const user = await Admin.create(userData);
 
       // Créer 5 familles de test
       const familiesData = testDataFactory.createMultipleFamilies(user._id, 5);
@@ -155,7 +156,7 @@ describe("FamilyService", () => {
 
       // Créer un utilisateur de test
       const userData = testDataFactory.createTestAdmin();
-      const user = await User.create(userData);
+      const user = await Admin.create(userData);
 
       // Créer des familles avec des dates différentes
       const now = new Date();
@@ -193,7 +194,7 @@ describe("FamilyService", () => {
     beforeEach(async () => {
       // Créer un utilisateur de test
       const userData = testDataFactory.createTestAdmin();
-      testUser = await User.create(userData);
+      testUser = await Admin.create(userData);
 
       // Créer une famille de test
       const familyData = testDataFactory.createTestFamilyComplete(testUser._id);
@@ -652,7 +653,7 @@ describe("FamilyService", () => {
     beforeEach(async () => {
       // Créer un utilisateur de test
       const userData = testDataFactory.createTestAdmin();
-      testUser = await User.create(userData);
+      testUser = await Admin.create(userData);
     });
 
     describe("createFamily()", () => {

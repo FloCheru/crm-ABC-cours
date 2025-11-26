@@ -1,7 +1,8 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
-const User = require("../models/User");
+const Professor = require("../models/Professor");
+const Admin = require("../models/Admin");
 const { authenticate } = require("../middleware/auth");
 
 const router = express.Router();
@@ -59,21 +60,34 @@ router.post(
 
       const { email, password, firstName, lastName, role, phone } = req.body;
 
-      // Vérifier si l'utilisateur existe déjà
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
+      // Vérifier si l'email existe déjà (dans Professor ou Admin)
+      const existingProfessor = await Professor.findOne({ email });
+      const existingAdmin = await Admin.findOne({ email });
+      if (existingProfessor || existingAdmin) {
         return res.status(400).json({ message: "Cet email est déjà utilisé" });
       }
 
-      // Créer le nouvel utilisateur
-      const user = new User({
-        email,
-        password,
-        firstName,
-        lastName,
-        role,
-        phone,
-      });
+      // Créer le nouvel utilisateur selon son rôle
+      let user;
+      if (role === 'professor') {
+        user = new Professor({
+          email,
+          password,
+          firstName,
+          lastName,
+          phone,
+        });
+      } else if (role === 'admin') {
+        user = new Admin({
+          email,
+          password,
+          firstName,
+          lastName,
+          phone,
+        });
+      } else {
+        return res.status(400).json({ message: "Rôle invalide" });
+      }
 
       await user.save();
 
@@ -121,6 +135,7 @@ router.post(
       // Vérifier les erreurs de validation
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log("❌ [LOGIN] Validation échouée:", errors.array());
         return res.status(400).json({
           message: "Données invalides",
           errors: errors.array(),
@@ -128,23 +143,50 @@ router.post(
       }
 
       const { email, password } = req.body;
+      console.log("🔐 [LOGIN] Tentative de connexion pour:", email);
+      console.log("🔑 [LOGIN] Mot de passe reçu:", password);
 
-      // Trouver l'utilisateur
-      const user = await User.findOne({ email });
+      // Trouver l'utilisateur (dans Professor ou Admin)
+      let user = await Professor.findOne({ email });
+      let userType = "Professor";
+
       if (!user) {
+        console.log("👤 [LOGIN] Utilisateur non trouvé dans Professor, recherche dans Admin...");
+        user = await Admin.findOne({ email });
+        userType = "Admin";
+      }
+
+      if (!user) {
+        console.log("❌ [LOGIN] Aucun utilisateur trouvé avec cet email:", email);
         return res
           .status(401)
           .json({ message: "Email ou mot de passe incorrect" });
       }
 
+      console.log("✅ [LOGIN] Utilisateur trouvé:", {
+        type: userType,
+        email: user.email,
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isActive: user.isActive,
+        hasPassword: !!user.password,
+        passwordHash: user.password.substring(0, 20) + "..."
+      });
+
       // Vérifier si le compte est actif
       if (!user.isActive) {
+        console.log("❌ [LOGIN] Compte désactivé pour:", email);
         return res.status(401).json({ message: "Compte désactivé" });
       }
 
       // Vérifier le mot de passe
+      console.log("🔍 [LOGIN] Vérification du mot de passe...");
       const isMatch = await user.comparePassword(password);
+      console.log("🔍 [LOGIN] Résultat de la comparaison:", isMatch ? "✅ MATCH" : "❌ PAS DE MATCH");
+
       if (!isMatch) {
+        console.log("❌ [LOGIN] Mot de passe incorrect pour:", email);
         return res
           .status(401)
           .json({ message: "Email ou mot de passe incorrect" });
@@ -157,7 +199,7 @@ router.post(
       // Générer les tokens
       const accessToken = generateAccessToken(user._id);
       const refreshToken = generateRefreshToken(user._id);
-      
+
       // Stocker le refresh token
       refreshTokens.add(refreshToken);
 
@@ -167,6 +209,8 @@ router.post(
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
       });
+
+      console.log("✅ [LOGIN] Connexion réussie pour:", email, "- Token généré");
 
       res.json({
         message: "Connexion réussie",
@@ -182,7 +226,7 @@ router.post(
         },
       });
     } catch (error) {
-      console.error("Erreur lors de la connexion:", error);
+      console.error("❌ [LOGIN] Erreur lors de la connexion:", error);
       res.status(500).json({ message: "Erreur serveur" });
     }
   }
@@ -234,23 +278,22 @@ router.put(
 
       const { firstName, lastName, phone } = req.body;
 
-      // Mettre à jour l'utilisateur
-      const user = await User.findById(req.user._id);
-      if (firstName) user.firstName = firstName;
-      if (lastName) user.lastName = lastName;
-      if (phone) user.phone = phone;
+      // Mettre à jour l'utilisateur (déjà chargé via req.user par le middleware)
+      if (firstName) req.user.firstName = firstName;
+      if (lastName) req.user.lastName = lastName;
+      if (phone) req.user.phone = phone;
 
-      await user.save();
+      await req.user.save();
 
       res.json({
         message: "Profil mis à jour avec succès",
         user: {
-          id: user._id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          phone: user.phone,
+          id: req.user._id,
+          email: req.user.email,
+          firstName: req.user.firstName,
+          lastName: req.user.lastName,
+          role: req.user.role,
+          phone: req.user.phone,
         },
       });
     } catch (error) {
@@ -282,8 +325,11 @@ router.post("/refresh", async (req, res) => {
       return res.status(401).json({ message: "Type de token invalide" });
     }
     
-    // Récupérer l'utilisateur
-    const user = await User.findById(decoded.userId).select("-password");
+    // Récupérer l'utilisateur (dans Professor ou Admin)
+    let user = await Professor.findById(decoded.userId).select("-password");
+    if (!user) {
+      user = await Admin.findById(decoded.userId).select("-password");
+    }
     if (!user || !user.isActive) {
       refreshTokens.delete(refreshToken);
       return res.status(401).json({ message: "Utilisateur invalide" });
@@ -379,9 +425,8 @@ router.post("/logout", authenticate, (req, res) => {
 router.get("/admins", authenticate, async (req, res) => {
   try {
     // Récupérer tous les administrateurs actifs
-    const admins = await User.find({ 
-      role: "admin", 
-      isActive: true 
+    const admins = await Admin.find({
+      isActive: true
     })
     .select("firstName lastName email")
     .sort({ firstName: 1, lastName: 1 });
