@@ -64,6 +64,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
   const [teachingSubjects, setTeachingSubjects] = useState<TeachingSubject[]>([]);
   const [customSubjectName, setCustomSubjectName] = useState('');
   const [isAddingCustomSubject, setIsAddingCustomSubject] = useState(false);
+  const [isEditingSubjects, setIsEditingSubjects] = useState(false);
 
   // États pour CV (Éducation et Expérience)
   const [newEducation, setNewEducation] = useState<Partial<EducationInfo>>({});
@@ -304,6 +305,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
       });
 
       alert('Vos choix ont été enregistrés avec succès !');
+      setIsEditingSubjects(false);
     } catch (error) {
       console.error(`\n❌ [CHOIX] Erreur de sauvegarde:`, error);
       alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
@@ -1258,11 +1260,95 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
           <CardHeader>
             <CardTitle className="text-2xl">Matières enseignées</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Sélectionner les matières enseignées et les niveaux correspondants
+              {isEditingSubjects ? 'Sélectionner les matières enseignées et les niveaux correspondants' : 'Matières enseignées et niveaux associés'}
             </p>
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {/* VUE LECTURE - Affichage des matières sauvegardées */}
+            {!isEditingSubjects && teachingSubjects.length > 0 && (
+              <>
+                <div className="space-y-4">
+                  {/* Matières standard */}
+                  {teachingSubjects.filter(ts => !ts.isCustom).map(subject => (
+                    <div key={subject.subjectId} className="border rounded-lg p-4 bg-white hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">{subject.subjectName}</h4>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {subject.grades.map(grade => (
+                              <Badge key={grade} variant="secondary" className="text-xs">
+                                {grade}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Matières personnalisées */}
+                  {teachingSubjects.filter(ts => ts.isCustom).length > 0 && (
+                    <>
+                      <Separator className="my-4" />
+                      <h4 className="text-sm font-semibold text-gray-900">Matières personnalisées</h4>
+                      {teachingSubjects.filter(ts => ts.isCustom).map(subject => (
+                        <div key={subject.subjectId} className="border border-orange-200 rounded-lg p-4 bg-orange-50">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="text-sm font-semibold text-gray-900">{subject.subjectName}</h4>
+                                <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300 text-xs">
+                                  Personnalisée
+                                </Badge>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {subject.grades.map(grade => (
+                                  <Badge key={grade} variant="secondary" className="text-xs">
+                                    {grade}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+
+                <Separator />
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    onClick={() => setIsEditingSubjects(true)}
+                    variant="outline"
+                  >
+                    Modifier
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* VUE LECTURE - Aucune matière */}
+            {!isEditingSubjects && teachingSubjects.length === 0 && (
+              <>
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Aucune matière sélectionnée. Cliquez sur "Ajouter des matières" pour commencer.
+                  </AlertDescription>
+                </Alert>
+                <div className="flex gap-2 justify-end">
+                  <Button onClick={() => setIsEditingSubjects(true)}>
+                    Ajouter des matières
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* VUE ÉDITION - Formulaire de sélection */}
+            {isEditingSubjects && (
+              <>
             {/* Alert si aucune matière ou matières invalides */}
             {teachingSubjects.length === 0 && (
               <Alert>
@@ -1452,7 +1538,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
             <div className="flex justify-end gap-3">
               <Button
                 variant="outline"
-                onClick={loadChoixData}
+                onClick={() => setIsEditingSubjects(false)}
                 disabled={isSaving}
               >
                 <X className="w-4 h-4 mr-2" />
@@ -1466,6 +1552,8 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                 {isSaving ? 'Enregistrement...' : 'Enregistrer les choix'}
               </Button>
             </div>
+            </>
+            )}
           </CardContent>
         </Card>
       </TabsContent>
