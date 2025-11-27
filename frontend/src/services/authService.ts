@@ -16,6 +16,7 @@ export interface AuthResponse {
     role: string;
     firstName: string;
     lastName: string;
+    isPasswordSet?: boolean;
   };
 }
 
@@ -76,6 +77,24 @@ class AuthService {
 
   isAuthenticated(): boolean {
     return !!this.getToken();
+  }
+
+  async changePassword(newPassword: string): Promise<void> {
+    const token = this.getToken();
+    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ newPassword }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Erreur lors du changement de mot de passe");
+    }
   }
 
   async refreshToken(): Promise<void> {

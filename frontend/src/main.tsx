@@ -28,6 +28,7 @@ import {
   ProfessorLayout,
   AdminLayout,
 } from "./pages";
+import { ChangePassword } from "./pages/auth/ChangePassword";
 import {
   Ndrs,
   NdrDetails,
@@ -59,6 +60,7 @@ function AppRoutes() {
       <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/change-password" element={<ChangePassword />} />
 
           {/* Routes admin avec layout nested */}
           <Route

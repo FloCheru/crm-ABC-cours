@@ -24,9 +24,14 @@ export const Login: React.FC = () => {
     setError("");
 
     try {
-      await login(credentials.email, credentials.password);
-      // Rediriger vers la page d'origine ou la page par défaut
-      navigate(from, { replace: true });
+      const result = await login(credentials.email, credentials.password);
+
+      // Si première connexion, rediriger vers changement de mot de passe
+      if (result.requirePasswordChange) {
+        navigate("/change-password", { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : "Erreur de connexion");
     } finally {
