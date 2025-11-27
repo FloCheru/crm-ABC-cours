@@ -111,9 +111,16 @@ const professorSchema = new mongoose.Schema(
         trim: true,
       },
     },
-    transportMode: {
-      type: String,
-      trim: true,
+    transportModes: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: function(modes) {
+          const validModes = ['voiture', 'vélo', 'transports', 'moto', 'pied'];
+          return modes.every(mode => validModes.includes(mode));
+        },
+        message: 'Mode de transport invalide'
+      }
     },
     courseLocation: {
       type: String,
@@ -337,20 +344,33 @@ professorSchema.index({ isActive: 1 });
 
 // Méthode pour hasher le mot de passe avant sauvegarde
 professorSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password")) {
+    console.log("[PROFESSOR PRE-SAVE] Mot de passe non modifié, skip hashing");
+    return next();
+  }
 
   try {
+    console.log("[PROFESSOR PRE-SAVE] 🔐 Hashing du mot de passe pour:", this.email);
+    console.log("[PROFESSOR PRE-SAVE] Longueur du mot de passe avant hash:", this.password?.length);
     const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    const hashedPassword = await bcrypt.hash(this.password, salt);
+    console.log("[PROFESSOR PRE-SAVE] Hash généré:", hashedPassword.substring(0, 20) + "...");
+    this.password = hashedPassword;
     next();
   } catch (error) {
+    console.error("[PROFESSOR PRE-SAVE] ❌ Erreur lors du hashing:", error);
     next(error);
   }
 });
 
 // Méthode pour comparer les mots de passe
 professorSchema.methods.comparePassword = async function (candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  console.log("[COMPARE PASSWORD] 🔍 Comparaison pour:", this.email);
+  console.log("[COMPARE PASSWORD] Mot de passe candidat longueur:", candidatePassword?.length);
+  console.log("[COMPARE PASSWORD] Hash stocké:", this.password?.substring(0, 20) + "...");
+  const result = await bcrypt.compare(candidatePassword, this.password);
+  console.log("[COMPARE PASSWORD] Résultat:", result ? "✅ MATCH" : "❌ NO MATCH");
+  return result;
 };
 
 // Méthode pour obtenir le nom complet

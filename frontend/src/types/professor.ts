@@ -8,6 +8,7 @@ import type { SchoolCategory } from '../constants/schoolLevels';
 
 export type Gender = "M." | "Mme";
 export type TransportMode = "voiture" | "vélo" | "transports" | "moto" | "pied";
+export type TransportModes = TransportMode[];
 export type CourseLocation = "domicile" | "visio";
 export type DisabilityKnowledge =
   | "aucune"
@@ -184,7 +185,7 @@ export interface ProfessorProfile extends Professor {
   secondaryPhone?: string;
   primaryAddress?: Address;
   secondaryAddress?: Address;
-  transportMode?: TransportMode;
+  transportModes?: TransportModes;
   courseLocation?: CourseLocation;
   employmentStatus?: EmploymentStatus;
   currentSituation?: CurrentSituation;

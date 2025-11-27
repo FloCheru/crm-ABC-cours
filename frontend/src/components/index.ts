@@ -18,3 +18,4 @@ export { ProtectedRoute } from "./ProtectedRoute";
 export { DeletionPreviewModal } from "./ui/DeletionPreviewModal";
 export { SettlementDeletionPreviewModal } from "./ui/SettlementDeletionPreviewModal";
 export { PageHeader } from "./pageHeader/PageHeader";
+export { TemporaryPasswordModal } from "./TemporaryPasswordModal";

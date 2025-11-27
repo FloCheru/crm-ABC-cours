@@ -24,15 +24,30 @@ export const Login: React.FC = () => {
     setError("");
 
     try {
+      console.log("[LOGIN PAGE] 🔐 Tentative de connexion pour:", credentials.email);
       const result = await login(credentials.email, credentials.password);
+      console.log("[LOGIN PAGE] ✅ Connexion réussie, résultat:", result);
+      console.log("[LOGIN PAGE] 🔍 requirePasswordChange?", result.requirePasswordChange);
 
       // Si première connexion, rediriger vers changement de mot de passe
       if (result.requirePasswordChange) {
+        console.log("[LOGIN PAGE] 🔄 Redirection vers /change-password");
         navigate("/change-password", { replace: true });
       } else {
-        navigate(from, { replace: true });
+        // Déterminer la page de destination selon le rôle
+        const userRole = result.user?.role;
+        let destination = from;
+
+        // Si pas de "from" spécifique ou si c'est une route par défaut, rediriger selon le rôle
+        if (!location.state?.from || from === "/admin/coupons") {
+          destination = userRole === "professor" ? "/professeur/dashboard" : "/admin/coupons";
+        }
+
+        console.log("[LOGIN PAGE] 🔄 Redirection vers", destination, "(rôle:", userRole + ")");
+        navigate(destination, { replace: true });
       }
     } catch (error) {
+      console.error("[LOGIN PAGE] ❌ Erreur de connexion:", error);
       setError(error instanceof Error ? error.message : "Erreur de connexion");
     } finally {
       setIsLoading(false);

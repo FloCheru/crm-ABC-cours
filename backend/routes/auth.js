@@ -219,6 +219,7 @@ router.post(
       });
 
       console.log("✅ [LOGIN] Connexion réussie pour:", email, "- Token généré");
+      console.log("🔍 [LOGIN] isPasswordSet:", user.isPasswordSet);
 
       res.json({
         message: "Connexion réussie",
@@ -230,7 +231,7 @@ router.post(
           lastName: user.lastName,
           role: user.role,
           isActive: user.isActive,
-          isPasswordSet: user.isPasswordSet || true,
+          isPasswordSet: user.isPasswordSet !== false, // true si undefined ou true, false si explicitement false
           lastLogin: user.lastLogin,
         },
       });
@@ -339,6 +340,7 @@ router.post(
       const userId = req.user._id;
 
       console.log("🔐 [CHANGE-PASSWORD] Changement de mot de passe pour utilisateur:", userId);
+      console.log("🔐 [CHANGE-PASSWORD] Nouveau mot de passe reçu (longueur):", newPassword?.length);
 
       // Récupérer l'utilisateur actuel (peut être Professor ou Admin)
       let user = await Professor.findById(userId);
@@ -357,12 +359,19 @@ router.post(
       console.log("✅ [CHANGE-PASSWORD] Utilisateur trouvé:", {
         type: userType,
         email: user.email,
+        isPasswordSet: user.isPasswordSet,
+        hasPassword: !!user.password,
       });
+
+      console.log("🔐 [CHANGE-PASSWORD] Ancien hash:", user.password?.substring(0, 20) + "...");
 
       // Mettre à jour le mot de passe
       user.password = newPassword;
       user.isPasswordSet = true;
+
+      console.log("🔐 [CHANGE-PASSWORD] Avant save - nouveau mot de passe (longueur):", user.password?.length);
       await user.save();
+      console.log("🔐 [CHANGE-PASSWORD] Après save - hash du mot de passe:", user.password?.substring(0, 20) + "...");
 
       console.log("✅ [CHANGE-PASSWORD] Mot de passe changé avec succès");
 

@@ -44,10 +44,18 @@ class ProfessorService {
   /**
    * Crée un nouveau professeur
    */
-  async createProfessor(professorData: Partial<Professor>): Promise<Professor> {
+  async createProfessor(professorData: Partial<Professor>): Promise<any> {
     try {
       const data = await apiClient.post<any>('/api/professors', professorData);
-      return data.professor;
+      console.log("[PROFESSOR SERVICE] 📦 Réponse complète de l'API:", data);
+      console.log("[PROFESSOR SERVICE] 🔑 Clés disponibles:", Object.keys(data));
+      console.log("[PROFESSOR SERVICE] 🔐 temporaryPassword présent?", data.temporaryPassword);
+
+      // Retourner la réponse complète pour inclure temporaryPassword si présent
+      return {
+        ...data.professor,
+        temporaryPassword: data.temporaryPassword,
+      };
     } catch (error) {
       console.error('Erreur createProfessor:', error);
       throw error;

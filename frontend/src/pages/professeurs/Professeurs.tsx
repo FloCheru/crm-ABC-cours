@@ -10,6 +10,7 @@ import {
   Table,
   Select,
   Modal,
+  TemporaryPasswordModal,
 } from "../../components";
 import { KeyRound, UserRound, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
@@ -64,6 +65,14 @@ export const Professeurs: React.FC = () => {
   const [filterEmploymentStatus, setFilterEmploymentStatus] = useState<string>("");
   const [isCreateTeacherModalOpen, setIsCreateTeacherModalOpen] =
     useState(false);
+
+  // State for temporary password modal
+  const [showTemporaryPasswordModal, setShowTemporaryPasswordModal] = useState(false);
+  const [temporaryPasswordData, setTemporaryPasswordData] = useState({
+    password: "",
+    firstName: "",
+    email: "",
+  });
 
   // State pour les données des filtres
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
@@ -155,8 +164,25 @@ export const Professeurs: React.FC = () => {
 
   const handleCreateTeacherSuccess = async (createdProfessor?: any) => {
     console.log("[PROFESSEURS PAGE] 🎉 Callback onSuccess appelé après création de professeur");
+    console.log("[PROFESSEURS PAGE] 📦 Données reçues dans onSuccess:", createdProfessor);
+    console.log("[PROFESSEURS PAGE] 🔍 Type de createdProfessor:", typeof createdProfessor);
+    console.log("[PROFESSEURS PAGE] 🔍 Clés disponibles:", Object.keys(createdProfessor || {}));
+    console.log("[PROFESSEURS PAGE] 🔍 temporaryPassword présent?", createdProfessor?.temporaryPassword);
 
-    // Fermer la modal
+    // Afficher le modal du mot de passe temporaire si disponible
+    if (createdProfessor?.temporaryPassword) {
+      console.log("[PROFESSEURS PAGE] 🔐 Mot de passe temporaire trouvé, affichage du modal");
+      setTemporaryPasswordData({
+        password: createdProfessor.temporaryPassword,
+        firstName: createdProfessor.firstName,
+        email: createdProfessor.email,
+      });
+      setShowTemporaryPasswordModal(true);
+    } else {
+      console.log("[PROFESSEURS PAGE] ⚠️ Aucun mot de passe temporaire trouvé dans la réponse");
+    }
+
+    // Fermer la modal de création
     setIsCreateTeacherModalOpen(false);
     console.log("[PROFESSEURS PAGE] 🚪 Modal fermée");
 
@@ -783,6 +809,17 @@ export const Professeurs: React.FC = () => {
         data={{}}
         onSuccess={handleCreateTeacherSuccess}
         mode="edit"
+      />
+
+      {/* Modal d'affichage du mot de passe temporaire */}
+      <TemporaryPasswordModal
+        isOpen={showTemporaryPasswordModal}
+        temporaryPassword={temporaryPasswordData.password}
+        professorName={temporaryPasswordData.firstName}
+        professorEmail={temporaryPasswordData.email}
+        onClose={() => {
+          setShowTemporaryPasswordModal(false);
+        }}
       />
     </div>
   );

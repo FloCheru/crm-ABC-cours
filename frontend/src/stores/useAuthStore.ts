@@ -10,7 +10,7 @@ interface AuthState {
   requirePasswordChange: boolean;
 
   // Actions
-  login: (email: string, password: string) => Promise<{ requirePasswordChange: boolean }>;
+  login: (email: string, password: string) => Promise<{ requirePasswordChange: boolean; user: AuthResponse['user'] }>;
   logout: () => void;
   logoutAndRedirect: () => void;
   setUser: (user: AuthResponse['user'] | null) => void;
@@ -40,7 +40,10 @@ export const useAuthStore = create<AuthState>()(
               isAuthenticated: true,
               requirePasswordChange,
             });
-            return { requirePasswordChange };
+            return {
+              requirePasswordChange,
+              user: response.user,
+            };
           } catch (error) {
             console.error('Login error:', error);
             throw error;

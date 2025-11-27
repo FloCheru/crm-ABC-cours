@@ -22,6 +22,7 @@ import { AlertCircle, Save, X } from 'lucide-react';
 import { SubjectLevelsSelector } from './SubjectLevelsSelector';
 import { DepartmentCombobox } from './DepartmentCombobox';
 import { CommuneCombobox } from './CommuneCombobox';
+import { TransportModesCombobox } from './TransportModesCombobox';
 import { subjectService } from '../../services/subjectService';
 import { geoApiService, type Commune } from '../../services/geoApiService';
 import type { Subject } from '../../types/subject';
@@ -76,6 +77,9 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
   const [communesByDept, setCommunesByDept] = useState<Record<string, Commune[]>>({});
   const [showDepartmentCombobox, setShowDepartmentCombobox] = useState(false);
   const [showCommuneCombobox, setShowCommuneCombobox] = useState<Record<string, boolean>>({});
+
+  // États pour Modes de déplacement
+  const [showTransportModesCombobox, setShowTransportModesCombobox] = useState(false);
 
   useEffect(() => {
     setActiveTab(defaultTab);
@@ -184,12 +188,12 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
   // Charger et fusionner les matières depuis le profil complet
   const loadTeachingSubjectsFromProfile = async () => {
     try {
-      const professor = await professorService.getProfessorById(professorId);
+      const professor = await professorService.getProfessorById(professorId) as ProfessorProfile;
 
       // Fusionner teachingSubjects (standard) et customSubjects
       const mergedSubjects: TeachingSubject[] = [
         ...(professor.teachingSubjects || []),
-        ...(professor.customSubjects || []).map((cs, index) => ({
+        ...(professor.customSubjects || []).map((cs: any, index: number) => ({
           subjectId: `custom-${Date.now()}-${index}`,
           subjectName: cs.subjectName,
           grades: cs.grades,
@@ -231,7 +235,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
           secondaryPhone: formData.secondaryPhone,
           primaryAddress: formData.primaryAddress,
           secondaryAddress: formData.secondaryAddress,
-          transportMode: formData.transportMode,
+          transportModes: formData.transportModes || [],
           courseLocation: formData.courseLocation,
           employmentStatus: formData.employmentStatus,
           siret: formData.siret,
@@ -514,6 +518,15 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
     handleInputChange('availableCities', updated);
   };
 
+  // Handler pour ajouter/supprimer un mode de transport
+  const toggleTransportMode = (modeValue: string) => {
+    const current = formData.transportModes || [];
+    const updated = current.includes(modeValue as any)
+      ? current.filter((m) => m !== modeValue)
+      : [...current, modeValue as any];
+    handleInputChange('transportModes', updated);
+  };
+
   // Handler pour supprimer un département (avec vérification de protection)
   const handleRemoveDepartment = (deptCode: string) => {
     const protectedDepts = getProtectedDepartments();
@@ -770,10 +783,59 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                 className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               />
             </div>
-            {renderField('Déplacement', 'transportMode', 'select', [
-              { value: '', label: 'Sélectionner...' },
-              ...TRANSPORT_MODES
-            ])}
+            <div>
+              <label className="text-xs text-gray-500 mb-2 block">Modes de déplacement</label>
+
+              {/* Badges affichant les modes sélectionnés */}
+              {(formData.transportModes || []).length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {(formData.transportModes || []).map((mode) => {
+                    const modeLabel = TRANSPORT_MODES.find(m => m.value === mode)?.label || mode;
+                    return (
+                      <Badge
+                        key={mode}
+                        variant="secondary"
+                        className="cursor-pointer hover:bg-gray-300"
+                        onClick={() => toggleTransportMode(mode)}
+                      >
+                        {modeLabel} ✕
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Bouton pour ouvrir le combobox */}
+              {!showTransportModesCombobox && (
+                <div>
+                  <button
+                    onClick={() => setShowTransportModesCombobox(true)}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Sélectionner les modes
+                  </button>
+                </div>
+              )}
+
+              {/* Combobox pour sélectionner les modes */}
+              {showTransportModesCombobox && (
+                <div className="space-y-2">
+                  <TransportModesCombobox
+                    onSelect={toggleTransportMode}
+                    selectedValues={formData.transportModes || []}
+                    placeholder="Sélectionner les modes de déplacement..."
+                    open={showTransportModesCombobox}
+                    onOpenChange={setShowTransportModesCombobox}
+                  />
+                  <button
+                    onClick={() => setShowTransportModesCombobox(false)}
+                    className="text-xs text-gray-600 hover:text-gray-700"
+                  >
+                    Fermer
+                  </button>
+                </div>
+              )}
+            </div>
             {renderField('Cours', 'courseLocation', 'select', [
               { value: '', label: 'Sélectionner...' },
               { value: 'domicile', label: 'À domicile' },
