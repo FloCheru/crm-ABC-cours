@@ -171,7 +171,7 @@ router.post(
         lastName: user.lastName,
         isActive: user.isActive,
         hasPassword: !!user.password,
-        passwordHash: user.password.substring(0, 20) + "..."
+        passwordHash: user.password ? user.password.substring(0, 20) + "..." : "non défini"
       });
 
       // Vérifier si le compte est actif

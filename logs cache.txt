@@ -1,64 +1,29 @@
-
-📤 [INFORMATIONS] Début de sauvegarde - 10:48:26
-ProfessorProfileContent.tsx:188 📊 [INFORMATIONS] État formData complet: {primaryAddress: {…}, rating: {…}, _id: '6926c71ffafa808c600219fb', email: 'prof@abc-cours.fr', password: '$2a$10$Hf1wAMvuB8hM4k6gE3pXyeuhbYbHysK.coyWYD9amYheJHv.eRMMS', …}
-ProfessorProfileContent.tsx:214 ✍️  [INFORMATIONS] Données à envoyer (objet préparé): {gender: undefined, firstName: 'Prof', lastName: 'Test', birthName: undefined, birthDate: undefined, …}
-ProfessorProfileContent.tsx:215 🔍 [INFORMATIONS] primaryAddress détails: {street: '12 rue Blanche', postalCode: undefined, city: 'Nantes', full: {…}}
-ProfessorProfileContent.tsx:229 🌐 [INFORMATIONS] Envoi de la requête à l'API...
-ProfessorProfileContent.tsx:230 🌐 [INFORMATIONS] URL: /api/professors/6926c71ffafa808c600219fb
-ProfessorProfileContent.tsx:231 🌐 [INFORMATIONS] Payload final: {
-  "firstName": "Prof",
-  "lastName": "Test",
-  "email": "prof@abc-cours.fr",
-  "primaryAddress": {
-    "street": "12 rue Blanche",
-    "city": "Nantes"
-  },
-  "transportMode": "voiture",
-  "education": [],
-  "experience": []
-}
-professorService.ts:252 
-🔗 [professorService] updateMyProfile - 10:48:26
-professorService.ts:253 📦 [professorService] Données à envoyer: {gender: undefined, firstName: 'Prof', lastName: 'Test', birthName: undefined, birthDate: undefined, …}
-professorService.ts:255 📤 [professorService] Envoi PUT à /api/professors/6926c71ffafa808c600219fb
-logger.ts:36 [2025-11-26T09:48:26.821Z] [DEBUG] API Request Debug:
-logger.ts:36 [2025-11-26T09:48:26.822Z] [DEBUG] URL: http://localhost:3000/api/professors/6926c71ffafa808c600219fb
-logger.ts:36 [2025-11-26T09:48:26.822Z] [DEBUG] Token présent: true
-logger.ts:36 [2025-11-26T09:48:26.822Z] [DEBUG] Token (premiers caractères): eyJhbGciOiJIUzI1NiIs...
-logger.ts:36 [2025-11-26T09:48:26.929Z] [DEBUG] === DÉBOGAGE RÉPONSE HTTP ===
-logger.ts:36 [2025-11-26T09:48:26.929Z] [DEBUG] Status: 200
-logger.ts:36 [2025-11-26T09:48:26.929Z] [DEBUG] Status Text: OK
-logger.ts:36 [2025-11-26T09:48:26.929Z] [DEBUG] Headers: (2) [Array(2), Array(2)]
-logger.ts:36 [2025-11-26T09:48:26.929Z] [DEBUG] === FIN DÉBOGAGE RÉPONSE HTTP ===
-logger.ts:36 [2025-11-26T09:48:26.930Z] [DEBUG] Réponse parsée: {message: 'Professeur mis à jour avec succès', professor: {…}}
-professorService.ts:258 ✅ [professorService] Réponse reçue du backend: {status: 'succès', professorId: '6926c71ffafa808c600219fb', message: 'Professeur mis à jour avec succès'}
-ProfessorProfileContent.tsx:235 ✅ [INFORMATIONS] Réponse du serveur reçue: {status: 'succès', timestamp: '10:48:26', professorId: '6926c71ffafa808c600219fb', primaryAddress: {…}, dataReturned: {…}}
-
- [PUT /professors/:id] 🔄 Mise à jour du profil - ID: 6926c71ffafa808c600219fb
-[0] [PUT /professors/:id] 👤 Utilisateur: {
-[0]   userId: new ObjectId('69257e5863045bd1a7de0202'),
-[0]   userRole: 'admin',
-[0]   userEmail: 'admin@abc-cours.fr'
+Erreur lors de la mise à jour des matières: CastError: Cast to ObjectId failed for value "custom-1764259503168" (type string) at path "_id" for model "Subject"
+[0]     at SchemaObjectId.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schema\objectId.js:251:11)
+[0]     at SchemaType.applySetters (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1262:12)
+[0]     at SchemaType.castForQuery (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1698:17)
+[0]     at cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\cast.js:390:32)
+[0]     at Query.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:5060:12)
+[0]     at Query._castConditions (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2374:10)
+[0]     at model.Query._findOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2697:8)
+[0]     at model.Query.exec (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:4627:80)
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\routes\professors.js:510:25 {
+[0]   stringValue: '"custom-1764259503168"',
+[0]   messageFormat: undefined,
+[0]   kind: 'ObjectId',
+[0]   value: 'custom-1764259503168',
+[0]   path: '_id',
+[0]   reason: BSONError: input must be a 24 character hex string, 12 byte Uint8Array, or an integer
+[0]       at new ObjectId (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\bson@6.10.4\node_modules\bson\lib\bson.cjs:2538:23)
+[0]       at castObjectId (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\cast\objectid.js:25:12)
+[0]       at SchemaObjectId.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schema\objectId.js:249:12)
+[0]       at SchemaType.applySetters (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1262:12)
+[0]       at SchemaType.castForQuery (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\schemaType.js:1698:17)
+[0]       at cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\cast.js:390:32)
+[0]       at Query.cast (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:5060:12)
+[0]       at Query._castConditions (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2374:10)
+[0]       at model.Query._findOne (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:2697:8)
+[0]       at model.Query.exec (C:\Users\flori\OneDrive\Bureau\ABC cours\Application\abc-cours-crm\backend\node_modules\.pnpm\mongoose@8.19.2_@aws-sdk+cr_20f59bdf1c509b8f6577576918af871f\node_modules\mongoose\lib\query.js:4627:80),
+[0]   valueType: 'string'
 [0] }
-[0] [PUT /professors/:id] 📝 Avant modification: { fields: 'aucun changement', oldValues: {} }
-[0] [PUT /professors/:id] 🔍 Détails du body reçu:
-[0] [PUT /professors/:id] - primaryAddress: { street: '12 rue Blanche', city: 'Nantes' }
-[0] [PUT /professors/:id] - postalCode (racine): undefined
-[0] [PUT /professors/:id] - Body complet: {
-[0]   "firstName": "Prof",
-[0]   "lastName": "Test",
-[0]   "email": "prof@abc-cours.fr",
-[0]   "primaryAddress": {
-[0]     "street": "12 rue Blanche",
-[0]     "city": "Nantes"
-[0]   },
-[0]   "transportMode": "voiture",
-[0]   "education": [],
-[0]   "experience": []
-[0] }
-[0] [PUT /professors/:id] 📋 Professeur après mise à jour:
-[0] [PUT /professors/:id] - primaryAddress: { street: '12 rue Blanche', city: 'Nantes' }
-[0] [PUT /professors/:id] - postalCode (racine): undefined
-[0] [PUT /professors/:id] ✅ Profil mis à jour avec succès
-[0] [PUT /professors/:id] 📊 Champs modifiés: { count: 0, fields: [], newValues: {} }
-[0] ::1 - - [26/Nov/2025:09:48:26 +0000] "PUT /api/professors/6926c71ffafa808c600219fb HTTP/1.1" 200 606 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
