@@ -504,9 +504,13 @@ router.put(
 
       const { teachingSubjects } = req.body;
 
-      // Vérifier que toutes les matières existent
+      // Séparer matières standard et matières personnalisées
+      const standardSubjects = teachingSubjects.filter(ts => !ts.isCustom);
+      const customSubjects = teachingSubjects.filter(ts => ts.isCustom);
+
+      // Vérifier que toutes les matières standard existent
       const Subject = require("../models/Subject");
-      for (const ts of teachingSubjects) {
+      for (const ts of standardSubjects) {
         const subject = await Subject.findById(ts.subjectId);
         if (!subject) {
           return res.status(400).json({
@@ -515,12 +519,22 @@ router.put(
         }
       }
 
-      // Mettre à jour le professeur
+      // Mettre à jour le professeur avec les deux types séparés
       const professor = await Professor.findByIdAndUpdate(
         req.params.id,
         {
-          teachingSubjects,
-          subjects: teachingSubjects.map((ts) => ts.subjectId),
+          teachingSubjects: standardSubjects.map(ts => ({
+            subjectId: ts.subjectId,
+            subjectName: ts.subjectName,
+            grades: ts.grades,
+            levels: ts.levels,
+          })),
+          customSubjects: customSubjects.map(ts => ({
+            subjectName: ts.subjectName,
+            grades: ts.grades,
+            levels: ts.levels,
+          })),
+          subjects: standardSubjects.map((ts) => ts.subjectId),
         },
         { new: true, runValidators: true }
       ).populate("subjects", "name category");
@@ -532,6 +546,7 @@ router.put(
       res.json({
         message: "Matières mises à jour avec succès",
         teachingSubjects: professor.teachingSubjects,
+        customSubjects: professor.customSubjects,
       });
     } catch (error) {
       console.error("Erreur lors de la mise à jour des matières:", error);

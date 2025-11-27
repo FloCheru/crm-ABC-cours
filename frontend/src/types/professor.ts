@@ -71,6 +71,15 @@ export interface TeachingSubject {
 }
 
 /**
+ * Matière personnalisée (sans référence à Subject)
+ */
+export interface CustomSubject {
+  subjectName: string;        // Nom de la matière (ex: "Latin", "Grec ancien")
+  grades: string[];           // Classes précises (ex: ["Seconde", "Première"])
+  levels: SchoolCategory[];   // Catégories (ex: ["lycee"])
+}
+
+/**
  * Document professeur (CV, diplôme, certificat, etc.)
  */
 export interface ProfessorDocument {
@@ -186,4 +195,6 @@ export interface ProfessorProfile extends Professor {
   availableDepartments?: string[];
   availableCities?: string[];
   weeklyAvailability?: WeeklySchedule;
+  teachingSubjects?: TeachingSubject[];     // Matières standard avec ObjectId
+  customSubjects?: CustomSubject[];         // Matières personnalisées
 }

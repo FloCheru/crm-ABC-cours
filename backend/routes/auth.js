@@ -230,6 +230,7 @@ router.post(
           lastName: user.lastName,
           role: user.role,
           isActive: user.isActive,
+          isPasswordSet: user.isPasswordSet || true,
           lastLogin: user.lastLogin,
         },
       });
@@ -306,6 +307,78 @@ router.put(
       });
     } catch (error) {
       console.error("Erreur lors de la mise à jour du profil:", error);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
+
+// @route   POST /api/auth/change-password
+// @desc    Changer le mot de passe de l'utilisateur
+// @access  Private
+router.post(
+  "/change-password",
+  [
+    authenticate,
+    body("newPassword")
+      .isLength({ min: 6 })
+      .withMessage("Le mot de passe doit contenir au moins 6 caractères"),
+  ],
+  async (req, res) => {
+    try {
+      // Vérifier les erreurs de validation
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        console.log("❌ [CHANGE-PASSWORD] Erreurs de validation:", errors.array());
+        return res.status(400).json({
+          message: "Données invalides",
+          errors: errors.array(),
+        });
+      }
+
+      const { newPassword } = req.body;
+      const userId = req.user._id;
+
+      console.log("🔐 [CHANGE-PASSWORD] Changement de mot de passe pour utilisateur:", userId);
+
+      // Récupérer l'utilisateur actuel (peut être Professor ou Admin)
+      let user = await Professor.findById(userId);
+      let userType = "Professor";
+
+      if (!user) {
+        user = await Admin.findById(userId);
+        userType = "Admin";
+      }
+
+      if (!user) {
+        console.log("❌ [CHANGE-PASSWORD] Utilisateur non trouvé:", userId);
+        return res.status(404).json({ message: "Utilisateur non trouvé" });
+      }
+
+      console.log("✅ [CHANGE-PASSWORD] Utilisateur trouvé:", {
+        type: userType,
+        email: user.email,
+      });
+
+      // Mettre à jour le mot de passe
+      user.password = newPassword;
+      user.isPasswordSet = true;
+      await user.save();
+
+      console.log("✅ [CHANGE-PASSWORD] Mot de passe changé avec succès");
+
+      res.json({
+        message: "Mot de passe changé avec succès",
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          isPasswordSet: user.isPasswordSet,
+        },
+      });
+    } catch (error) {
+      console.error("❌ [CHANGE-PASSWORD] Erreur lors du changement de mot de passe:", error);
       res.status(500).json({ message: "Erreur serveur" });
     }
   }

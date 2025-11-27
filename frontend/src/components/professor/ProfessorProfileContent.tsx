@@ -84,6 +84,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
     loadProfile();
     loadDocuments();
     loadChoixData();
+    loadTeachingSubjectsFromProfile();
   }, [professorId]);
 
   // Effet pour auto-sélectionner les départements depuis les adresses
@@ -176,6 +177,29 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
       ];
       setAllSubjects(mockSubjects);
       setTeachingSubjects(initialTeachingSubjects || []);
+    }
+  };
+
+  // Charger et fusionner les matières depuis le profil complet
+  const loadTeachingSubjectsFromProfile = async () => {
+    try {
+      const professor = await professorService.getProfessorById(professorId);
+
+      // Fusionner teachingSubjects (standard) et customSubjects
+      const mergedSubjects: TeachingSubject[] = [
+        ...(professor.teachingSubjects || []),
+        ...(professor.customSubjects || []).map((cs, index) => ({
+          subjectId: `custom-${Date.now()}-${index}`,
+          subjectName: cs.subjectName,
+          grades: cs.grades,
+          levels: cs.levels,
+          isCustom: true,
+        })),
+      ];
+
+      setTeachingSubjects(mergedSubjects);
+    } catch (error) {
+      console.error('Erreur lors du chargement des matières du profil:', error);
     }
   };
 

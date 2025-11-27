@@ -7,13 +7,15 @@ interface AuthState {
   user: AuthResponse['user'] | null;
   token: string | null;
   isAuthenticated: boolean;
-  
+  requirePasswordChange: boolean;
+
   // Actions
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ requirePasswordChange: boolean }>;
   logout: () => void;
   logoutAndRedirect: () => void;
   setUser: (user: AuthResponse['user'] | null) => void;
   setToken: (token: string | null) => void;
+  setRequirePasswordChange: (value: boolean) => void;
   initializeAuth: () => void;
 }
 
@@ -25,16 +27,20 @@ export const useAuthStore = create<AuthState>()(
         user: null,
         token: null,
         isAuthenticated: false,
-        
+        requirePasswordChange: false,
+
         // Actions
         login: async (email: string, password: string) => {
           try {
             const response = await authService.login({ email, password });
+            const requirePasswordChange = response.user.isPasswordSet === false;
             set({
               user: response.user,
               token: response.accessToken,
               isAuthenticated: true,
+              requirePasswordChange,
             });
+            return { requirePasswordChange };
           } catch (error) {
             console.error('Login error:', error);
             throw error;
@@ -47,6 +53,7 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             token: null,
             isAuthenticated: false,
+            requirePasswordChange: false,
           });
         },
 
@@ -56,17 +63,20 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             token: null,
             isAuthenticated: false,
+            requirePasswordChange: false,
           });
-          
+
           // Rediriger vers la page de connexion
           if (typeof window !== 'undefined') {
             window.location.href = '/login';
           }
         },
-        
+
         setUser: (user) => set({ user, isAuthenticated: !!user }),
-        
+
         setToken: (token) => set({ token, isAuthenticated: !!token }),
+
+        setRequirePasswordChange: (value) => set({ requirePasswordChange: value }),
         
         initializeAuth: () => {
           const token = authService.getToken();

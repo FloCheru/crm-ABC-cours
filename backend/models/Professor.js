@@ -204,6 +204,24 @@ const professorSchema = new mongoose.Schema(
         },
       },
     ],
+    // Matières personnalisées (sans référence à la collection Subject)
+    customSubjects: [
+      {
+        subjectName: {
+          type: String,
+          required: true,
+        },
+        grades: {
+          type: [String],
+          default: [],
+        },
+        levels: {
+          type: [String],
+          enum: ["primaire", "college", "lycee", "superieur"],
+          default: [],
+        },
+      },
+    ],
     availability: [
       {
         day: {
