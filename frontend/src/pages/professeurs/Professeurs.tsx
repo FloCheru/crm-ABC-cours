@@ -12,6 +12,7 @@ import {
   Modal,
   TemporaryPasswordModal,
 } from "../../components";
+import { PasswordChangeModal } from "../../components/professor/PasswordChangeModal";
 import { KeyRound, UserRound, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
 import { professorService } from "../../services/professorService";
@@ -73,6 +74,10 @@ export const Professeurs: React.FC = () => {
     firstName: "",
     email: "",
   });
+
+  // State pour la modal de gestion de mot de passe
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [selectedProfessor, setSelectedProfessor] = useState<ProfessorTableRow | null>(null);
 
   // State pour les données des filtres
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
@@ -309,34 +314,13 @@ export const Professeurs: React.FC = () => {
     }
   };
 
-  // Gérer le renvoi du mot de passe au professeur
-  const handleResendPassword = async (professorId: string, email: string) => {
+  // Gérer l'ouverture de la modal de gestion de mot de passe
+  const handleOpenPasswordModal = (professorId: string) => {
     const teacher = teachers.find((t) => t._id === professorId);
-    const fullName = teacher
-      ? `${teacher.firstName} ${teacher.lastName}`
-      : "ce professeur";
+    if (!teacher) return;
 
-    if (
-      window.confirm(
-        `Renvoyer le mot de passe à ${fullName} ?\n\nUn email sera envoyé à : ${email}`
-      )
-    ) {
-      try {
-        // TODO: Appeler le service de renvoi de mot de passe
-        // await teacherService.resendPassword(professorId);
-
-        toast.success(`Mot de passe renvoyé à ${fullName}`, {
-          description: `Un email a été envoyé à ${email}`,
-        });
-
-        console.log(`Mot de passe renvoyé à ${email}`);
-      } catch (error) {
-        console.error("Erreur lors du renvoi du mot de passe:", error);
-        toast.error("Erreur lors du renvoi du mot de passe", {
-          description: "Veuillez réessayer ultérieurement",
-        });
-      }
-    }
+    setSelectedProfessor(teacher);
+    setShowPasswordModal(true);
   };
 
   // Gérer l'activation/désactivation d'un professeur
@@ -526,15 +510,15 @@ export const Professeurs: React.FC = () => {
       label: "Actions",
       render: (_: unknown, row: ProfessorTableRow) => (
         <div className="flex gap-sm items-center">
-          {/* Bouton renvoyer mot de passe */}
+          {/* Bouton gérer mot de passe */}
           <Button
             size="sm"
             variant="primary"
             onClick={(e) => {
               e.stopPropagation();
-              handleResendPassword(row._id, row.email);
+              handleOpenPasswordModal(row._id);
             }}
-            title="Renvoyer le mot de passe"
+            title="Gérer le mot de passe"
           >
             <KeyRound className="w-4 h-4" />
           </Button>
@@ -821,6 +805,24 @@ export const Professeurs: React.FC = () => {
           setShowTemporaryPasswordModal(false);
         }}
       />
+
+      {/* Modal de gestion du mot de passe */}
+      {selectedProfessor && (
+        <PasswordChangeModal
+          isOpen={showPasswordModal}
+          onClose={() => {
+            setShowPasswordModal(false);
+            setSelectedProfessor(null);
+          }}
+          mode="admin"
+          professor={{
+            _id: selectedProfessor._id,
+            firstName: selectedProfessor.firstName,
+            lastName: selectedProfessor.lastName,
+            email: selectedProfessor.email,
+          }}
+        />
+      )}
     </div>
   );
 };
