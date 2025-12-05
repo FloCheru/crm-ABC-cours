@@ -122,11 +122,10 @@ const professorSchema = new mongoose.Schema(
         message: 'Mode de transport invalide'
       }
     },
-    courseLocation: {
+    courseLocation: [{
       type: String,
-      enum: ['domicile', 'visio', ''],
-      trim: true,
-    },
+      enum: ['domicile', 'visio'],
+    }],
     identifier: {
       type: String,
       trim: true,
@@ -304,31 +303,34 @@ const professorSchema = new mongoose.Schema(
       trim: true,
       maxlength: [1000, "La bio ne peut pas dépasser 1000 caractères"],
     },
-    education: [
-      {
-        degree: String,
-        institution: String,
-        year: Number,
-        description: String,
-      },
-    ],
-    experience: [
-      {
-        position: String,
-        company: String,
-        startDate: Date,
-        endDate: Date,
-        description: String,
-      },
-    ],
-    currentActivity: {
+    diplomes: {
       type: String,
       trim: true,
-      maxlength: [1000, "L'activité actuelle ne peut pas dépasser 1000 caractères"],
+      maxlength: [2000, "Le champ diplômes ne peut pas dépasser 2000 caractères"],
+    },
+    certifications: {
+      type: String,
+      trim: true,
+      maxlength: [2000, "Le champ certifications ne peut pas dépasser 2000 caractères"],
+    },
+    experiences: {
+      type: String,
+      trim: true,
+      maxlength: [2000, "Le champ expériences ne peut pas dépasser 2000 caractères"],
+    },
+    divers: {
+      type: String,
+      trim: true,
+      maxlength: [1000, "Le champ divers ne peut pas dépasser 1000 caractères"],
     },
     notes: {
       type: String,
       trim: true,
+    },
+    adminComments: {
+      type: String,
+      trim: true,
+      maxlength: [5000, "Le champ commentaires admin ne peut pas dépasser 5000 caractères"],
     },
   },
   {

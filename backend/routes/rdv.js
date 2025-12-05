@@ -11,22 +11,26 @@ router.use(authenticateToken);
 // GET /api/rdv - Récupérer tous les RDV avec filtres
 router.get('/', async (req, res) => {
   try {
-    const { 
-      familyId, 
-      assignedAdminId, 
-      status, 
-      dateFrom, 
-      dateTo, 
+    const {
+      familyId,
+      professorId,
+      assignedAdminId,
+      entityType,
+      status,
+      dateFrom,
+      dateTo,
       type,
-      page = 1, 
-      limit = 50 
+      page = 1,
+      limit = 50
     } = req.query;
 
     // Construction de la requête de filtrage
     const query = {};
-    
+
     if (familyId) query.familyId = familyId;
+    if (professorId) query.professorId = professorId;
     if (assignedAdminId) query.assignedAdminId = assignedAdminId;
+    if (entityType) query.entityType = entityType;
     if (status) query.status = status;
     if (type) query.type = type;
     
@@ -43,6 +47,7 @@ router.get('/', async (req, res) => {
     // Exécution de la requête avec population
     const rdvs = await RendezVous.find(query)
       .populate('familyId', 'primaryContact address')
+      .populate('professorId', 'firstName lastName email phone')
       .populate('assignedAdminId', 'firstName lastName email')
       .sort({ date: 1, time: 1 })
       .skip(skip)
@@ -75,6 +80,7 @@ router.get('/:id', async (req, res) => {
   try {
     const rdv = await RendezVous.findById(req.params.id)
       .populate('familyId', 'primaryContact address students')
+      .populate('professorId', 'firstName lastName email phone')
       .populate('assignedAdminId', 'firstName lastName email');
 
     if (!rdv) {
@@ -95,20 +101,42 @@ router.get('/:id', async (req, res) => {
 // POST /api/rdv - Créer un nouveau RDV
 router.post('/', authorize(['admin']), async (req, res) => {
   try {
-    const { familyId, assignedAdminId, date, time, type, notes } = req.body;
+    const { familyId, professorId, assignedAdminId, entityType, date, time, type, notes } = req.body;
 
     // Validation des champs requis
-    if (!familyId || !assignedAdminId || !date || !time || !type) {
+    if (!assignedAdminId || !date || !time || !type || !entityType) {
       return res.status(400).json({
         message: 'Tous les champs obligatoires doivent être renseignés',
-        required: ['familyId', 'assignedAdminId', 'date', 'time', 'type']
+        required: ['assignedAdminId', 'entityType', 'date', 'time', 'type']
       });
     }
 
-    // Vérifier que la famille existe
-    const family = await Family.findById(familyId);
-    if (!family) {
-      return res.status(404).json({ message: 'Famille non trouvée' });
+    // Validation selon entityType
+    if (entityType === 'admin-family') {
+      if (!familyId) {
+        return res.status(400).json({
+          message: 'familyId est requis pour un RDV de type admin-family'
+        });
+      }
+
+      // Vérifier que la famille existe
+      const family = await Family.findById(familyId);
+      if (!family) {
+        return res.status(404).json({ message: 'Famille non trouvée' });
+      }
+    } else if (entityType === 'admin-professor') {
+      if (!professorId) {
+        return res.status(400).json({
+          message: 'professorId est requis pour un RDV de type admin-professor'
+        });
+      }
+
+      // Vérifier que le professeur existe
+      const Professor = require('../models/Professor');
+      const professor = await Professor.findById(professorId);
+      if (!professor) {
+        return res.status(404).json({ message: 'Professeur non trouvé' });
+      }
     }
 
     // Vérifier que l'admin existe
@@ -119,8 +147,10 @@ router.post('/', authorize(['admin']), async (req, res) => {
 
     // Créer le RDV
     const rdv = new RendezVous({
-      familyId,
+      familyId: familyId || undefined,
+      professorId: professorId || undefined,
       assignedAdminId,
+      entityType,
       date: new Date(date),
       time,
       type,
@@ -129,14 +159,17 @@ router.post('/', authorize(['admin']), async (req, res) => {
 
     const savedRdv = await rdv.save();
 
-    // Ajouter l'ID du RDV au tableau rdvs de la famille
-    await Family.findByIdAndUpdate(familyId, {
-      $push: { rdvs: savedRdv._id }
-    });
+    // Ajouter l'ID du RDV au tableau rdvs de la famille si applicable
+    if (familyId) {
+      await Family.findByIdAndUpdate(familyId, {
+        $push: { rdvs: savedRdv._id }
+      });
+    }
 
     // Récupérer le RDV avec les données populées
     const populatedRdv = await RendezVous.findById(savedRdv._id)
       .populate('familyId', 'primaryContact address')
+      .populate('professorId', 'firstName lastName email phone')
       .populate('assignedAdminId', 'firstName lastName email');
 
     res.status(201).json({

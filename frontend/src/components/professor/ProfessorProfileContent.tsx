@@ -26,7 +26,7 @@ import { TransportModesCombobox } from './TransportModesCombobox';
 import { subjectService } from '../../services/subjectService';
 import { geoApiService, type Commune } from '../../services/geoApiService';
 import type { Subject } from '../../types/subject';
-import type { TeachingSubject, EducationInfo, ExperienceInfo } from '../../types/professor';
+import type { TeachingSubject } from '../../types/professor';
 import type { SchoolCategory } from '../../constants/schoolLevels';
 
 interface Document {
@@ -66,12 +66,6 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
   const [customSubjectName, setCustomSubjectName] = useState('');
   const [isAddingCustomSubject, setIsAddingCustomSubject] = useState(false);
   const [isEditingSubjects, setIsEditingSubjects] = useState(false);
-
-  // États pour CV (Éducation et Expérience)
-  const [newEducation, setNewEducation] = useState<Partial<EducationInfo>>({});
-  const [newExperience, setNewExperience] = useState<Partial<ExperienceInfo>>({});
-  const [showEducationForm, setShowEducationForm] = useState(false);
-  const [showExperienceForm, setShowExperienceForm] = useState(false);
 
   // États pour Déplacements (Communes)
   const [communesByDept, setCommunesByDept] = useState<Record<string, Commune[]>>({});
@@ -238,10 +232,14 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
           transportModes: formData.transportModes || [],
           courseLocation: formData.courseLocation,
           employmentStatus: formData.employmentStatus,
+          currentSituation: formData.currentSituation,
+          iban: formData.iban,
+          bic: formData.bic,
           siret: formData.siret,
-          education: formData.education,
-          experience: formData.experience,
-          currentActivity: formData.currentActivity,
+          diplomes: formData.diplomes,
+          certifications: formData.certifications,
+          experiences: formData.experiences,
+          divers: formData.divers,
         };
         console.log(`✍️  [${section.toUpperCase()}] Données à envoyer (objet préparé):`, dataToSend);
         console.log(`🔍 [${section.toUpperCase()}] primaryAddress détails:`, {
@@ -405,54 +403,6 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
   const handleDeleteCustomSubject = (subjectId: string) => {
     setTeachingSubjects((prev) =>
       prev.filter((ts) => ts.subjectId !== subjectId)
-    );
-  };
-
-  // Handlers pour CV (Éducation)
-  const handleAddEducation = () => {
-    if (!newEducation.degree || !newEducation.institution || !newEducation.year) {
-      alert('Veuillez remplir les champs obligatoires');
-      return;
-    }
-
-    const currentEducation = formData.education || [];
-    handleInputChange('education', [
-      ...currentEducation,
-      newEducation as EducationInfo,
-    ]);
-    setNewEducation({});
-    setShowEducationForm(false);
-  };
-
-  const handleDeleteEducation = (index: number) => {
-    const currentEducation = formData.education || [];
-    handleInputChange(
-      'education',
-      currentEducation.filter((_, i) => i !== index)
-    );
-  };
-
-  // Handlers pour CV (Expérience)
-  const handleAddExperience = () => {
-    if (!newExperience.position || !newExperience.company || !newExperience.startDate) {
-      alert('Veuillez remplir les champs obligatoires');
-      return;
-    }
-
-    const currentExperience = formData.experience || [];
-    handleInputChange('experience', [
-      ...currentExperience,
-      newExperience as ExperienceInfo,
-    ]);
-    setNewExperience({});
-    setShowExperienceForm(false);
-  };
-
-  const handleDeleteExperience = (index: number) => {
-    const currentExperience = formData.experience || [];
-    handleInputChange(
-      'experience',
-      currentExperience.filter((_, i) => i !== index)
     );
   };
 
@@ -674,7 +624,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
+        <TabsList className="bg-transparent border-b border-gray-200 rounded-none p-0 h-auto w-full justify-start">
         <TabsTrigger
           value="informations"
           className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
@@ -836,11 +786,48 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                 </div>
               )}
             </div>
-            {renderField('Cours', 'courseLocation', 'select', [
-              { value: '', label: 'Sélectionner...' },
-              { value: 'domicile', label: 'À domicile' },
-              { value: 'visio', label: 'En visio' },
-            ])}
+            <div className="col-span-2">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="courseLocation-domicile"
+                    checked={(formData.courseLocation || []).includes('domicile')}
+                    onCheckedChange={(checked: boolean | string) => {
+                      const current = formData.courseLocation || [];
+                      const updated = checked === true
+                        ? [...current, 'domicile']
+                        : current.filter(loc => loc !== 'domicile');
+                      handleInputChange('courseLocation', updated);
+                    }}
+                  />
+                  <Label
+                    htmlFor="courseLocation-domicile"
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    À domicile
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="courseLocation-visio"
+                    checked={(formData.courseLocation || []).includes('visio')}
+                    onCheckedChange={(checked: boolean | string) => {
+                      const current = formData.courseLocation || [];
+                      const updated = checked === true
+                        ? [...current, 'visio']
+                        : current.filter(loc => loc !== 'visio');
+                      handleInputChange('courseLocation', updated);
+                    }}
+                  />
+                  <Label
+                    htmlFor="courseLocation-visio"
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    En visio
+                  </Label>
+                </div>
+              </div>
+            </div>
             <div className="col-span-2">
               <div className="flex items-center gap-2 mb-2">
                 <label className="text-xs text-gray-500">Adresse secondaire</label>
@@ -912,6 +899,45 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                   </select>
                 </div>
 
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    IBAN (Relevé d'Identité Bancaire)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.iban || ''}
+                    onChange={(e) => handleInputChange('iban', e.target.value.toUpperCase())}
+                    pattern="[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}"
+                    title="Format IBAN invalide (ex: FR7612345678901234567890123)"
+                    maxLength={34}
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    placeholder="FR76 1234 5678 9012 3456 7890 123"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Format européen (27 à 34 caractères)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    BIC / SWIFT
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.bic || ''}
+                    onChange={(e) => handleInputChange('bic', e.target.value.toUpperCase())}
+                    pattern="[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?"
+                    title="Format BIC/SWIFT invalide (8 ou 11 caractères, ex: BNPAFRPP)"
+                    minLength={8}
+                    maxLength={11}
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    placeholder="BNPAFRPP"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Code SWIFT de votre banque (8 ou 11 caractères)
+                  </p>
+                </div>
+
                 {formData.employmentStatus === 'auto-entrepreneur' && (
                   <div>
                     <label className="text-xs text-gray-500 mb-1 block">
@@ -936,227 +962,120 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
               <Separator />
             </div>
 
-            {/* Section CV - Formations */}
+            {/* Section Situation actuelle */}
             <div className="col-span-2">
-              <h4 className="text-sm font-semibold text-gray-900 mb-4">Formations académiques</h4>
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">Situation actuelle</h4>
 
-              {/* Liste des formations existantes */}
-              {formData.education && formData.education.length > 0 && (
-                <div className="space-y-3 mb-4">
-                  {formData.education.map((edu, index) => (
-                    <div key={index} className="bg-gray-50 rounded-md p-3 flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">
-                          {edu.degree} • {edu.institution} ({edu.year})
-                        </div>
-                        {edu.description && (
-                          <div className="text-xs text-gray-600 mt-1">{edu.description}</div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleDeleteEducation(index)}
-                        className="ml-4 text-red-600 hover:text-red-700 text-xs font-medium"
-                      >
-                        Supprimer
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Formulaire d'ajout de formation */}
-              {showEducationForm ? (
-                <div className="border border-gray-300 rounded-md p-4 space-y-3 mb-4">
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Diplôme *</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: Master, Licence, Bac..."
-                      value={newEducation.degree || ''}
-                      onChange={(e) => setNewEducation({ ...newEducation, degree: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Établissement *</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: Université de Paris..."
-                      value={newEducation.institution || ''}
-                      onChange={(e) => setNewEducation({ ...newEducation, institution: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Année *</label>
-                    <input
-                      type="number"
-                      placeholder="Ex: 2020"
-                      value={newEducation.year || ''}
-                      onChange={(e) => setNewEducation({ ...newEducation, year: parseInt(e.target.value) })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Description</label>
-                    <textarea
-                      placeholder="Détails supplémentaires..."
-                      value={newEducation.description || ''}
-                      onChange={(e) => setNewEducation({ ...newEducation, description: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                      rows={2}
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleAddEducation}
-                      className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                    >
-                      Ajouter
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowEducationForm(false);
-                        setNewEducation({});
-                      }}
-                      className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowEducationForm(true)}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium mb-4"
-                >
-                  + Ajouter une formation
-                </button>
-              )}
-            </div>
-
-            {/* Section CV - Expériences */}
-            <div className="col-span-2">
-              <h4 className="text-sm font-semibold text-gray-900 mb-4">Expériences professionnelles</h4>
-
-              {/* Liste des expériences existantes */}
-              {formData.experience && formData.experience.length > 0 && (
-                <div className="space-y-3 mb-4">
-                  {formData.experience.map((exp, index) => (
-                    <div key={index} className="bg-gray-50 rounded-md p-3 flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">
-                          {exp.position} chez {exp.company}{' '}
-                          ({new Date(exp.startDate).getFullYear()}
-                          {exp.endDate ? ` - ${new Date(exp.endDate).getFullYear()}` : ' - Actuellement'})
-                        </div>
-                        {exp.description && (
-                          <div className="text-xs text-gray-600 mt-1">{exp.description}</div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleDeleteExperience(index)}
-                        className="ml-4 text-red-600 hover:text-red-700 text-xs font-medium"
-                      >
-                        Supprimer
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Formulaire d'ajout d'expérience */}
-              {showExperienceForm ? (
-                <div className="border border-gray-300 rounded-md p-4 space-y-3 mb-4">
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Poste *</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: Professeur de mathématiques..."
-                      value={newExperience.position || ''}
-                      onChange={(e) => setNewExperience({ ...newExperience, position: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Entreprise/Établissement *</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: Lycée Jean Moulin..."
-                      value={newExperience.company || ''}
-                      onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">Date de début *</label>
-                      <input
-                        type="date"
-                        value={newExperience.startDate || ''}
-                        onChange={(e) => setNewExperience({ ...newExperience, startDate: e.target.value })}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">Date de fin</label>
-                      <input
-                        type="date"
-                        value={newExperience.endDate || ''}
-                        onChange={(e) => setNewExperience({ ...newExperience, endDate: e.target.value })}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Description</label>
-                    <textarea
-                      placeholder="Détails supplémentaires..."
-                      value={newExperience.description || ''}
-                      onChange={(e) => setNewExperience({ ...newExperience, description: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                      rows={2}
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleAddExperience}
-                      className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                    >
-                      Ajouter
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowExperienceForm(false);
-                        setNewExperience({});
-                      }}
-                      className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowExperienceForm(true)}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  + Ajouter une expérience
-                </button>
-              )}
-            </div>
-
-            {/* Section Activité actuelle */}
-            <div className="col-span-2">
-              <h4 className="text-sm font-semibold text-gray-900 mb-4">Activité actuelle</h4>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">
-                  Décrivez votre activité professionnelle actuelle
+                  Votre situation professionnelle actuelle
+                </label>
+                <select
+                  value={formData.currentSituation || ''}
+                  onChange={(e) => handleInputChange('currentSituation', e.target.value)}
+                  className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+                  <option value="">Non renseigné</option>
+                  <option value="enseignant_education_nationale">
+                    Enseignant en Éducation Nationale
+                  </option>
+                  <option value="enseignant_vacataire_contractuel">
+                    Enseignant Vacataire/Contractuel
+                  </option>
+                  <option value="etudiant_master_professorat">
+                    Étudiant Master Professorat
+                  </option>
+                  <option value="enseignant_avec_activite_domicile">
+                    Enseignant avec Activité à Domicile
+                  </option>
+                  <option value="enseignant_activite_professionnelle">
+                    Enseignant avec Autre Activité
+                  </option>
+                  <option value="enseignant_formation_professionnelle">
+                    En Formation Professionnelle
+                  </option>
+                  <option value="etudiant">Étudiant</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="col-span-2 my-4">
+              <Separator />
+            </div>
+
+            {/* Section CV - Diplômes et Certifications */}
+            <div className="col-span-2">
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">Diplômes</h4>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">
+                  Listez vos diplômes
                 </label>
                 <textarea
-                  value={formData.currentActivity || ''}
-                  onChange={(e) => handleInputChange('currentActivity', e.target.value)}
-                  placeholder="Ex: Professeur de mathématiques en lycée, formateur en entreprise..."
+                  value={formData.diplomes || ''}
+                  onChange={(e) => handleInputChange('diplomes', e.target.value)}
+                  placeholder="Ex: Master en Mathématiques - Université Paris-Saclay (2020)&#10;Licence de Mathématiques - Sorbonne Université (2018)"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                  rows={4}
+                  maxLength={2000}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Maximum 2000 caractères
+                </p>
+              </div>
+            </div>
+
+            <div className="col-span-2">
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">Certifications</h4>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">
+                  Listez vos certifications
+                </label>
+                <textarea
+                  value={formData.certifications || ''}
+                  onChange={(e) => handleInputChange('certifications', e.target.value)}
+                  placeholder="Ex: Certification FLE - Alliance Française (2021)&#10;TOEFL 110/120 (2019)"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                  rows={4}
+                  maxLength={2000}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Maximum 2000 caractères
+                </p>
+              </div>
+            </div>
+
+            {/* Section CV - Expériences professionnelles */}
+            <div className="col-span-2">
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">Expériences professionnelles</h4>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">
+                  Listez vos expériences professionnelles
+                </label>
+                <textarea
+                  value={formData.experiences || ''}
+                  onChange={(e) => handleInputChange('experiences', e.target.value)}
+                  placeholder="Ex: Professeur de mathématiques - Lycée Jean Moulin (2018-2022)&#10;Formateur en entreprise - ABC Formation (2015-2018)"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                  rows={4}
+                  maxLength={2000}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Maximum 2000 caractères
+                </p>
+              </div>
+            </div>
+
+            {/* Section Divers */}
+            <div className="col-span-2">
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">Divers</h4>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">
+                  Informations complémentaires
+                </label>
+                <textarea
+                  value={formData.divers || ''}
+                  onChange={(e) => handleInputChange('divers', e.target.value)}
+                  placeholder="Ex: Disponible pour des cours particuliers le soir et le week-end..."
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                   rows={4}
                   maxLength={1000}

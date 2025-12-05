@@ -13,14 +13,14 @@ export interface CreateRdvData {
 
   date: string;
   time: string;
-  type: "physique" | "virtuel";
+  type: "physique" | "visio";
   notes?: string;
 }
 
 export interface UpdateRdvData {
   date?: string;
   time?: string;
-  type?: "physique" | "virtuel";
+  type?: "physique" | "visio";
   notes?: string;
   status?: "planifie" | "realise" | "annule" | "demande";
 }
@@ -33,7 +33,7 @@ export interface RdvFilters {
   status?: "planifie" | "realise" | "annule" | "demande";
   dateFrom?: string;
   dateTo?: string;
-  type?: "physique" | "virtuel";
+  type?: "physique" | "visio";
   page?: number;
   limit?: number;
 }
@@ -334,7 +334,7 @@ class RdvService {
       }
     }
 
-    if (data.type && !["physique", "virtuel"].includes(data.type)) {
+    if (data.type && !["physique", "visio"].includes(data.type)) {
       throw new Error("Type de rendez-vous invalide");
     }
 
