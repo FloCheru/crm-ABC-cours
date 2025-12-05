@@ -156,7 +156,7 @@ export const ProfesseurDetails: React.FC = () => {
 
       const rdvPayload = {
         professorId: professorId!,
-        assignedAdminId: currentUser?._id || currentUser?.id,
+        assignedAdminId: currentUser?._id,
         entityType: "admin-professor" as const,
         date: rdvFormData.date,
         time: rdvFormData.time,
