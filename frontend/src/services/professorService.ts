@@ -405,6 +405,80 @@ class ProfessorService {
       return false;
     }
   }
+
+  /**
+   * Récupère la date du dernier coupon saisi pour un professeur
+   * @param professorId - ID du professeur
+   * @returns Date du dernier coupon ou null si aucun coupon
+   */
+  async getLastCouponDate(professorId: string): Promise<Date | null> {
+    try {
+      const data = await apiClient.get<any>(`/api/professors/${professorId}/last-coupon-date`);
+      return data.lastCouponDate ? new Date(data.lastCouponDate) : null;
+    } catch (error) {
+      console.error('Erreur getLastCouponDate:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Met à jour les commentaires admin d'un professeur
+   * @param professorId - ID du professeur
+   * @param comments - Commentaires admin (max 5000 caractères)
+   * @returns Profil mis à jour
+   */
+  async updateAdminComments(professorId: string, comments: string): Promise<Professor> {
+    try {
+      console.log(`\n📝 [professorService] updateAdminComments - Professor: ${professorId}`);
+      console.log(`📦 [professorService] Commentaires (${comments.length} caractères)`);
+
+      const data = await apiClient.patch<any>(`/api/professors/${professorId}/admin-comments`, {
+        adminComments: comments
+      });
+
+      console.log(`✅ [professorService] Commentaires admin mis à jour avec succès`);
+
+      return data.professor;
+    } catch (error) {
+      console.error(`\n❌ [professorService] Erreur updateAdminComments:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Génère un nouveau mot de passe temporaire pour un professeur (Admin uniquement)
+   * @param professorId - ID du professeur
+   * @returns Mot de passe temporaire généré et infos du professeur
+   */
+  async resetPassword(professorId: string): Promise<{ temporaryPassword: string; professor: Professor }> {
+    try {
+      console.log(`\n🔐 [professorService] resetPassword - Professor: ${professorId}`);
+      const data = await apiClient.post<any>(`/api/professors/${professorId}/reset-password`, {});
+      console.log(`✅ [professorService] Mot de passe temporaire généré`);
+      return {
+        temporaryPassword: data.temporaryPassword,
+        professor: data.professor,
+      };
+    } catch (error) {
+      console.error(`\n❌ [professorService] Erreur resetPassword:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Envoie un nouveau mot de passe temporaire par email à un professeur (Admin uniquement)
+   * @param professorId - ID du professeur
+   */
+  async sendPasswordEmail(professorId: string): Promise<void> {
+    try {
+      console.log(`\n📧 [professorService] sendPasswordEmail - Professor: ${professorId}`);
+      await apiClient.post<any>(`/api/professors/${professorId}/send-password-email`, {});
+      console.log(`✅ [professorService] Email envoyé avec succès`);
+    } catch (error) {
+      console.error(`\n❌ [professorService] Erreur sendPasswordEmail:`, error);
+      throw error;
+    }
+  }
 }
 
 // Exporter une instance unique du service

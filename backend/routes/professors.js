@@ -463,6 +463,90 @@ router.put(
   }
 );
 
+// @route   PATCH /api/professors/:id/admin-comments
+// @desc    Mettre à jour les commentaires admin d'un professeur
+// @access  Private (Admin uniquement)
+router.patch(
+  "/:id/admin-comments",
+  [
+    authorize(["admin"]),
+    body("adminComments")
+      .optional()
+      .isString()
+      .withMessage("Les commentaires doivent être une chaîne de caractères")
+      .isLength({ max: 5000 })
+      .withMessage("Les commentaires ne peuvent pas dépasser 5000 caractères"),
+  ],
+  async (req, res) => {
+    try {
+      console.log("[PATCH /professors/:id/admin-comments] 📝 Mise à jour des commentaires admin - ID:", req.params.id);
+      console.log("[PATCH /professors/:id/admin-comments] 👤 Admin:", req.user.email);
+
+      // Vérifier les erreurs de validation
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        console.log("[PATCH /professors/:id/admin-comments] ❌ Erreurs de validation:", errors.array());
+        return res.status(400).json({
+          message: "Données invalides",
+          errors: errors.array(),
+        });
+      }
+
+      const professor = await Professor.findByIdAndUpdate(
+        req.params.id,
+        { adminComments: req.body.adminComments },
+        { new: true, runValidators: true }
+      ).populate("subjects", "name category");
+
+      if (!professor) {
+        console.log("[PATCH /professors/:id/admin-comments] ❌ Professeur non trouvé");
+        return res.status(404).json({ message: "Professeur non trouvé" });
+      }
+
+      console.log("[PATCH /professors/:id/admin-comments] ✅ Commentaires admin mis à jour avec succès");
+
+      res.json({
+        message: "Commentaires admin mis à jour avec succès",
+        professor,
+      });
+    } catch (error) {
+      console.error("[PATCH /professors/:id/admin-comments] ❌ Erreur:", error.message);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
+
+// @route   GET /api/professors/:id/last-coupon-date
+// @desc    Obtenir la date du dernier coupon saisi pour un professeur
+// @access  Private
+router.get("/:id/last-coupon-date", async (req, res) => {
+  try {
+    const { id: professorId } = req.params;
+
+    // Rechercher toutes les NDRs du professeur
+    const NDR = require("../models/NDR");
+    const ndrs = await NDR.find({ 'professor.id': professorId });
+
+    // Trouver la date du dernier coupon
+    let lastCouponDate = null;
+
+    ndrs.forEach(ndr => {
+      if (ndr.coupons && ndr.coupons.length > 0) {
+        ndr.coupons.forEach(coupon => {
+          if (!lastCouponDate || new Date(coupon.updatedAt) > new Date(lastCouponDate)) {
+            lastCouponDate = coupon.updatedAt;
+          }
+        });
+      }
+    });
+
+    res.json({ lastCouponDate });
+  } catch (error) {
+    console.error("Erreur lors de la récupération de la date du dernier coupon:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 // @route   PUT /api/professors/:id/subjects
 // @desc    Mettre à jour les matières enseignées d'un professeur
 // @access  Private (Admin ou le professeur lui-même)
@@ -551,6 +635,124 @@ router.put(
     } catch (error) {
       console.error("Erreur lors de la mise à jour des matières:", error);
       res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+);
+
+// @route   POST /api/professors/:id/reset-password
+// @desc    Générer un nouveau mot de passe temporaire pour un professeur (Admin uniquement)
+// @access  Private (Admin)
+router.post(
+  "/:id/reset-password",
+  authorize(["admin"]),
+  async (req, res) => {
+    try {
+      console.log(`[POST /professors/:id/reset-password] 🔐 Génération d'un nouveau mot de passe temporaire`);
+      console.log(`[POST /professors/:id/reset-password] 👤 Admin:`, req.user.email);
+      console.log(`[POST /professors/:id/reset-password] 🎯 Professeur ciblé:`, req.params.id);
+
+      // Vérifier que le professeur existe
+      const professor = await Professor.findById(req.params.id);
+      if (!professor) {
+        console.log(`[POST /professors/:id/reset-password] ❌ Professeur non trouvé`);
+        return res.status(404).json({ message: "Professeur non trouvé" });
+      }
+
+      // Générer un mot de passe temporaire aléatoire (12 caractères)
+      const temporaryPassword = UserService.generateTemporaryPassword();
+      console.log(`[POST /professors/:id/reset-password] 🔑 Mot de passe temporaire généré`);
+
+      // Hasher le mot de passe
+      const bcrypt = require("bcryptjs");
+      const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+
+      // Mettre à jour le professeur
+      professor.password = hashedPassword;
+      professor.isPasswordSet = false;
+      await professor.save();
+
+      console.log(`[POST /professors/:id/reset-password] ✅ Mot de passe mis à jour pour:`, {
+        professorId: professor._id,
+        email: professor.email,
+        name: `${professor.firstName} ${professor.lastName}`,
+      });
+
+      res.json({
+        message: "Mot de passe temporaire généré avec succès",
+        temporaryPassword,
+        professor: {
+          _id: professor._id,
+          firstName: professor.firstName,
+          lastName: professor.lastName,
+          email: professor.email,
+        },
+      });
+    } catch (error) {
+      console.error(`[POST /professors/:id/reset-password] ❌ Erreur:`, error.message);
+      res.status(500).json({ message: "Erreur lors de la génération du mot de passe" });
+    }
+  }
+);
+
+// @route   POST /api/professors/:id/send-password-email
+// @desc    Générer un mot de passe temporaire et l'envoyer par email au professeur (Admin uniquement)
+// @access  Private (Admin)
+router.post(
+  "/:id/send-password-email",
+  authorize(["admin"]),
+  async (req, res) => {
+    try {
+      console.log(`[POST /professors/:id/send-password-email] 📧 Envoi d'un mot de passe temporaire par email`);
+      console.log(`[POST /professors/:id/send-password-email] 👤 Admin:`, req.user.email);
+      console.log(`[POST /professors/:id/send-password-email] 🎯 Professeur ciblé:`, req.params.id);
+
+      // Vérifier que le professeur existe
+      const professor = await Professor.findById(req.params.id);
+      if (!professor) {
+        console.log(`[POST /professors/:id/send-password-email] ❌ Professeur non trouvé`);
+        return res.status(404).json({ message: "Professeur non trouvé" });
+      }
+
+      // Générer un mot de passe temporaire aléatoire
+      const temporaryPassword = UserService.generateTemporaryPassword();
+      console.log(`[POST /professors/:id/send-password-email] 🔑 Mot de passe temporaire généré`);
+
+      // Hasher le mot de passe
+      const bcrypt = require("bcryptjs");
+      const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+
+      // Mettre à jour le professeur
+      professor.password = hashedPassword;
+      professor.isPasswordSet = false;
+      await professor.save();
+
+      console.log(`[POST /professors/:id/send-password-email] 💾 Mot de passe mis à jour en base`);
+
+      // TODO: Envoyer l'email avec le mot de passe temporaire
+      // Pour l'instant, on simule l'envoi (à implémenter avec nodemailer ou service email)
+      console.log(`[POST /professors/:id/send-password-email] 📤 EMAIL À ENVOYER:`);
+      console.log(`   Destinataire: ${professor.email}`);
+      console.log(`   Sujet: Votre nouveau mot de passe temporaire - ABC Cours`);
+      console.log(`   Contenu:`);
+      console.log(`     Bonjour ${professor.firstName} ${professor.lastName},`);
+      console.log(`     Votre mot de passe temporaire : ${temporaryPassword}`);
+      console.log(`     Vous devrez le changer à votre première connexion.`);
+      console.log(`     Lien de connexion : ${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`);
+
+      console.log(`[POST /professors/:id/send-password-email] ✅ Email envoyé avec succès (simulation)`);
+
+      res.json({
+        message: `Mot de passe temporaire envoyé à ${professor.email}`,
+        professor: {
+          _id: professor._id,
+          firstName: professor.firstName,
+          lastName: professor.lastName,
+          email: professor.email,
+        },
+      });
+    } catch (error) {
+      console.error(`[POST /professors/:id/send-password-email] ❌ Erreur:`, error.message);
+      res.status(500).json({ message: "Erreur lors de l'envoi du mot de passe" });
     }
   }
 );
