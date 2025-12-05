@@ -3,10 +3,10 @@ import { toast } from "sonner";
 import {
   PageHeader,
   Container,
-  SummaryCard,
   Input,
   Button,
   Table,
+  Select,
 } from "../../../components";
 import { subjectService } from "../../../services/subjectService";
 import { SubjectModal } from "./SubjectModal";
@@ -21,6 +21,10 @@ export const Parametres: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [error, setError] = useState<string>("");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [filterCategory, setFilterCategory] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   // Charger les matières au montage
   useEffect(() => {
@@ -30,8 +34,12 @@ export const Parametres: React.FC = () => {
   const loadSubjects = async () => {
     try {
       setIsLoading(true);
-      const data = await subjectService.getSubjects();
-      setSubjects(data);
+      const [subjectsData, categoriesData] = await Promise.all([
+        subjectService.getSubjects(),
+        subjectService.getCategories(),
+      ]);
+      setSubjects(subjectsData);
+      setCategories(categoriesData);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Erreur de chargement"
@@ -83,24 +91,33 @@ export const Parametres: React.FC = () => {
     loadSubjects();
   };
 
-  // Filtrage
-  const filteredSubjects = subjects.filter(
-    (s) =>
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.description || "").toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filtrage et tri
+  const filteredAndSortedSubjects = subjects
+    .filter((s) => {
+      const matchesSearch =
+        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.category.toLowerCase().includes(searchTerm.toLowerCase());
 
-  // Statistiques
-  const totalSubjects = subjects.length;
-  const categoriesCount = new Set(subjects.map((s) => s.category)).size;
-  const subjectsByCategory = subjects.reduce(
-    (acc, s) => {
-      acc[s.category] = (acc[s.category] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
+      const matchesCategory = !filterCategory || s.category === filterCategory;
+
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortBy) {
+        case "name":
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case "category":
+          comparison = a.category.localeCompare(b.category);
+          break;
+        default:
+          comparison = 0;
+      }
+
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
 
   // Colonnes du tableau
   const columns = [
@@ -109,13 +126,6 @@ export const Parametres: React.FC = () => {
       label: "Nom",
       render: (_: unknown, row: TableRowData) => (
         <div className="font-medium">{row.name}</div>
-      ),
-    },
-    {
-      key: "description",
-      label: "Description",
-      render: (_: unknown, row: TableRowData) => (
-        <div className="text-text-secondary">{row.description || "-"}</div>
       ),
     },
     {
@@ -156,7 +166,7 @@ export const Parametres: React.FC = () => {
   ];
 
   // Transformer les données pour le tableau
-  const tableData: TableRowData[] = filteredSubjects.map((s) => ({
+  const tableData: TableRowData[] = filteredAndSortedSubjects.map((s) => ({
     ...s,
     id: s._id,
   }));
@@ -179,35 +189,6 @@ export const Parametres: React.FC = () => {
           </div>
         )}
 
-        {/* Cartes de statistiques */}
-        <Container layout="grid" padding="none">
-          <SummaryCard
-            title="MATIÈRES"
-            metrics={[
-              {
-                value: totalSubjects,
-                label: "Total",
-                variant: "primary",
-              },
-              {
-                value: categoriesCount,
-                label: "Catégories",
-                variant: "success",
-              },
-            ]}
-          />
-          <SummaryCard
-            title="RÉPARTITION"
-            metrics={Object.entries(subjectsByCategory)
-              .slice(0, 2)
-              .map(([cat, count]) => ({
-                value: count,
-                label: cat,
-                variant: "primary" as const,
-              }))}
-          />
-        </Container>
-
         {/* Boutons d'action */}
         <Container layout="flex">
           <Button variant="primary" onClick={handleCreate}>
@@ -215,14 +196,65 @@ export const Parametres: React.FC = () => {
           </Button>
         </Container>
 
-        {/* Barre de recherche */}
+        {/* Filtres et tri */}
         <Container layout="flex">
-          <Input
-            placeholder="Rechercher par nom, description, catégorie..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Button variant="outline" onClick={() => setSearchTerm("")}>
+          <div className="flex gap-4 flex-wrap items-center">
+            {/* Barre de recherche */}
+            <Input
+              placeholder="Rechercher par nom, catégorie..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 min-w-[300px]"
+            />
+
+            {/* Filtre par catégorie */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Catégorie:</label>
+              <Select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                options={[
+                  { value: "", label: "Toutes" },
+                  ...categories.map((cat) => ({ value: cat, label: cat })),
+                ]}
+              />
+            </div>
+
+            {/* Tri */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Trier par:</label>
+              <Select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                options={[
+                  { value: "name", label: "Nom" },
+                  { value: "category", label: "Catégorie" },
+                ]}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                }
+                title={`Ordre ${
+                  sortOrder === "asc" ? "croissant" : "décroissant"
+                }`}
+              >
+                {sortOrder === "asc" ? "↑" : "↓"}
+              </Button>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchTerm("");
+              setFilterCategory("");
+              setSortBy("name");
+              setSortOrder("asc");
+            }}
+          >
             Réinitialiser
           </Button>
         </Container>
@@ -232,7 +264,7 @@ export const Parametres: React.FC = () => {
           <h3>Liste des matières</h3>
           {isLoading ? (
             <div className="text-center py-8">Chargement...</div>
-          ) : filteredSubjects.length === 0 ? (
+          ) : filteredAndSortedSubjects.length === 0 ? (
             <div className="text-center py-8">Aucune matière trouvée</div>
           ) : (
             <Table

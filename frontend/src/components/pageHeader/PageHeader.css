@@ -36,6 +36,12 @@
   flex: 1;
 }
 
+/* Métadonnées (badges, tags, etc.) */
+.page-header__metadata {
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
 /* Description optionnelle */
 .page-header__description {
   font-size: 0.875rem;

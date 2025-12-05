@@ -82,7 +82,7 @@ export const ProfessorElevesContent: React.FC<ProfessorElevesContentProps> = ({
   const [demandeData, setDemandeData] = useState({
     date: "",
     time: "",
-    type: "physique" as "physique" | "virtuel",
+    type: "physique" as "physique" | "visio",
     notes: "",
   });
 
@@ -988,13 +988,13 @@ export const ProfessorElevesContent: React.FC<ProfessorElevesContentProps> = ({
                     onChange={(e) =>
                       setDemandeData({
                         ...demandeData,
-                        type: e.target.value as "physique" | "virtuel",
+                        type: e.target.value as "physique" | "visio",
                       })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="physique">Physique</option>
-                    <option value="virtuel">Virtuel</option>
+                    <option value="visio">Visio</option>
                   </select>
                 </div>
 

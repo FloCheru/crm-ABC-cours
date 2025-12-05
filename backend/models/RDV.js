@@ -2,15 +2,28 @@ const mongoose = require("mongoose");
 
 const rdvSchema = new mongoose.Schema(
   {
+    // Context identifiers (familyId OU professorId selon entityType)
     familyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Family",
-      required: [true, "ID de la famille requis"],
+    },
+    professorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Professor",
     },
     assignedAdminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: [true, "ID de l'admin requis"],
+    },
+    // Type de RDV pour distinguer les contextes
+    entityType: {
+      type: String,
+      enum: {
+        values: ["admin-family", "admin-professor"],
+        message: "Type d'entité invalide. Valeurs autorisées: admin-family, admin-professor"
+      },
+      required: [true, "Type d'entité requis"],
     },
     date: {
       type: Date,
@@ -57,8 +70,10 @@ const rdvSchema = new mongoose.Schema(
 
 // Index composés pour optimiser les requêtes
 rdvSchema.index({ familyId: 1, date: 1 }); // Recherche RDV par famille + tri date
+rdvSchema.index({ professorId: 1, date: 1 }); // Recherche RDV par professeur + tri date
 rdvSchema.index({ assignedAdminId: 1, date: 1 }); // Recherche RDV par admin + tri date
 rdvSchema.index({ status: 1 }); // Recherche par statut
+rdvSchema.index({ entityType: 1 }); // Recherche par type d'entité
 
 // Méthode d'instance pour formater la date
 rdvSchema.methods.getFormattedDateTime = function () {
@@ -74,7 +89,24 @@ rdvSchema.methods.getFormattedDateTime = function () {
 // Middleware
 // pre-save pour validation simple
 rdvSchema.pre("save", function (next) {
-  // Validation simple : pas de date dans le passé
+  // Validation 1 : Vérifier que familyId OU professorId est présent selon entityType
+  if (this.entityType === "admin-family" && !this.familyId) {
+    const error = new Error(
+      "familyId est requis pour un RDV de type admin-family"
+    );
+    error.name = "ValidationError";
+    return next(error);
+  }
+
+  if (this.entityType === "admin-professor" && !this.professorId) {
+    const error = new Error(
+      "professorId est requis pour un RDV de type admin-professor"
+    );
+    error.name = "ValidationError";
+    return next(error);
+  }
+
+  // Validation 2 : pas de date dans le passé
   if (this.isNew || this.isModified("date")) {
     const now = new Date();
     if (this.date < now && this.status === "planned") {

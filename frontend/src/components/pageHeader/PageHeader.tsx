@@ -41,6 +41,11 @@ interface PageHeaderProps {
   actions?: React.ReactNode;
 
   /**
+   * Métadonnées à afficher sous le titre (badges, tags, etc.)
+   */
+  metadata?: React.ReactNode;
+
+  /**
    * Classes CSS supplémentaires
    */
   className?: string;
@@ -75,6 +80,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   description,
   backButton,
   actions,
+  metadata,
   className = "",
 }) => {
   const navigate = useNavigate();
@@ -165,6 +171,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
               </div>
             )}
           </div>
+          {metadata && (
+            <div className="page-header__metadata">
+              {metadata}
+            </div>
+          )}
           {description && (
             <p className="page-header__description">{description}</p>
           )}

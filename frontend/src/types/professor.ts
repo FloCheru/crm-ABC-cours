@@ -9,7 +9,7 @@ import type { SchoolCategory } from '../constants/schoolLevels';
 export type Gender = "M." | "Mme";
 export type TransportMode = "voiture" | "vélo" | "transports" | "moto" | "pied";
 export type TransportModes = TransportMode[];
-export type CourseLocation = "domicile" | "visio";
+export type CourseLocation = ("domicile" | "visio")[];
 export type DisabilityKnowledge =
   | "aucune"
   | "dys"
@@ -91,26 +91,7 @@ export interface ProfessorDocument {
   verified: boolean;
 }
 
-/**
- * Information d'éducation du professeur
- */
-export interface EducationInfo {
-  degree: string;
-  institution: string;
-  year: number;
-  description: string;
-}
 
-/**
- * Information d'expérience du professeur
- */
-export interface ExperienceInfo {
-  position: string;
-  company: string;
-  startDate: string;
-  endDate?: string;
-  description: string;
-}
 
 /**
  * Rating (note moyenne) du professeur
@@ -157,9 +138,10 @@ export interface Professor {
 
   // Informations académiques et professionnelles
   bio?: string;
-  education?: EducationInfo[];
-  experience?: ExperienceInfo[];
-  currentActivity?: string;
+  diplomes?: string;
+  certifications?: string;
+  experiences?: string;
+  divers?: string;
   notes?: string;
 
   // Champs système
@@ -198,4 +180,6 @@ export interface ProfessorProfile extends Professor {
   weeklyAvailability?: WeeklySchedule;
   teachingSubjects?: TeachingSubject[];     // Matières standard avec ObjectId
   customSubjects?: CustomSubject[];         // Matières personnalisées
+  adminComments?: string;                   // Commentaires admin (visible uniquement par les admins)
+  isActive?: boolean;                       // Statut actif/inactif du professeur
 }
