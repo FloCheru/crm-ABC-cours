@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, FormCard } from '../../../../components';
+import { Button } from '../../../../components';
+import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/ui/card';
 import { familyService } from '../../../../services/familyService';
 import type { Family } from '../../../../types/family';
 import './Step1ClientSelection.css';
@@ -81,55 +82,65 @@ export const Step1ClientSelection: React.FC<Props> = ({
   return (
     <div className="step1-client-selection">
       {/* Sélection de la famille */}
-      <FormCard title="Sélection du client" className="step1__family-selection">
-        <div className="step1__families-grid">
-          {families.map((family) => (
-            <div
-              key={family._id}
-              className={`step1__family-card ${
-                selectedFamily?._id === family._id ? 'step1__family-card--selected' : ''
-              }`}
-              onClick={() => handleFamilySelect(family)}
-            >
-              <div className="step1__family-header">
-                <h4 className="step1__family-name">
-                  {family.primaryContact.firstName} {family.primaryContact.lastName}
-                </h4>
-                <span className={`step1__family-status ${getStatusColor(family.status)}`}>
-                  {family.status}
-                </span>
-              </div>
+      <Card className="step1__family-selection">
+        <CardHeader>
+          <CardTitle>Sélection du client</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="step1__families-grid">
+            {families.map((family) => (
+              <div
+                key={family._id}
+                className={`step1__family-card ${
+                  selectedFamily?._id === family._id ? 'step1__family-card--selected' : ''
+                }`}
+                onClick={() => handleFamilySelect(family)}
+              >
+                <div className="step1__family-header">
+                  <h4 className="step1__family-name">
+                    {family.primaryContact.firstName} {family.primaryContact.lastName}
+                  </h4>
+                  <span className={`step1__family-status ${getStatusColor(family.status)}`}>
+                    {family.status}
+                  </span>
+                </div>
 
-              <div className="step1__family-details">
-                <div className="step1__family-contact">
-                  📧 {family.primaryContact.email}
-                </div>
-                <div className="step1__family-contact">
-                  📞 {family.primaryContact.primaryPhone}
-                </div>
-                {family.primaryContact.address && (
-                  <div className="step1__family-address">
-                    🏠 {family.primaryContact.address.city}, {family.primaryContact.address.postalCode}
+                <div className="step1__family-details">
+                  <div className="step1__family-contact">
+                    📧 {family.primaryContact.email}
                   </div>
-                )}
+                  <div className="step1__family-contact">
+                    📞 {family.primaryContact.primaryPhone}
+                  </div>
+                  {family.primaryContact.address && (
+                    <div className="step1__family-address">
+                      🏠 {family.primaryContact.address.city}, {family.primaryContact.address.postalCode}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </FormCard>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Confirmation sélection */}
       {selectedFamily && (
-        <FormCard title="Client sélectionné" className="step1__selected-family">
-          <div className="step1__selected-info">
-            <h4>{selectedFamily.primaryContact.firstName} {selectedFamily.primaryContact.lastName}</h4>
-            <p>📧 {selectedFamily.primaryContact.email}</p>
-            <p>📞 {selectedFamily.primaryContact.primaryPhone}</p>
-            {selectedFamily.primaryContact.address && (
-              <p>🏠 {selectedFamily.primaryContact.address.street}, {selectedFamily.primaryContact.address.city} {selectedFamily.primaryContact.address.postalCode}</p>
-            )}
-          </div>
-        </FormCard>
+        <Card className="step1__selected-family">
+          <CardHeader>
+            <CardTitle>Client sélectionné</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="step1__selected-info">
+              <h4>{selectedFamily.primaryContact.firstName} {selectedFamily.primaryContact.lastName}</h4>
+              <p>📧 {selectedFamily.primaryContact.email}</p>
+              <p>📞 {selectedFamily.primaryContact.primaryPhone}</p>
+              {selectedFamily.primaryContact.address && (
+                <p>🏠 {selectedFamily.primaryContact.address.street}, {selectedFamily.primaryContact.address.city} {selectedFamily.primaryContact.address.postalCode}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Navigation */}

@@ -7,10 +7,10 @@ import {
   Container,
   SummaryCard,
   ButtonGroup,
-  Input,
   Button,
   Table,
 } from "../../components";
+import { Input } from "../../components/ui/input";
 import { ModalWrapper } from "../../components/ui/ModalWrapper/ModalWrapper";
 import { CompleteFamilyModal } from "../../components/domain/CompleteFamilyModal";
 import { familyService } from "../../services/familyService";
@@ -693,16 +693,17 @@ export const Clients: React.FC = () => {
         {/* Bouton "Ajouter un client" supprimé - Les clients sont créés via NDR depuis prospects */}
 
         <Container layout="flex">
-          <Input
-            placeholder="Rechercher par nom, téléphone, adresse..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            button={
-              <Button variant="primary" onClick={handleSearch}>
-                Appliquer
-              </Button>
-            }
-          />
+          <div className="flex gap-2 flex-1">
+            <Input
+              placeholder="Rechercher par nom, téléphone, adresse..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1"
+            />
+            <Button variant="primary" onClick={handleSearch}>
+              Appliquer
+            </Button>
+          </div>
           <ButtonGroup
             variant="double"
             buttons={[

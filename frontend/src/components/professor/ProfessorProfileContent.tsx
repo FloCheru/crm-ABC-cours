@@ -42,12 +42,14 @@ interface ProfessorProfileContentProps {
   professorId: string;
   defaultTab?: string;
   teachingSubjects?: TeachingSubject[];
+  onSaveSuccess?: () => Promise<void>;
 }
 
 export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = ({
   professorId,
   defaultTab = 'informations',
   teachingSubjects: initialTeachingSubjects,
+  onSaveSuccess,
 }) => {
 
   const [isLoading, setIsLoading] = useState(true);
@@ -107,14 +109,20 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
     if (!professorId) return;
 
     try {
+      console.log(`\n📥 loadProfile() - DÉBUT - professorId: ${professorId}`);
       setIsLoading(true);
       const professor = await professorService.getProfessorById(professorId);
+      console.log(`✅ loadProfile() - Données reçues du serveur:`, professor);
       setFormData(professor);
+      console.log(`✅ loadProfile() - setFormData() appelé, profil mis à jour`);
+      return professor;
     } catch (err) {
-      console.error('Erreur lors du chargement du profil:', err);
+      console.error('❌ Erreur lors du chargement du profil:', err);
       setError('Impossible de charger le profil du professeur');
+      return null;
     } finally {
       setIsLoading(false);
+      console.log(`✅ loadProfile() - FIN`);
     }
   };
 
@@ -182,7 +190,9 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
   // Charger et fusionner les matières depuis le profil complet
   const loadTeachingSubjectsFromProfile = async () => {
     try {
+      console.log(`\n📥 loadTeachingSubjectsFromProfile() - DÉBUT`);
       const professor = await professorService.getProfessorById(professorId) as ProfessorProfile;
+      console.log(`✅ loadTeachingSubjectsFromProfile() - Profil reçu:`, professor);
 
       // Fusionner teachingSubjects (standard) et customSubjects
       const mergedSubjects: TeachingSubject[] = [
@@ -196,9 +206,12 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
         })),
       ];
 
+      console.log(`📊 loadTeachingSubjectsFromProfile() - Matières fusionnées:`, mergedSubjects);
       setTeachingSubjects(mergedSubjects);
+      console.log(`✅ loadTeachingSubjectsFromProfile() - setTeachingSubjects() appelé`);
+      console.log(`✅ loadTeachingSubjectsFromProfile() - FIN`);
     } catch (error) {
-      console.error('Erreur lors du chargement des matières du profil:', error);
+      console.error('❌ Erreur lors du chargement des matières du profil:', error);
     }
   };
 
@@ -269,7 +282,25 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
         dataReturned: response
       });
 
+      // Rafraîchissement silencieux après sauvegarde réussie
+      console.log(`\n🔄 [${section.toUpperCase()}] DÉBUT du rafraîchissement silencieux...`);
+      console.log(`📍 État formData AVANT loadProfile():`, formData);
+
+      const updatedProfile = await loadProfile();
+
+      console.log(`📍 État formData APRÈS loadProfile():`, formData);
+      console.log(`📍 updatedProfile retourné:`, updatedProfile);
+      console.log(`✅ [${section.toUpperCase()}] Le profil local (formData) a été mis à jour`);
+
+      console.log(`\n✅ [${section.toUpperCase()}] FIN du rafraîchissement silencieux`);
       alert('Modifications enregistrées avec succès !');
+
+      // Notifier la page parent pour qu'elle rafraîchisse les données (badges, etc)
+      if (onSaveSuccess) {
+        console.log(`📡 [${section.toUpperCase()}] Appel du callback onSaveSuccess()`);
+        await onSaveSuccess();
+        console.log(`✅ [${section.toUpperCase()}] Page parent rafraîchie`);
+      }
     } catch (err) {
       console.error(`\n❌ [${section.toUpperCase()}] Erreur lors de la sauvegarde:`, err);
       alert('Erreur lors de la sauvegarde: ' + (err instanceof Error ? err.message : 'Erreur inconnue'));
@@ -306,8 +337,24 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
         subjects: response
       });
 
+      // Rafraîchissement silencieux après sauvegarde réussie
+      console.log(`\n🔄 [CHOIX] DÉBUT du rafraîchissement silencieux...`);
+      console.log(`📍 État teachingSubjects AVANT loadTeachingSubjectsFromProfile():`, teachingSubjects);
+
+      await loadTeachingSubjectsFromProfile();
+
+      console.log(`📍 État teachingSubjects APRÈS loadTeachingSubjectsFromProfile():`, teachingSubjects);
+      console.log(`\n✅ [CHOIX] FIN du rafraîchissement silencieux`);
+
       alert('Vos choix ont été enregistrés avec succès !');
       setIsEditingSubjects(false);
+
+      // Notifier la page parent pour qu'elle rafraîchisse les données (badges, etc)
+      if (onSaveSuccess) {
+        console.log(`📡 [CHOIX] Appel du callback onSaveSuccess()`);
+        await onSaveSuccess();
+        console.log(`✅ [CHOIX] Page parent rafraîchie`);
+      }
     } catch (error) {
       console.error(`\n❌ [CHOIX] Erreur de sauvegarde:`, error);
       alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
@@ -584,6 +631,22 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
     isFullWidth = false
   ) => {
     const fieldValue = formData[field];
+
+    // Formater la date correctement pour input type="date" (format: yyyy-MM-dd)
+    const getDisplayValue = () => {
+      if (!fieldValue) return '';
+
+      if (type === 'date' && fieldValue) {
+        const date = new Date(String(fieldValue));
+        if (!isNaN(date.getTime())) {
+          // Format: YYYY-MM-DD
+          return date.toISOString().split('T')[0];
+        }
+      }
+
+      return String(fieldValue);
+    };
+
     return (
       <div className={isFullWidth ? 'col-span-2' : ''}>
         <label className="text-xs text-gray-500 mb-1 block">{label}</label>
@@ -602,7 +665,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
         ) : (
           <input
             type={type}
-            value={String(fieldValue || '')}
+            value={getDisplayValue()}
             onChange={(e) => handleInputChange(field, e.target.value)}
             className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           />
@@ -656,9 +719,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Informations personnelles</h3>
-            <p className="text-sm text-gray-500">
-              Informations d'identité et coordonnées
-            </p>
+           
           </div>
 
           <div className="grid grid-cols-2 gap-x-8 gap-y-6">
@@ -787,6 +848,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
               )}
             </div>
             <div className="col-span-2">
+              <label className="text-xs text-gray-500 mb-1 block">Cours</label>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -901,7 +963,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
 
                 <div>
                   <label className="text-xs text-gray-500 mb-1 block">
-                    IBAN (Relevé d'Identité Bancaire)
+                    IBAN
                   </label>
                   <input
                     type="text"
@@ -911,11 +973,9 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                     title="Format IBAN invalide (ex: FR7612345678901234567890123)"
                     maxLength={34}
                     className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder="FR76 1234 5678 9012 3456 7890 123"
+              
                   />
-                  <p className="text-xs text-gray-400 mt-1">
-                    Format européen (27 à 34 caractères)
-                  </p>
+                
                 </div>
 
                 <div>
@@ -931,11 +991,8 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                     minLength={8}
                     maxLength={11}
                     className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder="BNPAFRPP"
                   />
-                  <p className="text-xs text-gray-400 mt-1">
-                    Code SWIFT de votre banque (8 ou 11 caractères)
-                  </p>
+                 
                 </div>
 
                 {formData.employmentStatus === 'auto-entrepreneur' && (

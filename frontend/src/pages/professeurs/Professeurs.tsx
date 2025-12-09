@@ -5,13 +5,19 @@ import {
   Container,
   SummaryCard,
   ButtonGroup,
-  Input,
   Button,
   Table,
-  Select,
   Modal,
   TemporaryPasswordModal,
 } from "../../components";
+import { Input } from "../../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 import { PasswordChangeModal } from "../../components/professor/PasswordChangeModal";
 import { KeyRound, UserRound, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
@@ -597,17 +603,18 @@ export const Professeurs: React.FC = () => {
           <div className="flex gap-4 flex-wrap items-center">
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Trier par:</label>
-              <Select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                options={[
-                  { value: "createdAt", label: "Date de création" },
-                  { value: "lastName", label: "Nom" },
-                  { value: "city", label: "Ville" },
-                  { value: "department", label: "Département" },
-                  { value: "lastCouponDate", label: "Date dernier coupon" },
-                ]}
-              />
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Trier par..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="createdAt">Date de création</SelectItem>
+                  <SelectItem value="lastName">Nom</SelectItem>
+                  <SelectItem value="city">Ville</SelectItem>
+                  <SelectItem value="department">Département</SelectItem>
+                  <SelectItem value="lastCouponDate">Date dernier coupon</SelectItem>
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 size="sm"
@@ -624,104 +631,122 @@ export const Professeurs: React.FC = () => {
 
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Département:</label>
-              <Select
-                value={filterDepartment}
-                onChange={(e) => setFilterDepartment(e.target.value)}
-                options={[
-                  { value: "", label: "Tous" },
-                  ...departments.map((dept) => ({ value: dept, label: dept })),
-                ]}
-              />
+              <Select value={filterDepartment || "all"} onValueChange={(value) => setFilterDepartment(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Tous" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Ville:</label>
-              <Select
-                value={filterCity}
-                onChange={(e) => setFilterCity(e.target.value)}
-                options={[
-                  { value: "", label: "Toutes" },
-                  ...cities.map((city) => ({ value: city, label: city })),
-                ]}
-              />
+              <Select value={filterCity || "all"} onValueChange={(value) => setFilterCity(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Toutes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  {cities.map((city) => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Matière:</label>
-              <Select
-                value={filterSubject}
-                onChange={(e) => setFilterSubject(e.target.value)}
-                options={[
-                  { value: "", label: "Toutes" },
-                  ...allSubjects.map((subject) => ({
-                    value: subject._id,
-                    label: subject.name,
-                  })),
-                ]}
-              />
+              <Select value={filterSubject || "all"} onValueChange={(value) => setFilterSubject(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Toutes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  {allSubjects.map((subject) => (
+                    <SelectItem key={subject._id} value={subject._id}>{subject.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Niveau:</label>
-              <Select
-                value={filterLevel}
-                onChange={(e) => setFilterLevel(e.target.value)}
-                options={[
-                  { value: "", label: "Tous" },
-                  ...levels.map((level) => ({
-                    value: level.value,
-                    label: level.label,
-                  })),
-                ]}
-              />
+              <Select value={filterLevel || "all"} onValueChange={(value) => setFilterLevel(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Tous" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  {levels.map((level) => (
+                    <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Sexe:</label>
-              <Select
-                value={filterGender}
-                onChange={(e) => setFilterGender(e.target.value)}
-                options={[
-                  { value: "", label: "Tous" },
-                  ...GENDER_OPTIONS,
-                ]}
-              />
+              <Select value={filterGender || "all"} onValueChange={(value) => setFilterGender(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Tous" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  {GENDER_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Statut:</label>
-              <Select
-                value={filterActiveStatus}
-                onChange={(e) => setFilterActiveStatus(e.target.value)}
-                options={[
-                  { value: "", label: "Tous" },
-                  ...ACTIVE_STATUS_OPTIONS,
-                ]}
-              />
+              <Select value={filterActiveStatus || "all"} onValueChange={(value) => setFilterActiveStatus(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Tous" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  {ACTIVE_STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Situation actuelle:</label>
-              <Select
-                value={filterCurrentSituation}
-                onChange={(e) => setFilterCurrentSituation(e.target.value)}
-                options={[
-                  { value: "", label: "Toutes" },
-                  ...CURRENT_SITUATION_OPTIONS,
-                ]}
-              />
+              <Select value={filterCurrentSituation || "all"} onValueChange={(value) => setFilterCurrentSituation(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Toutes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  {CURRENT_SITUATION_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Statut d'emploi:</label>
-              <Select
-                value={filterEmploymentStatus}
-                onChange={(e) => setFilterEmploymentStatus(e.target.value)}
-                options={[
-                  { value: "", label: "Tous" },
-                  ...EMPLOYMENT_STATUS_OPTIONS,
-                ]}
-              />
+              <Select value={filterEmploymentStatus || "all"} onValueChange={(value) => setFilterEmploymentStatus(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Tous" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  {EMPLOYMENT_STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

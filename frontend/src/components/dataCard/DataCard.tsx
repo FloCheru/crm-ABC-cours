@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Input, Select, Button } from "../";
+import { Button } from "../";
+import { Input } from "../ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import "./DataCard.css";
 
 export interface FieldConfig {
@@ -235,33 +243,55 @@ export const DataCard: React.FC<DataCardProps> = ({
     if (type === "select" && options) {
       return (
         <div key={key} className="data-card__field">
+          <label className="data-card__label">
+            {label}
+            {required && <span className="data-card__required">*</span>}
+          </label>
           <Select
-            label={label}
             value={displayValue || ""}
-            onChange={(e) => handleFieldChange(key, e.target.value)}
-            options={options}
-            required={required}
-            error={error}
-            className="data-card__select"
+            onValueChange={(newValue) => handleFieldChange(key, newValue)}
             disabled={isSaving}
-          />
+          >
+            <SelectTrigger className={`data-card__select ${error ? "data-card__select--error" : ""}`}>
+              <SelectValue placeholder="Sélectionner..." />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem key={option.value} value={option.value || "none"}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {error && (
+            <div className="data-card__error" role="alert">
+              {error}
+            </div>
+          )}
         </div>
       );
     }
 
     return (
       <div key={key} className="data-card__field">
+        <label className="data-card__label">
+          {label}
+          {required && <span className="data-card__required">*</span>}
+        </label>
         <Input
           type={type}
-          label={label}
           value={displayValue || ""}
           onChange={(e) => handleFieldChange(key, e.target.value)}
           placeholder={placeholder}
           required={required}
-          error={error}
-          className="data-card__input"
+          className={`data-card__input ${error ? "data-card__input--error" : ""}`}
           disabled={isSaving}
         />
+        {error && (
+          <div className="data-card__error" role="alert">
+            {error}
+          </div>
+        )}
       </div>
     );
   };

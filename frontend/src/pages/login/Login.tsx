@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Input, Button } from "../../components";
+import { Button } from "../../components";
+import { Input } from "../../components/ui/input";
 import { useAuth } from "../../hooks/useAuth";
 
 export const Login: React.FC = () => {

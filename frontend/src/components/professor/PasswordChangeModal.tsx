@@ -1,9 +1,26 @@
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Mail, RefreshCw, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Input } from "../../components";
+import { Button } from "../../components";
+import { Input } from "../../components/ui/input";
 import { authService } from "../../services/authService";
 import { professorService } from "../../services/professorService";
+
+// Schema Zod pour la validation du formulaire
+const passwordSchema = z
+  .object({
+    newPassword: z.string().min(6, "Minimum 6 caractères"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["confirmPassword"],
+  });
+
+type PasswordFormData = z.infer<typeof passwordSchema>;
 
 interface PasswordChangeModalProps {
   isOpen: boolean;
@@ -23,10 +40,15 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
   mode,
   professor,
 }) => {
-  // États pour mode "self"
-  const [passwords, setPasswords] = useState({
-    newPassword: "",
-    confirmPassword: "",
+  // React Hook Form avec validation Zod
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: { newPassword: "", confirmPassword: "" },
   });
 
   // États pour mode "admin"
@@ -35,45 +57,32 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
   const [isCopied, setIsCopied] = useState(false);
 
   // États communs
-  const [error, setError] = useState("");
+  const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   // Réinitialiser les états quand la modal se ferme
   React.useEffect(() => {
     if (!isOpen) {
-      setPasswords({ newPassword: "", confirmPassword: "" });
+      reset();
       setAdminMode("options");
       setGeneratedPassword(null);
       setIsCopied(false);
-      setError("");
+      setServerError("");
     }
-  }, [isOpen]);
+  }, [isOpen, reset]);
 
   // ============ HANDLERS MODE "SELF" ============
 
-  const handleSelfPasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    // Validation
-    if (passwords.newPassword.length < 6) {
-      setError("Le mot de passe doit contenir au moins 6 caractères");
-      return;
-    }
-
-    if (passwords.newPassword !== passwords.confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
-      return;
-    }
-
+  const onSubmitPassword = async (data: PasswordFormData) => {
+    setServerError("");
     setIsLoading(true);
 
     try {
-      await authService.changePassword(passwords.newPassword);
+      await authService.changePassword(data.newPassword);
       toast.success("Mot de passe changé avec succès");
       onClose(); // Le parent gère la déconnexion et la redirection
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur lors du changement de mot de passe");
+      setServerError(err instanceof Error ? err.message : "Erreur lors du changement de mot de passe");
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +99,7 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
     if (!confirmed) return;
 
     setIsLoading(true);
-    setError("");
+    setServerError("");
 
     try {
       await professorService.sendPasswordEmail(professor._id);
@@ -99,7 +108,7 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
       });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur lors de l'envoi du mot de passe");
+      setServerError(err instanceof Error ? err.message : "Erreur lors de l'envoi du mot de passe");
     } finally {
       setIsLoading(false);
     }
@@ -114,7 +123,7 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
     if (!confirmed) return;
 
     setIsLoading(true);
-    setError("");
+    setServerError("");
 
     try {
       const { temporaryPassword } = await professorService.resetPassword(professor._id);
@@ -122,7 +131,7 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
       setAdminMode("generated");
       toast.success("Mot de passe généré avec succès");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur lors de la génération du mot de passe");
+      setServerError(err instanceof Error ? err.message : "Erreur lors de la génération du mot de passe");
     } finally {
       setIsLoading(false);
     }
@@ -169,16 +178,16 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
 
         {/* Body */}
         <div className="px-6 py-4">
-          {/* Message d'erreur */}
-          {error && (
+          {/* Message d'erreur serveur */}
+          {serverError && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-              {error}
+              {serverError}
             </div>
           )}
 
           {mode === "self" ? (
             // ========== MODE SELF : Formulaire de changement de MDP ==========
-            <form onSubmit={handleSelfPasswordChange} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmitPassword)} className="space-y-4">
               <div>
                 <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
                   Nouveau mot de passe
@@ -186,14 +195,16 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
                 <Input
                   id="newPassword"
                   type="password"
-                  value={passwords.newPassword}
-                  onChange={(e) =>
-                    setPasswords({ ...passwords, newPassword: e.target.value })
-                  }
+                  {...register("newPassword")}
                   placeholder="Min. 6 caractères"
-                  required
                   disabled={isLoading}
+                  aria-invalid={errors.newPassword ? "true" : "false"}
                 />
+                {errors.newPassword && (
+                  <p className="mt-1 text-sm text-red-600" role="alert">
+                    {errors.newPassword.message}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -203,14 +214,16 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
                 <Input
                   id="confirmPassword"
                   type="password"
-                  value={passwords.confirmPassword}
-                  onChange={(e) =>
-                    setPasswords({ ...passwords, confirmPassword: e.target.value })
-                  }
+                  {...register("confirmPassword")}
                   placeholder="Retapez votre mot de passe"
-                  required
                   disabled={isLoading}
+                  aria-invalid={errors.confirmPassword ? "true" : "false"}
                 />
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600" role="alert">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
               </div>
 
               <Button type="submit" variant="primary" disabled={isLoading} style={{ width: "100%", marginTop: "1.5rem" }}>

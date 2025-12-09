@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
 import {
   Button,
-  Input,
-  Select,
   DataCard,
   Container,
   PageHeader,
 } from "../../components";
+import { Input } from "../../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 import { familyService } from "../../services/familyService";
 import rdvService from "../../services/rdvService";
 import { adminService, type Admin } from "../../services/adminService";
@@ -1112,12 +1118,14 @@ export const Modal: React.FC<ModalProps> = ({
 
         return (
           <div key={key} className="data-card__field">
+            <label className="data-card__label">
+              {label}
+              {required && <span className="data-card__required">*</span>}
+            </label>
             <Input
               type="text"
-              label={label}
               value={displayText}
               disabled={true}
-              required={required}
             />
           </div>
         );
@@ -1126,15 +1134,26 @@ export const Modal: React.FC<ModalProps> = ({
       // En mode edit, utiliser le composant Select
       return (
         <div key={key} className="data-card__field">
+          <label className="data-card__label">
+            {label}
+            {required && <span className="data-card__required">*</span>}
+          </label>
           <Select
-            label={label}
             value={value?.toString() || ""}
-            onChange={(e) => handleFieldChange(key, e.target.value)}
-            options={selectOptions}
-            required={required}
+            onValueChange={(newValue) => handleFieldChange(key, newValue)}
             disabled={isDisabled}
-            data-testid={`select-${key}`}
-          />
+          >
+            <SelectTrigger data-testid={`select-${key}`}>
+              <SelectValue placeholder="Sélectionner..." />
+            </SelectTrigger>
+            <SelectContent>
+              {selectOptions.map((option: any) => (
+                <SelectItem key={option.value} value={option.value || "none"}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       );
     }
@@ -1149,7 +1168,7 @@ export const Modal: React.FC<ModalProps> = ({
           {required && <span className="data-card__required">*</span>}
         </label>
         <Input
-          type={type as any}
+          type={type}
           value={value?.toString() || ""}
           onChange={(e) => handleFieldChange(key, e.target.value)}
           placeholder={placeholder}

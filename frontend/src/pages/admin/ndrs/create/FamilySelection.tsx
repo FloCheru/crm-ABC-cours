@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageHeader, Container, Button, Input, Select, ButtonGroup } from "../../../../components";
+import { PageHeader, Container, Button, ButtonGroup } from "../../../../components";
+import { Input } from "../../../../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../../components/ui/select";
 import {
   Card,
   CardHeader,
@@ -231,26 +239,32 @@ export const FamilySelection: React.FC = () => {
               <div className="flex gap-4 flex-wrap items-center">
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium">Ville:</label>
-                  <Select
-                    value={filterCity}
-                    onChange={(e) => setFilterCity(e.target.value)}
-                    options={[
-                      { value: "", label: "Toutes" },
-                      ...cities.map((city) => ({ value: city, label: city })),
-                    ]}
-                  />
+                  <Select value={filterCity || "all"} onValueChange={(value) => setFilterCity(value === "all" ? "" : value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Toutes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes</SelectItem>
+                      {cities.map((city) => (
+                        <SelectItem key={city} value={city}>{city}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium">Département:</label>
-                  <Select
-                    value={filterDepartment}
-                    onChange={(e) => setFilterDepartment(e.target.value)}
-                    options={[
-                      { value: "", label: "Tous" },
-                      ...departments.map((dept) => ({ value: dept, label: dept })),
-                    ]}
-                  />
+                  <Select value={filterDepartment || "all"} onValueChange={(value) => setFilterDepartment(value === "all" ? "" : value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Tous" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous</SelectItem>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

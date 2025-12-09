@@ -6,7 +6,6 @@ import {
   Container,
   SummaryCard,
   ButtonGroup,
-  Input,
   Button,
   Table,
   ReminderSubjectDropdown,
@@ -14,6 +13,7 @@ import {
   PageHeader,
   Modal,
 } from "../../components";
+import { Input } from "../../components/ui/input";
 import { CompleteFamilyModal } from "../../components/domain/CompleteFamilyModal";
 import { AddStudentModal } from "../../components/domain/AddStudentModal";
 import { familyService } from "../../services/familyService";

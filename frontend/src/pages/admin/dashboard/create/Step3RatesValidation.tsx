@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Input, FormCard } from "../../../../components";
+import { Button } from "../../../../components";
+import { Input } from "../../../../components/ui/input";
+import { Card, CardHeader, CardTitle, CardContent } from "../../../../components/ui/card";
 import { ndrService } from "../../../../services/ndrService";
 import "./Step3RatesValidation.css";
 
@@ -120,7 +122,11 @@ export const Step3RatesValidation: React.FC<Props> = ({
 
       <form onSubmit={handleSubmit} className="step3__form">
         {/* Tarification */}
-        <FormCard title="Tarification">
+        <Card>
+          <CardHeader>
+            <CardTitle>Tarification</CardTitle>
+          </CardHeader>
+          <CardContent>
           <div className="step3__rates-grid">
             <div className="rate-field">
               <label htmlFor="hourlyRate">Tarif horaire (€) *</label>
@@ -174,10 +180,15 @@ export const Step3RatesValidation: React.FC<Props> = ({
               €
             </h4>
           </div>
-        </FormCard>
+          </CardContent>
+        </Card>
 
         {/* Mode de paiement */}
-        <FormCard title="Mode de paiement">
+        <Card>
+          <CardHeader>
+            <CardTitle>Mode de paiement</CardTitle>
+          </CardHeader>
+          <CardContent>
           <div className="step3__payment">
             <div className="payment-methods">
               <h4>Mode de paiement *</h4>
@@ -227,10 +238,15 @@ export const Step3RatesValidation: React.FC<Props> = ({
               </div>
             </div>
           </div>
-        </FormCard>
+          </CardContent>
+        </Card>
 
         {/* Notes */}
-        <FormCard title="Notes">
+        <Card>
+          <CardHeader>
+            <CardTitle>Notes</CardTitle>
+          </CardHeader>
+          <CardContent>
           <div className="step3__notes">
             <label htmlFor="notes">Notes complémentaires</label>
             <textarea
@@ -241,7 +257,8 @@ export const Step3RatesValidation: React.FC<Props> = ({
               placeholder="Ajoutez des notes ou remarques particulières..."
             />
           </div>
-        </FormCard>
+          </CardContent>
+        </Card>
 
         {/* Navigation */}
         <div className="step3__navigation">

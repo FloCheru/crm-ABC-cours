@@ -58,12 +58,12 @@
 }
 
 .navbar-item.active {
-  background-color: #3b82f6;
+  background-color: var(--primary);
   color: #ffffff;
 }
 
 .navbar-item.active:hover {
-  background-color: #2563eb;
+  background-color: var(--primary-hover);
 }
 
 /* Dropdown submenu */
@@ -103,7 +103,7 @@
 
 .navbar-submenu-item.active {
   background-color: #eff6ff;
-  color: #3b82f6;
+  color: var(--primary);
   font-weight: 600;
 }
 

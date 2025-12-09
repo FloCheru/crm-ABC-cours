@@ -352,8 +352,115 @@ export const ProfesseurDetails: React.FC = () => {
               </button>
             </div>
 
-            {/* Colonne 2 : Rendez-vous du professeur (3/4) */}
-            <div className="col-span-3 bg-gray-50 border border-gray-200 rounded-lg p-4">
+            {/* Colonne 2 : Compétences et Conformité (2/4) */}
+            <div className="col-span-2 bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-4">
+                Compétences et Conformité
+              </h3>
+
+              {/* 4 Cases à cocher */}
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="competence-pedagogique"
+                    disabled
+                    className="w-4 h-4 rounded border-gray-300"
+                  />
+                  <label
+                    htmlFor="competence-pedagogique"
+                    className="text-sm text-gray-700 cursor-pointer"
+                  >
+                    Compétence pédagogique
+                  </label>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="savoir-faire"
+                    disabled
+                    className="w-4 h-4 rounded border-gray-300"
+                  />
+                  <label
+                    htmlFor="savoir-faire"
+                    className="text-sm text-gray-700 cursor-pointer"
+                  >
+                    Savoir-faire
+                  </label>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="savoir-etre"
+                    disabled
+                    className="w-4 h-4 rounded border-gray-300"
+                  />
+                  <label
+                    htmlFor="savoir-etre"
+                    className="text-sm text-gray-700 cursor-pointer"
+                  >
+                    Savoir-être
+                  </label>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="rigueur-administrative"
+                    disabled
+                    className="w-4 h-4 rounded border-gray-300"
+                  />
+                  <label
+                    htmlFor="rigueur-administrative"
+                    className="text-sm text-gray-700 cursor-pointer"
+                  >
+                    Rigueur administrative
+                  </label>
+                </div>
+              </div>
+
+              {/* Séparateur */}
+              <div className="border-t border-gray-300 my-4" />
+
+              {/* 3 Encarts avec dates/infos */}
+              <div className="space-y-3">
+                {/* Habilitation */}
+                <div className="bg-white rounded border border-gray-200 p-3">
+                  <p className="text-xs font-semibold text-gray-600 mb-1">
+                    Habilitation
+                  </p>
+                  <div className="flex gap-2">
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                      Oui
+                    </span>
+                    <span className="text-xs text-gray-500">00-00-0000</span>
+                  </div>
+                </div>
+
+                {/* Évaluation à 2 ans */}
+                <div className="bg-white rounded border border-gray-200 p-3">
+                  <p className="text-xs font-semibold text-gray-600 mb-1">
+                    Évaluation à 2 ans
+                  </p>
+                  <div className="flex gap-2">
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                      Non
+                    </span>
+                    <span className="text-xs text-gray-500">00-00-0000</span>
+                  </div>
+                </div>
+
+                {/* Charte resignée */}
+                <div className="bg-white rounded border border-gray-200 p-3">
+                  <p className="text-xs font-semibold text-gray-600 mb-1">
+                    Charte resignée
+                  </p>
+                  <p className="text-xs text-gray-500">00-00-0000</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Colonne 3 : Rendez-vous du professeur (1/4) */}
+            <div className="col-span-1 bg-gray-50 border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-gray-700">
                   Rendez-vous de la semaine
@@ -472,12 +579,10 @@ export const ProfesseurDetails: React.FC = () => {
               <span className="text-xl">⚠️</span>
               <div>
                 <h4 className="font-semibold text-yellow-900 mb-1">
-                  RIB à ajouter
+                  RIB manquant
                 </h4>
                 <p className="text-sm text-yellow-800">
-                  Le professeur doit renseigner ses informations bancaires avant
-                  toute saisie de coupon. Veuillez compléter l'onglet "Mon RIB"
-                  ci-dessous.
+                  Complétez les informations avant toute saisie de coupon.
                 </p>
               </div>
             </div>
@@ -492,6 +597,7 @@ export const ProfesseurDetails: React.FC = () => {
             professorId={professorId}
             defaultTab="informations"
             teachingSubjects={teachingSubjects}
+            onSaveSuccess={loadProfessorData}
           />
         </div>
       )}

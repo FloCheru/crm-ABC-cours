@@ -1,16 +1,20 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle } from 'lucide-react';
 
-export interface ErrorMessageProps {
-  children: React.ReactNode;
+interface ErrorMessageProps {
+  children?: React.ReactNode;
+  className?: string;
 }
 
-export function ErrorMessage({ children }: ErrorMessageProps) {
+export function ErrorMessage({ children, className = '' }: ErrorMessageProps) {
   if (!children) return null;
 
   return (
-    <p className="text-sm flex items-center gap-1 mt-2 text-red-600" role="alert">
-      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+    <div
+      className={`flex items-center gap-2 mt-1 text-sm text-red-600 ${className}`}
+      role="alert"
+    >
+      <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
       <span>{children}</span>
-    </p>
+    </div>
   );
 }

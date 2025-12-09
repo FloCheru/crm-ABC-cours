@@ -4,10 +4,18 @@ import {
   Container,
   Button,
   PageHeader,
-  Input,
-  Select,
   ButtonGroup,
 } from "../../../components";
+import { Input } from "../../../components/ui/input";
+import { Textarea } from "../../../components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
+import { Label } from "../../../components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useCouponSeriesForm } from "../../../hooks/useCouponSeriesForm";
 import { couponSeriesService } from "../../../services/couponSeriesService";
@@ -186,48 +194,60 @@ export function CouponSeriesCreate() {
               >
                 <h2>Informations générales</h2>
                 <Container padding="none">
-                  <Select
-                    label="Famille / Parent"
-                    helpText="Famille bénéficiaire des coupons"
-                    required
-                    value={formData.familyId}
-                    onChange={(e) => updateFormData("familyId", e.target.value)}
-                    error={errors.familyId}
-                    options={[
-                      { value: "", label: "Sélectionner une famille" },
-                      ...(families || []).map((family) => ({
-                        value: family._id,
-                        label: `${family.primaryContact.firstName} ${family.primaryContact.lastName}`,
-                      })),
-                    ]}
-                  />
-                  <Select
-                    label="Élève concerné"
-                    required
-                    value={formData.studentId}
-                    onChange={(e) =>
-                      updateFormData("studentId", e.target.value)
-                    }
-                    error={errors.studentId}
-                    disabled={!formData.familyId}
-                    options={[
-                      { value: "", label: "Sélectionner un élève" },
-                      ...(students || []).map((student) => ({
-                        value: student._id,
-                        label: `${student.firstName} ${student.lastName} (${student.school.grade})`,
-                      })),
-                    ]}
-                  />
+                  <div className="space-y-2">
+                    <Label>Famille / Parent <span className="text-red-500">*</span></Label>
+                    <Select
+                      value={formData.familyId || "none"}
+                      onValueChange={(value) => updateFormData("familyId", value === "none" ? "" : value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une famille" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sélectionner une famille</SelectItem>
+                        {(families || []).map((family) => (
+                          <SelectItem key={family._id} value={family._id}>
+                            {family.primaryContact.firstName} {family.primaryContact.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">Famille bénéficiaire des coupons</p>
+                    {errors.familyId && <p className="text-sm text-red-500">{errors.familyId}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Élève concerné <span className="text-red-500">*</span></Label>
+                    <Select
+                      value={formData.studentId || "none"}
+                      onValueChange={(value) => updateFormData("studentId", value === "none" ? "" : value)}
+                      disabled={!formData.familyId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un élève" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sélectionner un élève</SelectItem>
+                        {(students || []).map((student) => (
+                          <SelectItem key={student._id} value={student._id}>
+                            {student.firstName} {student.lastName} ({student.school.grade})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.studentId && <p className="text-sm text-red-500">{errors.studentId}</p>}
+                  </div>
                 </Container>
                 <h2>Options avancées</h2>
                 <Container padding="none">
-                  <Input
-                    label="Notes et commentaires"
-                    type="textarea"
-                    helpText="Commentaires internes (optionnel)"
-                    value={formData.notes}
-                    onChange={(e) => updateFormData("notes", e.target.value)}
-                  />
+                  <div className="space-y-2">
+                    <Label>Notes et commentaires</Label>
+                    <Textarea
+                      value={formData.notes}
+                      onChange={(e) => updateFormData("notes", e.target.value)}
+                      placeholder="Commentaires internes (optionnel)"
+                    />
+                    <p className="text-sm text-muted-foreground">Commentaires internes (optionnel)</p>
+                  </div>
                 </Container>
                 <Container>
                   <input
@@ -260,50 +280,58 @@ export function CouponSeriesCreate() {
               >
                 <h2>Matière et tarification</h2>
                 <Container padding="none">
-                  <Select
-                    label="Matière"
-                    required
-                    value={formData.subject}
-                    onChange={(e) => updateFormData("subject", e.target.value)}
-                    error={errors.subject}
-                    options={[
-                      { value: "", label: "Sélectionner une matière" },
-                      ...(subjects || []).map((subject) => ({
-                        value: subject._id,
-                        label: subject.name,
-                      })),
-                    ]}
-                  />
+                  <div className="space-y-2">
+                    <Label>Matière <span className="text-red-500">*</span></Label>
+                    <Select
+                      value={formData.subject || "none"}
+                      onValueChange={(value) => updateFormData("subject", value === "none" ? "" : value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une matière" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sélectionner une matière</SelectItem>
+                        {(subjects || []).map((subject) => (
+                          <SelectItem key={subject._id} value={subject._id}>
+                            {subject.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.subject && <p className="text-sm text-red-500">{errors.subject}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tarif horaire <span className="text-red-500">*</span></Label>
+                    <Input
+                      type="number"
+                      value={formData.hourlyRate}
+                      onChange={(e) =>
+                        updateFormData(
+                          "hourlyRate",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
+                      min={0}
+                      step={0.01}
+                    />
+                    {errors.hourlyRate && <p className="text-sm text-red-500">{errors.hourlyRate}</p>}
+                  </div>
+                </Container>
+                <div className="space-y-2">
+                  <Label>Nombre de coupons <span className="text-red-500">*</span></Label>
                   <Input
-                    label="Tarif horaire"
-                    required
                     type="number"
-                    value={formData.hourlyRate}
+                    value={formData.totalCoupons}
                     onChange={(e) =>
                       updateFormData(
-                        "hourlyRate",
-                        parseFloat(e.target.value) || 0
+                        "totalCoupons",
+                        parseInt(e.target.value) || 0
                       )
                     }
-                    error={errors.hourlyRate}
-                    min="0"
-                    step="0.01"
+                    min={1}
                   />
-                </Container>
-                <Input
-                  label="Nombre de coupons"
-                  required
-                  type="number"
-                  value={formData.totalCoupons}
-                  onChange={(e) =>
-                    updateFormData(
-                      "totalCoupons",
-                      parseInt(e.target.value) || 0
-                    )
-                  }
-                  error={errors.totalCoupons}
-                  min="1"
-                />
+                  {errors.totalCoupons && <p className="text-sm text-red-500">{errors.totalCoupons}</p>}
+                </div>
                 <div className="summary-preview">
                   <h3>Aperçu de la série</h3>
                   <div>
