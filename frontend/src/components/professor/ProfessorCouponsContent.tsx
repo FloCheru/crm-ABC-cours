@@ -325,9 +325,7 @@ export const ProfessorCouponsContent: React.FC<ProfessorCouponsContentProps> = (
               <h3 className="text-lg font-semibold text-gray-900">
                 Mon RIB
               </h3>
-              <p className="text-sm text-gray-500">
-                Vos coordonnées bancaires pour le paiement de vos cours
-              </p>
+              
             </div>
 
             <div className="space-y-6">
@@ -340,7 +338,7 @@ export const ProfessorCouponsContent: React.FC<ProfessorCouponsContentProps> = (
                   onChange={(e) =>
                     setRibData({ ...ribData, bankName: e.target.value })
                   }
-                  placeholder="Ex: Banque Postale"
+                 
                 />
               </div>
 
@@ -353,12 +351,10 @@ export const ProfessorCouponsContent: React.FC<ProfessorCouponsContentProps> = (
                   onChange={(e) =>
                     setRibData({ ...ribData, iban: e.target.value })
                   }
-                  placeholder="FR76 1234 5678 9012 3456 7890 123"
+                  
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Format: 27 caractères (FR suivi de 25 chiffres/lettres)
-                </p>
+               
               </div>
 
               <div>
@@ -370,12 +366,10 @@ export const ProfessorCouponsContent: React.FC<ProfessorCouponsContentProps> = (
                   onChange={(e) =>
                     setRibData({ ...ribData, bic: e.target.value })
                   }
-                  placeholder="PSSTFRPPXXX"
+                  
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Format: 8 ou 11 caractères
-                </p>
+               
               </div>
             </div>
 

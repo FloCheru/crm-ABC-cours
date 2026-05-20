@@ -492,6 +492,7 @@ export const ProfesseurDetails: React.FC = () => {
             professorId={professorId}
             defaultTab="informations"
             teachingSubjects={teachingSubjects}
+            onProfileUpdated={loadProfessorData}
           />
         </div>
       )}

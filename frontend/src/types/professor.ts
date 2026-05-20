@@ -163,7 +163,7 @@ export interface ProfessorProfile extends Professor {
   birthName?: string;
   socialSecurityNumber?: string;
   birthCountry?: string;
-  nativeLanguage?: boolean;
+  nativeLanguage?: string;  // Code ISO de la langue (ex: "fr", "en", "es")
   secondaryPhone?: string;
   primaryAddress?: Address;
   secondaryAddress?: Address;

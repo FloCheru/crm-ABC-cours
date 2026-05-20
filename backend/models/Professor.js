@@ -66,6 +66,10 @@ const professorSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    nativeLanguage: {
+      type: String,
+      trim: true,
+    },
     // Informations de contact - Coordonnées
     phone: {
       type: String,

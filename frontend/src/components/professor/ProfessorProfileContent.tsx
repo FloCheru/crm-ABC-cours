@@ -23,6 +23,7 @@ import { SubjectLevelsSelector } from './SubjectLevelsSelector';
 import { DepartmentCombobox } from './DepartmentCombobox';
 import { CommuneCombobox } from './CommuneCombobox';
 import { TransportModesCombobox } from './TransportModesCombobox';
+import { LanguageCombobox } from './LanguageCombobox';
 import { subjectService } from '../../services/subjectService';
 import { geoApiService, type Commune } from '../../services/geoApiService';
 import type { Subject } from '../../types/subject';
@@ -42,12 +43,14 @@ interface ProfessorProfileContentProps {
   professorId: string;
   defaultTab?: string;
   teachingSubjects?: TeachingSubject[];
+  onProfileUpdated?: () => void;
 }
 
 export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = ({
   professorId,
   defaultTab = 'informations',
   teachingSubjects: initialTeachingSubjects,
+  onProfileUpdated,
 }) => {
 
   const [isLoading, setIsLoading] = useState(true);
@@ -59,6 +62,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<{ iban?: string; bic?: string }>({});
 
   // États pour Choix (Matières)
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
@@ -270,6 +274,7 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
       });
 
       alert('Modifications enregistrées avec succès !');
+      onProfileUpdated?.();
     } catch (err) {
       console.error(`\n❌ [${section.toUpperCase()}] Erreur lors de la sauvegarde:`, err);
       alert('Erreur lors de la sauvegarde: ' + (err instanceof Error ? err.message : 'Erreur inconnue'));
@@ -318,6 +323,27 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
 
   const handleInputChange = (field: keyof ProfessorProfile, value: any) => {
     setFormData((prev: Partial<ProfessorProfile>) => ({ ...prev, [field]: value }));
+  };
+
+  // Fonctions de validation IBAN et BIC
+  const validateIban = (value: string): string | undefined => {
+    if (!value) return undefined; // Champ optionnel
+    // IBAN: 2 lettres (pays) + 2 chiffres (clé) + 11-30 caractères alphanumériques (BBAN)
+    const ibanRegex = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/;
+    if (!ibanRegex.test(value)) {
+      return 'Format IBAN invalide (ex: FR7612345678901234567890123)';
+    }
+    return undefined;
+  };
+
+  const validateBic = (value: string): string | undefined => {
+    if (!value) return undefined; // Champ optionnel
+    // BIC: 6 lettres + 2 alphanumériques + optionnellement 3 alphanumériques (8 ou 11 caractères)
+    const bicRegex = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
+    if (!bicRegex.test(value)) {
+      return 'Format BIC invalide (ex: BNPAFRPP ou BNPAFRPPXXX)';
+    }
+    return undefined;
   };
 
   // Handlers pour les matières (Choix)
@@ -662,6 +688,97 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
           </div>
 
           <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+            {/* Section Statut d'emploi */}
+            <div className="col-span-2">
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">Statut d'emploi</h4>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    Statut professionnel *
+                  </label>
+                  <select
+                    value={formData.employmentStatus || ''}
+                    onChange={(e) =>
+                      handleInputChange('employmentStatus', e.target.value)
+                    }
+                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
+                    <option value="">Sélectionner...</option>
+                    <option value="salarie">Salarié</option>
+                    <option value="auto-entrepreneur">Auto-entrepreneur</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    IBAN (Relevé d'Identité Bancaire)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.iban || ''}
+                    onChange={(e) => {
+                      const value = e.target.value.toUpperCase().replace(/\s/g, '');
+                      handleInputChange('iban', value);
+                      setFormErrors(prev => ({ ...prev, iban: validateIban(value) }));
+                    }}
+                    maxLength={34}
+                    className={`w-full px-3 py-2 text-base border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none ${
+                      formErrors.iban ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                  {formErrors.iban && (
+                    <p className="text-xs text-red-600 mt-1">{formErrors.iban}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    BIC / SWIFT
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.bic || ''}
+                    onChange={(e) => {
+                      const value = e.target.value.toUpperCase().replace(/\s/g, '');
+                      handleInputChange('bic', value);
+                      setFormErrors(prev => ({ ...prev, bic: validateBic(value) }));
+                    }}
+                    minLength={8}
+                    maxLength={11}
+                    className={`w-full px-3 py-2 text-base border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none ${
+                      formErrors.bic ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                  {formErrors.bic && (
+                    <p className="text-xs text-red-600 mt-1">{formErrors.bic}</p>
+                  )}
+                </div>
+
+                {formData.employmentStatus === 'auto-entrepreneur' && (
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      SIRET * (14 chiffres)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.siret || ''}
+                      onChange={(e) => handleInputChange('siret', e.target.value)}
+                      pattern="[0-9]{14}"
+                      title="14 chiffres requis"
+                      maxLength={14}
+                      className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="col-span-2 my-4">
+              <Separator />
+            </div>
+
             {/* Identité */}
             {renderField('Genre *', 'gender', 'select', [
               { value: 'M.', label: 'M.' },
@@ -672,21 +789,13 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
             {renderField('Nom de naissance (si différent)', 'birthName')}
             {renderField('Date de naissance *', 'birthDate', 'date')}
             {renderField('N° de sécurité sociale', 'socialSecurityNumber')}
-            {renderField('Pays de naissance', 'birthCountry', 'text', undefined, true)}
-            <div className="flex items-end gap-2">
-              <Checkbox
-                id="nativeLanguage"
-                checked={formData.nativeLanguage || false}
-                onCheckedChange={(checked: boolean | string) =>
-                  handleInputChange('nativeLanguage', checked === true ? 'yes' : '')
-                }
+            {renderField('Pays de naissance', 'birthCountry')}
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Langue maternelle</label>
+              <LanguageCombobox
+                value={formData.nativeLanguage}
+                onSelect={(code) => handleInputChange('nativeLanguage', code)}
               />
-              <Label
-                htmlFor="nativeLanguage"
-                className="text-sm font-normal cursor-pointer"
-              >
-                Langue maternelle
-              </Label>
             </div>
 
             <div className="col-span-2 my-4">
@@ -787,7 +896,9 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
               )}
             </div>
             <div className="col-span-2">
+              <label className="text-xs text-gray-500">Cours</label>
               <div className="flex items-center gap-6">
+                
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="courseLocation-domicile"
@@ -877,91 +988,6 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
               <Separator />
             </div>
 
-            {/* Section Statut d'emploi */}
-            <div className="col-span-2">
-              <h4 className="text-sm font-semibold text-gray-900 mb-4">Statut d'emploi</h4>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">
-                    Statut professionnel *
-                  </label>
-                  <select
-                    value={formData.employmentStatus || ''}
-                    onChange={(e) =>
-                      handleInputChange('employmentStatus', e.target.value)
-                    }
-                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  >
-                    <option value="">Sélectionner...</option>
-                    <option value="salarie">Salarié</option>
-                    <option value="auto-entrepreneur">Auto-entrepreneur</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">
-                    IBAN (Relevé d'Identité Bancaire)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.iban || ''}
-                    onChange={(e) => handleInputChange('iban', e.target.value.toUpperCase())}
-                    pattern="[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}"
-                    title="Format IBAN invalide (ex: FR7612345678901234567890123)"
-                    maxLength={34}
-                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder="FR76 1234 5678 9012 3456 7890 123"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    Format européen (27 à 34 caractères)
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">
-                    BIC / SWIFT
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.bic || ''}
-                    onChange={(e) => handleInputChange('bic', e.target.value.toUpperCase())}
-                    pattern="[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?"
-                    title="Format BIC/SWIFT invalide (8 ou 11 caractères, ex: BNPAFRPP)"
-                    minLength={8}
-                    maxLength={11}
-                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder="BNPAFRPP"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    Code SWIFT de votre banque (8 ou 11 caractères)
-                  </p>
-                </div>
-
-                {formData.employmentStatus === 'auto-entrepreneur' && (
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">
-                      SIRET * (14 chiffres)
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.siret || ''}
-                      onChange={(e) => handleInputChange('siret', e.target.value)}
-                      pattern="[0-9]{14}"
-                      title="14 chiffres requis"
-                      maxLength={14}
-                      className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      placeholder="12345678901234"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="col-span-2 my-4">
-              <Separator />
-            </div>
-
             {/* Section Situation actuelle */}
             <div className="col-span-2">
               <h4 className="text-sm font-semibold text-gray-900 mb-4">Situation actuelle</h4>
@@ -1013,14 +1039,10 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                 <textarea
                   value={formData.diplomes || ''}
                   onChange={(e) => handleInputChange('diplomes', e.target.value)}
-                  placeholder="Ex: Master en Mathématiques - Université Paris-Saclay (2020)&#10;Licence de Mathématiques - Sorbonne Université (2018)"
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                   rows={4}
                   maxLength={2000}
                 />
-                <p className="text-xs text-gray-400 mt-1">
-                  Maximum 2000 caractères
-                </p>
               </div>
             </div>
 
@@ -1033,14 +1055,10 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                 <textarea
                   value={formData.certifications || ''}
                   onChange={(e) => handleInputChange('certifications', e.target.value)}
-                  placeholder="Ex: Certification FLE - Alliance Française (2021)&#10;TOEFL 110/120 (2019)"
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                   rows={4}
                   maxLength={2000}
                 />
-                <p className="text-xs text-gray-400 mt-1">
-                  Maximum 2000 caractères
-                </p>
               </div>
             </div>
 
@@ -1054,14 +1072,10 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                 <textarea
                   value={formData.experiences || ''}
                   onChange={(e) => handleInputChange('experiences', e.target.value)}
-                  placeholder="Ex: Professeur de mathématiques - Lycée Jean Moulin (2018-2022)&#10;Formateur en entreprise - ABC Formation (2015-2018)"
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                   rows={4}
                   maxLength={2000}
                 />
-                <p className="text-xs text-gray-400 mt-1">
-                  Maximum 2000 caractères
-                </p>
               </div>
             </div>
 
@@ -1075,14 +1089,10 @@ export const ProfessorProfileContent: React.FC<ProfessorProfileContentProps> = (
                 <textarea
                   value={formData.divers || ''}
                   onChange={(e) => handleInputChange('divers', e.target.value)}
-                  placeholder="Ex: Disponible pour des cours particuliers le soir et le week-end..."
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                   rows={4}
                   maxLength={1000}
                 />
-                <p className="text-xs text-gray-400 mt-1">
-                  Maximum 1000 caractères
-                </p>
               </div>
             </div>
           </div>
